@@ -5,6 +5,7 @@ owner: Raj
 last_updated: 2026-04-21
 ---
 
+
 # ADR Log
 
 One-page summary of every Architecture Decision Record. Full ADRs live at [../01-architecture/adr/](../01-architecture/adr/).
@@ -56,12 +57,25 @@ The canonical structure every ADR follows: Status / Context / Decision / Options
 
 ---
 
+## ADR-005: Residual-first UI and hand-rolled SVG charts
+
+**Status:** Proposed (2026-04-21)
+**Location:** [../01-architecture/adr/0005-residual-first-ui.md](../01-architecture/adr/0005-residual-first-ui.md)
+
+**Decision:** Drop `@tremor/react` entirely. Every chart in the v2 frontend is hand-rolled SVG, styled via Tailwind and CSS variables defined in `globals.css`. Residual color (`--residual`, amber `#f59e0b`) is enforced by a single token used nowhere else. `@tailwindcss/typography` is also dropped; Methodology is hand-styled.
+
+**Rationale:** The thesis of Basis is the *size* of the residual. Chart primitives must visually foreground it — a donut or equal-weight bar contradicts the finding. Libraries make residual-first discipline leaky (anyone can borrow amber from a palette) and their donut defaults are the exact wrong shape. Five chart primitives (`DecompBar`, `DispersionFan`, `DeviationBar`, `HeatCell`, `Sparkline`) cover every visualization in scope; library overhead is not justified at this size.
+
+**Consequence:** More SVG code to write/maintain than the v1 Tremor stack. Accessibility (ARIA, focus, non-color signals) is manual. Reversible but not cheap — if interactions ever get complex (brushing, linked-view selection), revisit.
+
+---
+
 ## Resolved without a formal ADR
 
 Decisions that were listed as pending in earlier revisions of this log but were settled informally and documented elsewhere. Preserved here as a reasoning trail.
 
 - **Variance decomposition method.** ~~Sequential ANOVA vs Shapley — will be decided during Phase 3.~~ **Decided during Phase 3: sequential ANOVA on log-prices** in a fixed factor order (region → commitment → provider → bundle → residual). See [`docs/methodology.md`](../methodology.md) for the full treatment and rationale.
-- **Slice architecture (ADR 0005).** ~~Option 1 (precomputed `sliced_decompositions` table) vs Option 2 (client-side composition) — to be decided before Phase C begins.~~ **Not pursued: Phase C skipped on 2026-04-21.** Decision and rationale in [`temp-doc/phase-c-scoping.md`](../../temp-doc/phase-c-scoping.md). ADR number 0005 remains unused.
+- **Slice architecture.** ~~Option 1 (precomputed `sliced_decompositions` table) vs Option 2 (client-side composition) — to be decided before Phase C begins.~~ **Not pursued: Phase C skipped on 2026-04-21.** Decision and rationale in [`temp-doc/phase-c-scoping.md`](../../temp-doc/phase-c-scoping.md). (The ADR-0005 slot previously held for this decision has been repurposed for the residual-first UI decision above.)
 
 ## Proposed / pending
 
