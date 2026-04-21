@@ -1,0 +1,137 @@
+# Guide: Run Collection
+
+## What this file is for
+
+How to run the collection pipeline manually, do dry-runs, reset, and catch up on missed days.
+
+## When to read/use this
+
+- First manual run after setup.
+- Cron missed a day (laptop was asleep) and you want to catch up.
+- Testing a new collector.
+- Verifying a fix.
+
+---
+
+## Command cheatsheet
+
+From `backend/`:
+
+```bash
+# All enabled collectors, save to DB
+uv run python run_collect.py
+
+# Dry-run (prints summary, no DB writes)
+uv run python run_collect.py --dry-run
+
+# Specific collector
+uv run python run_collect.py vast
+uv run python run_collect.py runpod
+uv run python run_collect.py aws_spot
+uv run python run_collect.py tensordock
+
+# Specific collector, dry-run
+uv run python run_collect.py vast --dry-run
+```
+
+---
+
+## What a dry-run does
+
+- Calls the provider's API.
+- Parses the response.
+- Builds `RawObservationCreate` objects in memory.
+- Prints a summary (counts per GPU type).
+- **Does not write to the database.**
+
+Use dry-run when:
+
+- Testing a new collector for the first time.
+- Inspecting unfamiliar provider output.
+- Verifying a collector fix before committing to DB writes.
+
+---
+
+## Catching up after missed cron runs
+
+macOS cron skips firings when the laptop is asleep — no retry, no backfill. If you see a gap in the time series, simply run manually:
+
+```bash
+cd backend
+uv run python run_collect.py        # full run, all sources
+uv run python run_normalize.py      # normalize the new rows
+```
+
+That puts one observation per source into the DB at the current timestamp. It doesn't reconstruct missed timestamps — those gaps are permanent.
+
+### How to detect gaps
+
+```sql
+SELECT DATE(collected_at) AS day, source, count(*) 
+FROM raw_observations 
+GROUP BY 1, 2 
+ORDER BY 1 DESC, 2;
+```
+
+Look for days with zero rows for a source you expect to be live.
+
+---
+
+## Full pipeline (collect → normalize)
+
+```bash
+cd backend
+uv run python run_collect.py && uv run python run_normalize.py
+```
+
+This is what `collect_cron.sh` should eventually do (currently only runs the collector; add the normalize step when ready).
+
+---
+
+## Re-normalizing everything
+
+If the mapping tables in `normalization/` change, run:
+
+```bash
+cd backend
+uv run python run_normalize.py --reset
+```
+
+This wipes `canonical_offers` and regenerates from `raw_observations`. Raw data is untouched. Takes roughly 5–10 seconds per 1,000 rows on a local Postgres.
+
+---
+
+## Verifying success
+
+```bash
+# Counts per source
+docker exec basis-db-1 psql -U basis -d basis -c "
+SELECT source, count(*), max(collected_at) 
+FROM raw_observations 
+GROUP BY source ORDER BY source;"
+
+# Any unknown GPUs that got skipped during normalization?
+# (Search the output of run_normalize.py; 'skipped_unknown_gpu' should be 0.)
+```
+
+---
+
+## Common issues
+
+| Issue | Fix |
+|-------|-----|
+| `AWS credentials not configured` | `.env` not picked up — ensure you run from `backend/` with `uv run`. |
+| AWS `UnauthorizedOperation` | Attach `AmazonEC2ReadOnlyAccess` IAM policy to the user. |
+| TensorDock timeouts | Their API is slow; the client uses `timeout=30.0`. Retry. |
+| Very low Vast.ai count | Check for API rate limiting; set `VAST_API_KEY`. |
+| `skipped_unknown_gpu > 0` | New GPU name from a provider — add to `canonicalize.py` and re-run. |
+
+See [troubleshooting.md](troubleshooting.md) for more.
+
+---
+
+## Related docs
+
+- [../00-start-here/dev-commands.md](../00-start-here/dev-commands.md) — all commands.
+- [../02-reference/observability.md](../02-reference/observability.md) — health checks.
+- [add-collector.md](add-collector.md) — adding a new source.
