@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basis · seal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card     { background: #FAFAF7; color: #111; }
+    .card-inv { background: #0B1220; color: #FAFAF7; }
+    .eyebrow  { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5; }
+    .foot     { font-family: "JetBrains Mono", monospace; font-size: 9px;  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    // A commodity-exchange seal. Monogram "b" in a contrast serif, set
+    // inside a bordered circle. Perimeter text runs along the top arc and
+    // (optionally) the bottom arc. Reference: ICE/Platts/Argus institutional
+    // stamps — flat, engraved, quiet.
+
+    const SERIF = '"Playfair Display", "Cormorant Garamond", "Didot", "Bodoni 72", Georgia, serif';
+    const SANS  = '"Inter", system-ui, sans-serif';
+
+    // ── Seal primitive ────────────────────────────────────────
+    //
+    // Renders a circular seal. Text is drawn on two arcs: `top` and
+    // (optional) `bottom`. The bottom arc uses a reversed path so the
+    // baseline sits outward-facing.
+    //
+    //   size       — outer SVG size (px)
+    //   ringWidth  — optional text ring around the perimeter
+    //   border     — one of 'single' | 'double' | 'hairline'
+    //   top/bottom — strings to set along the top and bottom arcs
+    //   sep        — separator glyph used to pad the bottom string
+    //   color      — fg color (applies to border, letter, perimeter text)
+    //   letter     — monogram character
+    //   italic     — italicize the monogram
+    //   serifFamily — override serif family (e.g. a Cormorant variant)
+    //   ornament   — 'none' | 'stars' (three tiny stars at top center)
+    function Seal({
+      size = 200,
+      border = 'double',
+      top = 'BASIS · COMPUTE PRICE RESEARCH',
+      bottom = 'EST · 2026',
+      sep = '·',
+      color = '#0B1220',
+      letter = 'b',
+      italic = false,
+      serifFamily = SERIF,
+      ornament = 'stars',
+      showPerimeter = true,
+      perimeterSize,      // px, overrides computed
+      letterSize,         // px, overrides computed
+      padding = 12,
+    }) {
+      const s = size;
+      const cx = s / 2, cy = s / 2;
+      const ringPad = 3;
+      const outerR = (s / 2) - ringPad;
+      const innerR = showPerimeter ? outerR - (s * 0.11) : outerR - (s * 0.05);
+      const textR  = (outerR + innerR) / 2;     // baseline for perimeter
+      const topArcId = `arc-top-${Math.random().toString(36).slice(2, 8)}`;
+      const botArcId = `arc-bot-${Math.random().toString(36).slice(2, 8)}`;
+
+      // Top arc: from lower-left around through top to lower-right
+      // (sweep=1, large-arc=1). textPath default places letters outward.
+      const topArc = `M ${cx - textR},${cy} A ${textR},${textR} 0 0 1 ${cx + textR},${cy}`;
+      // Bottom arc (reversed): from lower-right back to lower-left so
+      // baseline sits below the text with letters right-side up.
+      const botArc = `M ${cx - textR},${cy} A ${textR},${textR} 0 0 0 ${cx + textR},${cy}`;
+
+      const perimFontSize = perimeterSize ?? Math.max(6, s * 0.048);
+      const monoSize = letterSize ?? (showPerimeter ? s * 0.52 : s * 0.68);
+
+      return (
+        <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} style={{ display: 'block' }}>
+          <defs>
+            <path id={topArcId} d={topArc} />
+            <path id={botArcId} d={botArc} />
+          </defs>
+
+          {/* Border */}
+          {border === 'single' && (
+            <circle cx={cx} cy={cy} r={outerR} fill="none" stroke={color} strokeWidth={1.2} />
+          )}
+          {border === 'hairline' && (
+            <circle cx={cx} cy={cy} r={outerR} fill="none" stroke={color} strokeWidth={0.6} />
+          )}
+          {border === 'double' && (
+            <>
+              <circle cx={cx} cy={cy} r={outerR} fill="none" stroke={color} strokeWidth={1.4} />
+              <circle cx={cx} cy={cy} r={outerR - 3} fill="none" stroke={color} strokeWidth={0.6} />
+              {showPerimeter && (
+                <circle cx={cx} cy={cy} r={innerR} fill="none" stroke={color} strokeWidth={0.8} />
+              )}
+            </>
+          )}
+          {border === 'single' && showPerimeter && (
+            <circle cx={cx} cy={cy} r={innerR} fill="none" stroke={color} strokeWidth={0.6} />
+          )}
+
+          {/* Perimeter text */}
+          {showPerimeter && (
+            <g fill={color}>
+              <text fontFamily={SANS} fontSize={perimFontSize} fontWeight={500} letterSpacing={perimFontSize * 0.22}>
+                <textPath href={`#${topArcId}`} startOffset="50%" textAnchor="middle">{top.toUpperCase()}</textPath>
+              </text>
+              {bottom && (
+                <text fontFamily={SANS} fontSize={perimFontSize} fontWeight={500} letterSpacing={perimFontSize * 0.22}>
+                  <textPath href={`#${botArcId}`} startOffset="50%" textAnchor="middle">{bottom.toUpperCase()}</textPath>
+                </text>
+              )}
+            </g>
+          )}
+
+          {/* Ornamental stars on the side — separate top arc text from bottom */}
+          {showPerimeter && ornament === 'stars' && (
+            <g fill={color}>
+              {[-1, 1].map(side => {
+                const ang = side * Math.PI / 2; // east/west points
+                const x = cx + Math.cos(ang) * textR;
+                const y = cy + Math.sin(ang) * textR;
+                return <Star key={side} cx={x} cy={y} r={perimFontSize * 0.35} color={color} />;
+              })}
+            </g>
+          )}
+
+          {/* Monogram — drawn centered with dominantBaseline=central.
+              Some serif fonts sit high; a small y-nudge trues up the optics. */}
+          <text
+            x={cx}
+            y={cy + monoSize * 0.04}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontFamily={serifFamily}
+            fontSize={monoSize}
+            fontWeight={400}
+            fontStyle={italic ? 'italic' : 'normal'}
+            fill={color}
+            style={{ fontFeatureSettings: '"kern","liga","onum"' }}
+          >{letter}</text>
+        </svg>
+      );
+    }
+
+    function Star({ cx, cy, r, color = '#111' }) {
+      // 5-point star, tiny
+      const pts = [];
+      for (let i = 0; i < 10; i++) {
+        const a = (-Math.PI / 2) + i * Math.PI / 5;
+        const rr = i % 2 === 0 ? r : r * 0.42;
+        pts.push(`${cx + Math.cos(a) * rr},${cy + Math.sin(a) * rr}`);
+      }
+      return <polygon points={pts.join(' ')} fill={color} />;
+    }
+
+    // ── Lockups ─────────────────────────────────────────────
+
+    // Full seal — perimeter text + monogram, shown large on warm off-white
+    function FullSeal({ concept, inverted }) {
+      const fg = inverted ? '#FAFAF7' : '#0B1220';
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 48, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ opacity: inverted ? 0.55 : 0.5 }}>Full seal · documentation</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Seal {...concept.seal} color={fg} size={260} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.seal.border}</span>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.serifLabel || 'playfair'}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Monogram only — small-scale use (favicon, contract corner)
+    function Monogram({ concept }) {
+      const sealMono = { ...concept.seal, showPerimeter: false };
+      const sizes = [24, 48, 96, 160];
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Monogram · no perimeter</div>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', alignItems: 'end', justifyItems: 'center', alignContent: 'center', gap: 20 }}>
+            {sizes.map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <div style={{ width: s + 8, height: s + 8, background: '#FAFAF7', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Seal {...sealMono} size={s} />
+                </div>
+                <div className="foot" style={{ marginTop: 6 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>mark-only</div>
+        </div>
+      );
+    }
+
+    // Horizontal lockup — seal + wordmark side-by-side, for a header row
+    function Horizontal({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Horizontal lockup</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22 }}>
+            <Seal {...concept.seal} showPerimeter={false} size={68} color="#0B1220" />
+            <div style={{ width: 1, height: 46, background: '#0B1220', opacity: 0.2 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontFamily: SERIF, fontSize: 38, fontWeight: 400, color: '#0B1220', lineHeight: 1, letterSpacing: '-0.01em' }}>basis</span>
+              <span style={{ fontFamily: SANS, fontSize: 9.5, letterSpacing: '0.22em', textTransform: 'uppercase', opacity: 0.6, color: '#0B1220' }}>
+                compute price research
+              </span>
+            </div>
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>—</div>
+        </div>
+      );
+    }
+
+    // In-situ — a contract / working paper header, with the seal sitting at
+    // the top corner like a real exchange document.
+    function Insitu({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '28px 40px 18px', borderBottom: '1px solid rgba(0,0,0,0.12)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 10 }}>Working paper · Series A · 03</div>
+              <div style={{ fontFamily: SERIF, fontSize: 28, letterSpacing: '-0.01em', lineHeight: 1.1, color: '#0B1220' }}>
+                On the fungibility of GPU compute
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 12.5, opacity: 0.6, marginTop: 8 }}>Filed 2026 · Specification v1.1</div>
+            </div>
+            <Seal {...concept.seal} size={108} color="#0B1220" />
+          </div>
+
+          <div style={{ flex: 1, padding: '32px 40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 36 }}>
+            <div style={{ fontFamily: SERIF, fontSize: 14.5, lineHeight: 1.55, color: '#0B1220' }}>
+              This paper studies the price at which a fungible hour of H100 compute clears across providers, regions and contract terms. We define a benchmark basis and report the residual variance that cannot be explained by observable factors.
+            </div>
+            <div style={{ fontFamily: SERIF, fontSize: 14.5, lineHeight: 1.55, color: '#0B1220', opacity: 0.8 }}>
+              Findings: basis compression of 34% year-over-year on on-demand contracts; persistent residual dispersion of 17% on reserved capacity, concentrated in smaller providers.
+            </div>
+          </div>
+
+          <div style={{ padding: '14px 40px', borderTop: '1px solid rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot">basis.research</span>
+            <span className="foot">Pg. 1 of 24</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Plate — the mark rendered as if embossed on a printed contract cover.
+    // A visual check that it reads as commodity-exchange gravitas.
+    function Plate({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: '#F1EEE6', padding: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', top: 24, left: 32 }} className="eyebrow">Contract plate</div>
+          <div style={{ position: 'absolute', bottom: 24, left: 32, right: 32, display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot">Contract № BASIS-H100-2026-Q2</span>
+            <span className="foot">Clearing ref · NYC</span>
+          </div>
+
+          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            <Seal {...concept.seal} size={180} color="#0B1220" />
+            <div style={{ fontFamily: SANS, fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', opacity: 0.55, color: '#0B1220' }}>
+              Certified benchmark · basis index
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Concepts ────────────────────────────────────────────
+    // Axes:
+    //   seal.letter       — 'b' default
+    //   seal.italic       — italic serif feels even more engraved
+    //   seal.border       — 'single' | 'double' | 'hairline'
+    //   seal.top/bottom   — perimeter strings
+    //   serifFamily       — Playfair (high-contrast, Didot-ish) or Cormorant (Garamond-like, softer engraved)
+    //   ornament          — 'stars' | 'none'
+
+    const CONCEPTS = [
+      {
+        id: 's1', name: 'I · double border · Playfair · stars',
+        note: 'Baseline Platts-style seal. Double outer border, star separators between top and bottom text.',
+        seal: { border: 'double', top: 'BASIS · COMPUTE PRICE RESEARCH', bottom: 'EST · 2026', serifFamily: SERIF, ornament: 'stars', italic: false, letter: 'b' },
+        serifLabel: 'playfair',
+      },
+      {
+        id: 's2', name: 'II · single border · Playfair italic',
+        note: 'Single ring. Italic serif monogram — the letter feels cut, not set. No ornament.',
+        seal: { border: 'single', top: 'BASIS · GPU FUNGIBILITY STUDY', bottom: 'MMXXVI', serifFamily: SERIF, ornament: 'none', italic: true, letter: 'b' },
+        serifLabel: 'playfair italic',
+      },
+      {
+        id: 's3', name: 'III · double border · Cormorant',
+        note: 'Softer, Garamond-register serif. More "printed 1962 commodity contract" than "New York Times masthead."',
+        seal: { border: 'double', top: 'BASIS · COMPUTE PRICE RESEARCH', bottom: 'EST · 2026', serifFamily: '"Cormorant Garamond", Georgia, serif', ornament: 'stars', italic: false, letter: 'b' },
+        serifLabel: 'cormorant',
+      },
+      {
+        id: 's4', name: 'IV · hairline · no bottom text',
+        note: 'Just the top arc. A quieter seal — closer to a stamp than a coin.',
+        seal: { border: 'hairline', top: 'BASIS · COMPUTE PRICE RESEARCH · EST · 2026', bottom: '', serifFamily: SERIF, ornament: 'none', italic: false, letter: 'b' },
+        serifLabel: 'playfair',
+      },
+      {
+        id: 's5', name: 'V · double border · italic · no ornament',
+        note: 'Italic Playfair monogram inside a Platts-style double border, clean perimeter.',
+        seal: { border: 'double', top: 'BASIS · GPU COMPUTE BENCHMARK', bottom: 'CLEARING REF · 2026', serifFamily: SERIF, ornament: 'none', italic: true, letter: 'b' },
+        serifLabel: 'playfair italic',
+      },
+      {
+        id: 's6', name: 'VI · inverted · deep navy on warm',
+        note: 'The seal inverts cleanly — same geometry, navy ground, cream letter. For dark sections.',
+        seal: { border: 'double', top: 'BASIS · COMPUTE PRICE RESEARCH', bottom: 'EST · 2026', serifFamily: SERIF, ornament: 'stars', italic: false, letter: 'b' },
+        serifLabel: 'playfair',
+        invertDefault: true,
+      },
+    ];
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.note}>
+              <DCArtboard id="full"  label="Full seal"            width={520} height={520}><FullSeal concept={c} /></DCArtboard>
+              <DCArtboard id="inv"   label="Inverted"             width={520} height={520}><FullSeal concept={c} inverted /></DCArtboard>
+              <DCArtboard id="mono"  label="Monogram · scales"    width={640} height={340}><Monogram concept={c} /></DCArtboard>
+              <DCArtboard id="horiz" label="Horizontal lockup"    width={720} height={320}><Horizontal concept={c} /></DCArtboard>
+              <DCArtboard id="situ"  label="In situ · paper"      width={900} height={520}><Insitu concept={c} /></DCArtboard>
+              <DCArtboard id="plate" label="Contract plate"       width={620} height={520}><Plate  concept={c} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

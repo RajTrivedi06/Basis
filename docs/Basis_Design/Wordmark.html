@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basis · editorial wordmark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card  { background: #FAFAF7; color: #111; }
+    .card-inv { background: #111; color: #FAFAF7; }
+    .eyebrow { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5; }
+    .foot    { font-family: "JetBrains Mono", monospace; font-size: 9px;  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    // A quiet editorial wordmark. "basis", lowercase, Fraunces at a heavy
+    // optical size for high contrast. A detail is hidden in the kerning gap
+    // between two specific letters — user should pick which gap + which
+    // detail reads most institutional. Variants are conservative on purpose.
+
+    const SERIF = '"Fraunces", "Source Serif 4", Georgia, serif';
+
+    // A wordmark that splits "basis" at a chosen gap and places a detail
+    // between the halves. gap: 'b|asis' | 'ba|sis' | 'bas|is' | 'basi|s'
+    // detail: 'none' | 'hairline' | 'bracket' | 'tick' | 'dot' | 'slash'
+    function Wordmark({
+      size = 140, gap = 'basi|s', detail = 'hairline',
+      gapWidth = 0.22,       // em
+      detailOpacity = 1,
+      color = '#111',
+      weight = 350,
+      opsz = 144,
+    }) {
+      const [left, right] = gap.split('|');
+      const fs = size;
+      const halfGap = gapWidth * fs / 2;
+
+      const Detail = () => {
+        if (detail === 'none') return null;
+        const h = fs * 0.58;
+        const cy = fs * 0.0; // center on baseline area, adjusted by container
+        switch (detail) {
+          case 'hairline':
+            return <div style={{ width: 1, height: h, background: color, opacity: detailOpacity, alignSelf: 'center' }} />;
+          case 'bracket':
+            return (
+              <svg width={gapWidth * fs} height={h} style={{ opacity: detailOpacity, alignSelf: 'center' }} viewBox={`0 0 ${gapWidth * fs} ${h}`}>
+                <path d={`M ${gapWidth*fs*0.2} ${h*0.18} L ${gapWidth*fs*0.2} ${h*0.82} M ${gapWidth*fs*0.8} ${h*0.18} L ${gapWidth*fs*0.8} ${h*0.82}`}
+                  stroke={color} strokeWidth="1" fill="none" />
+              </svg>
+            );
+          case 'tick':
+            return (
+              <svg width={gapWidth*fs} height={h} style={{ opacity: detailOpacity, alignSelf: 'center' }}>
+                <line x1={gapWidth*fs/2} y1={h*0.38} x2={gapWidth*fs/2} y2={h*0.62} stroke={color} strokeWidth="1.25" />
+                <line x1={gapWidth*fs*0.35} y1={h*0.5} x2={gapWidth*fs*0.65} y2={h*0.5} stroke={color} strokeWidth="0.75" />
+              </svg>
+            );
+          case 'dot':
+            return <div style={{ width: fs*0.035, height: fs*0.035, borderRadius: '50%', background: color, opacity: detailOpacity, alignSelf: 'center' }} />;
+          case 'slash':
+            return (
+              <svg width={gapWidth*fs} height={h} style={{ opacity: detailOpacity, alignSelf: 'center' }}>
+                <line x1={gapWidth*fs*0.15} y1={h*0.85} x2={gapWidth*fs*0.85} y2={h*0.15} stroke={color} strokeWidth="0.85" />
+              </svg>
+            );
+        }
+      };
+
+      return (
+        <div style={{
+          display: 'inline-flex', alignItems: 'baseline',
+          fontFamily: SERIF,
+          fontSize: fs, lineHeight: 1,
+          fontWeight: weight,
+          letterSpacing: '-0.015em',
+          color,
+          fontVariationSettings: `"opsz" ${opsz}`,
+          fontFeatureSettings: '"ss01", "kern"',
+        }}>
+          <span>{left}</span>
+          <span style={{ width: gapWidth * fs, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', alignSelf: 'stretch' }}>
+            <Detail />
+          </span>
+          <span>{right}</span>
+        </div>
+      );
+    }
+
+    // ── Artboards ───────────────────────────────────────────────
+
+    // Full wordmark on off-white
+    function Header({ gap, detail }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Wordmark · header</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <Wordmark size={160} gap={gap} detail={detail} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span className="foot">{gap.replace('|', ' · ')}</span>
+            <span className="foot">{detail}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Inverted (dark) variant
+    function Inverted({ gap, detail }) {
+      return (
+        <div className="card-inv" style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ opacity: 0.5 }}>Wordmark · inverted</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <Wordmark size={160} gap={gap} detail={detail} color="#FAFAF7" />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span className="foot" style={{ color: '#FAFAF7', opacity: 0.5 }}>{gap.replace('|', ' · ')}</span>
+            <span className="foot" style={{ color: '#FAFAF7', opacity: 0.5 }}>{detail}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Compact — just "b" with gap detail trailing (favicon / app icon)
+    function Compact({ detail }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Favicon · app icon</div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, alignItems: 'end', justifyItems: 'center', flex: 1, alignContent: 'center' }}>
+            {[16, 32, 64, 128].map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: s, height: s, background: '#FAFAF7', border: '1px solid rgba(0,0,0,0.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'baseline' }}>
+                    <span style={{
+                      fontFamily: SERIF,
+                      fontSize: s * 0.7,
+                      fontWeight: 350,
+                      fontVariationSettings: '"opsz" 144',
+                      color: '#111',
+                      lineHeight: 1,
+                    }}>b</span>
+                    {detail !== 'none' && (
+                      <span style={{
+                        width: s * 0.12, height: s * 0.5,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {detail === 'hairline' && <div style={{ width: 1, height: s * 0.42, background: '#111' }} />}
+                        {detail === 'tick'     && <svg width={s*0.12} height={s*0.42}><line x1={s*0.06} y1={s*0.15} x2={s*0.06} y2={s*0.27} stroke="#111" strokeWidth="1" /><line x1={s*0.04} y1={s*0.21} x2={s*0.08} y2={s*0.21} stroke="#111" strokeWidth="0.6" /></svg>}
+                        {detail === 'bracket'  && <svg width={s*0.12} height={s*0.42}><path d={`M ${s*0.02} ${s*0.08} L ${s*0.02} ${s*0.34} M ${s*0.1} ${s*0.08} L ${s*0.1} ${s*0.34}`} stroke="#111" strokeWidth="0.75" fill="none" /></svg>}
+                        {detail === 'dot'      && <div style={{ width: s*0.05, height: s*0.05, borderRadius: '50%', background: '#111' }} />}
+                        {detail === 'slash'    && <svg width={s*0.12} height={s*0.42}><line x1={s*0.02} y1={s*0.34} x2={s*0.1} y2={s*0.08} stroke="#111" strokeWidth="0.75" /></svg>}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="foot" style={{ marginTop: 6 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="foot" style={{ textAlign: 'center' }}>detail · {detail}</div>
+        </div>
+      );
+    }
+
+    // Social avatar — square card with centered wordmark, signal + metadata
+    function Social({ gap, detail }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="eyebrow">Social · 1:1</div>
+            <div className="foot">@basis</div>
+          </div>
+
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <Wordmark size={96} gap={gap} detail={detail} />
+          </div>
+
+          <div style={{ padding: '14px 20px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot">Research · 2026</span>
+            <span className="foot">GPU compute</span>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Concepts ────────────────────────────────────────────────
+    // The brief suggests "between s and i" (bas|is) or "between i and s"
+    // (basi|s). We explore both, with each detail style, plus an ultralight
+    // variant and a Source Serif comparison.
+
+    const CONCEPTS = [
+      { id: 'a', gap: 'basi|s',  detail: 'hairline', name: 'I · hairline',   note: 'Gap before final s. A thin vertical rule — the basis line.' },
+      { id: 'b', gap: 'bas|is',  detail: 'hairline', name: 'II · hairline',  note: 'Gap after "bas". Slightly more symmetric — basis / is.' },
+      { id: 'c', gap: 'basi|s',  detail: 'tick',     name: 'III · tick',     name_: '', note: 'A whiskered tick — almost invisible at small sizes.' },
+      { id: 'd', gap: 'bas|is',  detail: 'bracket',  name: 'IV · bracket',   note: 'Editorial square bracket framing — institutional register.' },
+      { id: 'e', gap: 'basi|s',  detail: 'dot',      note: 'Full stop as basis point. Quiet, punctuational.', name: 'V · dot' },
+      { id: 'f', gap: 'bas|is',  detail: 'slash',    note: 'A single hairline solidus. Bloomberg-ish.', name: 'VI · slash' },
+      { id: 'g', gap: 'ba|sis',  detail: 'hairline', note: 'Earlier gap — after "ba". Reveals the word rhythm differently.', name: 'VII · ba|sis' },
+      { id: 'h', gap: 'basi|s',  detail: 'none',     note: 'No detail. Baseline reference — just the wordmark.', name: 'VIII · clean' },
+    ];
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.note}>
+              <DCArtboard id="header"   label="Header"          width={720} height={320}><Header   gap={c.gap} detail={c.detail} /></DCArtboard>
+              <DCArtboard id="inv"      label="Inverted"        width={720} height={320}><Inverted gap={c.gap} detail={c.detail} /></DCArtboard>
+              <DCArtboard id="fav"      label="Favicon · scales" width={520} height={320}><Compact  detail={c.detail} /></DCArtboard>
+              <DCArtboard id="social"   label="Social avatar"    width={320} height={320}><Social   gap={c.gap} detail={c.detail} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

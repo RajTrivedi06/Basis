@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basis · index mark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card     { background: #FAFAF7; color: #0B1220; }
+    .card-inv { background: #0B1220; color: #FAFAF7; }
+    .eyebrow  { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5; }
+    .foot     { font-family: "JetBrains Mono", monospace; font-size: 9px;  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    // An index mark — a reduced time series line. Hand-drawn 4-6 point
+    // paths, none of which are "up and to the right." The point is to feel
+    // like a real segment of data: dip + recovery, step, sideways drift.
+
+    const SANS = '"Inter", "Söhne", "GT America", system-ui, sans-serif';
+
+    // Path data: each is a list of [x, y] with x,y in [0,1].
+    // y=0 is top of frame, y=1 is bottom — higher y means lower price.
+    const PATHS = {
+      // dip and recovery — a V with different depths on each side
+      dip:        [[0.00, 0.38], [0.22, 0.30], [0.48, 0.78], [0.72, 0.55], [1.00, 0.45]],
+      // slight down-drift with a late bump
+      drift:      [[0.00, 0.35], [0.25, 0.48], [0.55, 0.55], [0.78, 0.40], [1.00, 0.52]],
+      // clear step down, then flat
+      step:       [[0.00, 0.30], [0.35, 0.30], [0.40, 0.65], [0.72, 0.65], [1.00, 0.68]],
+      // small saw — up, down, up, down
+      saw:        [[0.00, 0.55], [0.22, 0.35], [0.45, 0.62], [0.70, 0.40], [1.00, 0.55]],
+      // two plateaus connected by a ramp down
+      twoPlateau: [[0.00, 0.30], [0.28, 0.32], [0.55, 0.62], [0.80, 0.60], [1.00, 0.66]],
+      // mostly sideways, one jump up
+      quiet:      [[0.00, 0.58], [0.22, 0.55], [0.45, 0.60], [0.60, 0.35], [0.80, 0.42], [1.00, 0.40]],
+    };
+
+    // Reduce points to an SVG path. Straight segments only — no smoothing,
+    // because smoothed paths read too "fintech."
+    function toPath(points, w, h, insetX = 0.04, insetY = 0.12) {
+      const x0 = w * insetX, x1 = w * (1 - insetX);
+      const y0 = h * insetY, y1 = h * (1 - insetY);
+      return points.map(([px, py], i) => {
+        const x = x0 + px * (x1 - x0);
+        const y = y0 + py * (y1 - y0);
+        return (i === 0 ? 'M' : 'L') + x.toFixed(2) + ',' + y.toFixed(2);
+      }).join(' ');
+    }
+
+    function project(point, w, h, insetX = 0.04, insetY = 0.12) {
+      const [px, py] = point;
+      const x0 = w * insetX, x1 = w * (1 - insetX);
+      const y0 = h * insetY, y1 = h * (1 - insetY);
+      return [x0 + px * (x1 - x0), y0 + py * (y1 - y0)];
+    }
+
+    // Core mark. points: array of [x,y]. Styling knobs: dots, baseline,
+    // endcap marker (common on financial charts — "current value" dot).
+    function IndexMark({
+      points, width = 96, height = 40,
+      stroke = '#0B1220',
+      dotColor,
+      strokeWidth = 1.3,
+      baseline = false,
+      dots = false,
+      endDot = false,
+      lastValueTick = false,  // a short horizontal tick at last point
+    }) {
+      const d = toPath(points, width, height);
+      const projected = points.map(p => project(p, width, height));
+      const [lastX, lastY] = projected[projected.length - 1];
+      return (
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+          {baseline && (
+            <line x1={width * 0.04} y1={height * 0.88} x2={width * 0.96} y2={height * 0.88}
+              stroke={stroke} strokeOpacity={0.25} strokeWidth={0.75} strokeDasharray="1.5 1.5" />
+          )}
+          <path d={d} fill="none" stroke={stroke} strokeWidth={strokeWidth}
+            strokeLinecap="square" strokeLinejoin="miter" />
+          {dots && projected.map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r={strokeWidth * 0.95} fill={dotColor || stroke} />
+          ))}
+          {endDot && (
+            <circle cx={lastX} cy={lastY} r={strokeWidth * 1.4} fill={dotColor || stroke} />
+          )}
+          {lastValueTick && (
+            <line x1={lastX} y1={lastY} x2={width * 0.98} y2={lastY}
+              stroke={dotColor || stroke} strokeWidth={0.8} strokeDasharray="1.5 1.5" />
+          )}
+        </svg>
+      );
+    }
+
+    function Wordmark({ size = 26, color = '#0B1220', weight = 400 }) {
+      return (
+        <span style={{
+          fontFamily: SANS, fontSize: size, fontWeight: weight,
+          letterSpacing: '-0.015em', color, lineHeight: 1,
+          fontFeatureSettings: '"ss01","cv11","kern"',
+        }}>basis</span>
+      );
+    }
+
+    // ── Lockups ─────────────────────────────────────────────
+
+    // Horizontal: mark to the LEFT of the wordmark (brief's option 1).
+    // A vertical whisker separates them.
+    function Horizontal({ concept, inverted }) {
+      const fg = inverted ? '#FAFAF7' : '#0B1220';
+      const accent = inverted ? concept.accentInv : concept.accent;
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ opacity: inverted ? 0.55 : 0.5 }}>Horizontal · line beside wordmark</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+            <IndexMark points={concept.points} width={100} height={38}
+              stroke={accent || fg} dotColor={accent || fg}
+              strokeWidth={1.4}
+              baseline={concept.baseline}
+              endDot={concept.endDot}
+              lastValueTick={concept.lastValueTick}
+            />
+            <div style={{ width: 1, height: 30, background: fg, opacity: 0.18 }} />
+            <Wordmark size={34} color={fg} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.shape}</span>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.points.length} pts</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Stacked: mark above, wordmark below (brief's option 2).
+    function Stacked({ concept }) {
+      const accent = concept.accent;
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Stacked · card</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+              <IndexMark points={concept.points} width={130} height={52}
+                stroke={accent || '#0B1220'} dotColor={accent || '#0B1220'}
+                strokeWidth={1.5}
+                baseline={concept.baseline}
+                endDot={concept.endDot}
+                lastValueTick={concept.lastValueTick}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <Wordmark size={28} />
+                <span style={{ fontFamily: SANS, fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.55 }}>
+                  compute price index
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>—</div>
+        </div>
+      );
+    }
+
+    // Favicon / mark-only at multiple sizes.
+    function Favicons({ concept }) {
+      const sizes = [16, 32, 64, 128];
+      const accent = concept.accent;
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Favicon · mark only</div>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', alignItems: 'end', justifyItems: 'center', alignContent: 'center', gap: 20 }}>
+            {sizes.map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <div style={{ width: s, height: s, background: '#FAFAF7', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <IndexMark points={concept.points} width={s * 0.78} height={s * 0.5}
+                    stroke={accent || '#0B1220'} dotColor={accent || '#0B1220'}
+                    strokeWidth={s < 32 ? 0.9 : 1.2}
+                    // drop ornamentation at tiny sizes
+                    baseline={s >= 64 && concept.baseline}
+                    endDot={s >= 64 && concept.endDot}
+                    lastValueTick={false}
+                  />
+                </div>
+                <div className="foot" style={{ marginTop: 6 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>legibility at scale</div>
+        </div>
+      );
+    }
+
+    // In-situ: an "Index" card — how it reads next to a live value.
+    function Insitu({ concept }) {
+      const accent = concept.accent;
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '22px 32px', borderBottom: '1px solid rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <IndexMark points={concept.points} width={48} height={20}
+                stroke={accent || '#0B1220'} dotColor={accent || '#0B1220'} strokeWidth={1.1} />
+              <Wordmark size={15} weight={500} />
+            </div>
+            <div style={{ display: 'flex', gap: 22 }}>
+              <span style={{ fontFamily: SANS, fontSize: 12.5 }}>Index</span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, opacity: 0.55 }}>Methodology</span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, opacity: 0.55 }}>API</span>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, padding: '36px 32px', display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 28, alignItems: 'center' }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 10 }}>BASIS-H100 · spot</div>
+              <div style={{ fontFamily: SANS, fontSize: 48, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                2.31
+                <span style={{ fontSize: 14, opacity: 0.6, fontWeight: 400, marginLeft: 6 }}>USD/hr</span>
+              </div>
+              <div style={{ marginTop: 10, display: 'flex', gap: 14, fontFamily: SANS, fontSize: 12.5 }}>
+                <span style={{ color: accent || '#0B1220', opacity: 0.9 }}>−0.14 · 5.7%</span>
+                <span style={{ opacity: 0.55 }}>30d</span>
+              </div>
+            </div>
+            <div style={{ borderLeft: '1px solid rgba(0,0,0,0.08)', paddingLeft: 28 }}>
+              <IndexMark points={concept.points} width={320} height={110}
+                stroke={accent || '#0B1220'} dotColor={accent || '#0B1220'}
+                strokeWidth={1.5}
+                baseline dots endDot lastValueTick
+              />
+              <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, opacity: 0.5, letterSpacing: '0.1em' }}>
+                <span>APR 12</span>
+                <span>MAY 12</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: '14px 32px', borderTop: '1px solid rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot">basis.research · index</span>
+            <span className="foot">In-situ · dashboard</span>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Concepts ─────────────────────────────────────────────
+
+    const ACCENTS = {
+      slate: '#5B6B7A',
+      warm:  '#6B655C',
+      green: '#6B8F74',
+    };
+
+    const CONCEPTS = [
+      { id: 'i1', name: 'I · dip · mono',
+        note: 'Dip and recovery. No "up and to the right." The canonical price-series shape.',
+        shape: 'dip', points: PATHS.dip,
+        baseline: false, endDot: false, lastValueTick: false },
+
+      { id: 'i2', name: 'II · step · mono',
+        note: 'A clean step down — like an index revision, or a market event.',
+        shape: 'step', points: PATHS.step,
+        baseline: true, endDot: false, lastValueTick: false },
+
+      { id: 'i3', name: 'III · drift · slate',
+        note: 'Low-volatility sideways drift, in a muted slate. Feels measured.',
+        shape: 'drift', points: PATHS.drift,
+        accent: ACCENTS.slate, accentInv: '#8E9AA6',
+        baseline: true, endDot: true, lastValueTick: false },
+
+      { id: 'i4', name: 'IV · saw · mono · endpoints',
+        note: 'Zig-zag with small endpoint dots. Reads as discrete observations, not a smoothed line.',
+        shape: 'saw', points: PATHS.saw,
+        baseline: false, endDot: true, lastValueTick: false },
+
+      { id: 'i5', name: 'V · two-plateau · warm gray',
+        note: 'Two flat regimes connected by a ramp — like "before and after." Warm gray accent.',
+        shape: 'twoPlateau', points: PATHS.twoPlateau,
+        accent: ACCENTS.warm, accentInv: '#A39E94',
+        baseline: false, endDot: false, lastValueTick: true },
+
+      { id: 'i6', name: 'VI · quiet · desaturated green',
+        note: 'Mostly sideways, one small jump. Desaturated green — the accent earns itself via the single move.',
+        shape: 'quiet', points: PATHS.quiet,
+        accent: ACCENTS.green, accentInv: '#93AE9A',
+        baseline: true, endDot: true, lastValueTick: false },
+    ];
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.note}>
+              <DCArtboard id="h"    label="Horizontal"            width={720} height={320}><Horizontal concept={c} /></DCArtboard>
+              <DCArtboard id="hi"   label="Horizontal · inverted" width={720} height={320}><Horizontal concept={c} inverted /></DCArtboard>
+              <DCArtboard id="s"    label="Stacked"               width={420} height={420}><Stacked concept={c} /></DCArtboard>
+              <DCArtboard id="f"    label="Favicon · scales"      width={560} height={320}><Favicons concept={c} /></DCArtboard>
+              <DCArtboard id="situ" label="In situ · index card"  width={920} height={460}><Insitu concept={c} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

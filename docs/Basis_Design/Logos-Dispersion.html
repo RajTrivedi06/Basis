@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Basis · Dispersion variations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card-dark  { background: #111827; color: #eef1f8; }
+    .card-light { background: #f6f4ef; color: #0b1220; }
+    .f-serif { font-family: "Fraunces", Georgia, serif; }
+    .f-mono  { font-family: "JetBrains Mono", ui-monospace, monospace; }
+    .eyebrow { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.55; }
+    .hr-dark  { height: 1px; background: rgba(255,255,255,0.08); border: 0; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="logos-dispersion.jsx"></script>
+
+  <script type="text/babel">
+    const CONCEPTS = [
+      { id: 'a', Mark: DispA, name: 'Classic',         tag: 'Original — horizontal box, median amber.' },
+      { id: 'b', Mark: DispB, name: 'Portrait',        tag: 'Vertical candle orientation.' },
+      { id: 'c', Mark: DispC, name: 'Solid IQR',       tag: 'Filled box, median as amber cut.' },
+      { id: 'd', Mark: DispD, name: 'Nested range',    tag: 'IQR nested inside the full range.' },
+      { id: 'e', Mark: DispE, name: 'Five ticks',      tag: 'Just the five-number summary.' },
+      { id: 'f', Mark: DispF, name: 'Outlier',         tag: 'Box plus an amber outlier dot.' },
+      { id: 'g', Mark: DispG, name: 'Matrix',          tag: 'Three stacked rows — a fungibility matrix.' },
+      { id: 'h', Mark: DispH, name: 'Quartile blocks', tag: 'Q1–Q4 as four unequal bars.' },
+      { id: 'i', Mark: DispI, name: 'Raw + box',       tag: 'Data points scattered around the summary.' },
+      { id: 'j', Mark: DispJ, name: 'Violin',          tag: 'Distribution shape, not the summary.' },
+      { id: 'k', Mark: DispK, name: 'Bracketed',       tag: 'Typographic brackets with median dot.' },
+      { id: 'l', Mark: DispL, name: 'Box-B',           tag: 'Box-whisker rendered as the letter B.' },
+    ];
+
+    function HeroMark({ Mark, name }) {
+      return (
+        <div className="card-dark" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ color: '#aab4c8' }}>Mark</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <Mark size={220} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span className="f-serif" style={{ fontSize: 22, letterSpacing: '-0.01em' }}>{name}</span>
+            <span className="eyebrow" style={{ color: '#aab4c8' }}>disp · {name.toLowerCase()}</span>
+          </div>
+        </div>
+      );
+    }
+
+    function Lockup({ Mark, name, tag }) {
+      return (
+        <div className="card-dark" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column' }}>
+          <div className="eyebrow" style={{ color: '#aab4c8', marginBottom: 'auto' }}>Lockup</div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 40 }}>
+            <Mark size={56} />
+            <div style={{ width: 1, height: 36, background: 'rgba(255,255,255,0.2)' }} />
+            <div>
+              <div className="f-serif" style={{ fontSize: 34, letterSpacing: '-0.02em', lineHeight: 1, color: '#fff' }}>Basis</div>
+              <div className="f-mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: '#aab4c8', textTransform: 'uppercase', marginTop: 5 }}>gpu · compute · fungibility</div>
+            </div>
+          </div>
+
+          <hr className="hr-dark" style={{ margin: '0 0 22px' }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 14, marginBottom: 24 }}>
+            <Mark size={40} />
+            <div className="f-serif" style={{ fontSize: 26, letterSpacing: '-0.02em', lineHeight: 1, color: '#fff' }}>Basis</div>
+          </div>
+
+          <hr className="hr-dark" style={{ margin: '0 0 16px' }} />
+
+          <p className="f-serif" style={{ fontSize: 14, fontStyle: 'italic', color: '#aab4c8', margin: 0, lineHeight: 1.5 }}>
+            &ldquo;{tag}&rdquo;
+          </p>
+        </div>
+      );
+    }
+
+    function Favicons({ Mark }) {
+      return (
+        <div className="card-light" style={{ width: '100%', height: '100%', padding: 32, display: 'flex', flexDirection: 'column' }}>
+          <div className="eyebrow" style={{ color: '#4b5671' }}>Favicon · avatar</div>
+          <div style={{ marginTop: 28, display: 'grid', gap: 24 }}>
+            <div>
+              <div className="f-mono" style={{ fontSize: 10, color: '#6f7b94', letterSpacing: '0.08em', marginBottom: 8 }}>LIGHT</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                {[16, 32, 48, 64].map(s => (
+                  <div key={s} style={{ width: s, height: s, background: '#f6f4ef', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Mark size={s - 6} ink="#0b1220" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="f-mono" style={{ fontSize: 10, color: '#6f7b94', letterSpacing: '0.08em', marginBottom: 8 }}>DARK</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                {[16, 32, 48, 64].map(s => (
+                  <div key={s} style={{ width: s, height: s, background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Mark size={s - 6} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="f-mono" style={{ fontSize: 10, color: '#6f7b94', letterSpacing: '0.08em', marginBottom: 8 }}>SOCIAL · avatar</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                <div style={{ width: 72, height: 72, background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Mark size={56} ink="#0b1220" amber="#0b1220" />
+                </div>
+                <div style={{ width: 72, height: 72, borderRadius: 36, background: '#0b1220', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Mark size={52} />
+                </div>
+                <div style={{ flex: 1, background: '#0b1220', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Mark size={28} />
+                  <span className="f-serif" style={{ fontSize: 17, color: '#fff' }}>Basis</span>
+                  <span className="f-mono" style={{ fontSize: 9, color: '#aab4c8', letterSpacing: '0.12em', textTransform: 'uppercase', marginLeft: 'auto' }}>research · 2026</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.tag}>
+              <DCArtboard id="m" label="Mark"     width={360} height={380}><HeroMark Mark={c.Mark} name={c.name} /></DCArtboard>
+              <DCArtboard id="l" label="Lockup"   width={440} height={380}><Lockup Mark={c.Mark} name={c.name} tag={c.tag} /></DCArtboard>
+              <DCArtboard id="f" label="Favicons" width={520} height={380}><Favicons Mark={c.Mark} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

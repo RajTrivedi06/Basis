@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basis · distribution mark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card     { background: #FAFAF7; color: #0B1220; }
+    .card-inv { background: #0B1220; color: #FAFAF7; }
+    .eyebrow  { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5; }
+    .foot     { font-family: "JetBrains Mono", monospace; font-size: 9px;  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    // A distribution mark. Either a smooth asymmetric density line or a
+    // small histogram. The "statistical but abstract" test: reads as a
+    // distribution, not a chart; feels like a mark, not a figure.
+    //
+    // Density is defined as a mixture of skew-normal-ish lobes. Hand-tuned
+    // parameters — a bell is too generic; a heavy right tail or a bimodal
+    // ripple is more specifically statistical.
+
+    const SANS = '"Inter", "Söhne", "Suisse Intl", "Neue Haas Grotesk", system-ui, sans-serif';
+
+    // ── Density primitives ────────────────────────────────────
+
+    // Skew-normal PDF approximation (not exact — shape only).
+    // μ: location in [0, 1] of sample x, σ: width in x-units, α: skew.
+    function skewNormal(x, mu, sigma, alpha) {
+      const t = (x - mu) / sigma;
+      const phi = Math.exp(-0.5 * t * t) / Math.sqrt(2 * Math.PI);
+      // simple sigmoid-based skew — keeps the result smooth
+      const sk = 1 / (1 + Math.exp(-alpha * t));
+      return 2 * phi * sk / sigma;
+    }
+
+    // Build a normalized (height 0..1) path across N samples given a list
+    // of lobes: [{mu, sigma, alpha, weight}, ...]. Returns SVG "d" string.
+    function densityPath(lobes, width, height, samples = 120, inset = 0.04) {
+      const x0 = width * inset, x1 = width * (1 - inset);
+      const xs = [];
+      const ys = [];
+      let maxY = 0;
+      for (let i = 0; i < samples; i++) {
+        const t = i / (samples - 1);
+        let y = 0;
+        for (const l of lobes) {
+          y += l.weight * skewNormal(t, l.mu, l.sigma, l.alpha);
+        }
+        xs.push(t);
+        ys.push(y);
+        if (y > maxY) maxY = y;
+      }
+      // top inset so the peak doesn't touch the frame
+      const top = height * 0.08;
+      const bottom = height * 0.94;
+      let d = '';
+      for (let i = 0; i < samples; i++) {
+        const px = x0 + xs[i] * (x1 - x0);
+        const py = bottom - (ys[i] / maxY) * (bottom - top);
+        d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2) + ' ';
+      }
+      return { d: d.trim(), x0, x1, top, bottom, maxY };
+    }
+
+    // Density line mark. Thin stroke, optional baseline, optional peak tick.
+    function DensityMark({
+      size = 120, width, height,
+      lobes,
+      color = '#0B1220',
+      accent,
+      strokeWidth = 1.4,
+      baseline = true,
+      baselineStyle = 'dashed',   // 'dashed' | 'solid' | 'none'
+      peakTick = true,
+      fillAccent = false,         // fill the area under the curve in accent
+    }) {
+      const w = width ?? size * 1.8;
+      const h = height ?? size * 0.95;
+      const { d, x0, x1, top, bottom } = densityPath(lobes, w, h, 140);
+
+      // peak x
+      let peakX = 0, peakY = 0;
+      {
+        const lobesSorted = [...lobes].sort((a, b) => b.weight - a.weight);
+        // the peak of a skew mixture is approximately the dominant lobe's
+        // mu, nudged slightly by skew sign — good enough for a tick mark.
+        peakX = x0 + (lobesSorted[0].mu) * (x1 - x0);
+        peakY = top;
+      }
+
+      return (
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+          {baseline && baselineStyle !== 'none' && (
+            <line x1={x0} y1={bottom} x2={x1} y2={bottom}
+              stroke={color} strokeOpacity={0.3} strokeWidth={0.8}
+              strokeDasharray={baselineStyle === 'dashed' ? '2 2' : 'none'} />
+          )}
+          {fillAccent && accent && (
+            <path d={`${d} L ${x1} ${bottom} L ${x0} ${bottom} Z`} fill={accent} opacity={0.18} />
+          )}
+          <path d={d} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+          {peakTick && (
+            <line x1={peakX} y1={peakY - 4} x2={peakX} y2={peakY + 1}
+              stroke={accent || color} strokeWidth={1} />
+          )}
+        </svg>
+      );
+    }
+
+    // Histogram mark. Bars are stroked rectangles, not filled. Optional
+    // accent on the peak (or another nominated) bar.
+    function HistogramMark({
+      size = 120, width, height,
+      heights,                    // array of 0..1
+      color = '#0B1220',
+      accent,
+      peakAccent = true,          // fill the tallest bar with accent
+      strokeWidth = 1.1,
+      gap = 2,
+    }) {
+      const w = width ?? size * 1.8;
+      const h = height ?? size * 0.95;
+      const inset = w * 0.05;
+      const plotW = w - inset * 2;
+      const n = heights.length;
+      const barW = (plotW - gap * (n - 1)) / n;
+      const top = h * 0.08;
+      const bottom = h * 0.92;
+      const maxY = Math.max(...heights);
+      const peakIdx = heights.indexOf(maxY);
+
+      return (
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+          <line x1={inset} y1={bottom} x2={w - inset} y2={bottom}
+            stroke={color} strokeOpacity={0.35} strokeWidth={0.8} />
+          {heights.map((y, i) => {
+            const bh = (y / maxY) * (bottom - top);
+            const x = inset + i * (barW + gap);
+            const by = bottom - bh;
+            const isPeak = i === peakIdx;
+            const fill = peakAccent && isPeak && accent ? accent : 'none';
+            const stroke = (peakAccent && isPeak && accent) ? accent : color;
+            return (
+              <rect key={i} x={x} y={by} width={barW} height={bh}
+                fill={fill} fillOpacity={isPeak && peakAccent && accent ? 0.2 : 0}
+                stroke={stroke} strokeWidth={strokeWidth} />
+            );
+          })}
+        </svg>
+      );
+    }
+
+    function Wordmark({ size = 28, color = '#0B1220', weight = 400 }) {
+      return (
+        <span style={{
+          fontFamily: SANS, fontSize: size, fontWeight: weight,
+          letterSpacing: '-0.015em', color, lineHeight: 1,
+          fontFeatureSettings: '"ss01", "cv11", "kern"',
+        }}>basis</span>
+      );
+    }
+
+    // ── Concepts ─────────────────────────────────────────────
+
+    // Each concept is either 'density' or 'histogram' + shape params +
+    // optional muted accent. Curves / bar heights are all hand-tuned.
+
+    const CONCEPTS = [
+      {
+        id: 'd1', name: 'I · right-skew density',
+        note: 'Unimodal with a heavy right tail. The canonical "prices" distribution — long upper tail of expensive providers.',
+        kind: 'density',
+        lobes: [{ mu: 0.30, sigma: 0.14, alpha: 3.5, weight: 1 }],
+        baselineStyle: 'dashed',
+        peakTick: true,
+      },
+      {
+        id: 'd2', name: 'II · left-skew density',
+        note: 'Mirror image. Reads less like "prices", more like "utilization" — most concentrated high.',
+        kind: 'density',
+        lobes: [{ mu: 0.70, sigma: 0.14, alpha: -3.5, weight: 1 }],
+        baselineStyle: 'dashed',
+        peakTick: true,
+      },
+      {
+        id: 'd3', name: 'III · bimodal density',
+        note: 'Two lobes — spot vs reserved, perhaps. The shape that says "two markets inside one."',
+        kind: 'density',
+        lobes: [
+          { mu: 0.28, sigma: 0.09, alpha: 0, weight: 1 },
+          { mu: 0.66, sigma: 0.12, alpha: 0, weight: 0.75 },
+        ],
+        baselineStyle: 'dashed',
+        peakTick: true,
+      },
+      {
+        id: 'd4', name: 'IV · heavy-tail density · slate accent',
+        note: 'Right-skew with a muted slate fill under the curve. Just enough color to separate figure from text.',
+        kind: 'density',
+        lobes: [{ mu: 0.28, sigma: 0.13, alpha: 4, weight: 1 }],
+        accent: '#5B6B7A',
+        fillAccent: true,
+        baselineStyle: 'solid',
+        peakTick: false,
+      },
+      {
+        id: 'h1', name: 'V · histogram · asymmetric',
+        note: 'Seven bars, stroked only. The shape of a right-skewed histogram — no fill except the peak.',
+        kind: 'histogram',
+        heights: [0.22, 0.58, 0.95, 0.72, 0.45, 0.28, 0.14],
+        peakAccent: false,
+      },
+      {
+        id: 'h2', name: 'VI · histogram · accent peak',
+        note: 'Same bars, modal class filled in a desaturated rust. A single earned color.',
+        kind: 'histogram',
+        heights: [0.22, 0.58, 0.95, 0.72, 0.45, 0.28, 0.14],
+        accent: '#9C5B4A',
+        peakAccent: true,
+      },
+      {
+        id: 'h3', name: 'VII · histogram · bimodal',
+        note: 'Two modes, peak accent on the taller. The histogram sibling to III.',
+        kind: 'histogram',
+        heights: [0.3, 0.85, 0.55, 0.38, 0.62, 0.92, 0.42],
+        accent: '#5B6B7A',
+        peakAccent: true,
+      },
+      {
+        id: 'd5', name: 'VIII · density · no baseline',
+        note: 'Floating curve, no baseline, no tick. The quietest possible reading.',
+        kind: 'density',
+        lobes: [{ mu: 0.32, sigma: 0.14, alpha: 3.2, weight: 1 }],
+        baselineStyle: 'none',
+        peakTick: false,
+      },
+    ];
+
+    // Render the mark in a given color (respects concept-type).
+    function Mark({ concept, size = 140, color = '#0B1220' }) {
+      const w = size * 1.8, h = size * 0.95;
+      if (concept.kind === 'density') {
+        return <DensityMark
+          width={w} height={h}
+          lobes={concept.lobes}
+          color={color}
+          accent={concept.accent}
+          baseline={concept.baselineStyle !== 'none'}
+          baselineStyle={concept.baselineStyle}
+          peakTick={concept.peakTick}
+          fillAccent={concept.fillAccent}
+        />;
+      }
+      return <HistogramMark
+        width={w} height={h}
+        heights={concept.heights}
+        color={color}
+        accent={concept.accent}
+        peakAccent={concept.peakAccent}
+      />;
+    }
+
+    // ── Lockups ─────────────────────────────────────────────
+
+    // Horizontal: mark above, wordmark below — both centered. "Chart with
+    // a caption."
+    function Horizontal({ concept, inverted }) {
+      const fg = inverted ? '#FAFAF7' : '#0B1220';
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Horizontal lockup · header</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+              <Mark concept={concept} size={110} color={fg} />
+              <Wordmark size={32} color={fg} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.kind}</span>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.kind === 'density' ? `${concept.lobes.length} lobe${concept.lobes.length>1?'s':''}` : `${concept.heights.length} bins`}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Stacked for card / social avatar
+    function Stacked({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Stacked · card</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+              <Mark concept={concept} size={90} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <Wordmark size={26} />
+                <span style={{ fontFamily: SANS, fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0B1220', opacity: 0.55 }}>
+                  distribution research
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>—</div>
+        </div>
+      );
+    }
+
+    // Favicon / mark-only at multiple sizes. At tiny sizes, density lines
+    // stay legible longer than histogram bars, so they're shown together.
+    function FaviconRow({ concept }) {
+      const sizes = [16, 32, 64, 128];
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Favicon · mark only</div>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', alignItems: 'end', justifyItems: 'center', alignContent: 'center', gap: 20 }}>
+            {sizes.map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <div style={{ width: s, height: s, background: '#FAFAF7', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Mark concept={concept} size={s * 0.5} />
+                </div>
+                <div className="foot" style={{ marginTop: 6 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>legibility at scale</div>
+        </div>
+      );
+    }
+
+    // In-situ — a figure caption that places the mark in a research context.
+    function Insitu({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '22px 32px', borderBottom: '1px solid rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Mark concept={concept} size={32} />
+              <Wordmark size={15} weight={500} />
+            </div>
+            <div style={{ display: 'flex', gap: 22 }}>
+              <span style={{ fontFamily: SANS, fontSize: 12.5 }}>Findings</span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, opacity: 0.55 }}>Methodology</span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, opacity: 0.55 }}>Data</span>
+            </div>
+          </div>
+          <div style={{ flex: 1, padding: '36px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="eyebrow">Figure 2.1</div>
+            <div style={{ fontFamily: SANS, fontSize: 22, lineHeight: 1.3, letterSpacing: '-0.01em', maxWidth: 480 }}>
+              The distribution of on-demand H100 clearing prices across 43 providers, May 2026.
+            </div>
+            <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.55, opacity: 0.7, maxWidth: 480, marginTop: 4 }}>
+              The shape is strongly right-skewed: a dense mode near $2.40/hour, a long upper tail extending past $9.
+            </div>
+          </div>
+          <div style={{ padding: '14px 32px', borderTop: '1px solid rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot">basis.research</span>
+            <span className="foot">In-situ · paper</span>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.note}>
+              <DCArtboard id="h"    label="Horizontal"            width={720} height={360}><Horizontal concept={c} /></DCArtboard>
+              <DCArtboard id="hi"   label="Horizontal · inverted" width={720} height={360}><Horizontal concept={c} inverted /></DCArtboard>
+              <DCArtboard id="s"    label="Stacked"               width={420} height={420}><Stacked concept={c} /></DCArtboard>
+              <DCArtboard id="f"    label="Favicon · scales"      width={560} height={340}><FaviconRow concept={c} /></DCArtboard>
+              <DCArtboard id="situ" label="In situ · figure"      width={900} height={480}><Insitu concept={c} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
