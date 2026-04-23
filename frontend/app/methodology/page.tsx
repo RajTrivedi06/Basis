@@ -197,6 +197,10 @@ export default function MethodologyPage() {
             narrow once a few weeks of consistent collection have accumulated.
           </p>
         </MethodSection>
+
+        <Suspense fallback={<ComparisonFallback />}>
+          <MethodologyComparisonSection />
+        </Suspense>
       </div>
     </div>
   );
@@ -218,3 +222,17 @@ function MethodSection({
     </section>
   );
 }
+
+function ComparisonFallback() {
+  return (
+    <section className="pt-14">
+      <div className="sec-eyebrow">
+        <span className="num">06</span>
+        <h2>Compare to an equal-weight donut</h2>
+      </div>
+      <p className="caption">Loading comparison…</p>
+    </section>
+  );
+}
+import { Suspense } from "react";
+import { MethodologyComparisonSection } from "./MethodologyComparisonSection";
