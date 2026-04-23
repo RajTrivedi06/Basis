@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "/", label: "Findings" },
@@ -13,6 +13,12 @@ const NAV_ITEMS: { href: string; label: string }[] = [
 
 export function Nav() {
   const pathname = usePathname();
+  const params = useSearchParams();
+  // Preserve ?sku= across page navigation so the selected SKU survives
+  // nav clicks without each page re-deriving it from scratch.
+  const sku = params.get("sku");
+  const suffix = sku ? `?sku=${encodeURIComponent(sku)}` : "";
+
   return (
     <nav className="ml-2 flex items-center gap-6">
       {NAV_ITEMS.map((item) => {
@@ -21,7 +27,7 @@ export function Nav() {
         return (
           <Link
             key={item.href}
-            href={item.href}
+            href={`${item.href}${suffix}`}
             className={`nav-link ${active ? "active" : ""}`}
           >
             {item.label}
