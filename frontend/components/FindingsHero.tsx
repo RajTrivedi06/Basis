@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { Suspense } from "react";
 import { useSku } from "@/lib/useSku";
 import {
   getBasisDecomposition,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/api";
 import type { BasisDecompositionResponse } from "@/lib/types";
 
-export function FindingsHero() {
+function FindingsHeroInner() {
   const { sku } = useSku();
 
   // Dispersion tells us which dates the focus SKU has data for.
@@ -176,6 +177,28 @@ export function FindingsHero() {
         </div>
       </div>
     </section>
+  );
+}
+
+export function FindingsHero() {
+  return (
+    <Suspense
+      fallback={
+        <section
+          className="grid items-start"
+          style={{
+            gridTemplateColumns: "1.3fr 1fr",
+            gap: 64,
+            padding: "40px 0 36px",
+            borderBottom: "1px solid var(--line-lo)",
+          }}
+        >
+          <p className="caption">Loading…</p>
+        </section>
+      }
+    >
+      <FindingsHeroInner />
+    </Suspense>
   );
 }
 

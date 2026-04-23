@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "/", label: "Findings" },
@@ -11,7 +12,7 @@ const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "/methodology", label: "Methodology" },
 ];
 
-export function Nav() {
+function NavLinks() {
   const pathname = usePathname();
   const params = useSearchParams();
   // Preserve ?sku= across page navigation so the selected SKU survives
@@ -35,5 +36,13 @@ export function Nav() {
         );
       })}
     </nav>
+  );
+}
+
+export function Nav() {
+  return (
+    <Suspense fallback={<nav className="ml-2 flex items-center gap-6" aria-hidden />}>
+      <NavLinks />
+    </Suspense>
   );
 }
