@@ -3,7 +3,7 @@ import { FungibilityMatrix } from "@/components/FungibilityMatrix";
 
 export default function FindingsPage() {
   return (
-    <div className="space-y-12">
+    <div className="page-wide fade-up space-y-12">
       <FindingsHero />
 
       <FungibilityMatrix />
