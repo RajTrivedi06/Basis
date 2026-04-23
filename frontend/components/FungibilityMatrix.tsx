@@ -3,17 +3,23 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getFungibilityMatrix } from "@/lib/api";
+import { gpuFamily } from "@/lib/gpuFamily";
 import type { FungibilityMatrixRow } from "@/lib/types";
 
-type SortKey = "gpu_sku" | "median_price" | "pct_residual" | "observation_count" | "provider_count";
+type SortKey =
+  | "gpu_sku"
+  | "median_price"
+  | "pct_residual"
+  | "observation_count"
+  | "provider_count";
 type SortDir = "asc" | "desc";
 
 const COLUMNS: { key: SortKey; label: string; align: "left" | "right" }[] = [
-  { key: "gpu_sku", label: "GPU SKU", align: "left" },
-  { key: "median_price", label: "Median $/hr", align: "right" },
-  { key: "pct_residual", label: "% Residual", align: "right" },
+  { key: "gpu_sku", label: "SKU", align: "left" },
   { key: "observation_count", label: "Offers", align: "right" },
   { key: "provider_count", label: "Providers", align: "right" },
+  { key: "median_price", label: "Median $/hr", align: "right" },
+  { key: "pct_residual", label: "Residual", align: "right" },
 ];
 
 export function FungibilityMatrix() {
@@ -30,19 +36,59 @@ export function FungibilityMatrix() {
     [data, sortKey, sortDir]
   );
 
+  const header = (
+    <header style={{ marginBottom: 18 }}>
+      <div className="eyebrow" style={{ marginBottom: 6 }}>
+        01 · Fungibility matrix
+      </div>
+      <h2
+        className="serif"
+        style={{
+          fontSize: 28,
+          fontWeight: 400,
+          margin: 0,
+          letterSpacing: "-0.01em",
+          color: "var(--ink-hi)",
+        }}
+      >
+        How interchangeable is each SKU?
+      </h2>
+      <p className="caption" style={{ marginTop: 6, maxWidth: 620 }}>
+        A low residual means the market agrees on price given observable
+        features. A high residual means it doesn&apos;t — and the SKU is a poor
+        benchmark target.
+      </p>
+    </header>
+  );
+
   if (isLoading) {
-    return <Placeholder message="Loading fungibility matrix…" />;
+    return (
+      <section>
+        {header}
+        <Placeholder message="Loading fungibility matrix…" />
+      </section>
+    );
   }
   if (isError) {
     return (
-      <Placeholder
-        message={`Failed to load: ${(error as Error)?.message ?? "unknown error"}`}
-        tone="error"
-      />
+      <section>
+        {header}
+        <Placeholder
+          message={`Failed to load: ${
+            (error as Error)?.message ?? "unknown error"
+          }`}
+          tone="error"
+        />
+      </section>
     );
   }
   if (!data || data.items.length === 0) {
-    return <Placeholder message="No canonical SKUs observed yet." tone="muted" />;
+    return (
+      <section>
+        {header}
+        <Placeholder message="No canonical SKUs observed yet." />
+      </section>
+    );
   }
 
   const toggle = (key: SortKey) => {
@@ -55,85 +101,152 @@ export function FungibilityMatrix() {
   };
 
   return (
-    <div className="overflow-hidden rounded-md border border-gray-800">
-      <div className="flex items-baseline justify-between border-b border-gray-800 bg-gray-900/60 px-4 py-3">
-        <div>
-          <h2 className="text-sm font-medium text-gray-100">Fungibility matrix</h2>
-          <p className="mt-0.5 text-xs text-gray-500">
-            Latest observed date per canonical SKU. Sort by % residual to rank by basis risk.
-          </p>
-        </div>
-        <span className="text-xs text-gray-500">{data.items.length} SKUs</span>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-900/40 text-xs uppercase tracking-wide text-gray-500">
-            <tr>
-              {COLUMNS.map((c) => (
-                <th
-                  key={c.key}
-                  scope="col"
-                  className={`px-3 py-2 font-medium ${c.align === "right" ? "text-right" : "text-left"}`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggle(c.key)}
-                    className="inline-flex items-center gap-1 hover:text-gray-300"
-                  >
-                    {c.label}
-                    <SortIndicator active={sortKey === c.key} dir={sortDir} />
-                  </button>
-                </th>
+    <section>
+      {header}
+      <div className="panel" style={{ overflow: "hidden" }}>
+        <div style={{ overflowX: "auto" }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                {COLUMNS.map((c) => (
+                  <th key={c.key} scope="col" style={{ textAlign: c.align }}>
+                    <button
+                      type="button"
+                      onClick={() => toggle(c.key)}
+                      className="inline-flex items-center gap-1"
+                      style={{
+                        color:
+                          c.key === "pct_residual"
+                            ? "var(--residual)"
+                            : "inherit",
+                      }}
+                    >
+                      {c.label}
+                      <SortIndicator
+                        active={sortKey === c.key}
+                        dir={sortDir}
+                      />
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((row) => (
+                <MatrixRow key={row.gpu_sku} row={row} />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((row) => (
-              <MatrixRow key={row.gpu_sku} row={row} />
-            ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 function MatrixRow({ row }: { row: FungibilityMatrixRow }) {
-  const residualCell =
-    row.pct_residual === null ? (
-      <span className="inline-flex items-center rounded-sm bg-gray-800 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-gray-400">
-        accumulating
-      </span>
-    ) : (
-      <span className="font-mono font-semibold text-rose-300">
-        {row.pct_residual.toFixed(1)}%
-      </span>
-    );
-
+  const family = gpuFamily(row.gpu_sku);
   return (
-    <tr className="border-t border-gray-800 hover:bg-gray-900/40">
-      <td className="px-3 py-2">
-        <div className="font-mono text-gray-200">{row.gpu_sku}</div>
-        <div className="text-[11px] text-gray-500">{row.latest_date}</div>
+    <tr>
+      <td>
+        <div className="flex items-baseline" style={{ gap: 10 }}>
+          <span
+            className="mono"
+            style={{ fontSize: 12, color: "var(--ink-hi)" }}
+          >
+            {row.gpu_sku}
+          </span>
+          {family && <span className="badge">{family}</span>}
+        </div>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10,
+            color: "var(--ink-dim)",
+            marginTop: 2,
+            letterSpacing: "0.02em",
+          }}
+        >
+          latest · {row.latest_date}
+        </div>
       </td>
-      <td className="px-3 py-2 text-right font-mono text-gray-300">
+      <td
+        className="num"
+        style={{ textAlign: "right", color: "var(--ink)" }}
+      >
+        {row.observation_count.toLocaleString()}
+      </td>
+      <td
+        className="num"
+        style={{ textAlign: "right", color: "var(--ink-mid)" }}
+      >
+        {row.provider_count}
+      </td>
+      <td
+        className="num"
+        style={{ textAlign: "right", color: "var(--ink)" }}
+      >
         ${row.median_price.toFixed(2)}
       </td>
-      <td className="px-3 py-2 text-right">{residualCell}</td>
-      <td className="px-3 py-2 text-right font-mono text-gray-400">
-        {row.observation_count}
-      </td>
-      <td className="px-3 py-2 text-right font-mono text-gray-400">
-        {row.provider_count}
+      <td style={{ textAlign: "right" }}>
+        {row.pct_residual === null ? (
+          <span className="pill-unknown">accumulating</span>
+        ) : (
+          <ResidualCell v={row.pct_residual} />
+        )}
       </td>
     </tr>
   );
 }
 
+function ResidualCell({ v }: { v: number }) {
+  const pct = Math.max(0, Math.min(100, v));
+  return (
+    <span
+      className="inline-flex items-center"
+      style={{ gap: 8, minWidth: 96 }}
+    >
+      <span
+        style={{
+          width: 54,
+          height: 6,
+          background: "var(--panel-hi)",
+          borderRadius: 1,
+          overflow: "hidden",
+          display: "inline-block",
+        }}
+      >
+        <span
+          style={{
+            display: "block",
+            height: "100%",
+            width: `${pct}%`,
+            background: "var(--residual)",
+          }}
+        />
+      </span>
+      <span
+        className="mono"
+        style={{ fontSize: 12, color: "var(--residual)" }}
+      >
+        {v.toFixed(0)}%
+      </span>
+    </span>
+  );
+}
+
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
-  if (!active) return <span className="text-gray-700">↕</span>;
-  return <span className="text-gray-300">{dir === "asc" ? "↑" : "↓"}</span>;
+  if (!active) {
+    return (
+      <span className="mono" style={{ color: "var(--ink-faint)" }}>
+        ↕
+      </span>
+    );
+  }
+  return (
+    <span className="mono" style={{ color: "var(--ink-mid)" }}>
+      {dir === "asc" ? "↑" : "↓"}
+    </span>
+  );
 }
 
 function Placeholder({
@@ -143,10 +256,12 @@ function Placeholder({
   message: string;
   tone?: "muted" | "error";
 }) {
-  const color = tone === "error" ? "text-red-300" : "text-gray-500";
   return (
     <div
-      className={`flex h-48 items-center justify-center rounded-md border border-gray-800 bg-gray-900/40 text-sm ${color}`}
+      className="panel caption flex h-48 items-center justify-center"
+      style={{
+        color: tone === "error" ? "var(--verdict-bad)" : "var(--ink-dim)",
+      }}
     >
       {message}
     </div>
@@ -163,7 +278,6 @@ function sortRows(
   copy.sort((a, b) => {
     const av = a[key];
     const bv = b[key];
-    // Nulls always last, regardless of direction.
     if (av === null && bv === null) return 0;
     if (av === null) return 1;
     if (bv === null) return -1;
