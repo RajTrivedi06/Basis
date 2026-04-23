@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DecompBar, type DecompShares } from "@/components/charts/DecompBar";
 import { SkuPicker } from "@/components/SkuPicker";
@@ -8,6 +8,8 @@ import { getBasisDecomposition, getDecompositionObservations, getDispersion } fr
 import { factorColor, type Factor } from "@/lib/factorColor";
 import { useSku } from "@/lib/useSku";
 import type { BasisDecompositionResponse } from "@/lib/types";
+import { BasisObservationsDrawer } from "./BasisObservationsDrawer";
+import { BasisRawObservationInspector } from "./BasisRawObservationInspector";
 
 type FactorKey = Exclude<Factor, "residual">;
 
@@ -48,6 +50,8 @@ const FACTOR_META: {
 
 export function BasisPageClient() {
   const { sku, setSku } = useSku();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [inspectingId, setInspectingId] = useState<number | null>(null);
 
   const basisQuery = useQuery({
     queryKey: ["basis", sku],
@@ -161,6 +165,15 @@ export function BasisPageClient() {
               </span>{" "}
               is residual basis risk.
             </p>
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={() => setDrawerOpen(true)}
+              >
+                View contributing observations →
+              </button>
+            </div>
           </div>
         ) : (
           <StatePanel
@@ -198,11 +211,16 @@ export function BasisPageClient() {
                   </th>
                   <th style={{ width: 260 }}>Cumulative %</th>
                   <th>Interpretation</th>
+                  <th style={{ width: 96 }} />
                 </tr>
               </thead>
               <tbody>
                 {factorRows.map((row) => (
-                  <FactorContributionRow key={row.key} row={row} />
+                  <FactorContributionRow
+                    key={row.key}
+                    row={row}
+                    onInspect={() => setDrawerOpen(true)}
+                  />
                 ))}
               </tbody>
             </table>
@@ -225,6 +243,20 @@ export function BasisPageClient() {
           />
         )}
       </section>
+
+      <BasisObservationsDrawer
+        gpuSku={sku}
+        date={decomposition?.date ?? null}
+        open={drawerOpen}
+        suspendEscape={inspectingId != null}
+        onClose={() => setDrawerOpen(false)}
+        onInspect={(id) => setInspectingId(id)}
+      />
+      <BasisRawObservationInspector
+        rawObservationId={inspectingId}
+        open={inspectingId != null}
+        onClose={() => setInspectingId(null)}
+      />
     </div>
   );
 }
@@ -327,7 +359,13 @@ function StatePanel({
   );
 }
 
-function FactorContributionRow({ row }: { row: FactorRow }) {
+function FactorContributionRow({
+  row,
+  onInspect,
+}: {
+  row: FactorRow;
+  onInspect: () => void;
+}) {
   const isResidual = row.key === "residual";
   const color = isResidual ? "var(--residual)" : factorColor(row.key);
   const labelColor = isResidual ? "var(--residual)" : "var(--ink)";
@@ -391,6 +429,23 @@ function FactorContributionRow({ row }: { row: FactorRow }) {
       </td>
       <td className="caption leading-relaxed">
         {row.note}
+      </td>
+      <td className="text-right">
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={onInspect}
+          style={
+            isResidual
+              ? {
+                  color: "var(--residual)",
+                  borderColor: "var(--residual-line)",
+                }
+              : undefined
+          }
+        >
+          Inspect →
+        </button>
       </td>
     </tr>
   );
