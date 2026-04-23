@@ -1,18 +1,11 @@
 import Link from "next/link";
+import { FindingsHero } from "@/components/FindingsHero";
 import { FungibilityMatrix } from "@/components/FungibilityMatrix";
 
 export default function FindingsPage() {
   return (
     <div className="space-y-12">
-      <section>
-        <p className="text-sm uppercase tracking-wide text-gray-500">Basis · Findings</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-          How fungible is GPU compute?
-        </h1>
-        <p className="mt-2 text-gray-400">
-          Measuring basis risk in quoted GPU prices across four providers.
-        </p>
-      </section>
+      <FindingsHero />
 
       <section>
         <FungibilityMatrix />
