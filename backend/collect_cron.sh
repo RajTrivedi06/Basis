@@ -1,35 +1,23 @@
-#!/bin/bash
-# Cron wrapper for the full Basis pipeline.
-# Called by crontab twice daily. Logs to backend/logs/collect.log.
-# Runs: collect -> normalize -> analytics
-
+#!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="/Users/raaj/Documents/CS/Basis"
+# Find repo root from script location (works on any machine)
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND_DIR="$REPO_DIR/backend"
-LOG_DIR="$BACKEND_DIR/logs"
-LOG_FILE="$LOG_DIR/collect.log"
-
-mkdir -p "$LOG_DIR"
-
 cd "$BACKEND_DIR"
 
-echo "" >> "$LOG_FILE"
-echo "=== Pipeline run: $(date -u '+%Y-%m-%d %H:%M:%S UTC') ===" >> "$LOG_FILE"
-
-# Use the full path to uv
 UV="$HOME/.local/bin/uv"
-if [ ! -f "$UV" ]; then
-    UV="$(which uv 2>/dev/null || echo uv)"
+[ -x "$UV" ] || UV="$(command -v uv)"
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] basis-collect starting"
+
+"$UV" run python run_collect.py
+"$UV" run python run_normalize.py
+"$UV" run python run_analytics.py
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] basis-collect done"
+
+# Ping healthchecks.io on success
+if [ -n "${HC_PING_URL:-}" ]; then
+    curl -fsS -m 10 --retry 5 -o /dev/null "$HC_PING_URL" || true
 fi
-
-echo "--- collect ---" >> "$LOG_FILE"
-$UV run python run_collect.py >> "$LOG_FILE" 2>&1
-
-echo "--- normalize ---" >> "$LOG_FILE"
-$UV run python run_normalize.py >> "$LOG_FILE" 2>&1
-
-echo "--- analytics ---" >> "$LOG_FILE"
-$UV run python run_analytics.py >> "$LOG_FILE" 2>&1
-
-echo "=== Completed: $(date -u '+%Y-%m-%d %H:%M:%S UTC') ===" >> "$LOG_FILE"
