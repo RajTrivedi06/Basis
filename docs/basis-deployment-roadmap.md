@@ -45,6 +45,29 @@ v2 had ~15 issues caught in second-round agent review. v3 fixes all of them. Spe
 
 ---
 
+## v3 corrections (applied 2026-04-23 after second-pass agent review)
+
+Sixteen small corrections applied directly to v3 rather than producing a v4. All from second-pass agent review:
+
+- Phase 1.1: clarified asymmetry in collect_cron.sh redirects
+- Phase 1.2: aws_spot.py change preserves BotoConfig retry policy; replaces credential guard with session probe instead of removing it
+- Phase 1.3: flagged allow_methods tightening as deliberate
+- Phase 1.4: kept ENVIRONMENT/VAST_API_KEY/AWS_DEFAULT_REGION in .env.example; dropped phantom TENSORDOCK_API_KEY; flagged lambda_api_key removal in Settings
+- Phase 1.5: corrected description of current docker-compose state
+- Phase 1.6: added Node version pin via package.json engines field
+- Phase 1.7: replaced `rm package-lock.json` recipe with `npm uninstall`
+- Phase 1.7b (new): gated next.config.ts rewrite on NODE_ENV === "development"
+- Phase 2.5: added Caddy keyring chmod commands and explicit Docker enable
+- Phase 4.1: added -q flag to pg_isready probe
+- Phase 4.3: narrowed ExecStop to docker compose stop db
+- Phase 4.5: clarified catch-up test pass signal (oneshot services show inactive after success)
+- Phase 7.2: added CAA preflight check
+- Phase 7.4: added www.gpu-basis.xyz to CORS_ORIGINS
+- Phase 7.5: added production branch alignment precondition
+- Phase 8.1: expanded reboot verification
+
+---
+
 ## Constraints and context
 
 - **Domain:** `gpu-basis.xyz` (registered on Namecheap)
@@ -121,7 +144,7 @@ These are repo changes that need to be in `ui-port-v2` (or `main`) before you pr
 Current state of `backend/collect_cron.sh`:
 
 - Line 8 hardcodes `REPO_DIR="/Users/raaj/Documents/CS/Basis"` — fails on EC2
-- Each command redirects output to `$LOG_DIR/collect.log` — defeats systemd journal logging
+- Multiple lines redirect output to `$LOG_DIR/collect.log` (some with stderr, some without — the three `uv run` lines use `>> "$LOG_FILE" 2>&1`, the four header `echo` lines use `>> "$LOG_FILE"` for stdout only). The replacement removes all of them so output flows to systemd journal.
 
 Updated `backend/collect_cron.sh`:
 
@@ -161,25 +184,45 @@ Key changes:
 
 Current state: `backend/basis/collectors/aws_spot.py` line ~88 reads `settings.aws_access_key_id` and aborts if missing.
 
-Find the `boto3` client construction in that file. Change from:
+Find the `boto3.client(...)` call inside `_fetch_region_sync`. The current code wraps `region_name` and retry settings in a `BotoConfig` object. Change from:
 
 ```python
+boto_config = BotoConfig(
+    region_name=region,
+    retries={"max_attempts": 2, "mode": "standard"},
+)
 client = boto3.client(
     "ec2",
-    region_name=region,
     aws_access_key_id=settings.aws_access_key_id,
     aws_secret_access_key=settings.aws_secret_access_key,
+    config=boto_config,
 )
 ```
 
 To:
 
 ```python
+boto_config = BotoConfig(
+    region_name=region,
+    retries={"max_attempts": 2, "mode": "standard"},
+)
 # boto3 picks up credentials from env vars (local) or IAM role (EC2)
-client = boto3.client("ec2", region_name=region)
+client = boto3.client("ec2", config=boto_config)
 ```
 
-Remove the early-return guard that checks for missing keys — boto3 raises a clear error if no credentials are findable, which is the right behavior.
+Keep `config=boto_config` — `region_name` and the retry policy live inside it. Only the two credential kwargs come out.
+
+Replace the early-return guard at the top of `collect()` (currently `if not settings.aws_access_key_id or not settings.aws_secret_access_key: return []`) with a session-level credentials probe so local dev without AWS creds still skips gracefully:
+
+```python
+import boto3
+
+if boto3.Session().get_credentials() is None:
+    logger.warning("AWS credentials not findable (env, IAM role, or profile) — skipping AWS Spot")
+    return []
+```
+
+This works on Mac (returns `None` when no creds in env or `~/.aws/`) and on EC2 (returns `Credentials` from instance metadata via the IAM role). It's a behavior-preserving substitute for the old env-var check; without it, any contributor without AWS creds in `.env` would see every region task crash with `NoCredentialsError` instead of the current silent-skip-with-warning.
 
 **On your Mac, this still works:** boto3 reads `AWS_ACCESS_KEY_ID` from your `.env` via the existing settings load.
 
@@ -211,7 +254,9 @@ app.add_middleware(
 )
 ```
 
-Local dev still works (env var unset → default `http://localhost:3000`). EC2 will set `CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz` in `.env`.
+**Note:** this change also tightens `allow_methods` from `["*"]` to `["GET"]`. Deliberate — the API is read-only. Don't revert this thinking it was incidental.
+
+Local dev still works (env var unset → default `http://localhost:3000`). EC2 will set `CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz,https://www.gpu-basis.xyz` in `.env`.
 
 ### 1.4 Update `.env.example`
 
@@ -224,9 +269,13 @@ Updated `.env.example`:
 DATABASE_URL=postgresql+asyncpg://basis:basis@localhost:5433/basis
 POSTGRES_PASSWORD=basis  # local dev keeps existing volume's password
 
+# Environment
+ENVIRONMENT=dev
+
 # AWS Spot collector (local only; EC2 uses IAM role)
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
 
 # CORS (production overrides this on EC2)
 CORS_ORIGINS=http://localhost:3000
@@ -236,16 +285,23 @@ HC_PING_URL=
 HC_BACKUP_PING_URL=
 HC_DATA_FRESH_PING_URL=
 
-# Other collectors
+# Provider API keys
+VAST_API_KEY=
 RUNPOD_API_KEY=
-TENSORDOCK_API_KEY=
 ```
 
 **Important:** `POSTGRES_PASSWORD=basis` is the safe default for local dev. Your existing local Postgres volume was initialized with this password; changing it would break local dev or require destroying the volume. EC2 will set a different `POSTGRES_PASSWORD` since it starts with a fresh volume.
 
+**Notes:**
+
+- `ENVIRONMENT`, `VAST_API_KEY`, and `AWS_DEFAULT_REGION` are kept in the example because all three are referenced in [`backend/basis/config.py`](../backend/basis/config.py) — Settings reads them on load. Removing them from the example would lose the documentation hint even though Settings defaults cover absence at runtime.
+- `TENSORDOCK_API_KEY` is **not** in the example: neither `backend/basis/config.py` nor `backend/basis/collectors/tensordock.py` references such a variable. The TensorDock collector hits the public endpoint `https://dashboard.tensordock.com/api/v2/locations` with no auth (collector file header: "Auth: None required"). Adding the env var would be misleading.
+
+**Additional Settings cleanup:** drop the `lambda_api_key: str = ""` field from [`backend/basis/config.py`](../backend/basis/config.py) line ~34. ADR 0003 retired the Lambda Labs collector; the Settings field has been a leftover. Remove it in the same commit that updates `.env.example`.
+
 ### 1.5 Update `docker-compose.yml`
 
-Current state: binds Postgres to `0.0.0.0:5433`, no healthcheck, no `POSTGRES_PASSWORD` env var (uses image default).
+Current state: binds Postgres to `0.0.0.0:5433`, no healthcheck, currently uses a hardcoded `POSTGRES_PASSWORD: basis` literal (the postgres image has no default password — the hardcoded literal is what makes the current setup work). The change is from hardcoded literal to env-interpolated default.
 
 Updated `docker-compose.yml`:
 
@@ -273,6 +329,8 @@ volumes:
 ```
 
 The `${POSTGRES_PASSWORD:-basis}` syntax keeps your local dev working with the existing volume even if `POSTGRES_PASSWORD` isn't set in your local `.env`.
+
+**Caveat:** Docker Compose env interpolation reads both `.env` *and* OS environment, with OS env winning. If `docker compose up` fails to connect locally after this change, run `env | grep POSTGRES_PASSWORD` to check for shell-shadowing from another project.
 
 ### 1.6 Update CI workflow
 
@@ -305,23 +363,55 @@ jobs:
 
 No `paths:` filter — workflow runs on every PR to main, including backend-only PRs. The frontend build is fast and the alternative (path-filtered required check) blocks backend PRs from merging.
 
+**Pin Node version on the project side too.** Add an `engines` field to `frontend/package.json` so Vercel's build uses the same Node version as CI:
+
+```json
+"engines": {
+  "node": "20.x"
+}
+```
+
+Without this, Vercel may default to a different Node version and produce a build that diverges from the CI smoke test.
+
 ### 1.7 Tremor cleanup
 
-In `frontend/package.json`, remove from dependencies:
-
-- `@tremor/react`
-- `@tailwindcss/typography`
-
-Then:
+Run `npm uninstall` to remove `@tremor/react` and `@tailwindcss/typography` cleanly:
 
 ```bash
 cd frontend
-rm package-lock.json
-npm install
+npm uninstall @tremor/react @tailwindcss/typography
 npm run build  # verify build still passes
 ```
 
+`npm uninstall` updates both `package.json` and `package-lock.json` deterministically without churning unrelated transitive deps. Same end state as a manual remove-and-reinstall, minimal diff, and CI's `npm ci` keeps working.
+
 Commit `package.json` and `package-lock.json` together.
+
+### 1.7b Gate `next.config.ts` rewrite on dev mode only
+
+The current `frontend/next.config.ts` rewrites `/api/*` to `http://localhost:8000` unconditionally. The rewrite is only useful in `next dev` (where the FastAPI backend runs locally on port 8000); on Vercel it would point at unreachable infrastructure. Today's code paths use absolute URLs via `NEXT_PUBLIC_API_URL` so the rewrite never fires in production, but it's a latent footgun for any future `fetch("/api/...")` call.
+
+Update `frontend/next.config.ts` to gate the rewrite on `NODE_ENV`:
+
+```typescript
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  async rewrites() {
+    if (process.env.NODE_ENV !== "development") return [];
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://localhost:8000/api/:path*",
+      },
+    ];
+  },
+};
+
+export default nextConfig;
+```
+
+`next dev` keeps proxying `/api/*` to local FastAPI; `next build` (run by Vercel) emits no rewrite at all.
 
 ### 1.8 Set branch protection (after CI workflow merges)
 
@@ -433,10 +523,16 @@ sudo apt install -y \
   postgresql-client-16 \
   build-essential
 
+# Ensure Docker starts on boot (later systemd units depend on docker.service)
+sudo systemctl enable --now docker
+
 # Caddy from official repo (NOT in stock Ubuntu)
 sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+# Per Caddy install docs: keyring + sources.list must be world-readable, otherwise apt update fails with permission errors
+sudo chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+sudo chmod o+r /etc/apt/sources.list.d/caddy-stable.list
 sudo apt update
 sudo apt install -y caddy
 
@@ -496,7 +592,7 @@ POSTGRES_PASSWORD=<PROD_PASSWORD>
 # Note: no AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY here.
 # boto3 picks up credentials from the IAM role automatically.
 
-CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz
+CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz,https://www.gpu-basis.xyz
 
 HC_PING_URL=https://hc-ping.com/<basis-collect-uuid>
 HC_BACKUP_PING_URL=https://hc-ping.com/<basis-backup-uuid>
@@ -505,6 +601,8 @@ HC_DATA_FRESH_PING_URL=https://hc-ping.com/<basis-data-fresh-uuid>
 RUNPOD_API_KEY=<your-runpod-key>
 TENSORDOCK_API_KEY=<your-tensordock-key>
 ```
+
+**Why `www.gpu-basis.xyz` is in CORS_ORIGINS:** even though www redirects to apex via Vercel's 308, browsers can briefly send `Origin: https://www.gpu-basis.xyz` headers before the redirect resolves. Belt and suspenders — including www avoids transient CORS failures during the redirect window.
 
 **Generate a strong `<PROD_PASSWORD>`:** `openssl rand -base64 24` and use that.
 
@@ -588,7 +686,7 @@ User=ubuntu
 WorkingDirectory=/home/ubuntu/Basis/backend
 EnvironmentFile=/home/ubuntu/Basis/.env
 # Wait for Postgres to accept connections (no docker exec needed)
-ExecStartPre=/usr/bin/timeout 60 bash -c 'until pg_isready -h 127.0.0.1 -p 5433 -U basis; do sleep 2; done'
+ExecStartPre=/usr/bin/timeout 60 bash -c 'until pg_isready -h 127.0.0.1 -p 5433 -q; do sleep 2; done'
 ExecStart=/home/ubuntu/Basis/backend/collect_cron.sh
 StandardOutput=journal
 StandardError=journal
@@ -597,7 +695,8 @@ MemoryMax=1800M
 
 Key points:
 
-- `pg_isready -h 127.0.0.1 -p 5433` doesn't require the docker container to exist as a callable tool; it just probes the port. Works at first boot before any `docker compose up`.
+- `pg_isready -h 127.0.0.1 -p 5433 -q` doesn't require the docker container to exist as a callable tool; it just probes the port. Works at first boot before any `docker compose up`. The `-q` flag silences per-attempt output so the journal stays clean — only failures and the eventual success line appear.
+- `pg_isready` ships in `postgresql-client-16`, which Phase 2.5 apt-installs. It is **not** a stock Ubuntu command; if Phase 2.5 was skipped, this line will fail with `command not found`.
 - `EnvironmentFile=/home/ubuntu/Basis/.env` loads variables for the script (including `HC_PING_URL`)
 - `MemoryMax=1800M` prevents OOM-killing Postgres during heavy analytics
 
@@ -636,7 +735,7 @@ Type=oneshot
 RemainAfterExit=true
 WorkingDirectory=/home/ubuntu/Basis
 ExecStart=/usr/bin/docker compose up -d --wait
-ExecStop=/usr/bin/docker compose down
+ExecStop=/usr/bin/docker compose stop db
 User=ubuntu
 
 [Install]
@@ -674,9 +773,15 @@ To test correctly:
    sudo systemctl status basis-collect.service
    journalctl -u basis-collect -n 100 --no-pager
    ```
-5. You should see the service triggered shortly after boot
 
-If it didn't fire, `Persistent=true` isn't working — investigate before trusting catch-up.
+**How to interpret the result.** `basis-collect.service` is `Type=oneshot`, so after a successful catch-up the unit will usually show `inactive (dead)` in `systemctl status`, **not** `active`. Don't read that as a failure — that's normal for oneshot services after they exit. The pass signals are:
+
+- Recent journal entries showing the collector ran shortly after boot (timestamp in `journalctl -u basis-collect` is within a few minutes of the boot time)
+- The `"basis-collect done"` line at the end of the latest run, indicating the script reached the success path before exiting
+
+If the journal has no entries from after boot, `Persistent=true` isn't working — investigate before trusting catch-up.
+
+**Multiple-miss behavior.** If several schedule slots were missed (e.g. the instance was down for 30 hours, missing both the 08:00 and 20:00 fires), systemd performs **one** immediate catch-up activation on boot, not one activation per missed slot. That's the intended design — running two collection cycles back-to-back wouldn't produce useful data anyway. Don't expect to see two journal entries in this case; one is correct.
 
 ---
 
@@ -931,6 +1036,14 @@ dig api.gpu-basis.xyz +short
 dig gpu-basis.xyz +short
 ```
 
+**CAA preflight (one-liner before Caddy).** Before Phase 7.3, check whether any CAA records on the apex would block Let's Encrypt from issuing the cert:
+
+```bash
+dig CAA gpu-basis.xyz +short
+```
+
+If the output is empty, proceed normally — the registrar isn't restricting which CAs can issue. If non-empty, add a `CAA 0 issue "letsencrypt.org"` record at Namecheap **before** restarting Caddy. Otherwise Caddy will silently fail the ACME challenge and `https://api.gpu-basis.xyz/health` won't come up. Namecheap's BasicDNS doesn't add CAA records by default so the check is usually empty, but the one-liner avoids a confusing debug session if it isn't.
+
 ### 7.3 Caddy configuration
 
 `/etc/caddy/Caddyfile`:
@@ -1000,6 +1113,10 @@ curl https://api.gpu-basis.xyz/health  # should return 200
 
 ### 7.5 Vercel frontend deploy
 
+**Precondition:** before importing the repo into Vercel, confirm that `main` contains the code you want deployed. If you're still on `ui-port-v2` or another branch, merge to `main` first. Vercel's default production branch is `main`; if `main` is stale, the first deploy builds outdated code.
+
+If you specifically want to deploy from a non-`main` branch, override the production branch in Vercel project settings → Git → Production Branch. For our case, deploy from `main` and merge there beforehand.
+
 1. https://vercel.com → Add New → Project → Import the basis repo
 2. Framework preset: Next.js
 3. Root directory: `frontend/`
@@ -1046,11 +1163,14 @@ sudo systemctl status basis-api.service        # active (after Phase 7)
 sudo systemctl status basis-collect.timer      # active, next run scheduled
 sudo systemctl status basis-backup.timer       # active
 sudo systemctl status basis-data-fresh.timer   # active
+sudo systemctl status caddy                    # active (after Phase 7)
+sudo systemctl list-timers 'basis-*' --all     # all three timers listed with valid next-fire times
+journalctl -b -u basis-postgres -u basis-api -u caddy -n 100 --no-pager
 curl http://localhost:8000/health              # 200
 curl https://api.gpu-basis.xyz/health          # 200 (after Phase 7)
 ```
 
-All five services should be running without intervention.
+All services should be running without intervention. The boot-scoped `journalctl -b` query catches startup-order issues (e.g. basis-api starting before Postgres is ready) and Caddy ACME problems faster than the per-unit `systemctl status` view alone — those failure modes often look fine in `status` but leave clear errors in the boot log.
 
 ### 8.2 Weekly checks (5 minutes/week)
 
