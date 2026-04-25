@@ -246,9 +246,13 @@ Updated `.env.example`:
 DATABASE_URL=postgresql+asyncpg://basis:basis@localhost:5433/basis
 POSTGRES_PASSWORD=basis  # local dev keeps existing volume's password
 
+# Environment
+ENVIRONMENT=dev
+
 # AWS Spot collector (local only; EC2 uses IAM role)
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
 
 # CORS (production overrides this on EC2)
 CORS_ORIGINS=http://localhost:3000
@@ -258,16 +262,23 @@ HC_PING_URL=
 HC_BACKUP_PING_URL=
 HC_DATA_FRESH_PING_URL=
 
-# Other collectors
+# Provider API keys
+VAST_API_KEY=
 RUNPOD_API_KEY=
-TENSORDOCK_API_KEY=
 ```
 
 **Important:** `POSTGRES_PASSWORD=basis` is the safe default for local dev. Your existing local Postgres volume was initialized with this password; changing it would break local dev or require destroying the volume. EC2 will set a different `POSTGRES_PASSWORD` since it starts with a fresh volume.
 
+**Notes:**
+
+- `ENVIRONMENT`, `VAST_API_KEY`, and `AWS_DEFAULT_REGION` are kept in the example because all three are referenced in [`backend/basis/config.py`](../backend/basis/config.py) — Settings reads them on load. Removing them from the example would lose the documentation hint even though Settings defaults cover absence at runtime.
+- `TENSORDOCK_API_KEY` is **not** in the example: neither `backend/basis/config.py` nor `backend/basis/collectors/tensordock.py` references such a variable. The TensorDock collector hits the public endpoint `https://dashboard.tensordock.com/api/v2/locations` with no auth (collector file header: "Auth: None required"). Adding the env var would be misleading.
+
+**Additional Settings cleanup:** drop the `lambda_api_key: str = ""` field from [`backend/basis/config.py`](../backend/basis/config.py) line ~34. ADR 0003 retired the Lambda Labs collector; the Settings field has been a leftover. Remove it in the same commit that updates `.env.example`.
+
 ### 1.5 Update `docker-compose.yml`
 
-Current state: binds Postgres to `0.0.0.0:5433`, no healthcheck, no `POSTGRES_PASSWORD` env var (uses image default).
+Current state: binds Postgres to `0.0.0.0:5433`, no healthcheck, currently uses a hardcoded `POSTGRES_PASSWORD: basis` literal (the postgres image has no default password — the hardcoded literal is what makes the current setup work). The change is from hardcoded literal to env-interpolated default.
 
 Updated `docker-compose.yml`:
 
@@ -295,6 +306,8 @@ volumes:
 ```
 
 The `${POSTGRES_PASSWORD:-basis}` syntax keeps your local dev working with the existing volume even if `POSTGRES_PASSWORD` isn't set in your local `.env`.
+
+**Caveat:** Docker Compose env interpolation reads both `.env` *and* OS environment, with OS env winning. If `docker compose up` fails to connect locally after this change, run `env | grep POSTGRES_PASSWORD` to check for shell-shadowing from another project.
 
 ### 1.6 Update CI workflow
 
