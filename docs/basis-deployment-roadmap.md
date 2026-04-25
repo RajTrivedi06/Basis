@@ -161,25 +161,45 @@ Key changes:
 
 Current state: `backend/basis/collectors/aws_spot.py` line ~88 reads `settings.aws_access_key_id` and aborts if missing.
 
-Find the `boto3` client construction in that file. Change from:
+Find the `boto3.client(...)` call inside `_fetch_region_sync`. The current code wraps `region_name` and retry settings in a `BotoConfig` object. Change from:
 
 ```python
+boto_config = BotoConfig(
+    region_name=region,
+    retries={"max_attempts": 2, "mode": "standard"},
+)
 client = boto3.client(
     "ec2",
-    region_name=region,
     aws_access_key_id=settings.aws_access_key_id,
     aws_secret_access_key=settings.aws_secret_access_key,
+    config=boto_config,
 )
 ```
 
 To:
 
 ```python
+boto_config = BotoConfig(
+    region_name=region,
+    retries={"max_attempts": 2, "mode": "standard"},
+)
 # boto3 picks up credentials from env vars (local) or IAM role (EC2)
-client = boto3.client("ec2", region_name=region)
+client = boto3.client("ec2", config=boto_config)
 ```
 
-Remove the early-return guard that checks for missing keys — boto3 raises a clear error if no credentials are findable, which is the right behavior.
+Keep `config=boto_config` — `region_name` and the retry policy live inside it. Only the two credential kwargs come out.
+
+Replace the early-return guard at the top of `collect()` (currently `if not settings.aws_access_key_id or not settings.aws_secret_access_key: return []`) with a session-level credentials probe so local dev without AWS creds still skips gracefully:
+
+```python
+import boto3
+
+if boto3.Session().get_credentials() is None:
+    logger.warning("AWS credentials not findable (env, IAM role, or profile) — skipping AWS Spot")
+    return []
+```
+
+This works on Mac (returns `None` when no creds in env or `~/.aws/`) and on EC2 (returns `Credentials` from instance metadata via the IAM role). It's a behavior-preserving substitute for the old env-var check; without it, any contributor without AWS creds in `.env` would see every region task crash with `NoCredentialsError` instead of the current silent-skip-with-warning.
 
 **On your Mac, this still works:** boto3 reads `AWS_ACCESS_KEY_ID` from your `.env` via the existing settings load.
 
@@ -210,6 +230,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 ```
+
+**Note:** this change also tightens `allow_methods` from `["*"]` to `["GET"]`. Deliberate — the API is read-only. Don't revert this thinking it was incidental.
 
 Local dev still works (env var unset → default `http://localhost:3000`). EC2 will set `CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz` in `.env`.
 
