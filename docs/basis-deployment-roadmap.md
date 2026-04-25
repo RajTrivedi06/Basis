@@ -748,9 +748,15 @@ To test correctly:
    sudo systemctl status basis-collect.service
    journalctl -u basis-collect -n 100 --no-pager
    ```
-5. You should see the service triggered shortly after boot
 
-If it didn't fire, `Persistent=true` isn't working — investigate before trusting catch-up.
+**How to interpret the result.** `basis-collect.service` is `Type=oneshot`, so after a successful catch-up the unit will usually show `inactive (dead)` in `systemctl status`, **not** `active`. Don't read that as a failure — that's normal for oneshot services after they exit. The pass signals are:
+
+- Recent journal entries showing the collector ran shortly after boot (timestamp in `journalctl -u basis-collect` is within a few minutes of the boot time)
+- The `"basis-collect done"` line at the end of the latest run, indicating the script reached the success path before exiting
+
+If the journal has no entries from after boot, `Persistent=true` isn't working — investigate before trusting catch-up.
+
+**Multiple-miss behavior.** If several schedule slots were missed (e.g. the instance was down for 30 hours, missing both the 08:00 and 20:00 fires), systemd performs **one** immediate catch-up activation on boot, not one activation per missed slot. That's the intended design — running two collection cycles back-to-back wouldn't produce useful data anyway. Don't expect to see two journal entries in this case; one is correct.
 
 ---
 
@@ -1004,6 +1010,14 @@ DNS propagation: typically 1-24 hours. Check with:
 dig api.gpu-basis.xyz +short
 dig gpu-basis.xyz +short
 ```
+
+**CAA preflight (one-liner before Caddy).** Before Phase 7.3, check whether any CAA records on the apex would block Let's Encrypt from issuing the cert:
+
+```bash
+dig CAA gpu-basis.xyz +short
+```
+
+If the output is empty, proceed normally — the registrar isn't restricting which CAs can issue. If non-empty, add a `CAA 0 issue "letsencrypt.org"` record at Namecheap **before** restarting Caddy. Otherwise Caddy will silently fail the ACME challenge and `https://api.gpu-basis.xyz/health` won't come up. Namecheap's BasicDNS doesn't add CAA records by default so the check is usually empty, but the one-liner avoids a confusing debug session if it isn't.
 
 ### 7.3 Caddy configuration
 
