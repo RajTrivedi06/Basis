@@ -500,10 +500,16 @@ sudo apt install -y \
   postgresql-client-16 \
   build-essential
 
+# Ensure Docker starts on boot (later systemd units depend on docker.service)
+sudo systemctl enable --now docker
+
 # Caddy from official repo (NOT in stock Ubuntu)
 sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+# Per Caddy install docs: keyring + sources.list must be world-readable, otherwise apt update fails with permission errors
+sudo chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+sudo chmod o+r /etc/apt/sources.list.d/caddy-stable.list
 sudo apt update
 sudo apt install -y caddy
 
@@ -655,7 +661,7 @@ User=ubuntu
 WorkingDirectory=/home/ubuntu/Basis/backend
 EnvironmentFile=/home/ubuntu/Basis/.env
 # Wait for Postgres to accept connections (no docker exec needed)
-ExecStartPre=/usr/bin/timeout 60 bash -c 'until pg_isready -h 127.0.0.1 -p 5433 -U basis; do sleep 2; done'
+ExecStartPre=/usr/bin/timeout 60 bash -c 'until pg_isready -h 127.0.0.1 -p 5433 -q; do sleep 2; done'
 ExecStart=/home/ubuntu/Basis/backend/collect_cron.sh
 StandardOutput=journal
 StandardError=journal
@@ -664,7 +670,8 @@ MemoryMax=1800M
 
 Key points:
 
-- `pg_isready -h 127.0.0.1 -p 5433` doesn't require the docker container to exist as a callable tool; it just probes the port. Works at first boot before any `docker compose up`.
+- `pg_isready -h 127.0.0.1 -p 5433 -q` doesn't require the docker container to exist as a callable tool; it just probes the port. Works at first boot before any `docker compose up`. The `-q` flag silences per-attempt output so the journal stays clean — only failures and the eventual success line appear.
+- `pg_isready` ships in `postgresql-client-16`, which Phase 2.5 apt-installs. It is **not** a stock Ubuntu command; if Phase 2.5 was skipped, this line will fail with `command not found`.
 - `EnvironmentFile=/home/ubuntu/Basis/.env` loads variables for the script (including `HC_PING_URL`)
 - `MemoryMax=1800M` prevents OOM-killing Postgres during heavy analytics
 
@@ -703,7 +710,7 @@ Type=oneshot
 RemainAfterExit=true
 WorkingDirectory=/home/ubuntu/Basis
 ExecStart=/usr/bin/docker compose up -d --wait
-ExecStop=/usr/bin/docker compose down
+ExecStop=/usr/bin/docker compose stop db
 User=ubuntu
 
 [Install]
