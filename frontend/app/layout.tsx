@@ -1,7 +1,28 @@
 import type { Metadata } from "next";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { AppProviders } from "@/components/providers";
+import { Nav } from "@/components/layout/Nav";
 import "./globals.css";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Basis — GPU Compute Fungibility Study",
@@ -9,44 +30,66 @@ export const metadata: Metadata = {
     "A public-data study quantifying GPU compute fungibility across cloud providers, decomposing price dispersion into observable factors and residual basis risk.",
 };
 
-const navItems = [
-  { href: "/", label: "Findings" },
-  { href: "/dispersion", label: "Dispersion" },
-  { href: "/basis", label: "Basis Decomposition" },
-  { href: "/providers", label: "Providers" },
-  { href: "/methodology", label: "Methodology" },
-];
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-gray-950 text-gray-100 antialiased">
-        <header className="border-b border-gray-800">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <Link href="/" className="text-lg font-semibold tracking-tight">
-              Basis
+    <html
+      lang="en"
+      className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}
+    >
+      <body className="min-h-screen bg-[var(--bg)] text-[var(--ink)] antialiased">
+        <header
+          className="sticky top-0 z-50 border-b border-[var(--line)]"
+          style={{
+            background: "rgba(17,24,39,0.82)",
+            backdropFilter: "saturate(1.2) blur(12px)",
+            WebkitBackdropFilter: "saturate(1.2) blur(12px)",
+          }}
+        >
+          <div className="mx-auto flex max-w-[1480px] items-center gap-7 px-10">
+            <Link
+              href="/"
+              className="flex items-baseline gap-2.5 py-4"
+            >
+              <span
+                className="font-serif text-[19px] tracking-[-0.01em] text-[var(--ink-hi)]"
+              >
+                Basis
+              </span>
+              <span className="mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-dim)]">
+                v2 · research
+              </span>
             </Link>
-            <nav className="flex gap-6 text-sm text-gray-400">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="transition-colors hover:text-gray-100"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <Nav />
+            <div className="flex-1" />
           </div>
         </header>
         <AppProviders>
-          <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
+          <main>{children}</main>
         </AppProviders>
+        <Footer />
       </body>
     </html>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mx-auto mt-20 max-w-[1480px] border-t border-[var(--line-lo)] px-10 py-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div className="flex items-baseline gap-3">
+          <span className="font-serif text-sm text-[var(--ink)]">Basis</span>
+          <span className="caption mono">
+            research artifact · public data · 2026
+          </span>
+        </div>
+        <div className="caption mono">
+          Not a price aggregator · Not a derivatives engine
+        </div>
+      </div>
+    </footer>
   );
 }

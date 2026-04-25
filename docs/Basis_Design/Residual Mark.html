@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basis · residual mark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card     { background: #FAFAF7; color: #111; }
+    .card-inv { background: #111;    color: #FAFAF7; }
+    .eyebrow  { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5; }
+    .foot     { font-family: "JetBrains Mono", monospace; font-size: 9px;  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    // Residual mark. "Mostly resolved, but with something irreducible."
+    // Three mark families:
+    //   (1) Grid — NxN of blocks, mostly filled, one or two offset/empty.
+    //   (2) Bars — stacked horizontal bars, mostly flush right, one
+    //       overshoots the clean edge.
+    //   (3) Notch — a solid square with a small corner notch removed.
+    //
+    // The residual element can pick up an optional muted accent. Positions
+    // are hand-tuned, not randomized — the irregularity should read as
+    // deliberate, not glitch.
+
+    const SANS = '"Inter", "Söhne", "GT America", system-ui, sans-serif';
+
+    // ── Marks ───────────────────────────────────────────────────
+
+    // 4×4 grid, with residual cells drawn differently. residualSet is a
+    // list of [row, col] pairs; their treatment varies by `kind`:
+    //   'offset'  — shifted slightly, still filled
+    //   'empty'   — left blank (stroked outline only)
+    //   'outline' — stroked, thin
+    //   'accent'  — drawn with accentColor, solid
+    function GridMark({
+      size = 64,
+      cell = 12,
+      gap = 3,
+      color = '#111',
+      accent,           // optional residual accent color
+      residualSet = [[3, 3]],
+      kind = 'empty',
+      residualShiftPx = 2,
+    }) {
+      const n = 4;
+      const total = n * cell + (n - 1) * gap;
+      const scale = size / total;
+      const blocks = [];
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          const isResidual = residualSet.some(([rr, cc]) => rr === r && cc === c);
+          const x = c * (cell + gap);
+          const y = r * (cell + gap);
+          if (!isResidual) {
+            blocks.push(
+              <rect key={`${r}-${c}`} x={x} y={y} width={cell} height={cell} fill={color} />
+            );
+          } else {
+            if (kind === 'offset') {
+              blocks.push(
+                <rect key={`${r}-${c}`}
+                  x={x + residualShiftPx} y={y + residualShiftPx}
+                  width={cell} height={cell}
+                  fill={accent || color} />
+              );
+            } else if (kind === 'empty') {
+              blocks.push(
+                <rect key={`${r}-${c}`} x={x + 0.5} y={y + 0.5}
+                  width={cell - 1} height={cell - 1}
+                  fill="none" stroke={accent || color} strokeWidth={1} />
+              );
+            } else if (kind === 'outline') {
+              blocks.push(
+                <rect key={`${r}-${c}`} x={x + 0.5} y={y + 0.5}
+                  width={cell - 1} height={cell - 1}
+                  fill="none" stroke={accent || color} strokeWidth={1.25} />
+              );
+            } else if (kind === 'accent') {
+              blocks.push(
+                <rect key={`${r}-${c}`} x={x} y={y} width={cell} height={cell} fill={accent || color} />
+              );
+            } else if (kind === 'halftone') {
+              // finely striped — feels like a residual region in a figure
+              const id = `h-${r}-${c}`;
+              blocks.push(
+                <g key={`${r}-${c}`}>
+                  <defs>
+                    <pattern id={id} width="2" height="2" patternUnits="userSpaceOnUse">
+                      <rect width="2" height="2" fill={color} opacity="0.18" />
+                      <rect width="1" height="2" fill={color} opacity="0.55" />
+                    </pattern>
+                  </defs>
+                  <rect x={x} y={y} width={cell} height={cell} fill={`url(#${id})`} />
+                </g>
+              );
+            }
+          }
+        }
+      }
+      return (
+        <svg width={size} height={size} viewBox={`0 0 ${total} ${total}`} style={{ display: 'block' }}>
+          {blocks}
+        </svg>
+      );
+    }
+
+    // Stacked horizontal bars. All bars align to the left edge. Most align
+    // to the same right edge; one or two overshoot. Widths are picked by
+    // hand for an empirical feel.
+    function BarsMark({
+      size = 64,
+      color = '#111',
+      accent,
+      widths = [0.72, 0.90, 0.55, 0.83, 1.00, 0.66],   // of total width
+      residualRows = [4],                              // which row overshoots
+      cleanEdge = 0.88,                                // the clean right edge
+      overshootAccent = true,
+    }) {
+      const n = widths.length;
+      const rowH = size / (n * 1.55 - 0.55);
+      const gap = rowH * 0.55;
+      const totalH = n * rowH + (n - 1) * gap;
+      const yOffset = (size - totalH) / 2;
+
+      return (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block' }}>
+          {widths.map((w, i) => {
+            const isResidual = residualRows.includes(i);
+            const y = yOffset + i * (rowH + gap);
+            const x1 = 0;
+            const x2 = size * w;
+            // dim bars that don't reach the clean edge; full-weight to
+            // the clean-edge and residual rows.
+            const reachesEdge = Math.abs(w - cleanEdge) < 0.03 || w > cleanEdge;
+            const barColor = isResidual
+              ? (overshootAccent ? (accent || color) : color)
+              : (reachesEdge ? color : color);
+            const opacity = isResidual ? 1 : (reachesEdge ? 1 : 0.55);
+            return (
+              <rect key={i} x={x1} y={y} width={x2} height={rowH}
+                fill={barColor} opacity={opacity} />
+            );
+          })}
+          {/* the clean edge — a whisper line */}
+          <line x1={size * cleanEdge} y1={yOffset - 2} x2={size * cleanEdge} y2={yOffset + totalH + 2}
+            stroke={color} strokeOpacity={0.25} strokeWidth={0.75} strokeDasharray="1.5 1.5" />
+        </svg>
+      );
+    }
+
+    // Solid square with one corner notched out. The notch can be filled
+    // with accent or left empty.
+    function NotchMark({
+      size = 64,
+      color = '#111',
+      accent,
+      corner = 'br',        // 'tl' | 'tr' | 'bl' | 'br'
+      notchSize = 0.28,     // fraction of side
+      notchFill = 'none',   // 'none' | 'accent'
+    }) {
+      const s = size;
+      const n = s * notchSize;
+      let path;
+      if (corner === 'br') {
+        path = `M0,0 L${s},0 L${s},${s - n} L${s - n},${s - n} L${s - n},${s} L0,${s} Z`;
+      } else if (corner === 'tr') {
+        path = `M0,0 L${s - n},0 L${s - n},${n} L${s},${n} L${s},${s} L0,${s} Z`;
+      } else if (corner === 'bl') {
+        path = `M0,0 L${s},0 L${s},${s} L${n},${s} L${n},${s - n} L0,${s - n} Z`;
+      } else {
+        path = `M${n},0 L${s},0 L${s},${s} L0,${s} L0,${n} L${n},${n} Z`;
+      }
+      return (
+        <svg width={size} height={size} viewBox={`0 0 ${s} ${s}`} style={{ display: 'block' }}>
+          <path d={path} fill={color} />
+          {notchFill === 'accent' && accent && (
+            corner === 'br' ? <rect x={s - n} y={s - n} width={n} height={n} fill={accent} /> :
+            corner === 'tr' ? <rect x={s - n} y={0} width={n} height={n} fill={accent} /> :
+            corner === 'bl' ? <rect x={0} y={s - n} width={n} height={n} fill={accent} /> :
+                              <rect x={0} y={0} width={n} height={n} fill={accent} />
+          )}
+        </svg>
+      );
+    }
+
+    function Mark({ concept, size, color, accent }) {
+      const c = color || concept.color || '#111';
+      const a = concept.accent && accent !== false ? concept.accent : undefined;
+      if (concept.kind === 'grid') {
+        return <GridMark
+          size={size}
+          cell={size / 5.8}
+          gap={size / 24}
+          color={c}
+          accent={a}
+          residualSet={concept.residualSet}
+          kind={concept.variant}
+          residualShiftPx={size * 0.03}
+        />;
+      }
+      if (concept.kind === 'bars') {
+        return <BarsMark
+          size={size}
+          color={c}
+          accent={a}
+          widths={concept.widths}
+          residualRows={concept.residualRows}
+          cleanEdge={concept.cleanEdge}
+        />;
+      }
+      return <NotchMark
+        size={size}
+        color={c}
+        accent={a}
+        corner={concept.corner}
+        notchSize={concept.notchSize}
+        notchFill={concept.notchFill}
+      />;
+    }
+
+    function Wordmark({ size = 28, color = '#111', weight = 400 }) {
+      return (
+        <span style={{
+          fontFamily: SANS, fontSize: size, fontWeight: weight,
+          letterSpacing: '-0.015em', color, lineHeight: 1,
+          fontFeatureSettings: '"ss01", "cv11", "kern"',
+        }}>basis</span>
+      );
+    }
+
+    // ── Lockups ────────────────────────────────────────────────
+
+    // Horizontal — mark left, wordmark right, separated by a hair
+    function Horizontal({ concept, inverted }) {
+      const bg = inverted ? '#111' : '#FAFAF7';
+      const fg = inverted ? '#FAFAF7' : '#111';
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Horizontal lockup</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <Mark concept={concept} size={52} color={fg} />
+              <div style={{ width: 1, height: 36, background: fg, opacity: 0.18 }} />
+              <Wordmark size={34} color={fg} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.kind}</span>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.variant || concept.notchFill || '—'}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Stacked — mark centered top, wordmark below
+    function Stacked({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Stacked · card</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+              <Mark concept={concept} size={76} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <Wordmark size={28} />
+                <span style={{ fontFamily: SANS, fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#111', opacity: 0.55 }}>
+                  residual research
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>—</div>
+        </div>
+      );
+    }
+
+    // Favicons — mark only at 16/32/64/128. For tiny sizes, accents and
+    // outline details may vanish; we keep them on — the point of showing
+    // multiple sizes is to see where the residual signal is still legible.
+    function FaviconRow({ concept }) {
+      const sizes = [16, 32, 64, 128];
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Favicon · mark only</div>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', alignItems: 'end', justifyItems: 'center', alignContent: 'center', gap: 20 }}>
+            {sizes.map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <div style={{ width: s, height: s, background: '#FAFAF7', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Mark concept={concept} size={s * 0.68} />
+                </div>
+                <div className="foot" style={{ marginTop: 6 }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>legibility at scale</div>
+        </div>
+      );
+    }
+
+    // In-situ paper figure — the mark shown as if it were a tiny figure
+    // caption in a research paper. This is the "does it belong in a
+    // research paper" test the brief names.
+    function Insitu({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', display: 'flex' }}>
+          <div style={{ flex: 1, padding: '44px 48px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="eyebrow">In situ · paper</div>
+            <div style={{ fontFamily: SANS, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.55 }}>Section 3.2</div>
+            <div style={{ fontFamily: SANS, fontSize: 22, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
+              What remains after observable factors
+            </div>
+            <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.55, color: '#111', opacity: 0.75, maxWidth: 440 }}>
+              After conditioning on provider, region, interconnect, term length and instance family, a non-trivial portion of price variance remains unexplained. We call this the residual basis.
+            </div>
+            <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 16, paddingTop: 18, borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+              <Mark concept={concept} size={28} />
+              <Wordmark size={14} weight={500} />
+              <span style={{ fontFamily: SANS, fontSize: 11.5, opacity: 0.5, marginLeft: 'auto' }}>basis.research · 2026</span>
+            </div>
+          </div>
+          <div style={{ width: 220, borderLeft: '1px solid rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }}>
+            <Mark concept={concept} size={120} />
+            <div style={{ fontFamily: SANS, fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
+              Figure 3.2<br />residual structure
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Concepts ───────────────────────────────────────────────
+    // Each concept declares its kind + variant + (optional) accent.
+    // Accent palette chosen muted:
+    //   slate  #5B6B7A
+    //   warm   #6B655C
+    //   rust   #9C5B4A  (only for the residual element; not a brand color)
+
+    const CONCEPTS = [
+      // Grid family
+      { id: 'g1', name: 'I · grid · empty residual',
+        note: '15 of 16 cells filled. The residual cell is stroked outline only — present but not filled.',
+        kind: 'grid', variant: 'empty', residualSet: [[2, 3]] },
+
+      { id: 'g2', name: 'II · grid · offset residual',
+        note: 'One cell shifted a fraction off-grid. Feels like a measurement that didn\'t quite land.',
+        kind: 'grid', variant: 'offset', residualSet: [[1, 3]] },
+
+      { id: 'g3', name: 'III · grid · two residuals, accent',
+        note: 'Two residual cells in a muted slate. Reads as structured unexplained variance.',
+        kind: 'grid', variant: 'accent', residualSet: [[0, 3], [3, 0]], accent: '#5B6B7A' },
+
+      { id: 'g4', name: 'IV · grid · halftone residual',
+        note: 'Residual cell rendered as fine hatching — the "partially explained" register from stats figures.',
+        kind: 'grid', variant: 'halftone', residualSet: [[2, 2]] },
+
+      // Bars family
+      { id: 'b1', name: 'V · bars · one overshoots',
+        note: 'A stack of widths — most touch a clean right edge, one overshoots it. Dashed guide shows the edge.',
+        kind: 'bars', variant: 'mono',
+        widths: [0.72, 0.88, 0.55, 0.88, 1.00, 0.88, 0.66],
+        residualRows: [4], cleanEdge: 0.88, accent: undefined },
+
+      { id: 'b2', name: 'VI · bars · accent overshoot',
+        note: 'Same idea, but the overshooting bar is a desaturated rust. The residual earns color; nothing else does.',
+        kind: 'bars', variant: 'accent',
+        widths: [0.72, 0.88, 0.55, 0.88, 1.00, 0.88, 0.66],
+        residualRows: [4], cleanEdge: 0.88, accent: '#9C5B4A' },
+
+      // Notch family
+      { id: 'n1', name: 'VII · notch · empty corner',
+        note: 'Solid square minus a small bottom-right corner. The most reductive reading of "something removed."',
+        kind: 'notch', corner: 'br', notchSize: 0.28, notchFill: 'none' },
+
+      { id: 'n2', name: 'VIII · notch · accent inset',
+        note: 'The removed corner is filled with a muted slate — what was explained away shown explicitly.',
+        kind: 'notch', corner: 'br', notchSize: 0.28, notchFill: 'accent', accent: '#5B6B7A' },
+    ];
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.note}>
+              <DCArtboard id="h"    label="Horizontal"            width={720} height={320}><Horizontal concept={c} /></DCArtboard>
+              <DCArtboard id="hi"   label="Horizontal · inverted" width={720} height={320}><Horizontal concept={c} inverted /></DCArtboard>
+              <DCArtboard id="s"    label="Stacked"               width={420} height={420}><Stacked concept={c} /></DCArtboard>
+              <DCArtboard id="f"    label="Favicon · scales"      width={560} height={320}><FaviconRow concept={c} /></DCArtboard>
+              <DCArtboard id="situ" label="In situ · figure"      width={900} height={460}><Insitu concept={c} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

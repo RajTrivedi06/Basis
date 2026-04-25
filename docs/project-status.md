@@ -15,6 +15,8 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 
 **Basis v2 in progress.** Phase A shipped on 2026-04-21. Proposal: [temp-doc/basis-v2-proposal-r2.md](../temp-doc/basis-v2-proposal-r2.md).
 
+**UI port in progress on the `ui-port-v2` branch.** A residual-first redesign of the frontend — drop Tremor, hand-roll SVG charts, Fraunces/Inter/JetBrains Mono typography, amber-residual discipline. Decision: [ADR 0005](01-architecture/adr/0005-residual-first-ui.md). Stage 1 (tokens + fonts + shell + utilities) is shipped on the branch; pages still render v1 content with v1 colors and v1 charts until Stages 2+ port them. Not merged to main until the port is end-to-end consistent.
+
 ## v2 progress
 
 | Phase | Scope | Status |
@@ -23,6 +25,7 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 | B | Provenance drilldown (parallel `explain_*` functions) | ✅ Shipped 2026-04-21 |
 | C | Slice interactivity | ⬛ Skipped 2026-04-21 — see [`temp-doc/phase-c-scoping.md`](../temp-doc/phase-c-scoping.md) |
 | D | Rolling stability view | 🔲 Blocked on ≥30 days of cron data (earliest meaningful start ~2026-05-17) |
+| UI port | Residual-first redesign (ADR 0005) | 🟡 Stage 1 of 7 shipped on `ui-port-v2`; Stages 2+ (chart primitives, page ports, cleanup, visual QA) pending |
 
 ## Data at a glance (2026-04-20)
 
@@ -55,6 +58,7 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 
 ## Update log
 
+- 2026-04-21 — UI port kicked off on `ui-port-v2` branch. Baseline commit on main (`7776ae5`) captures pre-port state. Stage 1 shipped on the branch: ~60 CSS design tokens + utility classes in `globals.css`, next/font/google loads Fraunces + Inter + JetBrains Mono as variable fonts, new sticky-blurred TopBar with serif wordmark + "v2 · research" eyebrow, flat nav with underline-active, footer, Tailwind config rewritten (Tremor glob + typography plugin dropped, tokens exposed as named colors), `useSku` hook (URL search params), `factorColor` + `gpuFamily` utilities. One in-session fix: container padding restored on `<main>` (dropped in the initial rewrite, causing v1 page content to bleed to viewport edges). Pages still render v1 content — dissonant with the new shell; gets resolved as Stages 2+ port them. Decision captured as ADR 0005 (Proposed). Screenshots under `design/pre-port-baseline/` + `design/stage-1-fixed/` for comparison.
 - 2026-04-21 — Pipeline offset/filter bug fixed in `backend/basis/normalization/pipeline.py` (cursor-based pagination via `id > last_id`; advances reliably across skipped-unknown-GPU batches, which pure offset-removal would have infinite-looped on). Regression test added. Backfill verification: zero silent data loss in current DB (eligible=9979, canonical=9979). Full suite: 20 passed / 4 skipped.
 - 2026-04-21 — Between-phase session: 19-test suite backfilled (fidelity / analytics integrity / API smoke + fixture-gated collector parse tests); country-code normalization fixed in `region.py` (TensorDock full-name → ISO-2); canonical offers + analytics regenerated; residual shifts all < 0.005pp across 179 decomposition rows. Pre-existing pipeline offset bug discovered and flagged; fixed in the following session.
 - 2026-04-21 — v2 Phase C skipped. Rationale in [`temp-doc/phase-c-scoping.md`](../temp-doc/phase-c-scoping.md). ADR 0005 not pursued; no code footprint.

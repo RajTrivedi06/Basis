@@ -63,3 +63,6 @@ logs/
 *.log
 *.bak
 *.tmp
+
+# Design scratch (regeneratable via design/inspect_page.py)
+design/debug/

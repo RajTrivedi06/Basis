@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basis · typographic mark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card     { background: #FAFAF7; color: #0B1220; }
+    .card-inv { background: #0B1220; color: #FAFAF7; }
+    .eyebrow  { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5; }
+    .foot     { font-family: "JetBrains Mono", monospace; font-size: 9px;  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    // Pure-typographic mark. Two type stacks, regular weight only. A single
+    // mathematical glyph is the only non-letterform element — either placed
+    // as prefix/subscript/brackets, or hidden as the dot on "i."
+
+    const SERIF = '"Fraunces", "Source Serif 4", "Tiempos", "GT Sectra", Georgia, serif';
+    const SANS  = '"Inter", "Söhne", "Suisse Intl", "Neue Haas Grotesk", system-ui, sans-serif';
+
+    // A lowercase "basis" with configurable glyph placement.
+    // glyph: 'bracket' | 'delta' | 'endash' | 'minus' | 'tick-on-i' | 'dot-on-i-dash' | 'none'
+    // placement: 'prefix' | 'subscript' | 'brackets' | 'i-replace'
+    function Mark({
+      family = SERIF,
+      size = 96,
+      weight = 400,
+      color = '#0B1220',
+      glyph = 'bracket',
+      placement = 'brackets',
+      opsz = 144,
+    }) {
+      const fs = size;
+      const small = fs * 0.48;  // mathematical glyph — slightly smaller than letters
+      const base = {
+        fontFamily: family,
+        fontSize: fs,
+        fontWeight: weight,
+        letterSpacing: '-0.012em',
+        color,
+        lineHeight: 1,
+        fontVariationSettings: family === SERIF ? `"opsz" ${opsz}` : undefined,
+        fontFeatureSettings: '"kern","liga"',
+      };
+      const glyphStyle = {
+        fontFamily: family,
+        fontSize: small,
+        fontWeight: weight,
+        color,
+        lineHeight: 1,
+        opacity: 0.85,
+      };
+
+      // i-replace: render the full wordmark once, clipping out a small
+      // rectangle over the tittle of the "i" (using clip-path with an
+      // evenodd polygon — the inner rect becomes a hole). Then overlay the
+      // replacement mark (dash or tick) in that hole. No bg-color erase.
+      if (placement === 'i-replace') {
+        // The i in "basis" is the 4th letter. To position the hole we need
+        // to know the x-center and y-position of the tittle. We render the
+        // word invisibly first to measure — but SSR-safe fallback: use
+        // fixed em-based heuristics that work well for both Fraunces and
+        // Inter at normal weights.
+        //
+        // The tittle sits roughly at: y = 0.06..0.22 of the cap-height.
+        // The i is character index 3 (0-based) in "basis". Average
+        // advance width ≈ 0.48em for Fraunces, ≈ 0.42em for Inter.
+        const advance = family === SERIF ? 0.48 : 0.40;
+        const iCenterX = (advance * 3) + (advance * 0.5); // in em
+        // Hole over the tittle — small square in em units
+        const holeW = 0.22, holeH = 0.22;
+        const holeX = iCenterX - holeW / 2;
+        const holeY = 0.02;
+        // Outer rect covers full bounding box generously
+        const OX = -0.5, OY = -0.1, OW = 5, OH = 1.2;
+        // Even-odd polygon: outer rect CW, then inner rect CCW (hole).
+        const emToPct = (v) => v;
+        // Use clip-path polygon in px via fs so it scales with size.
+        const toPx = (v) => `${(v * fs).toFixed(2)}px`;
+        const clip =
+          `polygon(` +
+          `${toPx(OX)} ${toPx(OY)},` +
+          `${toPx(OX + OW)} ${toPx(OY)},` +
+          `${toPx(OX + OW)} ${toPx(OY + OH)},` +
+          `${toPx(OX)} ${toPx(OY + OH)},` +
+          `${toPx(OX)} ${toPx(OY)},` +
+          // back to start, then cut the hole (CCW)
+          `${toPx(holeX)} ${toPx(holeY)},` +
+          `${toPx(holeX)} ${toPx(holeY + holeH)},` +
+          `${toPx(holeX + holeW)} ${toPx(holeY + holeH)},` +
+          `${toPx(holeX + holeW)} ${toPx(holeY)},` +
+          `${toPx(holeX)} ${toPx(holeY)}` +
+          `)`;
+
+        return (
+          <span style={{ position: 'relative', display: 'inline-block', lineHeight: 1 }}>
+            <span style={{ ...base, display: 'inline-block', clipPath: clip, WebkitClipPath: clip }}>
+              basis
+            </span>
+            {/* Replacement mark, placed in the hole */}
+            <span style={{
+              position: 'absolute',
+              left: toPx(iCenterX - (glyph === 'tick-on-i' ? 0.015 : 0.07)),
+              top:  toPx(holeY + (glyph === 'tick-on-i' ? 0.06 : 0.10)),
+              width:  toPx(glyph === 'tick-on-i' ? 0.03 : 0.14),
+              height: toPx(glyph === 'tick-on-i' ? 0.10 : 0.02),
+              background: color,
+            }} />
+          </span>
+        );
+      }
+
+      const glyphChar =
+        glyph === 'delta'  ? 'Δ' :
+        glyph === 'endash' ? '–' :
+        glyph === 'minus'  ? '−' :
+        glyph === 'bracket' ? '[' : '';
+
+      if (placement === 'prefix') {
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: fs * 0.16 }}>
+            <span style={glyphStyle}>{glyphChar}</span>
+            <span style={base}>basis</span>
+          </span>
+        );
+      }
+
+      if (placement === 'subscript') {
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: fs * 0.08 }}>
+            <span style={base}>basis</span>
+            <span style={{ ...glyphStyle, fontSize: fs * 0.32, transform: 'translateY(6%)', display: 'inline-block' }}>{glyphChar}</span>
+          </span>
+        );
+      }
+
+      if (placement === 'brackets') {
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: fs * 0.12 }}>
+            <span style={glyphStyle}>[</span>
+            <span style={base}>basis</span>
+            <span style={glyphStyle}>]</span>
+          </span>
+        );
+      }
+
+      // placement === 'none'
+      return <span style={base}>basis</span>;
+    }
+
+    // ── Artboards ────────────────────────────────────────────
+
+    function Header({ concept, inverted }) {
+      const bg = inverted ? '#0B1220' : '#FAFAF7';
+      const fg = inverted ? '#FAFAF7' : '#0B1220';
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: bg }}>
+          <div className="eyebrow" style={{ opacity: inverted ? 0.55 : 0.5 }}>Header · {concept.family === SERIF ? 'serif' : 'sans'}</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg }}>
+            <Mark {...concept} size={110} color={fg} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.placement}</span>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{concept.glyph}</span>
+          </div>
+        </div>
+      );
+    }
+
+    function PaperHead({ concept }) {
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '28px 40px 14px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+            <div className="eyebrow" style={{ marginBottom: 10 }}>Working paper · 03</div>
+            <div style={{ fontFamily: concept.family, fontSize: 28, letterSpacing: '-0.01em', lineHeight: 1.1 }}>
+              On the fungibility of GPU compute
+            </div>
+            <div style={{ fontFamily: SANS, fontSize: 12.5, opacity: 0.6, marginTop: 8 }}>Filed 2026 · v1.1</div>
+          </div>
+          <div style={{ flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontFamily: concept.family, fontSize: 14.5, lineHeight: 1.55, maxWidth: 540 }}>
+              We study the distribution of prices paid for a fungible H100-hour across providers, regions, and contract terms. A benchmark basis is defined; the residual unexplained dispersion is reported.
+            </div>
+          </div>
+          <div style={{ padding: '16px 40px', borderTop: '1px solid rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Mark {...concept} size={18} />
+            <span className="foot">basis.research · Pg. 1 of 24</span>
+          </div>
+        </div>
+      );
+    }
+
+    function Terminal({ concept }) {
+      return (
+        <div className="card-inv" style={{ width: '100%', height: '100%', padding: 0, display: 'flex', flexDirection: 'column', background: '#0B1220' }}>
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Mark {...concept} size={16} color="#FAFAF7" />
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.15em', opacity: 0.45 }}>BASIS · LIVE</span>
+          </div>
+          <div style={{ flex: 1, padding: '24px 24px', fontFamily: 'JetBrains Mono, monospace', fontSize: 11.5, color: '#FAFAF7', lineHeight: 1.75 }}>
+            <div style={{ opacity: 0.55 }}>$ basis query --sku h100 --term on-demand</div>
+            <div style={{ marginTop: 10 }}>provider         price    residual</div>
+            <div style={{ opacity: 0.8 }}>─────────────────────────────────</div>
+            <div>aws.us-east-1    2.41     +0.12</div>
+            <div>gcp.us-central   2.56     +0.04</div>
+            <div>coreweave.dfw    1.98     −0.31</div>
+            <div>lambda.sfo       2.12     −0.19</div>
+            <div style={{ opacity: 0.55, marginTop: 10 }}>median 2.31 · iqr 0.68 · n 43</div>
+          </div>
+          <div style={{ padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.14em', opacity: 0.4 }}>TTY · BASIS</span>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.14em', opacity: 0.4 }}>26·05·12</span>
+          </div>
+        </div>
+      );
+    }
+
+    function Favicons({ concept }) {
+      const sizes = [16, 32, 64, 128];
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow">Favicon · wordmark</div>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', alignItems: 'end', justifyItems: 'center', alignContent: 'center', gap: 20 }}>
+            {sizes.map(s => (
+              <div key={s} style={{ textAlign: 'center' }}>
+                <div style={{ width: s * 2.4, height: s, background: '#FAFAF7', border: '1px solid rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Mark {...concept} size={s * 0.55} />
+                </div>
+                <div className="foot" style={{ marginTop: 6 }}>{s}px</div>
+              </div>
+            ))}
+          </div>
+          <div className="foot" style={{ textAlign: 'center' }}>inline · wordmark</div>
+        </div>
+      );
+    }
+
+    // ── Concepts ─────────────────────────────────────────────
+
+    const CONCEPTS = [
+      { id: 'c1',  name: 'I · serif · brackets',
+        note: 'Fraunces at opsz 144. Brackets on either side — the cleanest read of "basis as a term being defined."',
+        family: SERIF, glyph: 'bracket', placement: 'brackets' },
+
+      { id: 'c2',  name: 'II · serif · Δ prefix',
+        note: 'Capital delta prefix. Feels like an equation, quietly signals "change in."',
+        family: SERIF, glyph: 'delta', placement: 'prefix' },
+
+      { id: 'c3',  name: 'III · serif · minus prefix',
+        note: 'A single unicode minus sign. The most restrained mathematical read.',
+        family: SERIF, glyph: 'minus', placement: 'prefix' },
+
+      { id: 'c4',  name: 'IV · serif · en-dash subscript',
+        note: 'En-dash set as a subscript — an editorial footnote more than a math glyph.',
+        family: SERIF, glyph: 'endash', placement: 'subscript' },
+
+      { id: 'c5',  name: 'V · serif · dash-on-i',
+        note: 'The tittle of the "i" is replaced by a tiny horizontal dash. Almost invisible — the math is hidden in the letterform.',
+        family: SERIF, glyph: 'dot-on-i-dash', placement: 'i-replace' },
+
+      { id: 'c6',  name: 'VI · sans · brackets',
+        note: 'Inter, regular weight, square brackets. The terminal sibling of I.',
+        family: SANS, glyph: 'bracket', placement: 'brackets' },
+
+      { id: 'c7',  name: 'VII · sans · Δ prefix',
+        note: 'Inter + capital delta. The equation read, in sans.',
+        family: SANS, glyph: 'delta', placement: 'prefix' },
+
+      { id: 'c8',  name: 'VIII · sans · minus subscript',
+        note: 'Minus set as subscript. Quiet, terminal, precise.',
+        family: SANS, glyph: 'minus', placement: 'subscript' },
+
+      { id: 'c9',  name: 'IX · sans · tick-on-i',
+        note: 'The tittle replaced by a tiny vertical tick. A measurement mark inside a letterform.',
+        family: SANS, glyph: 'tick-on-i', placement: 'i-replace' },
+
+      { id: 'c10', name: 'X · sans · nothing',
+        note: 'Control: the wordmark alone, no glyph. A reference for how much the mathematical mark is doing.',
+        family: SANS, glyph: 'none', placement: 'none' },
+    ];
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.note}>
+              <DCArtboard id="h"    label="Header"                width={720} height={320}><Header concept={c} /></DCArtboard>
+              <DCArtboard id="hi"   label="Header · inverted"     width={720} height={320}><Header concept={c} inverted /></DCArtboard>
+              <DCArtboard id="situ" label="In situ · paper"       width={720} height={380}><PaperHead concept={c} /></DCArtboard>
+              <DCArtboard id="term" label="In situ · terminal"    width={560} height={380}><Terminal concept={c} /></DCArtboard>
+              <DCArtboard id="fav"  label="Wordmark · scales"     width={640} height={320}><Favicons concept={c} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

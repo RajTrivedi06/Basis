@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>basis · dispersion mark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #f0eee9; }
+    .card     { background: #FAFAF7; color: #111; }
+    .card-inv { background: #111;    color: #FAFAF7; }
+    .eyebrow  { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.5; }
+    .foot     { font-family: "JetBrains Mono", monospace; font-size: 9px;  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    // A dispersion mark. Horizontal benchmark line, observed values
+    // scattered above/below. Positions are picked by hand (not random) to
+    // avoid the evenly-spaced "pattern" feel — each set should look like
+    // real empirical data.
+    //
+    // Each concept varies the observation glyph (dot / tick / plus) and the
+    // accent treatment (mono, slate, warm gray). The line itself stays the
+    // same quiet weight everywhere.
+
+    const SANS = '"Inter", "Söhne", "Neue Haas Grotesk", system-ui, sans-serif';
+
+    // ── Data ────────────────────────────────────────────────────
+    // Normalized offsets from the benchmark in range roughly [-1, 1].
+    // Picked by hand for an empirical-looking, non-symmetric distribution.
+    // Each array is 6–8 points, spanning most of the line horizontally.
+    //
+    //   [xFraction, yOffset]  xFraction in [0.05, 0.95], y in [-1, 1]
+    const DATA = {
+      A: [ // moderate spread, two above-cluster
+        [0.08, -0.55], [0.17,  0.30], [0.28, -0.15], [0.40,  0.80],
+        [0.52, -0.40], [0.63,  0.55], [0.74, -0.70], [0.88,  0.20],
+      ],
+      B: [ // wider tails
+        [0.06,  0.70], [0.19, -0.25], [0.33,  0.10], [0.46, -0.90],
+        [0.58,  0.45], [0.71, -0.20], [0.85,  0.85],
+      ],
+      C: [ // skewed above
+        [0.10,  0.40], [0.22,  0.75], [0.34, -0.20], [0.47,  0.60],
+        [0.59,  0.25], [0.72, -0.50], [0.84,  0.35],
+      ],
+      D: [ // tight around benchmark with one outlier
+        [0.09, -0.18], [0.20,  0.12], [0.31, -0.30], [0.42,  0.08],
+        [0.53,  0.95], [0.65, -0.22], [0.77,  0.15], [0.90, -0.10],
+      ],
+      E: [ // sparse, 5 points
+        [0.12, -0.45], [0.30,  0.65], [0.50, -0.25], [0.68,  0.15], [0.88, -0.80],
+      ],
+      F: [ // left-biased density
+        [0.07,  0.25], [0.14, -0.55], [0.23,  0.45], [0.34, -0.15],
+        [0.47,  0.60], [0.63, -0.20], [0.82,  0.10],
+      ],
+    };
+
+    // A single dispersion mark. width/height are pixel dimensions for the
+    // SVG; the data/glyph/color knobs are inherited from the concept.
+    function DispersionMark({
+      data = DATA.A,
+      width = 220,
+      height = 56,
+      stroke = '#111',
+      glyphColor = '#111',
+      glyph = 'dot',
+      lineWeight = 1,
+      dotSize = 2.6,
+      amplitude = 0.7,   // scale yOffset into px: 0..1 of the half-height
+    }) {
+      const midY = height / 2;
+      const halfAmp = (height / 2) * amplitude;
+      // inset the line a hair from edges
+      const x0 = width * 0.03, x1 = width * 0.97;
+
+      const renderGlyph = ([fx, fy], i) => {
+        const x = x0 + (x1 - x0) * fx;
+        const y = midY - fy * halfAmp;
+        if (glyph === 'dot') {
+          return <circle key={i} cx={x} cy={y} r={dotSize} fill={glyphColor} />;
+        }
+        if (glyph === 'tick') {
+          // a short vertical whisker
+          const h = dotSize * 2.4;
+          return <line key={i} x1={x} y1={y - h/2} x2={x} y2={y + h/2} stroke={glyphColor} strokeWidth={1.1} />;
+        }
+        if (glyph === 'plus') {
+          const h = dotSize * 1.9;
+          return (
+            <g key={i} stroke={glyphColor} strokeWidth={0.9}>
+              <line x1={x - h} y1={y} x2={x + h} y2={y} />
+              <line x1={x} y1={y - h} x2={x} y2={y + h} />
+            </g>
+          );
+        }
+        if (glyph === 'openCircle') {
+          return <circle key={i} cx={x} cy={y} r={dotSize} fill="none" stroke={glyphColor} strokeWidth={0.9} />;
+        }
+      };
+
+      return (
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+          {/* benchmark line */}
+          <line x1={x0} y1={midY} x2={x1} y2={midY} stroke={stroke} strokeWidth={lineWeight} strokeLinecap="butt" />
+          {/* observations */}
+          {data.map(renderGlyph)}
+        </svg>
+      );
+    }
+
+    function Wordmark({ size = 28, color = '#111', weight = 400, letterSpacing = '-0.015em' }) {
+      return (
+        <span style={{
+          fontFamily: SANS, fontSize: size, fontWeight: weight, letterSpacing,
+          color, lineHeight: 1,
+          fontFeatureSettings: '"ss01", "cv11", "kern"',
+        }}>basis</span>
+      );
+    }
+
+    // ── Compositions ────────────────────────────────────────────
+
+    // Wide horizontal: mark above, wordmark centered below
+    function Horizontal({ data, glyph, glyphColor, inverted }) {
+      const bg = inverted ? '#111' : '#FAFAF7';
+      const fg = inverted ? '#FAFAF7' : '#111';
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ opacity: inverted ? 0.45 : 0.5 }}>Horizontal lockup · header</div>
+
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+              <DispersionMark data={data} width={260} height={56} stroke={fg} glyphColor={inverted ? glyphColor.inv : glyphColor.lt} glyph={glyph} />
+              <Wordmark size={30} color={fg} />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{glyph}</span>
+            <span className="foot" style={{ color: fg, opacity: 0.45 }}>{data.length} obs</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Stacked (near-square): mark on top, wordmark + tagline below
+    function Stacked({ data, glyph, glyphColor, inverted }) {
+      const fg = inverted ? '#FAFAF7' : '#111';
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 48, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ opacity: 0.5 }}>Stacked · card · profile</div>
+
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+              <DispersionMark data={data} width={180} height={48} stroke={fg} glyphColor={inverted ? glyphColor.inv : glyphColor.lt} glyph={glyph} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <Wordmark size={28} color={fg} />
+                <span style={{ fontFamily: SANS, fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: fg, opacity: 0.55 }}>
+                  compute dispersion
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="foot" style={{ color: fg, opacity: 0.45, textAlign: 'center' }}>—</div>
+        </div>
+      );
+    }
+
+    // Favicon / compact mark — mark-only at multiple pixel sizes.
+    // Critical: at small sizes, overly-dense point counts mush. We
+    // down-sample data and clamp dotSize so it stays legible.
+    function FaviconRow({ data, glyph, glyphColor, inverted }) {
+      const fg = inverted ? '#FAFAF7' : '#111';
+      // pick a 5-point subset for tiny favicons so it doesn't mush
+      const small = [data[0], data[Math.floor(data.length/3)], data[Math.floor(data.length/2)], data[Math.floor(2*data.length/3)], data[data.length-1]];
+
+      const sizes = [
+        { size: 16, data: small, dot: 1.2, lineWeight: 0.75, amp: 0.55 },
+        { size: 32, data: small, dot: 1.9, lineWeight: 0.9,  amp: 0.6 },
+        { size: 64, data: data,  dot: 2.6, lineWeight: 1,    amp: 0.65 },
+        { size: 128, data: data, dot: 4.0, lineWeight: 1.1,  amp: 0.7 },
+      ];
+
+      return (
+        <div className={inverted ? 'card-inv' : 'card'} style={{ width: '100%', height: '100%', padding: 40, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div className="eyebrow" style={{ opacity: 0.5 }}>Favicon · mark only</div>
+
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', alignItems: 'end', justifyItems: 'center', alignContent: 'center', gap: 20 }}>
+            {sizes.map(({ size, data: d, dot, lineWeight, amp }) => (
+              <div key={size} style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: size, height: size,
+                  background: inverted ? '#111' : '#FAFAF7',
+                  border: `1px solid ${inverted ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <DispersionMark
+                    data={d} width={size * 0.82} height={size * 0.6}
+                    stroke={fg} glyphColor={inverted ? glyphColor.inv : glyphColor.lt}
+                    glyph={glyph} dotSize={dot} lineWeight={lineWeight} amplitude={amp}
+                  />
+                </div>
+                <div className="foot" style={{ color: fg, opacity: 0.45, marginTop: 6 }}>{size}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="foot" style={{ color: fg, opacity: 0.45, textAlign: 'center' }}>down-sampled at 16/32</div>
+        </div>
+      );
+    }
+
+    // In-situ preview — a tiny site-header + paragraph, shows the mark at
+    // operating scale so we can judge how "quiet" it actually reads.
+    function Insitu({ data, glyph, glyphColor }) {
+      const lineBody = '1px solid rgba(0,0,0,0.08)';
+      return (
+        <div className="card" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '18px 28px', borderBottom: lineBody, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <DispersionMark data={data.slice(0, 6)} width={68} height={20} glyph={glyph} dotSize={1.4} lineWeight={0.85} amplitude={0.8} glyphColor={glyphColor.lt} />
+              <Wordmark size={16} weight={500} />
+            </div>
+            <div style={{ display: 'flex', gap: 22 }}>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, color: '#111' }}>Findings</span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, color: '#111', opacity: 0.55 }}>Methodology</span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, color: '#111', opacity: 0.55 }}>Data</span>
+            </div>
+          </div>
+
+          <div style={{ padding: '40px 48px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div className="eyebrow" style={{ marginBottom: 14 }}>Working paper · 03</div>
+            <div style={{ fontFamily: SANS, fontSize: 22, lineHeight: 1.3, letterSpacing: '-0.01em', maxWidth: 520 }}>
+              On a given day, the price paid for an H100-hour varies by more than 4× across providers — even after adjusting for region, interconnect, and term.
+            </div>
+          </div>
+
+          <div style={{ padding: '14px 28px', borderTop: lineBody, display: 'flex', justifyContent: 'space-between' }}>
+            <span className="foot">basis.research</span>
+            <span className="foot">In-situ · header</span>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Concepts ────────────────────────────────────────────────
+    // glyphColor has two entries per concept: `lt` for light bg, `inv` for
+    // inverted bg. Accent choices per the brief: mono, slate blue, warm gray.
+
+    const CONCEPTS = [
+      {
+        id: 'a', name: 'I · dot · mono',
+        note: 'Filled dots, pure monochrome. The baseline — nothing but data and the line.',
+        data: DATA.A, glyph: 'dot', glyphColor: { lt: '#111', inv: '#FAFAF7' },
+      },
+      {
+        id: 'b', name: 'II · dot · slate',
+        note: 'Dots in a desaturated slate; quiet separation between observation and benchmark.',
+        data: DATA.B, glyph: 'dot', glyphColor: { lt: '#5B6B7A', inv: '#8E9AA6' },
+      },
+      {
+        id: 'c', name: 'III · tick · mono',
+        note: 'Whisker ticks instead of dots — reads more like a plotted time series than a scatter.',
+        data: DATA.C, glyph: 'tick', glyphColor: { lt: '#111', inv: '#FAFAF7' },
+      },
+      {
+        id: 'd', name: 'IV · tick · warm gray',
+        note: 'Ticks in a warm gray; the benchmark line stays near-black, dots recede.',
+        data: DATA.D, glyph: 'tick', glyphColor: { lt: '#6B655C', inv: '#A39E94' },
+      },
+      {
+        id: 'e', name: 'V · plus · mono',
+        note: 'Plus marks — matrix/scatter-plot convention. Analytical, slightly more technical.',
+        data: DATA.E, glyph: 'plus', glyphColor: { lt: '#111', inv: '#FAFAF7' },
+      },
+      {
+        id: 'f', name: 'VI · open circle · slate',
+        note: 'Open circles in slate. Airiest of the set — feels like residual plots in statistics texts.',
+        data: DATA.F, glyph: 'openCircle', glyphColor: { lt: '#5B6B7A', inv: '#8E9AA6' },
+      },
+    ];
+
+    function App() {
+      return (
+        <DesignCanvas>
+          {CONCEPTS.map(c => (
+            <DCSection key={c.id} id={c.id} title={c.name} subtitle={c.note}>
+              <DCArtboard id="h"   label="Horizontal"             width={720} height={340}><Horizontal {...c} /></DCArtboard>
+              <DCArtboard id="hi"  label="Horizontal · inverted" width={720} height={340}><Horizontal {...c} inverted /></DCArtboard>
+              <DCArtboard id="s"   label="Stacked"                width={420} height={420}><Stacked {...c} /></DCArtboard>
+              <DCArtboard id="f"   label="Favicon · mark only"   width={560} height={340}><FaviconRow {...c} /></DCArtboard>
+              <DCArtboard id="situ" label="In situ · header"      width={900} height={500}><Insitu {...c} /></DCArtboard>
+            </DCSection>
+          ))}
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
