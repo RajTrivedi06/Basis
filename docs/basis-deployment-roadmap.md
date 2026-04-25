@@ -340,23 +340,55 @@ jobs:
 
 No `paths:` filter — workflow runs on every PR to main, including backend-only PRs. The frontend build is fast and the alternative (path-filtered required check) blocks backend PRs from merging.
 
+**Pin Node version on the project side too.** Add an `engines` field to `frontend/package.json` so Vercel's build uses the same Node version as CI:
+
+```json
+"engines": {
+  "node": "20.x"
+}
+```
+
+Without this, Vercel may default to a different Node version and produce a build that diverges from the CI smoke test.
+
 ### 1.7 Tremor cleanup
 
-In `frontend/package.json`, remove from dependencies:
-
-- `@tremor/react`
-- `@tailwindcss/typography`
-
-Then:
+Run `npm uninstall` to remove `@tremor/react` and `@tailwindcss/typography` cleanly:
 
 ```bash
 cd frontend
-rm package-lock.json
-npm install
+npm uninstall @tremor/react @tailwindcss/typography
 npm run build  # verify build still passes
 ```
 
+`npm uninstall` updates both `package.json` and `package-lock.json` deterministically without churning unrelated transitive deps. Same end state as a manual remove-and-reinstall, minimal diff, and CI's `npm ci` keeps working.
+
 Commit `package.json` and `package-lock.json` together.
+
+### 1.7b Gate `next.config.ts` rewrite on dev mode only
+
+The current `frontend/next.config.ts` rewrites `/api/*` to `http://localhost:8000` unconditionally. The rewrite is only useful in `next dev` (where the FastAPI backend runs locally on port 8000); on Vercel it would point at unreachable infrastructure. Today's code paths use absolute URLs via `NEXT_PUBLIC_API_URL` so the rewrite never fires in production, but it's a latent footgun for any future `fetch("/api/...")` call.
+
+Update `frontend/next.config.ts` to gate the rewrite on `NODE_ENV`:
+
+```typescript
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  async rewrites() {
+    if (process.env.NODE_ENV !== "development") return [];
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://localhost:8000/api/:path*",
+      },
+    ];
+  },
+};
+
+export default nextConfig;
+```
+
+`next dev` keeps proxying `/api/*` to local FastAPI; `next build` (run by Vercel) emits no rewrite at all.
 
 ### 1.8 Set branch protection (after CI workflow merges)
 
