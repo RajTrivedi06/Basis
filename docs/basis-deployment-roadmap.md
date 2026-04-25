@@ -45,6 +45,29 @@ v2 had ~15 issues caught in second-round agent review. v3 fixes all of them. Spe
 
 ---
 
+## v3 corrections (applied 2026-04-23 after second-pass agent review)
+
+Sixteen small corrections applied directly to v3 rather than producing a v4. All from second-pass agent review:
+
+- Phase 1.1: clarified asymmetry in collect_cron.sh redirects
+- Phase 1.2: aws_spot.py change preserves BotoConfig retry policy; replaces credential guard with session probe instead of removing it
+- Phase 1.3: flagged allow_methods tightening as deliberate
+- Phase 1.4: kept ENVIRONMENT/VAST_API_KEY/AWS_DEFAULT_REGION in .env.example; dropped phantom TENSORDOCK_API_KEY; flagged lambda_api_key removal in Settings
+- Phase 1.5: corrected description of current docker-compose state
+- Phase 1.6: added Node version pin via package.json engines field
+- Phase 1.7: replaced `rm package-lock.json` recipe with `npm uninstall`
+- Phase 1.7b (new): gated next.config.ts rewrite on NODE_ENV === "development"
+- Phase 2.5: added Caddy keyring chmod commands and explicit Docker enable
+- Phase 4.1: added -q flag to pg_isready probe
+- Phase 4.3: narrowed ExecStop to docker compose stop db
+- Phase 4.5: clarified catch-up test pass signal (oneshot services show inactive after success)
+- Phase 7.2: added CAA preflight check
+- Phase 7.4: added www.gpu-basis.xyz to CORS_ORIGINS
+- Phase 7.5: added production branch alignment precondition
+- Phase 8.1: expanded reboot verification
+
+---
+
 ## Constraints and context
 
 - **Domain:** `gpu-basis.xyz` (registered on Namecheap)
