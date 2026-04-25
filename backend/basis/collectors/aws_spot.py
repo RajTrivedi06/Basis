@@ -85,8 +85,8 @@ class AWSSpotCollector(BaseCollector):
 
     async def collect(self) -> list[RawObservationCreate]:
         """Fetch spot prices across all regions and GPU instance types."""
-        if not settings.aws_access_key_id or not settings.aws_secret_access_key:
-            logger.warning("AWS credentials not configured — skipping AWS Spot collection")
+        if boto3.Session().get_credentials() is None:
+            logger.warning("AWS credentials not findable (env, IAM role, or profile) — skipping AWS Spot")
             return []
 
         now = self.now_utc()
@@ -140,12 +140,8 @@ class AWSSpotCollector(BaseCollector):
             region_name=region,
             retries={"max_attempts": 2, "mode": "standard"},
         )
-        client = boto3.client(
-            "ec2",
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key,
-            config=boto_config,
-        )
+        # boto3 picks up credentials from env vars (local) or IAM role (EC2)
+        client = boto3.client("ec2", config=boto_config)
 
         # Paginate through results
         all_records: list[dict] = []
