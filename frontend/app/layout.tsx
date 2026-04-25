@@ -68,10 +68,7 @@ export default function RootLayout({
           </div>
         </header>
         <AppProviders>
-          {/* Temporary container for Stage 1. When pages are ported in Stage 5+
-              they wrap themselves in `.page-wide` / `.page` per the prototype,
-              at which point the padding/max-width here should be removed. */}
-          <main className="mx-auto max-w-[1480px] px-10 py-8">{children}</main>
+          <main>{children}</main>
         </AppProviders>
         <Footer />
       </body>
