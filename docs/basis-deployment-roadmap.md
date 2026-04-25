@@ -121,7 +121,7 @@ These are repo changes that need to be in `ui-port-v2` (or `main`) before you pr
 Current state of `backend/collect_cron.sh`:
 
 - Line 8 hardcodes `REPO_DIR="/Users/raaj/Documents/CS/Basis"` — fails on EC2
-- Each command redirects output to `$LOG_DIR/collect.log` — defeats systemd journal logging
+- Multiple lines redirect output to `$LOG_DIR/collect.log` (some with stderr, some without — the three `uv run` lines use `>> "$LOG_FILE" 2>&1`, the four header `echo` lines use `>> "$LOG_FILE"` for stdout only). The replacement removes all of them so output flows to systemd journal.
 
 Updated `backend/collect_cron.sh`:
 
