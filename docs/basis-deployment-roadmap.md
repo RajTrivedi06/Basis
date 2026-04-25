@@ -233,7 +233,7 @@ app.add_middleware(
 
 **Note:** this change also tightens `allow_methods` from `["*"]` to `["GET"]`. Deliberate — the API is read-only. Don't revert this thinking it was incidental.
 
-Local dev still works (env var unset → default `http://localhost:3000`). EC2 will set `CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz` in `.env`.
+Local dev still works (env var unset → default `http://localhost:3000`). EC2 will set `CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz,https://www.gpu-basis.xyz` in `.env`.
 
 ### 1.4 Update `.env.example`
 
@@ -569,7 +569,7 @@ POSTGRES_PASSWORD=<PROD_PASSWORD>
 # Note: no AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY here.
 # boto3 picks up credentials from the IAM role automatically.
 
-CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz
+CORS_ORIGINS=http://localhost:3000,https://gpu-basis.xyz,https://www.gpu-basis.xyz
 
 HC_PING_URL=https://hc-ping.com/<basis-collect-uuid>
 HC_BACKUP_PING_URL=https://hc-ping.com/<basis-backup-uuid>
@@ -578,6 +578,8 @@ HC_DATA_FRESH_PING_URL=https://hc-ping.com/<basis-data-fresh-uuid>
 RUNPOD_API_KEY=<your-runpod-key>
 TENSORDOCK_API_KEY=<your-tensordock-key>
 ```
+
+**Why `www.gpu-basis.xyz` is in CORS_ORIGINS:** even though www redirects to apex via Vercel's 308, browsers can briefly send `Origin: https://www.gpu-basis.xyz` headers before the redirect resolves. Belt and suspenders — including www avoids transient CORS failures during the redirect window.
 
 **Generate a strong `<PROD_PASSWORD>`:** `openssl rand -base64 24` and use that.
 
@@ -1088,6 +1090,10 @@ curl https://api.gpu-basis.xyz/health  # should return 200
 
 ### 7.5 Vercel frontend deploy
 
+**Precondition:** before importing the repo into Vercel, confirm that `main` contains the code you want deployed. If you're still on `ui-port-v2` or another branch, merge to `main` first. Vercel's default production branch is `main`; if `main` is stale, the first deploy builds outdated code.
+
+If you specifically want to deploy from a non-`main` branch, override the production branch in Vercel project settings → Git → Production Branch. For our case, deploy from `main` and merge there beforehand.
+
 1. https://vercel.com → Add New → Project → Import the basis repo
 2. Framework preset: Next.js
 3. Root directory: `frontend/`
@@ -1134,11 +1140,14 @@ sudo systemctl status basis-api.service        # active (after Phase 7)
 sudo systemctl status basis-collect.timer      # active, next run scheduled
 sudo systemctl status basis-backup.timer       # active
 sudo systemctl status basis-data-fresh.timer   # active
+sudo systemctl status caddy                    # active (after Phase 7)
+sudo systemctl list-timers 'basis-*' --all     # all three timers listed with valid next-fire times
+journalctl -b -u basis-postgres -u basis-api -u caddy -n 100 --no-pager
 curl http://localhost:8000/health              # 200
 curl https://api.gpu-basis.xyz/health          # 200 (after Phase 7)
 ```
 
-All five services should be running without intervention.
+All services should be running without intervention. The boot-scoped `journalctl -b` query catches startup-order issues (e.g. basis-api starting before Postgres is ready) and Caddy ACME problems faster than the per-unit `systemctl status` view alone — those failure modes often look fine in `status` but leave clear errors in the boot log.
 
 ### 8.2 Weekly checks (5 minutes/week)
 
