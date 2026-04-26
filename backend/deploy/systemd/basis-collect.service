@@ -1,0 +1,16 @@
+[Unit]
+Description=Basis collect → normalize → analytics pipeline
+After=basis-postgres.service network-online.target
+Wants=network-online.target
+Requires=basis-postgres.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/Basis/backend
+EnvironmentFile=/home/ubuntu/Basis/.env
+ExecStartPre=/usr/bin/timeout 60 bash -c 'until pg_isready -h 127.0.0.1 -p 5433 -q; do sleep 2; done'
+ExecStart=/home/ubuntu/Basis/backend/collect_cron.sh
+StandardOutput=journal
+StandardError=journal
+MemoryMax=1800M

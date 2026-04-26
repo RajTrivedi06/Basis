@@ -1,0 +1,10 @@
+[Unit]
+Description=Basis data freshness check — hourly
+
+[Timer]
+OnCalendar=*-*-* *:00:00 UTC
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target
