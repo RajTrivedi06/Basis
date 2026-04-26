@@ -1,0 +1,15 @@
+[Unit]
+Description=Basis Postgres (docker compose)
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/home/ubuntu/Basis
+ExecStart=/usr/bin/docker compose up -d --wait
+ExecStop=/usr/bin/docker compose stop db
+User=ubuntu
+
+[Install]
+WantedBy=multi-user.target
