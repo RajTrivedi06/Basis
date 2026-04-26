@@ -1,0 +1,12 @@
+[Unit]
+Description=Basis data freshness probe
+After=basis-postgres.service
+Requires=basis-postgres.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+EnvironmentFile=/home/ubuntu/Basis/.env
+ExecStart=/home/ubuntu/Basis/backend/scripts/data_fresh_check.sh
+StandardOutput=journal
+StandardError=journal
