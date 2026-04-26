@@ -1,0 +1,12 @@
+[Unit]
+Description=Basis daily Postgres backup to S3
+After=basis-postgres.service
+Requires=basis-postgres.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+EnvironmentFile=/home/ubuntu/Basis/.env
+ExecStart=/home/ubuntu/Basis/backend/scripts/backup.sh
+StandardOutput=journal
+StandardError=journal
