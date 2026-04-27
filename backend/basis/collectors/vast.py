@@ -17,7 +17,9 @@ Key fields used:
 See docs/data_sources.md for full documentation.
 """
 
+import asyncio
 import logging
+from typing import Any
 
 import httpx
 
@@ -27,6 +29,58 @@ from basis.schemas.raw import RawObservationCreate
 logger = logging.getLogger(__name__)
 
 VAST_API_URL = "https://console.vast.ai/api/v0/bundles/"
+
+_RETRYABLE_STATUS_CODES: frozenset[int] = frozenset({429, 500, 502, 503, 504})
+_DEFAULT_BACKOFFS: tuple[float, ...] = (1.0, 2.0, 4.0)
+
+
+async def _request_with_retry(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    params: dict[str, str] | None = None,
+    backoffs: tuple[float, ...] = _DEFAULT_BACKOFFS,
+) -> httpx.Response:
+    """GET ``url`` with exponential backoff on transient failures.
+
+    Retries on HTTP 429, HTTP 5xx, and httpx.TransportError (connection drops,
+    timeouts). Other 4xx responses raise immediately — they signal real client
+    errors that won't be fixed by waiting. Total attempts = ``len(backoffs)``;
+    the final attempt re-raises whatever exception it produced.
+    """
+    last_exc: Exception | None = None
+    for attempt, delay in enumerate(backoffs, start=1):
+        try:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            return response
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code not in _RETRYABLE_STATUS_CODES:
+                raise
+            last_exc = exc
+            if attempt < len(backoffs):
+                logger.info(
+                    "Vast.ai request returned %d, retrying in %.1fs (attempt %d/%d)",
+                    exc.response.status_code,
+                    delay,
+                    attempt,
+                    len(backoffs),
+                )
+                await asyncio.sleep(delay)
+        except httpx.TransportError as exc:
+            last_exc = exc
+            if attempt < len(backoffs):
+                logger.info(
+                    "Vast.ai request failed with transport error (%s), retrying in %.1fs "
+                    "(attempt %d/%d)",
+                    type(exc).__name__,
+                    delay,
+                    attempt,
+                    len(backoffs),
+                )
+                await asyncio.sleep(delay)
+    assert last_exc is not None  # loop only exits via return or via this path
+    raise last_exc
 
 
 class VastCollector(BaseCollector):
@@ -60,29 +114,61 @@ class VastCollector(BaseCollector):
         Fetches both on-demand and spot (bid) offers separately, since
         the API's type filter only accepts one at a time.
         The default API limit is 64, so we set a high limit to get everything.
+
+        If one query fails after retries (e.g. persistent 429), the other
+        query's offers are still returned. Both failing yields an empty list,
+        matching the prior all-or-nothing behavior at that boundary.
         """
         all_offers: list[dict] = []
         seen_ids: set[int] = set()
 
-        queries = [
-            '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"on-demand","limit":10000}',
-            '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"bid","limit":10000}',
+        queries: list[tuple[str, str]] = [
+            (
+                "on-demand",
+                '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"on-demand","limit":10000}',
+            ),
+            (
+                "bid",
+                '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"bid","limit":10000}',
+            ),
         ]
 
         async with httpx.AsyncClient(timeout=60.0) as client:
-            for q in queries:
-                response = await client.get(VAST_API_URL, params={"q": q})
-                response.raise_for_status()
-                data = response.json()
-                offers = data.get("offers", [])
+            for label, q in queries:
+                try:
+                    offers = await self._fetch_query(client, q)
+                except (httpx.HTTPError, httpx.TransportError) as exc:
+                    logger.warning(
+                        "Vast.ai %s query failed after retries (%s); continuing with other endpoint",
+                        label,
+                        exc,
+                    )
+                    continue
                 for offer in offers:
                     oid = offer.get("id")
                     if oid not in seen_ids:
                         seen_ids.add(oid)
                         all_offers.append(offer)
-                logger.info("Vast.ai query returned %d offers (total unique: %d)", len(offers), len(all_offers))
+                logger.info(
+                    "Vast.ai %s query returned %d offers (total unique: %d)",
+                    label,
+                    len(offers),
+                    len(all_offers),
+                )
 
         return all_offers
+
+    @staticmethod
+    async def _fetch_query(client: httpx.AsyncClient, query: str) -> list[dict[str, Any]]:
+        """Run one Vast.ai bundles query through the retry helper.
+
+        Returns the parsed offers list. Raises after exhausted retries; the
+        caller decides whether to abort the run or proceed with partial data.
+        """
+        response = await _request_with_retry(client, VAST_API_URL, params={"q": query})
+        data = response.json()
+        offers: list[dict[str, Any]] = data.get("offers", [])
+        return offers
 
     @staticmethod
     def _parse_offer(offer: dict, collected_at) -> RawObservationCreate | None:
