@@ -17,6 +17,7 @@ Key fields used:
 See docs/data_sources.md for full documentation.
 """
 
+import asyncio
 import logging
 
 import httpx
@@ -27,6 +28,58 @@ from basis.schemas.raw import RawObservationCreate
 logger = logging.getLogger(__name__)
 
 VAST_API_URL = "https://console.vast.ai/api/v0/bundles/"
+
+_RETRYABLE_STATUS_CODES: frozenset[int] = frozenset({429, 500, 502, 503, 504})
+_DEFAULT_BACKOFFS: tuple[float, ...] = (1.0, 2.0, 4.0)
+
+
+async def _request_with_retry(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    params: dict[str, str] | None = None,
+    backoffs: tuple[float, ...] = _DEFAULT_BACKOFFS,
+) -> httpx.Response:
+    """GET ``url`` with exponential backoff on transient failures.
+
+    Retries on HTTP 429, HTTP 5xx, and httpx.TransportError (connection drops,
+    timeouts). Other 4xx responses raise immediately — they signal real client
+    errors that won't be fixed by waiting. Total attempts = ``len(backoffs)``;
+    the final attempt re-raises whatever exception it produced.
+    """
+    last_exc: Exception | None = None
+    for attempt, delay in enumerate(backoffs, start=1):
+        try:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            return response
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code not in _RETRYABLE_STATUS_CODES:
+                raise
+            last_exc = exc
+            if attempt < len(backoffs):
+                logger.info(
+                    "Vast.ai request returned %d, retrying in %.1fs (attempt %d/%d)",
+                    exc.response.status_code,
+                    delay,
+                    attempt,
+                    len(backoffs),
+                )
+                await asyncio.sleep(delay)
+        except httpx.TransportError as exc:
+            last_exc = exc
+            if attempt < len(backoffs):
+                logger.info(
+                    "Vast.ai request failed with transport error (%s), retrying in %.1fs "
+                    "(attempt %d/%d)",
+                    type(exc).__name__,
+                    delay,
+                    attempt,
+                    len(backoffs),
+                )
+                await asyncio.sleep(delay)
+    assert last_exc is not None  # loop only exits via return or via this path
+    raise last_exc
 
 
 class VastCollector(BaseCollector):
@@ -71,8 +124,7 @@ class VastCollector(BaseCollector):
 
         async with httpx.AsyncClient(timeout=60.0) as client:
             for q in queries:
-                response = await client.get(VAST_API_URL, params={"q": q})
-                response.raise_for_status()
+                response = await _request_with_retry(client, VAST_API_URL, params={"q": q})
                 data = response.json()
                 offers = data.get("offers", [])
                 for offer in offers:
