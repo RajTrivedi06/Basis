@@ -23,12 +23,13 @@ import datetime
 import json
 from pathlib import Path
 
+import httpx
 import pytest
 
 from basis.collectors.aws_spot import AWSSpotCollector
 from basis.collectors.runpod import RunPodCollector
 from basis.collectors.tensordock import TensorDockCollector
-from basis.collectors.vast import VastCollector
+from basis.collectors.vast import VastCollector, _request_with_retry
 from basis.schemas.raw import RawObservationCreate
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -124,6 +125,97 @@ def test_aws_spot_collector_parses_fixture() -> None:
         if obs is not None:
             observations.append(obs)
     _assert_valid_observations(observations, "aws_spot", _MIN_OBS["aws_spot"])
+
+
+async def test_vast_retry_succeeds_after_transient_429s() -> None:
+    """Two 429s followed by a 200 should succeed on the third attempt."""
+    attempts = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        attempts["n"] += 1
+        if attempts["n"] < 3:
+            return httpx.Response(429, json={"error": "rate limited"})
+        return httpx.Response(200, json={"offers": []})
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        response = await _request_with_retry(
+            client, "https://example.invalid/", backoffs=(0.0, 0.0, 0.0)
+        )
+
+    assert response.status_code == 200
+    assert attempts["n"] == 3
+
+
+async def test_vast_retry_raises_after_exhausting_attempts() -> None:
+    """Three consecutive 429s should raise HTTPStatusError (no further retries)."""
+    attempts = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        attempts["n"] += 1
+        return httpx.Response(429, json={"error": "rate limited"})
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        with pytest.raises(httpx.HTTPStatusError) as excinfo:
+            await _request_with_retry(
+                client, "https://example.invalid/", backoffs=(0.0, 0.0, 0.0)
+            )
+
+    assert excinfo.value.response.status_code == 429
+    assert attempts["n"] == 3
+
+
+async def test_vast_collect_returns_partial_when_bid_endpoint_fails() -> None:
+    """If on-demand returns 200 and bid returns persistent 429, collect()
+    must still produce observations from the on-demand response. This is the
+    bug the fix addresses: previously, a single 429 discarded the entire run.
+    """
+    on_demand_offer = {
+        "id": 1,
+        "gpu_name": "H100_SXM5",
+        "num_gpus": 1,
+        "dph_total": 3.25,
+        "geolocation": "US",
+        "is_bid": False,
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        # Vast bundles the query into the `q` parameter; route by content.
+        q = request.url.params.get("q", "")
+        if '"type":"on-demand"' in q:
+            return httpx.Response(200, json={"offers": [on_demand_offer]})
+        return httpx.Response(429, json={"error": "rate limited"})
+
+    transport = httpx.MockTransport(handler)
+
+    # Patch the AsyncClient constructor inside the vast module so the
+    # collector's internal `httpx.AsyncClient(timeout=60.0)` is replaced
+    # with one bound to our mock transport. Also zero out the backoffs so
+    # the 429 path doesn't sleep through the real 1s+2s+4s schedule.
+    from basis.collectors import vast as vast_module
+
+    real_client_cls = vast_module.httpx.AsyncClient
+
+    def make_client(*args: object, **kwargs: object) -> httpx.AsyncClient:
+        return real_client_cls(transport=transport)
+
+    monkeypatched_backoffs = (0.0, 0.0, 0.0)
+
+    import unittest.mock
+
+    with (
+        unittest.mock.patch.object(vast_module.httpx, "AsyncClient", make_client),
+        unittest.mock.patch.object(vast_module, "_DEFAULT_BACKOFFS", monkeypatched_backoffs),
+    ):
+        collector = VastCollector()
+        observations = await collector.collect()
+
+    assert len(observations) == 1, (
+        "Expected the on-demand offer to survive even though bid endpoint hit 429"
+    )
+    assert observations[0].gpu_model_reported == "H100_SXM5"
+    assert observations[0].commitment_type_reported == "on_demand"
 
 
 def test_aws_spot_per_gpu_price_conversion() -> None:

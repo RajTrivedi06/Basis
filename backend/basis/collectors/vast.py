@@ -19,6 +19,7 @@ See docs/data_sources.md for full documentation.
 
 import asyncio
 import logging
+from typing import Any
 
 import httpx
 
@@ -113,28 +114,61 @@ class VastCollector(BaseCollector):
         Fetches both on-demand and spot (bid) offers separately, since
         the API's type filter only accepts one at a time.
         The default API limit is 64, so we set a high limit to get everything.
+
+        If one query fails after retries (e.g. persistent 429), the other
+        query's offers are still returned. Both failing yields an empty list,
+        matching the prior all-or-nothing behavior at that boundary.
         """
         all_offers: list[dict] = []
         seen_ids: set[int] = set()
 
-        queries = [
-            '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"on-demand","limit":10000}',
-            '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"bid","limit":10000}',
+        queries: list[tuple[str, str]] = [
+            (
+                "on-demand",
+                '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"on-demand","limit":10000}',
+            ),
+            (
+                "bid",
+                '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"bid","limit":10000}',
+            ),
         ]
 
         async with httpx.AsyncClient(timeout=60.0) as client:
-            for q in queries:
-                response = await _request_with_retry(client, VAST_API_URL, params={"q": q})
-                data = response.json()
-                offers = data.get("offers", [])
+            for label, q in queries:
+                try:
+                    offers = await self._fetch_query(client, q)
+                except (httpx.HTTPError, httpx.TransportError) as exc:
+                    logger.warning(
+                        "Vast.ai %s query failed after retries (%s); continuing with other endpoint",
+                        label,
+                        exc,
+                    )
+                    continue
                 for offer in offers:
                     oid = offer.get("id")
                     if oid not in seen_ids:
                         seen_ids.add(oid)
                         all_offers.append(offer)
-                logger.info("Vast.ai query returned %d offers (total unique: %d)", len(offers), len(all_offers))
+                logger.info(
+                    "Vast.ai %s query returned %d offers (total unique: %d)",
+                    label,
+                    len(offers),
+                    len(all_offers),
+                )
 
         return all_offers
+
+    @staticmethod
+    async def _fetch_query(client: httpx.AsyncClient, query: str) -> list[dict[str, Any]]:
+        """Run one Vast.ai bundles query through the retry helper.
+
+        Returns the parsed offers list. Raises after exhausted retries; the
+        caller decides whether to abort the run or proceed with partial data.
+        """
+        response = await _request_with_retry(client, VAST_API_URL, params={"q": query})
+        data = response.json()
+        offers: list[dict[str, Any]] = data.get("offers", [])
+        return offers
 
     @staticmethod
     def _parse_offer(offer: dict, collected_at) -> RawObservationCreate | None:
