@@ -2,12 +2,12 @@
 title: Tasks & Status
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-21
+last_updated: 2026-04-28
 ---
 
 # Tasks & Status
 
-Granular snapshot of current work for Basis. Last refreshed: **2026-04-21**.
+Granular snapshot of current work for Basis. Last refreshed: **2026-04-28**.
 
 Complements [roadmap.md](../roadmap.md) (high-level phases) and [project-brief.md](../project-brief.md) (what the project is). This file is the most-updated doc — treat it like a living to-do list.
 
@@ -105,26 +105,57 @@ Basis is a public-data study measuring GPU compute fungibility across cloud prov
 - `docs/05-llm/DOC_MAP.md` + context packs for collectors / normalization / analytics
 - `docs/project-status.md`, now joined by `project-brief.md`, `roadmap.md`, `TASKS/README.md`, `decisions/adr-log.md`, `reference/domain-model.md`, `guides/operations-runbook.md`
 
+### Deployment — basis-deployment-roadmap.md Phases 0–6 (shipped 2026-04-27)
+
+Production now lives on EC2; Mac collection cron is stopped and 33,525 pre-EC2 obs are frozen as a baseline snapshot. Detailed playbook: [basis-deployment-roadmap.md](../basis-deployment-roadmap.md). Operational state in [project-status.md](../project-status.md#production-state).
+
+- AWS EC2 t3.small, Ubuntu 24.04, in `us-east-1`. Elastic IP `52.70.173.217`. 2 GiB swap file at `/swapfile`, persisted via `/etc/fstab`.
+- IAM role `basis-ec2-role` attached, with two inline policies: `basis-spot-read` (`ec2:DescribeSpotPriceHistory`) and `basis-s3-backup` (`s3:PutObject` / `GetObject` / `DeleteObject` on `arn:aws:s3:::basis-backups-rajt-2026/*` plus `s3:ListBucket` on the bucket). Collectors and the backup script use the default credential chain — no AWS keys in the EC2 `.env`.
+- S3 bucket `basis-backups-rajt-2026` (`us-east-1`) — versioning on, 90-day lifecycle (current expiry + permanent noncurrent delete), Block Public Access on, SSE-S3.
+- systemd unit set under `backend/deploy/systemd/` (7 unit files + README):
+  - `basis-postgres.service` — oneshot at boot; brings Docker compose Postgres up healthcheck-gated.
+  - `basis-collect.service` + `basis-collect.timer` — twice daily at `08:00 + 20:00` UTC, `RandomizedDelaySec=300`, `Persistent=true`.
+  - `basis-backup.service` + `basis-backup.timer` — daily `pg_dump` at `03:00` UTC to S3, `RandomizedDelaySec=600`, `Persistent=true`.
+  - `basis-data-fresh.service` + `basis-data-fresh.timer` — top of hour, `RandomizedDelaySec=120`, `Persistent=true`.
+- Three healthchecks.io endpoints on the alert path: `basis-collect` (cron `0 8,20 * * *`, 30 min grace), `basis-backup` (cron `0 3 * * *`, 1 hr grace), `basis-data-fresh` (period 1 hr, 14 hr grace — a single missed collection alerts ~14 h later).
+- Production `.env` at `/home/ubuntu/Basis/.env`, mode `600` — `DATABASE_URL`, `POSTGRES_PASSWORD`, `ENVIRONMENT=prod`, `AWS_DEFAULT_REGION`, `CORS_ORIGINS`, three `HC_*_PING_URL` values, no AWS keys.
+- Docker compose Postgres bound to `127.0.0.1:5433`, healthcheck-gated.
+- `backend/scripts/{backup.sh,data_fresh_check.sh}` shipped as part of Phase 4 PR.
+- `fix/vast-retry-and-partial-success` (Phase 4.5 PR) — vast.ai collector now retries on 429 / 5xx / transient errors with exponential backoff (1 s, 2 s, 4 s) and preserves partial success when one of two endpoints fails after retries. All 4 collectors hit on every run.
+- `fix/alembic-env-reads-settings` (merged) — Alembic `env.py` now reads `settings.database_url` instead of the `alembic.ini` default, fixing migrations on EC2.
+- `d164642` (direct to main) — `backend/scripts/backup.sh` cleanup `find` scoped to `/tmp` top level with `-maxdepth 1 ... 2>/dev/null || true`, so unrelated permission denials in `/tmp` subdirs don't fail the backup unit.
+- Domain `gpu-basis.xyz` registered at Namecheap; DNS not yet pointed (Phase 7 work).
+
 ---
 
 ## In progress
 
-Nothing in flight. All phases shipped — Basis v1 is feature-complete.
+UI polish via SSH tunnel against the EC2 backend. Open-ended; sets the trigger for Phase 7 (public deploy via Caddy + Vercel + DNS).
 
 ---
 
 ## Pending / next up
 
+### Operational (post-deployment)
+
+- [ ] **Phase 8 — reboot test on EC2** (this week). Hard reboot, verify `basis-postgres.service` brings Postgres up healthcheck-gated and all timers come back active. `Type=oneshot` units showing `Active: inactive (dead)` after success is the pass signal.
+- [ ] **Phase 8 — weekly operational checks** (ongoing). Timer health, journal scan for `code=exited, status=0/SUCCESS`, S3 backup integrity, healthchecks.io dashboard green, disk + swap usage.
+- [ ] **Phase 8 — mid-May findings refresh** (~2026-05-27). Recompute analytics with ≥30 days of EC2 collection and refresh `findings.md` + landing-page numbers.
+- [ ] **Tailscale (or AWS SSM Session Manager) setup** — only if home-IP rotation continues to break the security-group whitelist often. Workarounds, in order of friction: widen to `/24` → widen to `/16` → Tailscale → SSM.
+
+### Phase 7 — Public deploy (waiting on UI polish)
+
+Caddy reverse proxy on EC2, Vercel-hosted frontend, DNS for `gpu-basis.xyz`. Triggered when polish is ready (1–2 weeks). See [basis-deployment-roadmap.md](../basis-deployment-roadmap.md) Phase 7.
+
+### Phase 9 — Shutdown procedure (eventual)
+
+Tear-down checklist when the project is wound down (~3 months out). See [basis-deployment-roadmap.md](../basis-deployment-roadmap.md) Phase 9.
+
 ### Ongoing (post-Phase-6)
 
-- [ ] **Let data accumulate.** Writeup currently uses a 3-day sample; residual estimates will stabilize with ≥30 days of cron-driven collection.
-- [ ] **Refresh findings.md and the landing-page table** when ≥2 weeks of data exist.
+- [ ] **Let data accumulate.** Writeup currently uses a 3-day sample; residual estimates will stabilize with ≥30 days of cron-driven collection. Mid-May refresh tracked above.
 - [ ] **Monitor for `skipped_unknown_gpu`** — any new GPU name from a provider requires a `canonicalize.py` addition.
 - [ ] **Optional: screenshot reel / portfolio post.** Manual step (Raj's call) — not code.
-
-### Phase 7 — Deploy (deferred by design)
-
-Only triggered if/when a public deploy is wanted. See [roadmap.md Phase 7](../roadmap.md#phase-7--deploy-deferred).
 
 ### Cross-cutting / nice-to-haves
 
@@ -167,6 +198,7 @@ No active blockers. Watch items:
 
 Append a one-liner each time this file is updated.
 
+- 2026-04-27 — Phases 0–6 of [basis-deployment-roadmap.md](../basis-deployment-roadmap.md) shipped. Production is live on EC2 t3.small with twice-daily collection, daily backup, hourly freshness probe. UI polish via SSH tunnel begins now.
 - 2026-04-21 — UI port begun on `ui-port-v2` branch. Baseline on main (`7776ae5`) captures pre-port state + all tests passing. Stage 1 of 7 shipped on the branch: CSS design tokens + utility classes, next/font Fraunces/Inter/JetBrains Mono, redesigned shell (sticky TopBar, serif wordmark, flat nav, footer), Tailwind config (Tremor + typography plugin dropped), `useSku` hook, `factorColor` + `gpuFamily` utilities. Pages still render v1 content — expected; gets resolved as Stage 5 ports each page. Port decision captured as ADR 0005 (Proposed). No merge to main until end-to-end port complete.
 - 2026-04-21 — Pipeline offset/filter bug fixed: `run_normalization` now uses an id-based cursor instead of a numeric offset. Regression test `test_run_normalization_processes_all_rows_when_exceeding_batch_size` added to `test_normalization.py` (reproduced the bug at 5979/9979 before the fix; 9979/9979 after). Backfill verification: zero silent data loss in the current DB — last session's `batch_size=20000` workaround had fully regenerated the corpus. Stale smoke-tests placeholder removed from Cross-cutting (all four files shipped in the previous session).
 - 2026-04-21 — Country-code normalization fixed: TensorDock's full country names (e.g., "United States") now map to ISO-2 codes (`US`), matching AWS and Vast. Lookup table covers 7 country names actually observed in data. Canonical offers + analytics regenerated; residual shifts all < 0.005pp across 179 decomposition rows (TensorDock's small share in any single SKU meant the fix made storage consistent without perturbing findings). Full suite (19 tests) passes.
