@@ -25,8 +25,8 @@
   --ink:         #eef1f8;
   --ink-hi:      #ffffff;
   --ink-mid:     #aab4c8;
-  --ink-dim:     #6f7b94;
-  --ink-faint:   #4b5671;
+  --ink-dim:     #828ea3;
+  --ink-faint:   #5d6985;
 
   /* THE RESIDUAL. Used nowhere else. */
   --residual:      #f59e0b;
@@ -43,7 +43,7 @@
   /* Semantic */
   --verdict-ok:   #86a573;
   --verdict-warn: #c9a66b;
-  --verdict-bad:  #a76e6e;
+  --verdict-bad:  #b27676;
   --unknown:      #6f7b94;
   --unknown-bg:   rgba(111, 123, 148, 0.14);
 
