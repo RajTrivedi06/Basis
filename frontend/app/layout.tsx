@@ -65,7 +65,7 @@ export default function RootLayout({
                 Basis
               </span>
               <span className="mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-dim)]">
-                v2 · research
+                research
               </span>
             </Link>
             <Nav />
