@@ -2,7 +2,7 @@
 title: Documentation Index
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-20
+last_updated: 2026-04-28
 ---
 
 # Basis Documentation Index
@@ -37,6 +37,14 @@ Central navigation hub. Every other doc links back here.
 - [project-status.md](project-status.md) — TL;DR.
 - [findings.md](findings.md) — **the analytical writeup** (Phase 6 output).
 - [methodology.md](methodology.md) — analytical methodology.
+
+### Production & Operations
+
+Production runs on AWS EC2 (us-east-1) with systemd-driven twice-daily collection, daily `pg_dump` backup to S3, and an hourly freshness probe. Phases 0–6 of the deployment roadmap shipped 2026-04-27; Phases 7–9 (public deploy, reboot test, shutdown) are remaining.
+
+- [basis-deployment-roadmap.md](basis-deployment-roadmap.md) — deploy-day playbook (instance, IAM, S3, systemd units, healthchecks).
+- [project-status.md](project-status.md) — current production state and data counts.
+- [guides/operations-runbook.md](guides/operations-runbook.md) — day-to-day operations, health checks, incident response.
 
 ### Start Here (`00-start-here/`)
 
