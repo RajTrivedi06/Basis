@@ -72,9 +72,8 @@ function FindingsHeroInner() {
 
   return (
     <section
-      className="grid items-start"
+      className="grid items-start grid-cols-1 md:grid-cols-[1.3fr_1fr]"
       style={{
-        gridTemplateColumns: "1.3fr 1fr",
         gap: 64,
         padding: "40px 0 36px",
         borderBottom: "1px solid var(--line-lo)",
@@ -90,8 +89,9 @@ function FindingsHeroInner() {
             fontSize: "clamp(56px, 7.4vw, 112px)",
             lineHeight: 0.96,
             margin: 0,
-            color: "var(--ink-hi)",
+            color: "var(--ink)",
             letterSpacing: "-0.03em",
+            textWrap: "balance",
           }}
         >
           <HeroRange
@@ -102,12 +102,8 @@ function FindingsHeroInner() {
             max={pctMax}
           />
           <br />
-          <span style={{ fontStyle: "italic", fontWeight: 300 }}>
-            of log-price
-            <br />
-            variance is
-            <br />
-            unexplained.
+          <span style={{ fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)" }}>
+            of log-price variance is unexplained.
           </span>
         </h1>
         <p
@@ -121,13 +117,13 @@ function FindingsHeroInner() {
         >
           After controlling for the four observable factors —{" "}
           <span style={{ color: "var(--ink)" }}>
-            provider identity, commitment type, region, bundled resources
+            region, commitment type, provider identity, bundled resources
           </span>{" "}
           — a residual this large remains. That residual is the basis risk any
           compute benchmark has to live with.
         </p>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-          <Link className="btn primary" href="/basis">
+          <Link className="btn" href="/basis">
             See the decomposition →
           </Link>
           <Link className="btn ghost" href="/methodology">
@@ -136,7 +132,7 @@ function FindingsHeroInner() {
         </div>
       </div>
 
-      <div className="panel" style={{ padding: 22 }}>
+      <div className="panel" style={{ padding: 22, marginTop: "clamp(40px, 6vh, 96px)" }}>
         <div className="eyebrow" style={{ marginBottom: 14 }}>
           Residual share · by day
         </div>
@@ -185,9 +181,8 @@ export function FindingsHero() {
     <Suspense
       fallback={
         <section
-          className="grid items-start"
+          className="grid items-start grid-cols-1 md:grid-cols-[1.3fr_1fr]"
           style={{
-            gridTemplateColumns: "1.3fr 1fr",
             gap: 64,
             padding: "40px 0 36px",
             borderBottom: "1px solid var(--line-lo)",
@@ -340,8 +335,8 @@ function Stat({
       <div
         className="mono"
         style={{
-          fontSize: 20,
-          color: dim ? "var(--ink-dim)" : "var(--ink-hi)",
+          fontSize: 16,
+          color: dim ? "var(--ink-dim)" : "var(--ink)",
           letterSpacing: "-0.01em",
         }}
       >
