@@ -109,7 +109,18 @@ export function FungibilityMatrix() {
             <thead>
               <tr>
                 {COLUMNS.map((c) => (
-                  <th key={c.key} scope="col" style={{ textAlign: c.align }}>
+                  <th
+                    key={c.key}
+                    scope="col"
+                    style={{ textAlign: c.align }}
+                    aria-sort={
+                      sortKey === c.key
+                        ? sortDir === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : "none"
+                    }
+                  >
                     <button
                       type="button"
                       onClick={() => toggle(c.key)}

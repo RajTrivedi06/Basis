@@ -9,6 +9,8 @@
    ============================================================ */
 
 :root {
+  color-scheme: dark;
+
   /* Navy / neutrals */
   --bg:          #111827;
   --bg-deep:     #0b1220;
@@ -23,8 +25,8 @@
   --ink:         #eef1f8;
   --ink-hi:      #ffffff;
   --ink-mid:     #aab4c8;
-  --ink-dim:     #6f7b94;
-  --ink-faint:   #4b5671;
+  --ink-dim:     #828ea3;
+  --ink-faint:   #5d6985;
 
   /* THE RESIDUAL. Used nowhere else. */
   --residual:      #f59e0b;
@@ -41,7 +43,7 @@
   /* Semantic */
   --verdict-ok:   #86a573;
   --verdict-warn: #c9a66b;
-  --verdict-bad:  #a76e6e;
+  --verdict-bad:  #b27676;
   --unknown:      #6f7b94;
   --unknown-bg:   rgba(111, 123, 148, 0.14);
 
@@ -268,6 +270,28 @@ button {
   outline-offset: 2px;
 }
 
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -40px;
+  padding: 8px 12px;
+  background: var(--panel);
+  color: var(--ink-hi);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r-sm);
+  font-family: var(--f-mono);
+  font-size: 12px;
+  text-decoration: none;
+  z-index: 100;
+  transition: top 0.12s;
+}
+
+.skip-link:focus-visible {
+  top: 12px;
+  outline: 1px solid var(--residual);
+  outline-offset: 2px;
+}
+
 /* ------------------------------------------------------------
    Density modes
    ------------------------------------------------------------ */
@@ -293,6 +317,12 @@ button {
 
 .fade-up {
   animation: fadeUp 0.45s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    animation: none;
+  }
 }
 
 /* ------------------------------------------------------------

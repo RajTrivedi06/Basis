@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import { AppProviders } from "@/components/providers";
@@ -30,6 +30,10 @@ export const metadata: Metadata = {
     "A public-data study quantifying GPU compute fungibility across cloud providers, decomposing price dispersion into observable factors and residual basis risk.",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#111827",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -41,6 +45,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <body className="min-h-screen bg-[var(--bg)] text-[var(--ink)] antialiased">
+        <a href="#main" className="skip-link">Skip to main content</a>
         <header
           className="sticky top-0 z-50 border-b border-[var(--line)]"
           style={{
@@ -68,7 +73,7 @@ export default function RootLayout({
           </div>
         </header>
         <AppProviders>
-          <main>{children}</main>
+          <main id="main">{children}</main>
         </AppProviders>
         <Footer />
       </body>
