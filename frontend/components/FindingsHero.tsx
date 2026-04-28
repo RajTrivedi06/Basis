@@ -85,6 +85,8 @@ function FindingsHeroInner() {
         </div>
         <h1
           className="display"
+          aria-live="polite"
+          aria-atomic="true"
           style={{
             fontSize: "clamp(56px, 7.4vw, 112px)",
             lineHeight: 0.96,

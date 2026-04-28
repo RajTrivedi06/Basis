@@ -9,6 +9,8 @@
    ============================================================ */
 
 :root {
+  color-scheme: dark;
+
   /* Navy / neutrals */
   --bg:          #111827;
   --bg-deep:     #0b1220;
@@ -268,6 +270,28 @@ button {
   outline-offset: 2px;
 }
 
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -40px;
+  padding: 8px 12px;
+  background: var(--panel);
+  color: var(--ink-hi);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r-sm);
+  font-family: var(--f-mono);
+  font-size: 12px;
+  text-decoration: none;
+  z-index: 100;
+  transition: top 0.12s;
+}
+
+.skip-link:focus-visible {
+  top: 12px;
+  outline: 1px solid var(--residual);
+  outline-offset: 2px;
+}
+
 /* ------------------------------------------------------------
    Density modes
    ------------------------------------------------------------ */
@@ -293,6 +317,12 @@ button {
 
 .fade-up {
   animation: fadeUp 0.45s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    animation: none;
+  }
 }
 
 /* ------------------------------------------------------------
