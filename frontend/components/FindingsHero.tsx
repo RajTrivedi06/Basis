@@ -1,40 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { useSku } from "@/lib/useSku";
 import {
-  getBasisDecomposition,
-  getDispersion,
+  getBasisTimeseries,
   getFungibilityMatrix,
   getProviders,
 } from "@/lib/api";
-import type { BasisDecompositionResponse } from "@/lib/types";
+import { ResidualTimeSeriesChart } from "@/components/ResidualTimeSeriesChart";
 
 function FindingsHeroInner() {
   const { sku } = useSku();
 
-  // Dispersion tells us which dates the focus SKU has data for.
-  const dispersion = useQuery({
-    queryKey: ["dispersion", sku],
-    queryFn: () => getDispersion(sku),
-  });
-
-  const dates = (dispersion.data?.points ?? [])
-    .map((p) => p.date)
-    .sort()
-    .slice(-3);
-
-  // TODO(backend): replace with windowed /api/basis/{sku}?since=&until=
-  // when the backend agent work begins. Three round-trips are fine for a
-  // 3-day window; they won't scale to Phase D's 60-day rolling window.
-  const basis = useQueries({
-    queries: dates.map((d) => ({
-      queryKey: ["basis", sku, d],
-      queryFn: () => getBasisDecomposition(sku, { date: d }),
-      enabled: !!d,
-    })),
+  // Single 30-day timeseries query feeds both the hero range and the chart
+  // below. The chart uses the same React Query key so the network call is
+  // deduped — one fetch, two consumers.
+  const timeseries = useQuery({
+    queryKey: ["basis-timeseries", sku, null, null],
+    queryFn: () => getBasisTimeseries(sku),
   });
 
   const matrix = useQuery({
@@ -46,19 +31,12 @@ function FindingsHeroInner() {
     queryFn: () => getProviders(),
   });
 
-  const decomps: BasisDecompositionResponse[] = basis
-    .map((q) => q.data)
-    .filter((d): d is BasisDecompositionResponse => !!d);
+  const points = timeseries.data?.points ?? [];
+  const tsLoading = timeseries.isLoading;
+  const tsError = timeseries.isError;
+  const tsEmpty = !tsLoading && !tsError && points.length === 0;
 
-  const datesLoading = dispersion.isLoading;
-  const basisLoading =
-    datesLoading ||
-    (dates.length > 0 &&
-      (basis.some((q) => q.isLoading) || decomps.length < dates.length));
-  const basisError = dispersion.isError || basis.some((q) => q.isError);
-  const basisEmpty = !datesLoading && !basisError && dates.length === 0;
-
-  const pcts = decomps.map((d) => d.pct_residual);
+  const pcts = points.map((p) => p.pct_residual);
   const pctMin = pcts.length ? Math.min(...pcts) : null;
   const pctMax = pcts.length ? Math.max(...pcts) : null;
 
@@ -68,7 +46,7 @@ function FindingsHeroInner() {
   const providerCount = providers.data?.items.length ?? null;
 
   const windowLabel =
-    dates.length > 0 ? `${dates.length}-day window` : "3-day window";
+    points.length > 0 ? `${points.length}-day window` : "30-day window";
 
   return (
     <section
@@ -97,9 +75,9 @@ function FindingsHeroInner() {
           }}
         >
           <HeroRange
-            loading={basisLoading}
-            error={basisError}
-            empty={basisEmpty}
+            loading={tsLoading}
+            error={tsError}
+            empty={tsEmpty}
             min={pctMin}
             max={pctMax}
           />
@@ -136,14 +114,9 @@ function FindingsHeroInner() {
 
       <div className="panel" style={{ padding: 22, marginTop: "clamp(40px, 6vh, 96px)" }}>
         <div className="eyebrow" style={{ marginBottom: 14 }}>
-          Residual share · by day
+          Residual share · last 30 days
         </div>
-        <ResidualByDay
-          loading={basisLoading}
-          error={basisError}
-          empty={basisEmpty}
-          decomps={decomps}
-        />
+        <ResidualTimeSeriesChart gpuSku={sku} />
         <div
           style={{
             marginTop: 20,
@@ -225,94 +198,6 @@ function HeroRange({
     <span style={{ color: "var(--residual)" }}>
       {min.toFixed(0)}–{max.toFixed(0)}%
     </span>
-  );
-}
-
-function ResidualByDay({
-  loading,
-  error,
-  empty,
-  decomps,
-}: {
-  loading: boolean;
-  error: boolean;
-  empty: boolean;
-  decomps: BasisDecompositionResponse[];
-}) {
-  if (loading) {
-    return (
-      <div className="caption" style={{ padding: "12px 0" }}>
-        Loading 3-day residual window…
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div
-        className="caption"
-        style={{ padding: "12px 0", color: "var(--verdict-bad)" }}
-      >
-        Failed to load basis decomposition.
-      </div>
-    );
-  }
-  if (empty || decomps.length === 0) {
-    return (
-      <div className="caption" style={{ padding: "12px 0" }}>
-        No decompositions yet for this SKU.
-      </div>
-    );
-  }
-
-  const sorted = [...decomps].sort((a, b) => a.date.localeCompare(b.date));
-
-  return (
-    <div style={{ display: "grid", gap: 10 }}>
-      {sorted.map((d) => (
-        <div
-          key={d.date}
-          className="grid items-center"
-          style={{ gridTemplateColumns: "90px 1fr 64px", gap: 14 }}
-        >
-          <span
-            className="mono"
-            style={{ fontSize: 11, color: "var(--ink-dim)" }}
-          >
-            {d.date}
-          </span>
-          <div
-            style={{
-              height: 22,
-              background: "var(--panel-hi)",
-              borderRadius: 2,
-              overflow: "hidden",
-              position: "relative",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                bottom: 0,
-                width: `${Math.max(0, Math.min(100, d.pct_residual))}%`,
-                background: "var(--residual)",
-              }}
-            />
-          </div>
-          <span
-            className="mono"
-            style={{
-              fontSize: 13,
-              color: "var(--residual)",
-              textAlign: "right",
-            }}
-          >
-            {d.pct_residual.toFixed(1)}%
-          </span>
-        </div>
-      ))}
-    </div>
   );
 }
 

@@ -7,6 +7,7 @@
 
 import type {
   BasisDecompositionResponse,
+  BasisTimeseriesResponse,
   DecompositionObservationsResponse,
   DispersionResponse,
   FungibilityMatrixResponse,
@@ -74,6 +75,15 @@ export async function getBasisDecomposition(
 ): Promise<BasisDecompositionResponse> {
   return fetchApi<BasisDecompositionResponse>(
     `/api/basis/${encodeURIComponent(gpuSku)}${qs(params)}`
+  );
+}
+
+export async function getBasisTimeseries(
+  gpuSku: string,
+  params?: { since?: string; until?: string }
+): Promise<BasisTimeseriesResponse> {
+  return fetchApi<BasisTimeseriesResponse>(
+    `/api/basis/${encodeURIComponent(gpuSku)}/timeseries${qs(params)}`
   );
 }
 
