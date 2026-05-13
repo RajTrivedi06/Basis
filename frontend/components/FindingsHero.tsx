@@ -37,16 +37,15 @@ function FindingsHeroInner() {
   const tsEmpty = !tsLoading && !tsError && points.length === 0;
 
   const pcts = points.map((p) => p.pct_residual);
-  const pctMin = pcts.length ? Math.min(...pcts) : null;
-  const pctMax = pcts.length ? Math.max(...pcts) : null;
+  const pctMedian = pcts.length ? median(pcts) : null;
 
-  const totalObs =
-    matrix.data?.items.reduce((s, r) => s + r.observation_count, 0) ?? null;
+  const totalOffers =
+    providers.data?.items.reduce((s, p) => s + p.offer_count, 0) ?? null;
   const skuCount = matrix.data?.items.length ?? null;
   const providerCount = providers.data?.items.length ?? null;
 
   const windowLabel =
-    points.length > 0 ? `${points.length}-day window` : "30-day window";
+    points.length > 0 ? `last ${points.length} days` : "last 30 days";
 
   return (
     <section
@@ -74,16 +73,16 @@ function FindingsHeroInner() {
             textWrap: "balance",
           }}
         >
-          <HeroRange
+          <HeroMedian
             loading={tsLoading}
             error={tsError}
             empty={tsEmpty}
-            min={pctMin}
-            max={pctMax}
+            value={pctMedian}
           />
           <br />
           <span style={{ fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)" }}>
-            of log-price variance is unexplained.
+            of log-price variance is unexplained — even after controlling for
+            region, commitment type, provider, and bundled resources.
           </span>
         </h1>
         <p
@@ -95,12 +94,8 @@ function FindingsHeroInner() {
             color: "var(--ink-mid)",
           }}
         >
-          After controlling for the four observable factors —{" "}
-          <span style={{ color: "var(--ink)" }}>
-            region, commitment type, provider identity, bundled resources
-          </span>{" "}
-          — a residual this large remains. That residual is the basis risk any
-          compute benchmark has to live with.
+          That residual is the basis risk any compute benchmark has to live
+          with.
         </p>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
           <Link className="btn" href="/basis">
@@ -114,7 +109,7 @@ function FindingsHeroInner() {
 
       <div className="panel" style={{ padding: 22, marginTop: "clamp(40px, 6vh, 96px)" }}>
         <div className="eyebrow" style={{ marginBottom: 14 }}>
-          Residual share · last 30 days
+          Residual share · {windowLabel}
         </div>
         <ResidualTimeSeriesChart gpuSku={sku} />
         <div
@@ -128,10 +123,10 @@ function FindingsHeroInner() {
           }}
         >
           <Stat
-            label="Observations"
-            val={totalObs === null ? null : totalObs.toLocaleString()}
-            loading={matrix.isLoading}
-            error={matrix.isError}
+            label="Offers"
+            val={totalOffers === null ? null : totalOffers.toLocaleString()}
+            loading={providers.isLoading}
+            error={providers.isError}
           />
           <Stat
             label="Canonical SKUs"
@@ -172,33 +167,32 @@ export function FindingsHero() {
   );
 }
 
-function HeroRange({
+function HeroMedian({
   loading,
   error,
   empty,
-  min,
-  max,
+  value,
 }: {
   loading: boolean;
   error: boolean;
   empty: boolean;
-  min: number | null;
-  max: number | null;
+  value: number | null;
 }) {
   if (loading) {
     return <span style={{ color: "var(--residual)" }}>…</span>;
   }
-  if (error || empty || min === null || max === null) {
+  if (error || empty || value === null) {
     return <span style={{ color: "var(--ink-dim)" }}>—</span>;
   }
-  if (Math.round(min) === Math.round(max)) {
-    return <span style={{ color: "var(--residual)" }}>{min.toFixed(0)}%</span>;
-  }
   return (
-    <span style={{ color: "var(--residual)" }}>
-      {min.toFixed(0)}–{max.toFixed(0)}%
-    </span>
+    <span style={{ color: "var(--residual)" }}>~{Math.round(value)}%</span>
   );
+}
+
+function median(arr: number[]): number {
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
 function Stat({
