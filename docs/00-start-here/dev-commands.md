@@ -1,4 +1,22 @@
+---
+title: Dev Commands
+tags: [area:overview, audience:developers, status:active]
+owner: Raj
+last_updated: 2026-05-12
+---
+
 # Dev Commands
+
+## Polish-loop commands (production data on EC2)
+
+Canonical walkthrough (three terminals, `~/.ssh/config`, **restart after every `git pull`**, gotchas, shutdown): **[../guides/dev-setup.md](../guides/dev-setup.md#run-against-production-data-polish-loop)**.
+
+- **Start FastAPI on EC2 (once per session):** `ssh basis-prod` → `pkill -f uvicorn || true` → `cd ~/Basis/backend` → `nohup uv run uvicorn basis.api.main:app --host 127.0.0.1 --port 8000 > /tmp/uvicorn.log 2>&1 &` → `sleep 3` → `curl -s http://localhost:8000/health` → `exit`
+- **Tunnel (Mac):** `ssh -L 8000:127.0.0.1:8000 -N basis-prod`
+- **Frontend (Mac, from repo):** `cd frontend` → `npm run dev`
+- **Stop uvicorn on EC2:** `ssh basis-prod` → `pkill -f uvicorn`
+- **After `git pull` on EC2:** always restart uvicorn (same `nohup` line as above after `pkill`) — see **[../guides/dev-setup.md#restart-uvicorn-after-every-git-pull-on-ec2-critical](../guides/dev-setup.md#restart-uvicorn-after-every-git-pull-on-ec2-critical)**
+- **Inspect uvicorn log:** `ssh basis-prod` → `tail -50 /tmp/uvicorn.log`
 
 ## What this file is for
 

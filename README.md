@@ -51,11 +51,51 @@ Full architecture: **[docs/01-architecture/system-overview.md](docs/01-architect
 | 4 — API (6 endpoints live) | ✅ |
 | 5 — Frontend (4 pages, 3 Tremor charts) | ✅ |
 | 6 — Writeup & polish | ✅ |
-| 7 — Deploy | deferred |
+| 7 — Deploy | 🟢 Public (Vercel + Caddy + DNS); Phase 7.4 `basis-api.service` not shipped — [manual `nohup` uvicorn](docs/guides/dev-setup.md#known-operational-debt) |
 
 Detailed status: **[docs/TASKS/README.md](docs/TASKS/README.md)**. Phase plan: **[docs/roadmap.md](docs/roadmap.md)**.
 
 ## Quickstart
+
+### Run against production data (day-to-day)
+
+Public dashboard: **https://gpu-basis.xyz** (Vercel). API: **https://api.gpu-basis.xyz** (EC2). Default UI work: **local Next.js** + **SSH tunnel** to FastAPI on EC2 (live Postgres + collectors). Configure **`Host basis-prod`** in `~/.ssh/config` first (keepalives + `ServerAliveInterval` / `ServerAliveCountMax` — see **[docs/guides/dev-setup.md](docs/guides/dev-setup.md#one-time-sshconfig-entry-for-basis-prod)**).
+
+**After every `git pull` on EC2, restart uvicorn** (stale in-memory code otherwise — no exceptions). Procedure: **[docs/guides/dev-setup.md](docs/guides/dev-setup.md#restart-uvicorn-after-every-git-pull-on-ec2-critical)**.
+
+**Terminal 1 — EC2 (once per session), then disconnect; `uvicorn` stays up under `nohup`:**
+
+```bash
+ssh basis-prod
+pkill -f uvicorn || true                    # kill any stale process
+cd ~/Basis/backend
+nohup uv run uvicorn basis.api.main:app --host 127.0.0.1 --port 8000 > /tmp/uvicorn.log 2>&1 &
+sleep 3
+curl -s http://localhost:8000/health        # verify before exiting
+exit                                        # uvicorn keeps running (nohup)
+```
+
+**Terminal 2 — Mac (tunnel; no output when healthy is normal):**
+
+```bash
+ssh -L 8000:127.0.0.1:8000 -N basis-prod
+```
+
+**Terminal 3 — Mac (from repo root):**
+
+```bash
+cd frontend
+npm install          # first time or after package.json changes
+npm run dev
+```
+
+Open **http://localhost:3000**. Check the tunnel: `curl -s http://localhost:8000/health` on your Mac (expect JSON).
+
+Gotchas (silent tunnel, idle drop, `Connection refused` spam, IP rotation, tunnel vs EC2 health, shutdown order): **[docs/guides/dev-setup.md](docs/guides/dev-setup.md)** (see **Gotcha:** sections).
+
+### Run fully locally (initial setup / offline)
+
+Docker Postgres + local FastAPI + local Next.js — for backend changes, collectors, migrations, or working without SSH. Not the day-to-day polish path.
 
 ```bash
 # 1. Start the database
@@ -80,7 +120,7 @@ uv run uvicorn basis.api.main:app --reload    # backend on :8000
 cd ../frontend && npm install && npm run dev  # frontend on :3000
 ```
 
-Full setup: **[docs/guides/dev-setup.md](docs/guides/dev-setup.md)**. Command cheat-sheet: **[docs/00-start-here/dev-commands.md](docs/00-start-here/dev-commands.md)**.
+Full setup (both paths): **[docs/guides/dev-setup.md](docs/guides/dev-setup.md)**. Command cheat-sheet: **[docs/00-start-here/dev-commands.md](docs/00-start-here/dev-commands.md)**.
 
 ## Structure
 
