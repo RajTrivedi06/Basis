@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
 from basis.schemas.api import (
     BasisDecompositionResponse,
+    BasisTimeseriesResponse,
     DecompositionObservationsResponse,
     DispersionResponse,
     FungibilityMatrixResponse,
@@ -92,6 +93,23 @@ async def test_basis_decomposition(
     assert r.status_code == 200, r.text
     body = BasisDecompositionResponse.model_validate(r.json())
     assert body.gpu_sku == sku
+
+
+@pytest.mark.asyncio
+async def test_basis_timeseries(
+    api_client: AsyncClient, db_session: AsyncSession
+) -> None:
+    sku = await _pick_decomposed_sku(db_session)
+    if sku is None:
+        pytest.skip("No SKU with a basis decomposition available.")
+    r = await api_client.get(f"/api/basis/{sku}/timeseries")
+    assert r.status_code == 200, r.text
+    body = BasisTimeseriesResponse.model_validate(r.json())
+    assert body.gpu_sku == sku
+    assert len(body.points) >= 1
+    # ascending by date
+    dates = [p.date for p in body.points]
+    assert dates == sorted(dates)
 
 
 @pytest.mark.asyncio
