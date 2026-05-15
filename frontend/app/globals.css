@@ -326,6 +326,82 @@ button {
 }
 
 /* ------------------------------------------------------------
+   Hero motion: dual-number reveal + chart line draw.
+   Resolves within ~3s of mount, then settles. The outlier
+   pulse is the only perpetual animation and is intentionally
+   subtle. Per-element delay is supplied via `--basis-delay`.
+   ------------------------------------------------------------ */
+
+@keyframes basisFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.basis-fade {
+  opacity: 0;
+  animation: basisFadeIn 0.45s ease both;
+  animation-delay: var(--basis-delay, 0ms);
+}
+
+@keyframes basisDashDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.basis-line-anim {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: basisDashDraw 1700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 700ms;
+}
+
+.basis-dot-fade {
+  opacity: 0;
+  animation: basisFadeIn 300ms ease forwards;
+  animation-delay: var(--basis-delay, 700ms);
+}
+
+@keyframes basisOutlierPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.basis-outlier-pulse {
+  opacity: 0;
+  animation:
+    basisFadeIn 300ms ease forwards var(--basis-delay, 700ms),
+    basisOutlierPulse 2.4s ease-in-out infinite
+      calc(var(--basis-delay, 700ms) + 300ms);
+}
+
+.basis-median-line-anim {
+  opacity: 0;
+  animation: basisFadeIn 0.5s ease forwards;
+  animation-delay: 1850ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .basis-fade,
+  .basis-dot-fade,
+  .basis-outlier-pulse,
+  .basis-median-line-anim {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  .basis-line-anim {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------
    Nav
    ------------------------------------------------------------ */
 

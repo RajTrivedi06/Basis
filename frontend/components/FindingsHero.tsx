@@ -10,16 +10,30 @@ import {
   getProviders,
 } from "@/lib/api";
 import { ResidualTimeSeriesChart } from "@/components/ResidualTimeSeriesChart";
+import { useCountUp } from "@/lib/useCountUp";
+
+const EXCLUDED_PROVIDERS = ["vast"];
 
 function FindingsHeroInner() {
   const { sku } = useSku();
 
-  // Single 30-day timeseries query feeds both the hero range and the chart
-  // below. The chart uses the same React Query key so the network call is
-  // deduped — one fetch, two consumers.
-  const timeseries = useQuery({
-    queryKey: ["basis-timeseries", sku, null, null],
+  // Two timeseries queries with distinct React Query keys so they
+  // dedupe independently. The "full" query also dedupes with the chart
+  // on the right (matching key shape — the trailing `null` reserves
+  // space for the no-Vast variant). The "no-Vast" query asks the
+  // backend to recompute the decomposition with Vast filtered out.
+  const tsFull = useQuery({
+    queryKey: ["basis-timeseries", sku, null, null, null],
     queryFn: () => getBasisTimeseries(sku),
+  });
+  const tsNoVast = useQuery({
+    queryKey: ["basis-timeseries", sku, null, null, "exclude:vast"],
+    queryFn: () =>
+      getBasisTimeseries(sku, { excludeProviders: EXCLUDED_PROVIDERS }),
+    // The backend recomputes on demand; if it 404s while the surface
+    // is mid-deploy, surface the error gracefully via the "—" sentinel
+    // rather than retrying aggressively.
+    retry: 1,
   });
 
   const matrix = useQuery({
@@ -31,13 +45,16 @@ function FindingsHeroInner() {
     queryFn: () => getProviders(),
   });
 
-  const points = timeseries.data?.points ?? [];
-  const tsLoading = timeseries.isLoading;
-  const tsError = timeseries.isError;
-  const tsEmpty = !tsLoading && !tsError && points.length === 0;
+  const fullPoints = tsFull.data?.points ?? [];
+  const noVastPoints = tsNoVast.data?.points ?? [];
 
-  const pcts = points.map((p) => p.pct_residual);
-  const pctMedian = pcts.length ? median(pcts) : null;
+  const fullMedian = computeMedianPct(fullPoints, tsFull.isSuccess);
+  const noVastMedian = computeMedianPct(noVastPoints, tsNoVast.isSuccess);
+
+  // Count-up tweens. First number leads slightly, second trails by
+  // ~200ms so the eye reads them sequentially rather than competing.
+  const fullDisplay = useCountUp(fullMedian, 1100, 300);
+  const noVastDisplay = useCountUp(noVastMedian, 1100, 500);
 
   const totalOffers =
     providers.data?.items.reduce((s, p) => s + p.offer_count, 0) ?? null;
@@ -45,7 +62,17 @@ function FindingsHeroInner() {
   const providerCount = providers.data?.items.length ?? null;
 
   const windowLabel =
-    points.length > 0 ? `last ${points.length} days` : "last 30 days";
+    fullPoints.length > 0
+      ? `last ${fullPoints.length} days`
+      : "last 30 days";
+
+  // Dynamic delta for the body paragraph. Hidden when either query is
+  // not yet resolved so we never render a misleading "0 percentage
+  // points" placeholder.
+  const delta =
+    fullMedian !== null && noVastMedian !== null
+      ? Math.round(Math.abs(noVastMedian - fullMedian))
+      : null;
 
   return (
     <section
@@ -57,47 +84,102 @@ function FindingsHeroInner() {
       }}
     >
       <div>
-        <div className="eyebrow" style={{ marginBottom: 18 }}>
-          Finding · {sku} · {windowLabel}
+        <div
+          className="eyebrow basis-fade"
+          style={
+            {
+              marginBottom: 22,
+              "--basis-delay": "100ms",
+            } as React.CSSProperties
+          }
+        >
+          Finding · {sku} · {windowLabel} · Segment-conditional
         </div>
-        <h1
-          className="display"
-          aria-live="polite"
-          aria-atomic="true"
+
+        <dl
           style={{
-            fontSize: "clamp(56px, 7.4vw, 112px)",
-            lineHeight: 0.96,
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "clamp(32px, 5vw, 48px)",
             margin: 0,
-            color: "var(--ink)",
-            letterSpacing: "-0.03em",
-            textWrap: "balance",
           }}
         >
-          <HeroMedian
-            loading={tsLoading}
-            error={tsError}
-            empty={tsEmpty}
-            value={pctMedian}
+          <HeroNumber
+            valueLabel={fullDisplay}
+            target={fullMedian}
+            primary="marketplace pricing"
+            secondary="(Vast-dominated)"
+            numberDelay="200ms"
+            labelDelay="1000ms"
           />
-          <br />
-          <span style={{ fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)" }}>
-            of log-price variance is unexplained — even after controlling for
-            region, commitment type, provider, and bundled resources.
-          </span>
-        </h1>
+          <HeroNumber
+            valueLabel={noVastDisplay}
+            target={noVastMedian}
+            primary="curated providers"
+            secondary="(Vast excluded)"
+            numberDelay="200ms"
+            labelDelay="1000ms"
+          />
+        </dl>
+
         <p
-          style={{
-            maxWidth: 560,
-            marginTop: 32,
-            fontSize: 16,
-            lineHeight: 1.55,
-            color: "var(--ink-mid)",
-          }}
+          className="serif basis-fade"
+          style={
+            {
+              marginTop: 28,
+              maxWidth: 620,
+              fontStyle: "italic",
+              fontSize: "clamp(16px, 1.6vw, 22px)",
+              lineHeight: 1.35,
+              color: "var(--ink)",
+              letterSpacing: "-0.005em",
+              "--basis-delay": "1250ms",
+            } as React.CSSProperties
+          }
         >
-          That residual is the basis risk any compute benchmark has to live
-          with.
+          of log-price variance is unexplained — and the answer depends on
+          which segment of the market you measure.
         </p>
-        <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
+
+        <p
+          className="basis-fade"
+          style={
+            {
+              maxWidth: 560,
+              marginTop: 18,
+              fontSize: 13,
+              lineHeight: 1.65,
+              color: "var(--ink-mid)",
+              "--basis-delay": "1400ms",
+            } as React.CSSProperties
+          }
+        >
+          {delta !== null ? (
+            <>
+              Vast.ai accounts for 80% of canonical offers; including it
+              pulls the residual down by {delta} percentage points. Both
+              are basis risk benchmark designs have to live with.
+            </>
+          ) : (
+            <>
+              Vast.ai accounts for 80% of canonical offers; including it
+              pulls the residual down materially. Both are basis risk
+              benchmark designs have to live with.
+            </>
+          )}
+        </p>
+
+        <div
+          className="basis-fade"
+          style={
+            {
+              display: "flex",
+              gap: 10,
+              marginTop: 28,
+              "--basis-delay": "1550ms",
+            } as React.CSSProperties
+          }
+        >
           <Link className="btn" href="/basis">
             See the decomposition →
           </Link>
@@ -107,7 +189,10 @@ function FindingsHeroInner() {
         </div>
       </div>
 
-      <div className="panel" style={{ padding: 22, marginTop: "clamp(40px, 6vh, 96px)" }}>
+      <div
+        className="panel"
+        style={{ padding: 22, marginTop: "clamp(40px, 6vh, 96px)" }}
+      >
         <div className="eyebrow" style={{ marginBottom: 14 }}>
           Residual share · {windowLabel}
         </div>
@@ -167,26 +252,96 @@ export function FindingsHero() {
   );
 }
 
-function HeroMedian({
-  loading,
-  error,
-  empty,
-  value,
+function HeroNumber({
+  valueLabel,
+  target,
+  primary,
+  secondary,
+  numberDelay,
+  labelDelay,
 }: {
-  loading: boolean;
-  error: boolean;
-  empty: boolean;
-  value: number | null;
+  valueLabel: string;
+  target: number | null;
+  primary: string;
+  secondary: string;
+  numberDelay: string;
+  labelDelay: string;
 }) {
-  if (loading) {
-    return <span style={{ color: "var(--residual)" }}>…</span>;
-  }
-  if (error || empty || value === null) {
-    return <span style={{ color: "var(--ink-dim)" }}>—</span>;
-  }
+  // Numbers are wrapped in a <dl><dt><dd> pair so screen readers read
+  // each pair as a label/value unit. aria-live="off" keeps the count-up
+  // tween from spamming announcements every frame; the aria-label is
+  // derived from the target (final) value, not the in-flight display
+  // value, so screen readers always read the resolved number.
+  const ariaValue =
+    target === null
+      ? "data unavailable"
+      : `approximately ${Math.round(target)} percent`;
   return (
-    <span style={{ color: "var(--residual)" }}>~{Math.round(value)}%</span>
+    <div
+      className="basis-fade"
+      style={
+        {
+          flex: "0 0 auto",
+          "--basis-delay": numberDelay,
+        } as React.CSSProperties
+      }
+    >
+      <dt
+        className="display"
+        aria-live="off"
+        aria-label={`${ariaValue} ${primary} ${secondary}`}
+        style={{
+          fontStyle: "italic",
+          fontSize: "clamp(56px, 7.4vw, 112px)",
+          lineHeight: 0.96,
+          margin: 0,
+          color: "var(--residual)",
+          letterSpacing: "-0.03em",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {valueLabel}
+      </dt>
+      <dd
+        className="basis-fade"
+        style={
+          {
+            margin: "12px 0 0",
+            "--basis-delay": labelDelay,
+          } as React.CSSProperties
+        }
+      >
+        <div
+          style={{
+            fontSize: 13,
+            color: "var(--ink)",
+            letterSpacing: "0.005em",
+          }}
+        >
+          {primary}
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            color: "var(--ink-dim)",
+            marginTop: 2,
+            letterSpacing: "0.005em",
+          }}
+        >
+          {secondary}
+        </div>
+      </dd>
+    </div>
   );
+}
+
+function computeMedianPct(
+  points: { pct_residual: number }[],
+  isReady: boolean
+): number | null {
+  if (!isReady || points.length === 0) return null;
+  const vals = points.map((p) => p.pct_residual);
+  return median(vals);
 }
 
 function median(arr: number[]): number {
