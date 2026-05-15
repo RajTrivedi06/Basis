@@ -35,8 +35,11 @@ export function ResidualTimeSeriesChart({
   since,
   until,
 }: ResidualTimeSeriesChartProps) {
+  // 5th key element reserves space for an `excludeProviders` variant
+  // so the FindingsHero's matching no-filter query dedupes against this
+  // one (single network call, two consumers).
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["basis-timeseries", gpuSku, since ?? null, until ?? null],
+    queryKey: ["basis-timeseries", gpuSku, since ?? null, until ?? null, null],
     queryFn: () => getBasisTimeseries(gpuSku, { since, until }),
   });
 
@@ -202,31 +205,36 @@ function Chart({
         );
       })}
 
-      {/* Median reference line */}
-      <line
-        x1={PAD_L}
-        x2={VIEW_W - PAD_R}
-        y1={medY}
-        y2={medY}
-        stroke="var(--residual-line)"
-        strokeWidth={1}
-        strokeDasharray="3 3"
-        vectorEffect="non-scaling-stroke"
-      />
-      <text
-        x={VIEW_W - PAD_R - 4}
-        y={medY - 4}
-        textAnchor="end"
-        fontSize={10}
-        fontFamily="var(--f-mono)"
-        fill="var(--residual)"
-      >
-        median {med.toFixed(0)}%
-      </text>
+      {/* Median reference line — fades in after the main line draw */}
+      <g className="basis-median-line-anim">
+        <line
+          x1={PAD_L}
+          x2={VIEW_W - PAD_R}
+          y1={medY}
+          y2={medY}
+          stroke="var(--residual-line)"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          vectorEffect="non-scaling-stroke"
+        />
+        <text
+          x={VIEW_W - PAD_R - 4}
+          y={medY - 4}
+          textAnchor="end"
+          fontSize={10}
+          fontFamily="var(--f-mono)"
+          fill="var(--residual)"
+        >
+          median {med.toFixed(0)}%
+        </text>
+      </g>
 
-      {/* Line */}
+      {/* Line — draws left-to-right via stroke-dasharray.
+          pathLength=1 normalises the line to a single unit so the
+          dasharray/dashoffset values are independent of viewport scale. */}
       {n > 1 && (
         <polyline
+          className="basis-line-anim"
           points={linePoints}
           fill="none"
           stroke="var(--residual)"
@@ -234,16 +242,26 @@ function Chart({
           strokeLinejoin="round"
           strokeLinecap="round"
           vectorEffect="non-scaling-stroke"
+          pathLength={1}
         />
       )}
 
-      {/* Points */}
+      {/* Points — each dot fades in as the drawing line reaches it.
+          Outliers fade in then enter a slow infinite pulse. */}
       {values.map((v, i) => {
         const isOutlier = outlierIdxs.includes(i);
+        const x = xAt(i);
+        const dotDelayMs = computeDotDelayMs(x);
         return (
           <circle
             key={`p-${i}`}
-            cx={xAt(i)}
+            className={isOutlier ? "basis-outlier-pulse" : "basis-dot-fade"}
+            style={
+              {
+                "--basis-delay": `${dotDelayMs}ms`,
+              } as React.CSSProperties
+            }
+            cx={x}
             cy={yAt(v)}
             r={isOutlier ? 4 : 2.5}
             fill="var(--residual)"
@@ -253,7 +271,8 @@ function Chart({
         );
       })}
 
-      {/* Outlier labels */}
+      {/* Outlier labels — share the dot's fade-in delay so the label
+          arrives with its point. The label itself doesn't pulse. */}
       {outlierIdxs.map((i) => {
         const x = xAt(i);
         const y = yAt(values[i]);
@@ -267,6 +286,12 @@ function Chart({
         return (
           <text
             key={`ol-${i}`}
+            className="basis-dot-fade"
+            style={
+              {
+                "--basis-delay": `${computeDotDelayMs(x)}ms`,
+              } as React.CSSProperties
+            }
             x={x}
             y={y - 8}
             textAnchor={anchor}
@@ -280,6 +305,19 @@ function Chart({
       })}
     </svg>
   );
+}
+
+/**
+ * Map an x-coordinate (in viewBox units) to the dot's fade-in delay,
+ * matching the timing of the line-draw animation. The line starts at
+ * 700ms and runs for 1700ms across the plot area, so a dot at the
+ * left edge fades in immediately after the line starts and a dot at
+ * the right edge fades in just as the line completes.
+ */
+function computeDotDelayMs(x: number): number {
+  const ratio = (x - PAD_L) / PLOT_W;
+  const clamped = ratio < 0 ? 0 : ratio > 1 ? 1 : ratio;
+  return Math.round(clamped * 1700 + 700);
 }
 
 // ---------- helpers ----------
