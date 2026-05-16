@@ -7,6 +7,7 @@
 
 import type {
   BasisDecompositionResponse,
+  BasisTimeseriesResponse,
   DecompositionObservationsResponse,
   DispersionResponse,
   FungibilityMatrixResponse,
@@ -74,6 +75,32 @@ export async function getBasisDecomposition(
 ): Promise<BasisDecompositionResponse> {
   return fetchApi<BasisDecompositionResponse>(
     `/api/basis/${encodeURIComponent(gpuSku)}${qs(params)}`
+  );
+}
+
+export async function getBasisTimeseries(
+  gpuSku: string,
+  params?: {
+    since?: string;
+    until?: string;
+    /**
+     * Provider names (canonical, lowercase) to exclude from the
+     * decomposition. Sent as the comma-separated `exclude_providers`
+     * query param, which the backend honours by recomputing the
+     * decomposition on demand instead of reading the precomputed table.
+     */
+    excludeProviders?: string[];
+  }
+): Promise<BasisTimeseriesResponse> {
+  const query: Record<string, string | undefined> = {
+    since: params?.since,
+    until: params?.until,
+  };
+  if (params?.excludeProviders && params.excludeProviders.length > 0) {
+    query.exclude_providers = params.excludeProviders.join(",");
+  }
+  return fetchApi<BasisTimeseriesResponse>(
+    `/api/basis/${encodeURIComponent(gpuSku)}/timeseries${qs(query)}`
   );
 }
 

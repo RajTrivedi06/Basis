@@ -2,12 +2,12 @@
 title: Tasks & Status
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-28
+last_updated: 2026-05-15
 ---
 
 # Tasks & Status
 
-Granular snapshot of current work for Basis. Last refreshed: **2026-04-28**.
+Granular snapshot of current work for Basis. Last refreshed: **2026-05-15**.
 
 Complements [roadmap.md](../roadmap.md) (high-level phases) and [project-brief.md](../project-brief.md) (what the project is). This file is the most-updated doc — treat it like a living to-do list.
 
@@ -126,6 +126,10 @@ Production now lives on EC2; Mac collection cron is stopped and 33,525 pre-EC2 o
 - `d164642` (direct to main) — `backend/scripts/backup.sh` cleanup `find` scoped to `/tmp` top level with `-maxdepth 1 ... 2>/dev/null || true`, so unrelated permission denials in `/tmp` subdirs don't fail the backup unit.
 - Domain `gpu-basis.xyz` registered at Namecheap; DNS not yet pointed (Phase 7 work).
 
+### Phase 7+ — Post-deploy analysis
+
+- **Findings refresh shipped (2026-05-15).** First 18 days of EC2 collection (2026-04-26 → 2026-05-13) decomposed and written up. Segment-conditional headline (~59% / ~89%) replaces the v1 3-day 53–95% range. Vast.ai dominance promoted from implicit to explicit caveat in [findings.md](../findings.md) and [methodology.md](../methodology.md). Cross-SKU numbers refreshed (A100 SXM 80GB 24%, RTX 4090 24GB 86%). New backend param `exclude_providers` on `GET /api/basis/{sku}/timeseries` recomputes on demand against `canonical_offers`; new frontend hero renders both numbers side-by-side. Investigation report committed at [`docs/analysis/2026-05-13-findings-refresh-analysis.md`](../analysis/2026-05-13-findings-refresh-analysis.md). Branch: `feat/segment-conditional-finding`.
+
 ---
 
 ## In progress
@@ -140,7 +144,7 @@ UI polish via SSH tunnel against the EC2 backend. Open-ended; sets the trigger f
 
 - [ ] **Phase 8 — reboot test on EC2** (this week). Hard reboot, verify `basis-postgres.service` brings Postgres up healthcheck-gated and all timers come back active. `Type=oneshot` units showing `Active: inactive (dead)` after success is the pass signal.
 - [ ] **Phase 8 — weekly operational checks** (ongoing). Timer health, journal scan for `code=exited, status=0/SUCCESS`, S3 backup integrity, healthchecks.io dashboard green, disk + swap usage.
-- [ ] **Phase 8 — mid-May findings refresh** (~2026-05-27). Recompute analytics with ≥30 days of EC2 collection and refresh `findings.md` + landing-page numbers.
+- [ ] **Add curated providers** to reduce Vast.ai's 80% share — revisit Lambda Labs under different terms, add CoreWeave, add Crusoe. Each new collector would sharpen the segment-dependence picture in [findings.md](../findings.md) without changing methodology.
 - [ ] **Tailscale (or AWS SSM Session Manager) setup** — only if home-IP rotation continues to break the security-group whitelist often. Workarounds, in order of friction: widen to `/24` → widen to `/16` → Tailscale → SSM.
 
 ### Phase 7 — Public deploy (waiting on UI polish)
@@ -153,7 +157,7 @@ Tear-down checklist when the project is wound down (~3 months out). See [basis-d
 
 ### Ongoing (post-Phase-6)
 
-- [ ] **Let data accumulate.** Writeup currently uses a 3-day sample; residual estimates will stabilize with ≥30 days of cron-driven collection. Mid-May refresh tracked above.
+- [ ] **Let data accumulate.** The 18-day findings refresh shipped (above); residual estimates continue to tighten as the window grows. Re-anchor the writeup to a longer window once ≥60 days are in.
 - [ ] **Monitor for `skipped_unknown_gpu`** — any new GPU name from a provider requires a `canonicalize.py` addition.
 - [ ] **Optional: screenshot reel / portfolio post.** Manual step (Raj's call) — not code.
 
@@ -198,6 +202,7 @@ No active blockers. Watch items:
 
 Append a one-liner each time this file is updated.
 
+- 2026-05-15 — Findings refresh shipped on `feat/segment-conditional-finding`. Segment-conditional framing (~59% / ~89%) replaces the v1 single-residual headline. Vast.ai dominance (80% of canonical offers) promoted from implicit to explicit caveat. Cross-SKU comparison numbers refreshed against the 18-day EC2 window. Backend: new `exclude_providers` param on `/api/basis/{sku}/timeseries`. Frontend: dual-number hero with count-up motion. Docs: [findings.md](../findings.md), [methodology.md](../methodology.md), [project-status.md](../project-status.md), and the lede in root [README.md](../../README.md) all reflect the refresh. Source: [`docs/analysis/2026-05-13-findings-refresh-analysis.md`](../analysis/2026-05-13-findings-refresh-analysis.md).
 - 2026-04-27 — Phases 0–6 of [basis-deployment-roadmap.md](../basis-deployment-roadmap.md) shipped. Production is live on EC2 t3.small with twice-daily collection, daily backup, hourly freshness probe. UI polish via SSH tunnel begins now.
 - 2026-04-21 — UI port begun on `ui-port-v2` branch. Baseline on main (`7776ae5`) captures pre-port state + all tests passing. Stage 1 of 7 shipped on the branch: CSS design tokens + utility classes, next/font Fraunces/Inter/JetBrains Mono, redesigned shell (sticky TopBar, serif wordmark, flat nav, footer), Tailwind config (Tremor + typography plugin dropped), `useSku` hook, `factorColor` + `gpuFamily` utilities. Pages still render v1 content — expected; gets resolved as Stage 5 ports each page. Port decision captured as ADR 0005 (Proposed). No merge to main until end-to-end port complete.
 - 2026-04-21 — Pipeline offset/filter bug fixed: `run_normalization` now uses an id-based cursor instead of a numeric offset. Regression test `test_run_normalization_processes_all_rows_when_exceeding_batch_size` added to `test_normalization.py` (reproduced the bug at 5979/9979 before the fix; 9979/9979 after). Backfill verification: zero silent data loss in the current DB — last session's `batch_size=20000` workaround had fully regenerated the corpus. Stale smoke-tests placeholder removed from Cross-cutting (all four files shipped in the previous session).

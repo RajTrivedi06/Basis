@@ -1,238 +1,287 @@
-const ARTICLE_STYLE = {
-  fontFamily: "var(--f-serif)",
-  fontSize: 17,
-  lineHeight: 1.72,
-  color: "var(--ink-mid)",
-} as const;
+import { Suspense } from "react";
+import { MethodologyChrome, type TocItem } from "./MethodologyChrome";
+import { MethodologyHero } from "./MethodologyHero";
+import { ModelChain } from "./ModelChain";
+import { PipelineDiagram } from "./PipelineDiagram";
+import { ResidualReveal } from "./ResidualReveal";
+import { Reveal } from "./Reveal";
+import { MethodologyComparisonSection } from "./MethodologyComparisonSection";
 
-const HEADING_STYLE = {
-  margin: "0 0 14px",
-  color: "var(--ink-hi)",
-  fontWeight: 400,
-  fontSize: 24,
-  letterSpacing: "-0.01em",
-} as const;
+const TOC: TocItem[] = [
+  { id: "premise", num: "01", title: "Premise" },
+  { id: "collection", num: "02", title: "Data collection" },
+  { id: "schema", num: "03", title: "Canonical schema" },
+  { id: "dispersion", num: "04", title: "Dispersion metrics" },
+  { id: "decomposition", num: "05", title: "Basis decomposition" },
+  { id: "limitations", num: "06", title: "Limitations" },
+  { id: "residual", num: "07", title: "What the residual means" },
+  { id: "comparison", num: "08", title: "Comparison" },
+];
 
-const PARAGRAPH_STYLE = {
-  margin: "0 0 18px",
-} as const;
+const LIMITATIONS: { num: string; title: string; body: string }[] = [
+  {
+    num: "L1",
+    title: "Quoted, not transacted",
+    body: "Every figure is a public list price. Enterprise-negotiated rates are not visible without access to a transaction benchmark such as Ornn's OCPI.",
+  },
+  {
+    num: "L2",
+    title: "Selection bias",
+    body: "Marketplaces like Vast.ai list many independent sellers; hyperscalers list a small number of instance types. These are not like-for-like data generators.",
+  },
+  {
+    num: "L3",
+    title: "Temporal coverage",
+    body: "Collection currently runs on laptop-hosted cron. Gaps in the time series are possible and are not back-filled — only forward observations count.",
+  },
+  {
+    num: "L4",
+    title: "Continuous factors",
+    body: "Reliability scores, interconnect type, and datacenter tier are left in the residual by design. Conservative normalization avoids price-adjusting for fields we cannot audit.",
+  },
+];
 
 export default function MethodologyPage() {
   return (
     <div className="page-wide fade-up">
-      <section className="max-w-[780px] pb-2 pt-9">
-        <div className="eyebrow mb-2.5">08 · Methodology</div>
-        <h1 className="display m-0 text-[clamp(2.5rem,5vw,3rem)] font-normal leading-[1.05] tracking-[-0.02em] text-[var(--ink-hi)]">
-          Methodology
-        </h1>
-        <p className="caption mt-3 max-w-[640px]">
-          Basis is a variance-accounting study, not a forecasting engine. The
-          rules stay explicit because interpretability is part of the claim.
-        </p>
-      </section>
+      <MethodologyHero />
 
-      <div className="max-w-[780px]" style={ARTICLE_STYLE}>
-        <MethodSection title="Data collection">
-          <p style={PARAGRAPH_STYLE}>
-            <span style={{ color: "var(--ink-hi)" }}>Basis</span> is a
-            public-data study measuring how fungible GPU compute really is
-            across cloud providers. It collects quoted prices, normalizes them
-            into a canonical schema, and decomposes observed price variance
-            into observable factors and a residual. The residual is the
-            headline finding.
-          </p>
-          <p style={PARAGRAPH_STYLE}>
-            Four providers are collected twice daily: Vast.ai (REST), RunPod
-            (GraphQL), AWS EC2 Spot (boto3), and TensorDock (REST). Lambda
-            Labs was considered but dropped because its free API key now
-            requires a payment method on file, which violates the study&apos;s
-            zero-data-cost constraint.
-          </p>
-          <p style={PARAGRAPH_STYLE}>
-            Every collector writes its full provider response to{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              raw_observations
-            </span>{" "}
-            as a JSONB blob. Raw rows are immutable, never updated and never
-            deleted, so the normalized layer can always be regenerated from
-            source truth.
-          </p>
-        </MethodSection>
+      <div
+        id="meth-article"
+        className="relative grid grid-cols-1 gap-12 pt-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16 xl:gap-24"
+      >
+        <div className="hidden lg:block">
+          <MethodologyChrome items={TOC} />
+        </div>
 
-        <MethodSection title="Canonical schema">
-          <p style={PARAGRAPH_STYLE}>
-            The normalization layer projects each raw observation into a{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              canonical_offer
-            </span>{" "}
-            row with standardized fields: canonical GPU SKU (for example{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              h100_sxm_80gb
-            </span>
-            ), canonical commitment type (
-            <span className="mono text-[14px] text-[var(--ink)]">
-              on_demand
-            </span>
-            ,{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">spot</span>,{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              reserved_*
-            </span>
-            ), country/state/city region, and bundled vCPU/RAM/storage.
-          </p>
-          <p style={PARAGRAPH_STYLE}>
-            Unknown GPU names are skipped and logged, not guessed, and missing
-            factor values remain a distinct{" "}
-            <span className="pill-unknown">UNKNOWN</span> group rather than
-            being imputed away. Conservative normalization preserves the
-            residual instead of laundering ambiguity into &ldquo;region&rdquo;
-            or &ldquo;bundle.&rdquo;
-          </p>
-        </MethodSection>
+        <article className="min-w-0 max-w-[960px]">
+          <section id="premise" className="meth-section">
+            <Reveal className="meth-section__head" delay={40}>
+              <span className="meth-section__index">01 · Premise</span>
+              <h2 className="meth-section__title">
+                A variance-accounting study, not a price index.
+              </h2>
+              <p className="meth-section__lede">
+                Basis is a public-data study measuring how fungible GPU compute
+                really is across cloud providers. It collects quoted prices,
+                normalizes them into a canonical schema, and decomposes
+                observed price variance into observable factors and a
+                residual. The residual is the headline finding.
+              </p>
+            </Reveal>
 
-        <MethodSection title="Dispersion metrics">
-          <p style={PARAGRAPH_STYLE}>
-            For each{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              (date, gpu_sku)
-            </span>{" "}
-            with at least three offers, Basis computes median, 25th
-            percentile, 75th percentile, and observation count, both across
-            all providers and per-provider. These live in{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              daily_aggregates
-            </span>{" "}
-            and power the time-series pages.
-          </p>
-        </MethodSection>
+            <Reveal className="meth-section__body" delay={180}>
+              <p>
+                The entire pipeline is rule-based and traceable. Every
+                attribution can be regenerated from the original provider
+                response, and every adjustment is small enough to argue with.
+                Interpretability is not a polish — it is the claim.
+              </p>
+              <div className="meth-note">
+                <div className="meth-note__label">Why this matters</div>
+                <div className="meth-note__body">
+                  If a benchmark designer cannot tell you which adjustments
+                  produced the headline number, the headline number is doing
+                  the wrong job.
+                </div>
+              </div>
+            </Reveal>
+          </section>
 
-        <MethodSection title="Basis decomposition">
-          <p style={PARAGRAPH_STYLE}>
-            For each{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              (date, gpu_sku)
-            </span>{" "}
-            with at least five offers, Basis runs a sequential ANOVA on
-            log-prices in the fixed model order shown in the UI:
-          </p>
+          <section id="collection" className="meth-section">
+            <Reveal className="meth-section__head" delay={40}>
+              <span className="meth-section__index">02 · Data collection</span>
+              <h2 className="meth-section__title">
+                Four providers, <em>twice daily</em>, JSONB forever.
+              </h2>
+              <p className="meth-section__lede">
+                Vast.ai (REST), RunPod (GraphQL), AWS EC2 Spot (boto3), and
+                TensorDock (REST) are collected on a fixed 2× / day cadence.
+                Lambda Labs was considered but dropped — its free API key now
+                requires a payment method on file, which violates the study's
+                zero-data-cost constraint.
+              </p>
+            </Reveal>
 
-          <div className="panel mb-[18px] p-4">
-            <div className="mono text-[13px] text-[var(--ink)]">
-              region → commitment → provider → bundle → residual
+            <Reveal className="meth-section__body" delay={180}>
+              <p>
+                Every collector writes its full provider response to{" "}
+                <span className="tok">raw_observations</span> as a JSONB blob.
+                Raw rows are immutable — never updated, never deleted — so the
+                normalized layer can always be regenerated from source truth.
+              </p>
+            </Reveal>
+
+            <div className="mt-10">
+              <PipelineDiagram />
             </div>
-          </div>
+          </section>
 
-          <p style={PARAGRAPH_STYLE}>
-            Each factor&apos;s attribution is the additional sum-of-squares
-            explained after conditioning on all prior factors. The residual is{" "}
-            <span className="mono text-[14px] text-[var(--ink)]">
-              total_variance − Σ attributions
-            </span>
-            .
-          </p>
-          <p style={PARAGRAPH_STYLE}>
-            <span style={{ color: "var(--ink-hi)" }}>Order dependence.</span>{" "}
-            Sequential ANOVA is order-dependent: a different order
-            redistributes factor attributions, but leaves the residual
-            unchanged. That is why the Basis page and the comparison section at
-            the bottom both render in model order rather than prototype order.
-          </p>
-          <p style={PARAGRAPH_STYLE}>
-            <span style={{ color: "var(--ink-hi)" }}>Why log-prices.</span>{" "}
-            Price ratios, not absolute differences, are the meaningful
-            fungibility metric. A 2× price multiplier at $1/hr vs $2/hr
-            represents the same fungibility gap as 2× at $2/hr vs $4/hr; they
-            should not be conflated in absolute-variance terms.
-          </p>
-        </MethodSection>
+          <section id="schema" className="meth-section">
+            <Reveal className="meth-section__head" delay={40}>
+              <span className="meth-section__index">
+                03 · Canonical schema
+              </span>
+              <h2 className="meth-section__title">
+                Conservative normalization preserves the residual.
+              </h2>
+              <p className="meth-section__lede">
+                The normalization layer projects each raw observation into a{" "}
+                <span className="tok">canonical_offer</span> row with
+                standardized fields. Unknown values stay unknown.
+              </p>
+            </Reveal>
 
-        <MethodSection title="Limitations">
-          <ul className="m-0 list-disc space-y-3 pl-5">
-            <li>
-              <span style={{ color: "var(--ink-hi)" }}>
-                Quoted, not transacted.
-              </span>{" "}
-              All prices here are public list prices. Enterprise-negotiated
-              rates are not available without access to a transaction benchmark
-              such as Ornn&apos;s OCPI.
-            </li>
-            <li>
-              <span style={{ color: "var(--ink-hi)" }}>Selection bias.</span>{" "}
-              Marketplace providers such as Vast.ai list many independent
-              sellers; hyperscalers such as AWS list a small number of
-              instance types. These are not like-for-like data generators.
-            </li>
-            <li>
-              <span style={{ color: "var(--ink-hi)" }}>
-                Temporal coverage.
-              </span>{" "}
-              The dataset currently depends on laptop-hosted cron. Gaps in the
-              time series are possible and are not back-filled.
-            </li>
-            <li>
-              <span style={{ color: "var(--ink-hi)" }}>
-                Continuous factors.
-              </span>{" "}
-              Reliability scores, interconnect type, and datacenter tier are
-              left in the residual by design. Rule-based conservative
-              normalization means we do not price-adjust for fields we cannot
-              audit confidently.
-            </li>
-          </ul>
-        </MethodSection>
+            <Reveal className="meth-section__body" delay={180}>
+              <p>
+                Each canonical row carries a canonical GPU SKU (for example{" "}
+                <span className="tok">h100_sxm_80gb</span>), a canonical
+                commitment type (<span className="tok">on_demand</span>,{" "}
+                <span className="tok">spot</span>, or{" "}
+                <span className="tok">reserved_*</span>), country / state /
+                city region, and the bundled vCPU/RAM/storage that travelled
+                with the offer.
+              </p>
+              <p>
+                Unknown GPU names are skipped and logged, not guessed. Missing
+                factor values remain a distinct{" "}
+                <span className="pill-unknown">UNKNOWN</span> group rather
+                than being imputed away. Conservative normalization preserves
+                the residual instead of laundering ambiguity into &ldquo;region&rdquo;
+                or &ldquo;bundle.&rdquo;
+              </p>
+            </Reveal>
+          </section>
 
-        <MethodSection title="What the residual means">
-          <p style={PARAGRAPH_STYLE}>
-            The residual variance is the portion of log-price dispersion that
-            cannot be explained by region, commitment type, provider identity,
-            or bundle composition. It represents the genuine basis risk a
-            compute benchmark would have to absorb: the irreducible mismatch
-            between a single reference price and what a specific buyer actually
-            pays.
-          </p>
-          <p style={{ margin: 0 }}>
-            Across three observation days in April 2026, H100 SXM 80GB
-            residual variance ranged from 53% to 95% of total log-price
-            variance. More data will refine these numbers; the range should
-            narrow once a few weeks of consistent collection have accumulated.
-          </p>
-        </MethodSection>
+          <section id="dispersion" className="meth-section">
+            <Reveal className="meth-section__head" delay={40}>
+              <span className="meth-section__index">
+                04 · Dispersion metrics
+              </span>
+              <h2 className="meth-section__title">
+                Median and IQR, market-wide and per provider.
+              </h2>
+              <p className="meth-section__lede">
+                For each <span className="tok">(date, gpu_sku)</span> pair with
+                at least three offers, Basis computes median, 25th percentile,
+                75th percentile, and observation count — both across all
+                providers and per-provider.
+              </p>
+            </Reveal>
 
-        <Suspense fallback={<ComparisonFallback />}>
-          <MethodologyComparisonSection />
-        </Suspense>
+            <Reveal className="meth-section__body" delay={180}>
+              <p>
+                These daily aggregates live in{" "}
+                <span className="tok">daily_aggregates</span> and power the
+                time-series pages. Anything below three offers is held out:
+                noise from thin samples is precisely the kind of confidence
+                Basis is built to resist.
+              </p>
+            </Reveal>
+          </section>
+
+          <section id="decomposition" className="meth-section">
+            <Reveal className="meth-section__head" delay={40}>
+              <span className="meth-section__index">
+                05 · Basis decomposition
+              </span>
+              <h2 className="meth-section__title">
+                Sequential ANOVA, in <em>fixed model order</em>.
+              </h2>
+              <p className="meth-section__lede">
+                For each <span className="tok">(date, gpu_sku)</span> with at
+                least five offers, Basis runs a sequential ANOVA on
+                log-prices. The model order is fixed and renders the same way
+                everywhere on the site:
+              </p>
+            </Reveal>
+
+            <div className="mt-8">
+              <ModelChain />
+            </div>
+
+            <Reveal className="meth-section__body mt-10" delay={140}>
+              <p>
+                Each factor&apos;s attribution is the additional sum-of-squares
+                explained after conditioning on all prior factors. The
+                residual is{" "}
+                <span className="tok">total_variance − Σ attributions</span>.
+              </p>
+              <p>
+                <span className="ink">Order dependence.</span> Sequential
+                ANOVA is order-dependent: a different order redistributes
+                factor attributions, but leaves the residual unchanged. That
+                is why the Basis page and the comparison panel at the bottom
+                both render in model order rather than prototype order.
+              </p>
+              <p>
+                <span className="ink">Why log-prices.</span> Price ratios, not
+                absolute differences, are the meaningful fungibility metric.
+                A 2× price multiplier at $1/hr vs $2/hr represents the same
+                fungibility gap as 2× at $2/hr vs $4/hr; they should not be
+                conflated in absolute-variance terms.
+              </p>
+            </Reveal>
+          </section>
+
+          <section id="limitations" className="meth-section">
+            <Reveal className="meth-section__head" delay={40}>
+              <span className="meth-section__index">06 · Limitations</span>
+              <h2 className="meth-section__title">
+                What this measurement cannot see.
+              </h2>
+              <p className="meth-section__lede">
+                These four constraints set the scope of every claim Basis
+                makes. They are stated up front because pretending they are
+                not present is the failure mode the study is built to avoid.
+              </p>
+            </Reveal>
+
+            <div className="mt-8 limits-grid">
+              {LIMITATIONS.map((lim, idx) => (
+                <Reveal key={lim.num} delay={idx * 90}>
+                  <div className="limit-card">
+                    <div className="limit-card__num">{lim.num}</div>
+                    <div className="limit-card__title">{lim.title}</div>
+                    <div className="limit-card__body">{lim.body}</div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+
+          <section id="residual" className="meth-section">
+            <Reveal className="meth-section__head" delay={40}>
+              <span className="meth-section__index">
+                07 · What the residual means
+              </span>
+              <h2 className="meth-section__title">
+                The unexplained share <em>is</em> the finding.
+              </h2>
+            </Reveal>
+
+            <ResidualReveal />
+          </section>
+
+          <section id="comparison" className="meth-section">
+            <Suspense fallback={<ComparisonFallback />}>
+              <MethodologyComparisonSection />
+            </Suspense>
+          </section>
+        </article>
       </div>
     </div>
   );
 }
 
-function MethodSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="pt-10">
-      <h2 className="serif" style={HEADING_STYLE}>
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
 function ComparisonFallback() {
   return (
-    <section className="pt-14">
+    <div>
       <div className="sec-eyebrow">
-        <span className="num">06</span>
+        <span className="num">08</span>
         <h2>Compare to an equal-weight donut</h2>
       </div>
       <p className="caption">Loading comparison…</p>
-    </section>
+    </div>
   );
 }
-import { Suspense } from "react";
-import { MethodologyComparisonSection } from "./MethodologyComparisonSection";

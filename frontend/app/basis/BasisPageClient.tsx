@@ -10,6 +10,15 @@ import { useSku } from "@/lib/useSku";
 import type { BasisDecompositionResponse } from "@/lib/types";
 import { BasisObservationsDrawer } from "./BasisObservationsDrawer";
 import { BasisRawObservationInspector } from "./BasisRawObservationInspector";
+import { FactorStripPlot, pointsFromObservations } from "./FactorStripPlot";
+
+const STRIP_TABS: { factor: Factor; label: string }[] = [
+  { factor: "region", label: "Region" },
+  { factor: "commitment", label: "Commitment" },
+  { factor: "provider", label: "Provider" },
+  { factor: "bundle", label: "Bundle" },
+  { factor: "residual", label: "Residual (within cell)" },
+];
 
 type FactorKey = Exclude<Factor, "residual">;
 
@@ -52,6 +61,8 @@ export function BasisPageClient() {
   const { sku, setSku } = useSku();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [inspectingId, setInspectingId] = useState<number | null>(null);
+  const [stripFactor, setStripFactor] = useState<Factor>("provider");
+  const [hoveredOfferId, setHoveredOfferId] = useState<number | null>(null);
 
   const basisQuery = useQuery({
     queryKey: ["basis", sku],
@@ -94,6 +105,14 @@ export function BasisPageClient() {
   const factorRows = useMemo(
     () => (shares ? buildFactorRows(shares) : []),
     [shares]
+  );
+
+  // Strip-plot points are derived from the same contributing-offers
+  // payload the drawer uses. Recomputed on factor change so the bundle
+  // bin edges reflect the current selection's distribution.
+  const stripPoints = useMemo(
+    () => pointsFromObservations(stripFactor, observationsQuery.data?.items ?? []),
+    [stripFactor, observationsQuery.data]
   );
 
   return (
@@ -242,6 +261,72 @@ export function BasisPageClient() {
             tone={basisState === "error" ? "error" : "muted"}
           />
         )}
+      </section>
+
+      <section className="pt-10">
+        <div className="sec-eyebrow">
+          <span className="num">03</span>
+          <h2>Price by factor</h2>
+        </div>
+        <p className="caption mt-3 mb-4 max-w-[760px]">
+          Per-offer prices laid out by a single factor. Tight columns mean
+          the factor explains the spread; broad columns mean it doesn&apos;t.
+          The <span className="mono text-[var(--ink)]">Residual (within cell)</span>{" "}
+          view conditions on{" "}
+          <span className="mono text-[var(--ink)]">(provider × commitment)</span>{" "}
+          — within-cell spread is the basis risk observable factors cannot
+          capture. Click any dot to open its raw observation.
+        </p>
+        <div className="panel p-[18px]">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-dim)]">
+              Factor
+            </span>
+            {STRIP_TABS.map((tab) => (
+              <button
+                key={tab.factor}
+                type="button"
+                className={`chip${stripFactor === tab.factor ? " on" : ""}`}
+                onClick={() => setStripFactor(tab.factor)}
+                aria-pressed={stripFactor === tab.factor}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {observationsQuery.isLoading ? (
+            <StatePanel
+              title="Loading observations…"
+              body="Fetching the canonical offers that fed the current decomposition."
+              tone="muted"
+            />
+          ) : observationsQuery.isError ? (
+            <StatePanel
+              title="Failed to load observations."
+              body={
+                (observationsQuery.error as Error | undefined)?.message ??
+                "unknown error"
+              }
+              tone="error"
+            />
+          ) : stripPoints.length > 0 ? (
+            <FactorStripPlot
+              factor={stripFactor}
+              points={stripPoints}
+              hoveredOfferId={hoveredOfferId}
+              onPointHover={(p) =>
+                setHoveredOfferId(p?.canonicalOfferId ?? null)
+              }
+              onPointClick={(p) => setInspectingId(p.rawObservationId)}
+            />
+          ) : (
+            <StatePanel
+              title="No observations to plot."
+              body="The contributing-offer endpoint returned no canonical offers for this decomposition."
+              tone="muted"
+            />
+          )}
+        </div>
       </section>
 
       <BasisObservationsDrawer

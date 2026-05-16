@@ -39,7 +39,7 @@ export function FungibilityMatrix() {
   const header = (
     <header style={{ marginBottom: 18 }}>
       <div className="eyebrow" style={{ marginBottom: 6 }}>
-        01 · Fungibility matrix
+        Fungibility matrix
       </div>
       <h2
         className="serif"

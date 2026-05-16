@@ -2,7 +2,7 @@
 title: Project Status (TL;DR)
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-28
+last_updated: 2026-05-15
 ---
 
 # Project Status (TL;DR)
@@ -42,15 +42,14 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 | D | Rolling stability view | 🔲 Blocked on ≥30 days of cron data (earliest meaningful start ~2026-05-17) |
 | UI port | Residual-first redesign (ADR 0005) | 🟡 Stage 1 of 7 shipped on `ui-port-v2`; Stages 2+ (chart primitives, page ports, cleanup, visual QA) pending |
 
-## Data at a glance (2026-04-27)
+## Data at a glance (2026-05-13, 18-day window)
 
 - **4 collectors live:** Vast.ai, RunPod, AWS Spot, TensorDock. (Lambda Labs dropped — ADR 0003.) All four hit on every run since the vast.ai retry fix.
-- **Raw observations on EC2:** 6,880 across the 4 providers since the 2026-04-27 cutover. A separate 33,525-row Mac snapshot was frozen the same day as pre-EC2 history; new collection only writes to EC2.
-- **Canonical offers:** 6,880 (1:1 normalization, 0 skips).
-- **Daily aggregates:** 393 rows.
-- **Decompositions:** 143 rows.
+- **Raw observations on EC2:** 90,161 across the 4 providers since the 2026-04-26 cutover (18 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
+- **Canonical offers:** 90,054 (1:1 normalization, minimal skips). Provider mix: Vast.ai 71,770 (79.7%) · AWS Spot 10,465 (11.6%) · RunPod 6,661 (7.4%) · TensorDock 1,158 (1.3%).
+- **Canonical SKUs:** 93.
 - **Schedule:** systemd timers on EC2 — collect at `08:00 + 20:00` UTC, backup at `03:00` UTC, hourly freshness probe. The Mac cron (`backend/collect_cron.sh`) is stopped.
-- **H100 SXM residual variance:** **53% – 95%** of total variance is unexplained by region / commitment / provider / bundle — the headline Basis finding (from the v1 3-day sample). Refresh planned mid-May after ≥30 days of EC2 collection (Phase 8).
+- **H100 SXM 80GB residual variance:** **~59% (Vast included) / ~89% (Vast excluded)** of log-price variance is unexplained over the 18-day window — the headline Basis finding, segment-conditional. See [findings.md](findings.md) and the [2026-05-13 investigation report](analysis/2026-05-13-findings-refresh-analysis.md).
 
 ## Phase status table
 
@@ -67,12 +66,14 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 
 ## Ongoing / post-Phase-6
 
-1. **Keep cron running.** Residual estimates stabilize with ≥30 days. The writeup at [findings.md](findings.md) acknowledges the 3-day sample; numbers will be refreshed as data accumulates.
+1. **Keep cron running.** Residual estimates continue to tighten as the window grows. [findings.md](findings.md) is now anchored to the 18-day window (2026-04-26 → 2026-05-13); the dashboard refreshes live and may differ by a few tenths of a pp.
 2. **Watch `skipped_unknown_gpu`** in `run_normalize.py` output — a new GPU name from any provider will require adding to `canonicalize.py`.
 3. **Phase 7 (deploy)** is in progress. EC2 infrastructure shipped 2026-04-27 (see [basis-deployment-roadmap.md](basis-deployment-roadmap.md)). Public deploy (Caddy + Vercel + DNS for `gpu-basis.xyz`) is pending UI polish (1–2 weeks).
+4. **Add curated providers** (Lambda Labs revisit, CoreWeave, Crusoe) to reduce Vast.ai's 80% share of canonical offers and sharpen the segment-dependence picture.
 
 ## Update log
 
+- 2026-05-15 — Findings refresh shipped on `feat/segment-conditional-finding`. Segment-conditional framing (~59% / ~89%) replaces the v1 single-residual headline. Vast.ai dominance (80% of canonical offers) promoted from implicit to explicit caveat in both [findings.md](findings.md) and [methodology.md](methodology.md). Cross-SKU numbers (A100 24%, RTX 4090 86%) refreshed against the 18-day window. New `exclude_providers` query param on `GET /api/basis/{sku}/timeseries` powers a dual-number hero on the landing page. Investigation report: [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).
 - 2026-04-27 — Phases 0–6 of [basis-deployment-roadmap.md](basis-deployment-roadmap.md) shipped. Production runs on EC2 t3.small in `us-east-1` (EIP `52.70.173.217`) with systemd-driven twice-daily collection (`08:00` + `20:00` UTC), daily `pg_dump` backup to S3 (`basis-backups-rajt-2026`, 90-day lifecycle, versioned), and an hourly freshness probe. Three healthchecks.io endpoints monitor the alert path. IAM role `basis-ec2-role` provides Spot-pricing read + S3 backup write, so no AWS keys live in the EC2 `.env`. Mac collection cron stopped; 33,525 pre-EC2 obs frozen as a snapshot. UI polish via SSH tunnel begins now; public deploy waits on polish ready.
 - 2026-04-21 — UI port kicked off on `ui-port-v2` branch. Baseline commit on main (`7776ae5`) captures pre-port state. Stage 1 shipped on the branch: ~60 CSS design tokens + utility classes in `globals.css`, next/font/google loads Fraunces + Inter + JetBrains Mono as variable fonts, new sticky-blurred TopBar with serif wordmark + "v2 · research" eyebrow, flat nav with underline-active, footer, Tailwind config rewritten (Tremor glob + typography plugin dropped, tokens exposed as named colors), `useSku` hook (URL search params), `factorColor` + `gpuFamily` utilities. One in-session fix: container padding restored on `<main>` (dropped in the initial rewrite, causing v1 page content to bleed to viewport edges). Pages still render v1 content — dissonant with the new shell; gets resolved as Stages 2+ port them. Decision captured as ADR 0005 (Proposed). Screenshots under `design/pre-port-baseline/` + `design/stage-1-fixed/` for comparison.
 - 2026-04-21 — Pipeline offset/filter bug fixed in `backend/basis/normalization/pipeline.py` (cursor-based pagination via `id > last_id`; advances reliably across skipped-unknown-GPU batches, which pure offset-removal would have infinite-looped on). Regression test added. Backfill verification: zero silent data loss in current DB (eligible=9979, canonical=9979). Full suite: 20 passed / 4 skipped.

@@ -3,7 +3,7 @@ import { FungibilityMatrix } from "@/components/FungibilityMatrix";
 
 export default function FindingsPage() {
   return (
-    <div className="page-wide fade-up space-y-12">
+    <div className="page-wide fade-up space-y-16">
       <FindingsHero />
 
       <FungibilityMatrix />
@@ -21,7 +21,7 @@ export default function FindingsPage() {
         />
         <Caveat
           title="Short sample"
-          body="The cron has been running since 2026-04-17 and continues to collect. Residuals will move as data accumulates; expect the range to narrow over the next few weeks."
+          body="The cron continues to collect; residuals will move as data accumulates and the range will narrow over the next few weeks."
         />
       </section>
     </div>

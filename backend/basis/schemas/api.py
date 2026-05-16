@@ -74,6 +74,15 @@ class BasisDecompositionResponse(BaseModel):
     pct_residual: float
 
 
+# Wrapped (not bare list) so we can attach optional summary fields later
+# (e.g. median_residual_share, iqr, outlier_dates) without breaking clients.
+class BasisTimeseriesResponse(BaseModel):
+    """Variance decompositions for a GPU SKU across a date range."""
+
+    gpu_sku: str
+    points: list[BasisDecompositionResponse]
+
+
 class ProviderSummary(BaseModel):
     """Per-provider summary of coverage and pricing."""
 

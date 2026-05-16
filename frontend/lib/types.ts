@@ -57,6 +57,11 @@ export interface BasisDecompositionResponse {
   pct_residual: number;
 }
 
+export interface BasisTimeseriesResponse {
+  gpu_sku: string;
+  points: BasisDecompositionResponse[];
+}
+
 export interface ProviderSummary {
   provider: string;
   offer_count: number;
