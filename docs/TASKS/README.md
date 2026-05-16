@@ -2,12 +2,12 @@
 title: Tasks & Status
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-05-15
+last_updated: 2026-05-16
 ---
 
 # Tasks & Status
 
-Granular snapshot of current work for Basis. Last refreshed: **2026-05-15**.
+Granular snapshot of current work for Basis. Last refreshed: **2026-05-16**.
 
 Complements [roadmap.md](../roadmap.md) (high-level phases) and [project-brief.md](../project-brief.md) (what the project is). This file is the most-updated doc — treat it like a living to-do list.
 
@@ -124,7 +124,7 @@ Production now lives on EC2; Mac collection cron is stopped and 33,525 pre-EC2 o
 - `fix/vast-retry-and-partial-success` (Phase 4.5 PR) — vast.ai collector now retries on 429 / 5xx / transient errors with exponential backoff (1 s, 2 s, 4 s) and preserves partial success when one of two endpoints fails after retries. All 4 collectors hit on every run.
 - `fix/alembic-env-reads-settings` (merged) — Alembic `env.py` now reads `settings.database_url` instead of the `alembic.ini` default, fixing migrations on EC2.
 - `d164642` (direct to main) — `backend/scripts/backup.sh` cleanup `find` scoped to `/tmp` top level with `-maxdepth 1 ... 2>/dev/null || true`, so unrelated permission denials in `/tmp` subdirs don't fail the backup unit.
-- Domain `gpu-basis.xyz` registered at Namecheap; DNS not yet pointed (Phase 7 work).
+- DNS for `gpu-basis.xyz` / `api.gpu-basis.xyz` live (Vercel + Caddy); Phase 7.4 `basis-api.service` not shipped — see **Operational debt** below.
 
 ### Phase 7+ — Post-deploy analysis
 
@@ -134,7 +134,7 @@ Production now lives on EC2; Mac collection cron is stopped and 33,525 pre-EC2 o
 
 ## In progress
 
-UI polish via SSH tunnel against the EC2 backend. Open-ended; sets the trigger for Phase 7 (public deploy via Caddy + Vercel + DNS).
+UI polish: local Next.js (`npm run dev`) + SSH tunnel to EC2 FastAPI against production data. Procedure: [guides/dev-setup.md](../guides/dev-setup.md#run-against-production-data-polish-loop).
 
 ---
 
@@ -147,9 +147,13 @@ UI polish via SSH tunnel against the EC2 backend. Open-ended; sets the trigger f
 - [ ] **Add curated providers** to reduce Vast.ai's 80% share — revisit Lambda Labs under different terms, add CoreWeave, add Crusoe. Each new collector would sharpen the segment-dependence picture in [findings.md](../findings.md) without changing methodology.
 - [ ] **Tailscale (or AWS SSM Session Manager) setup** — only if home-IP rotation continues to break the security-group whitelist often. Workarounds, in order of friction: widen to `/24` → widen to `/16` → Tailscale → SSM.
 
-### Phase 7 — Public deploy (waiting on UI polish)
+### Operational debt
 
-Caddy reverse proxy on EC2, Vercel-hosted frontend, DNS for `gpu-basis.xyz`. Triggered when polish is ready (1–2 weeks). See [basis-deployment-roadmap.md](../basis-deployment-roadmap.md) Phase 7.
+- [ ] **Phase 7.4 — `basis-api.service` (not shipped).** FastAPI is still started with **`nohup`** during polish sessions instead of systemd. Until this lands, every **`git pull` on EC2 requires a manual uvicorn restart** or the live process serves stale code — the main failure mode behind “API looks fine but behaves wrong.” Shipping 7.4 replaces the nohup workflow with `sudo systemctl restart basis-api` (see [basis-deployment-roadmap.md](../basis-deployment-roadmap.md) Phase 7.4). Developer runbook: [guides/dev-setup.md](../guides/dev-setup.md#restart-uvicorn-after-every-git-pull-on-ec2-critical).
+
+### Phase 7 — Public deploy (shipped except 7.4)
+
+[Phases 7.1–7.3, 7.5, and 7.6](../basis-deployment-roadmap.md) are live: DNS, Caddy (`https://api.gpu-basis.xyz`), Vercel (`https://gpu-basis.xyz`). **Phase 7.4** (`basis-api.service`) was planned but never enabled — tracked under **Operational debt** above.
 
 ### Phase 9 — Shutdown procedure (eventual)
 
@@ -202,7 +206,9 @@ No active blockers. Watch items:
 
 Append a one-liner each time this file is updated.
 
+- 2026-05-16 — Polish-loop developer docs landed on `docs/polish-loop-cleanup`. README Quickstart now leads with the three-terminal polish-loop workflow; `docs/00-start-here/dev-commands.md` and `docs/guides/dev-setup.md` document the SSH-tunnel + `nohup` uvicorn procedure and the mandatory post-`git pull` restart. Phase 7 status and Operational debt sections (Phase 7.4 `basis-api.service` unshipped) added to this file and to [project-status.md](../project-status.md).
 - 2026-05-15 — Findings refresh shipped on `feat/segment-conditional-finding`. Segment-conditional framing (~59% / ~89%) replaces the v1 single-residual headline. Vast.ai dominance (80% of canonical offers) promoted from implicit to explicit caveat. Cross-SKU comparison numbers refreshed against the 18-day EC2 window. Backend: new `exclude_providers` param on `/api/basis/{sku}/timeseries`. Frontend: dual-number hero with count-up motion. Docs: [findings.md](../findings.md), [methodology.md](../methodology.md), [project-status.md](../project-status.md), and the lede in root [README.md](../../README.md) all reflect the refresh. Source: [`docs/analysis/2026-05-13-findings-refresh-analysis.md`](../analysis/2026-05-13-findings-refresh-analysis.md).
+- 2026-05-12 — Phase 7 public URLs live (`gpu-basis.xyz`, `api.gpu-basis.xyz`). Phase 7.4 `basis-api.service` remains unshipped; FastAPI under manual `nohup`; polish-loop runbook drafted under [guides/dev-setup.md](../guides/dev-setup.md).
 - 2026-04-27 — Phases 0–6 of [basis-deployment-roadmap.md](../basis-deployment-roadmap.md) shipped. Production is live on EC2 t3.small with twice-daily collection, daily backup, hourly freshness probe. UI polish via SSH tunnel begins now.
 - 2026-04-21 — UI port begun on `ui-port-v2` branch. Baseline on main (`7776ae5`) captures pre-port state + all tests passing. Stage 1 of 7 shipped on the branch: CSS design tokens + utility classes, next/font Fraunces/Inter/JetBrains Mono, redesigned shell (sticky TopBar, serif wordmark, flat nav, footer), Tailwind config (Tremor + typography plugin dropped), `useSku` hook, `factorColor` + `gpuFamily` utilities. Pages still render v1 content — expected; gets resolved as Stage 5 ports each page. Port decision captured as ADR 0005 (Proposed). No merge to main until end-to-end port complete.
 - 2026-04-21 — Pipeline offset/filter bug fixed: `run_normalization` now uses an id-based cursor instead of a numeric offset. Regression test `test_run_normalization_processes_all_rows_when_exceeding_batch_size` added to `test_normalization.py` (reproduced the bug at 5979/9979 before the fix; 9979/9979 after). Backfill verification: zero silent data loss in the current DB — last session's `batch_size=20000` workaround had fully regenerated the corpus. Stale smoke-tests placeholder removed from Cross-cutting (all four files shipped in the previous session).
