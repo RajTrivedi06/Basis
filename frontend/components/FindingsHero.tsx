@@ -53,8 +53,10 @@ function FindingsHeroInner() {
 
   // Count-up tweens. First number leads slightly, second trails by
   // ~200ms so the eye reads them sequentially rather than competing.
-  const fullDisplay = useCountUp(fullMedian, 1100, 300);
-  const noVastDisplay = useCountUp(noVastMedian, 1100, 500);
+  // Default formatter ("~NN%") is used for both — the segment-conditional
+  // hero is the original consumer of the hook.
+  const fullDisplay = useCountUp(fullMedian, { durationMs: 1100, delayMs: 300 });
+  const noVastDisplay = useCountUp(noVastMedian, { durationMs: 1100, delayMs: 500 });
 
   const totalOffers =
     providers.data?.items.reduce((s, p) => s + p.offer_count, 0) ?? null;

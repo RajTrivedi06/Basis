@@ -10,18 +10,34 @@ import { useEffect, useRef, useState } from "react";
  * Behaviour:
  * - If `target` is null/undefined (loading or errored upstream query)
  *   the hook returns the sentinel "—" and does not run the animation.
+ *   The sentinel is returned regardless of the supplied `format`.
  * - If `target` changes mid-flight, the tween is restarted from the
  *   currently-displayed value rather than snapping back to 0.
  * - Respects `prefers-reduced-motion: reduce`: snaps straight to the
  *   final value with no rAF loop.
  *
+ * `format` is applied at render time only — it is NOT a dependency of
+ * the rAF effect, so callers may inline-create a formatter without
+ * restarting the animation on every render.
+ *
  * No animation library is used — vanilla `requestAnimationFrame` only.
  */
+export type UseCountUpOptions = {
+  durationMs?: number;
+  delayMs?: number;
+  format?: (n: number) => string;
+};
+
+const DEFAULT_FORMAT = (n: number): string => `~${Math.round(n)}%`;
+
 export function useCountUp(
   target: number | null | undefined,
-  durationMs = 1100,
-  delayMs = 0
+  options: UseCountUpOptions = {}
 ): string {
+  const durationMs = options.durationMs ?? 1100;
+  const delayMs = options.delayMs ?? 0;
+  const format = options.format ?? DEFAULT_FORMAT;
+
   const [display, setDisplay] = useState<number | null>(target ?? null);
   const rafRef = useRef<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,5 +113,5 @@ export function useCountUp(
   }, [target, durationMs, delayMs]);
 
   if (display === null || display === undefined) return "—";
-  return `~${Math.round(display)}%`;
+  return format(display);
 }

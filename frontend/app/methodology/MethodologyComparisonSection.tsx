@@ -25,19 +25,23 @@ export function MethodologyComparisonSection() {
   const message = getBasisMessage(basisQuery.error);
 
   return (
-    <section className="pt-14">
-      <div className="sec-eyebrow">
-        <span className="num">06</span>
-        <h2>Compare to an equal-weight donut</h2>
-      </div>
-      <p className="caption mb-5 max-w-[780px]">
-        Same current decomposition, two geometries. Both panels below keep the
-        model order{" "}
-        <span className="mono text-[var(--ink)]">
-          region → commitment → provider → bundle → residual
+    <>
+      <div className="meth-section__head">
+        <span className="meth-section__index">
+          08 · Geometry comparison
         </span>
-        ; only the visual framing changes.
-      </p>
+        <h2 className="meth-section__title">
+          Same decomposition, <em>two geometries</em>.
+        </h2>
+        <p className="meth-section__lede">
+          Both panels keep the model order{" "}
+          <span className="tok">
+            region → commitment → provider → bundle → residual
+          </span>
+          ; only the visual framing changes. The bar gives the residual a
+          dominant footprint proportional to its share. The donut buries it.
+        </p>
+      </div>
 
       {basisQuery.isLoading ? (
         <ComparisonState
@@ -65,7 +69,7 @@ export function MethodologyComparisonSection() {
           decomposition={basisQuery.data}
         />
       )}
-    </section>
+    </>
   );
 }
 
@@ -79,30 +83,43 @@ function ComparisonPanels({
   const shares = toDecompShares(decomposition);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="panel p-[22px]">
-        <div className="eyebrow mb-3.5">v1 · donut framing</div>
-        <div className="flex justify-center">
-          <DonutComparison shares={shares} />
+    <div className="grid gap-6">
+      <div className="panel p-[26px]">
+        <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
+          <div className="eyebrow">v2 · residual-first bar</div>
+          <div className="mono text-[11px] text-[var(--ink-dim)]">
+            {sku} · {decomposition.date}
+          </div>
         </div>
-        <ComparisonLegend shares={shares} />
-        <p className="caption mt-4 leading-relaxed">
-          The donut uses the same latest decomposition for{" "}
-          <span className="mono text-[var(--ink)]">{sku}</span>, but the shape
-          makes residual read like just another slice.
+        <DecompBar decomp={shares} height={120} showLabels />
+        <p className="caption mt-5 max-w-[68ch] leading-relaxed">
+          The stacked bar keeps the sequential model order visible and gives
+          the residual the dominant footprint proportional to its share of
+          total variance — exactly the framing the page argues for.
         </p>
       </div>
 
-      <div className="panel p-[22px]">
-        <div className="eyebrow mb-3.5">
-          v2 · residual-first bar · {decomposition.date}
+      <div className="panel p-[26px]">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+          <div className="eyebrow">v1 · donut framing</div>
+          <div className="mono text-[11px] text-[var(--ink-dim)]">
+            same decomposition · different geometry
+          </div>
         </div>
-        <DecompBar decomp={shares} height={72} showLabels={false} />
-        <p className="caption mt-4 leading-relaxed">
-          The stacked bar keeps the sequential model order visible and gives
-          the residual the dominant footprint proportional to its share of
-          total variance.
-        </p>
+        <div className="grid items-center gap-6 sm:grid-cols-[220px_minmax(0,1fr)] sm:gap-10">
+          <div className="flex justify-center sm:justify-start">
+            <DonutComparison shares={shares} />
+          </div>
+          <div>
+            <p className="caption max-w-[58ch] leading-relaxed">
+              The donut uses the same latest decomposition for{" "}
+              <span className="mono text-[var(--ink)]">{sku}</span>, but the
+              shape makes the residual read like just another slice — easy to
+              under-weight at a glance.
+            </p>
+            <ComparisonLegend shares={shares} />
+          </div>
+        </div>
       </div>
     </div>
   );

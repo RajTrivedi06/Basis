@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getRawObservation, getRawObservationExplain } from "@/lib/api";
+import { providerLabel } from "@/lib/providerLabel";
 import type {
   BundleExtractionExplanation,
   CommitmentCanonicalizationExplanation,
   GpuCanonicalizationExplanation,
+  RawObservationDetail,
+  RawObservationExplainResponse,
   RegionNormalizationExplanation,
 } from "@/lib/types";
+
+type Status = "ok" | "warn" | "unknown";
 
 export function BasisRawObservationInspector({
   rawObservationId,
@@ -31,6 +37,38 @@ export function BasisRawObservationInspector({
     enabled: open && rawObservationId != null,
   });
 
+  const [mounted, setMounted] = useState(false);
+  const [domReady, setDomReady] = useState(false);
+
+  useEffect(() => {
+    setDomReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setMounted(false);
+      return;
+    }
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -40,12 +78,13 @@ export function BasisRawObservationInspector({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  if (!open || rawObservationId == null) return null;
+  if (!open || rawObservationId == null || !domReady) return null;
 
-  return (
+  const inspector = (
     <>
       <div
-        className="fixed inset-0 z-[60] bg-black/80"
+        className="fixed inset-0 z-[60] bg-black/80 transition-opacity duration-200"
+        style={{ opacity: mounted ? 1 : 0 }}
         aria-hidden="true"
         onClick={onClose}
       />
@@ -53,228 +92,373 @@ export function BasisRawObservationInspector({
         role="dialog"
         aria-label={`Raw observation ${rawObservationId}`}
         className="fixed inset-4 z-[70] flex flex-col overflow-hidden rounded-[8px] border border-[var(--line-hi)] bg-[var(--bg)] shadow-2xl md:inset-10"
+        style={{
+          transform: mounted ? "translateY(0)" : "translateY(8px)",
+          opacity: mounted ? 1 : 0,
+          transition:
+            "transform 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease",
+        }}
       >
-        <header className="border-b border-[var(--line-lo)] px-6 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="eyebrow mb-1">Raw observation</div>
-              <h2 className="serif m-0 text-[22px] font-normal text-[var(--ink-hi)]">
-                Audit trail for #{rawObservationId}
-              </h2>
-              <p className="caption mt-2 max-w-[560px]">
-                Full provider payload plus the rule-by-rule normalization trail
-                that produced the canonical offer.
-              </p>
-            </div>
-            <button type="button" className="btn ghost" onClick={onClose}>
-              Back
-            </button>
-          </div>
-        </header>
+        <InspectorHeader
+          rawObservationId={rawObservationId}
+          raw={rawQuery.data ?? null}
+          onClose={onClose}
+        />
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{ minHeight: 0 }}
+        >
           {rawQuery.isLoading || explainQuery.isLoading ? (
-            <InspectorState
-              title="Loading raw observation…"
-              body="Fetching the immutable payload and its normalization explanations."
-            />
-          ) : rawQuery.isError || explainQuery.isError ? (
-            <InspectorState
-              title="Failed to load raw observation."
-              body={
-                (rawQuery.error as Error | undefined)?.message ??
-                (explainQuery.error as Error | undefined)?.message ??
-                "unknown error"
-              }
-              tone="error"
-            />
-          ) : rawQuery.data && explainQuery.data ? (
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-              <div className="grid gap-6">
-                <section className="panel overflow-hidden">
-                  <div className="panel-hd">
-                    <span className="eyebrow">Raw observation</span>
-                    <span className="caption mono">
-                      {rawQuery.data.source}
-                    </span>
-                  </div>
-                  <div className="panel-body">
-                    <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-[12px]">
-                      <Field label="collected_at" value={rawQuery.data.collected_at} />
-                      <Field
-                        label="gpu_model_reported"
-                        value={rawQuery.data.gpu_model_reported}
-                      />
-                      <Field
-                        label="region_reported"
-                        value={rawQuery.data.region_reported ?? <span className="pill-unknown">UNKNOWN</span>}
-                      />
-                      <Field
-                        label="commitment_type_reported"
-                        value={
-                          rawQuery.data.commitment_type_reported ?? (
-                            <span className="pill-unknown">UNKNOWN</span>
-                          )
-                        }
-                      />
-                      <Field
-                        label="price_hourly"
-                        value={`$${rawQuery.data.price_hourly.toFixed(4)}`}
-                      />
-                    </dl>
-                  </div>
-                </section>
-
-                <JsonPanel
-                  title="raw_payload"
-                  value={rawQuery.data.raw_payload}
-                />
-
-                {rawQuery.data.provider_metadata && (
-                  <JsonPanel
-                    title="provider_metadata"
-                    value={rawQuery.data.provider_metadata}
-                  />
-                )}
-              </div>
-
-              <div className="grid gap-6">
-                <ExplainPanel
-                  title="GPU canonicalization"
-                  body={<GpuSection exp={explainQuery.data.gpu} />}
-                />
-                <ExplainPanel
-                  title="Commitment canonicalization"
-                  body={<CommitmentSection exp={explainQuery.data.commitment} />}
-                />
-                <ExplainPanel
-                  title="Region normalization"
-                  body={<RegionSection exp={explainQuery.data.region} />}
-                />
-                <ExplainPanel
-                  title="Bundle extraction"
-                  body={<BundleSection exp={explainQuery.data.bundle} />}
-                />
-              </div>
+            <div className="p-6">
+              <InspectorState
+                title="Loading raw observation…"
+                body="Fetching the immutable payload and its normalization explanations."
+              />
             </div>
+          ) : rawQuery.isError || explainQuery.isError ? (
+            <div className="p-6">
+              <InspectorState
+                title="Failed to load raw observation."
+                body={
+                  (rawQuery.error as Error | undefined)?.message ??
+                  (explainQuery.error as Error | undefined)?.message ??
+                  "unknown error"
+                }
+                tone="error"
+              />
+            </div>
+          ) : rawQuery.data && explainQuery.data ? (
+            <InspectorBody raw={rawQuery.data} explain={explainQuery.data} />
           ) : (
-            <InspectorState
-              title="Raw observation unavailable."
-              body="The audit trail did not return any data for this raw observation."
-            />
+            <div className="p-6">
+              <InspectorState
+                title="Raw observation unavailable."
+                body="The audit trail did not return any data for this raw observation."
+              />
+            </div>
           )}
         </div>
       </div>
     </>
   );
+
+  return createPortal(inspector, document.body);
 }
 
-function JsonPanel({
-  title,
+function InspectorHeader({
+  rawObservationId,
+  raw,
+  onClose,
+}: {
+  rawObservationId: number;
+  raw: RawObservationDetail | null;
+  onClose: () => void;
+}) {
+  return (
+    <header className="border-b border-[var(--line-lo)] px-6 py-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="eyebrow mb-1">Raw observation</div>
+          <h2 className="serif m-0 text-[22px] font-normal text-[var(--ink-hi)]">
+            Audit trail for{" "}
+            <span className="mono text-[var(--ink)]">#{rawObservationId}</span>
+          </h2>
+          <div className="caption mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>How this row was normalized — reported fields, the rule that fired, and the canonical result.</span>
+            {raw && (
+              <>
+                <span className="text-[var(--ink-faint)]">·</span>
+                <span className="mono text-[var(--ink-mid)]">
+                  {providerLabel(raw.source)}
+                </span>
+                <span className="text-[var(--ink-faint)]">·</span>
+                <span className="mono text-[var(--ink-mid)]">
+                  {raw.collected_at}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+        <button type="button" className="btn ghost shrink-0" onClick={onClose}>
+          Back
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function InspectorBody({
+  raw,
+  explain,
+}: {
+  raw: RawObservationDetail;
+  explain: RawObservationExplainResponse;
+}) {
+  return (
+    <div className="flex flex-col gap-6 p-6">
+      <QuoteStrip raw={raw} explain={explain} />
+
+      <section>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h3 className="serif m-0 text-[16px] font-normal text-[var(--ink)]">
+            Normalization pipeline
+          </h3>
+          <span className="eyebrow">4 stages · sequential</span>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <PipelineStage
+            step={1}
+            label="GPU"
+            status={gpuStatus(explain.gpu)}
+            from={explain.gpu.reported_name}
+            to={explain.gpu.canonical_sku}
+            meta={gpuMeta(explain.gpu)}
+            trail={explain.gpu.rules}
+          />
+          <PipelineStage
+            step={2}
+            label="Commitment"
+            status={commitmentStatus(explain.commitment)}
+            from={explain.commitment.reported_type}
+            to={explain.commitment.canonical_type}
+            meta={[`rule: ${explain.commitment.rule}`]}
+            trail={
+              explain.commitment.matched_key
+                ? [`matched key: ${explain.commitment.matched_key}`]
+                : []
+            }
+          />
+          <PipelineStage
+            step={3}
+            label="Region"
+            status={regionStatus(explain.region)}
+            from={explain.region.region_reported}
+            to={formatRegionResult(explain.region)}
+            meta={[`branch: ${explain.region.branch}`]}
+            trail={explain.region.trail}
+          />
+          <PipelineStage
+            step={4}
+            label="Bundle"
+            status={bundleStatus(explain.bundle)}
+            from={"provider payload"}
+            to={formatBundleResult(explain.bundle)}
+            meta={[`branch: ${explain.bundle.branch}`]}
+            trail={[]}
+          >
+            {explain.bundle.fields.length > 0 && (
+              <BundleFieldTable fields={explain.bundle.fields} />
+            )}
+          </PipelineStage>
+        </div>
+      </section>
+
+      <section className="grid gap-3">
+        <CollapsibleJsonPanel
+          title="raw_payload"
+          subtitle="Untouched provider response — what the collector saw"
+          value={raw.raw_payload}
+        />
+        {raw.provider_metadata && (
+          <CollapsibleJsonPanel
+            title="provider_metadata"
+            subtitle="Auxiliary fields kept alongside the raw payload"
+            value={raw.provider_metadata}
+          />
+        )}
+      </section>
+    </div>
+  );
+}
+
+function QuoteStrip({
+  raw,
+  explain,
+}: {
+  raw: RawObservationDetail;
+  explain: RawObservationExplainResponse;
+}) {
+  const price = raw.price_hourly;
+  const canonicalSku =
+    explain.gpu.canonical_sku ?? raw.gpu_model_reported;
+
+  return (
+    <section className="panel">
+      <div className="grid items-stretch gap-0 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <QuoteCell label="Price" emphasis>
+          <span className="num text-[28px] leading-none text-[var(--ink-hi)]">
+            ${price.toFixed(4)}
+          </span>
+          <span className="caption ml-1">/ GPU hr</span>
+        </QuoteCell>
+        <QuoteCell label="Source">
+          <span className="text-[15px] text-[var(--ink-hi)]">
+            {providerLabel(raw.source)}
+          </span>
+          <span className="caption mono">{raw.source}</span>
+        </QuoteCell>
+        <QuoteCell label="Reported GPU">
+          <span className="text-[14px] text-[var(--ink)]">
+            {raw.gpu_model_reported}
+          </span>
+          <span className="mono text-[11px] text-[var(--ink-dim)]">
+            → {canonicalSku}
+          </span>
+        </QuoteCell>
+        <QuoteCell label="Reported region">
+          {raw.region_reported ? (
+            <span className="mono text-[12px] text-[var(--ink)]">
+              {raw.region_reported}
+            </span>
+          ) : (
+            <span className="pill-unknown">UNKNOWN</span>
+          )}
+          <span className="mono text-[11px] text-[var(--ink-dim)]">
+            commitment: {raw.commitment_type_reported ?? "—"}
+          </span>
+        </QuoteCell>
+      </div>
+    </section>
+  );
+}
+
+function QuoteCell({
+  label,
+  emphasis = false,
+  children,
+}: {
+  label: string;
+  emphasis?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="flex flex-col gap-1.5 border-b border-[var(--line-lo)] px-5 py-4 md:border-b-0 md:border-r last:md:border-r-0"
+      style={{
+        background: emphasis ? "var(--panel-hi)" : "transparent",
+      }}
+    >
+      <div className="eyebrow">{label}</div>
+      <div className="flex min-h-[24px] flex-wrap items-baseline gap-x-2">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PipelineStage({
+  step,
+  label,
+  status,
+  from,
+  to,
+  meta,
+  trail,
+  children,
+}: {
+  step: number;
+  label: string;
+  status: Status;
+  from: string | null;
+  to: string | null;
+  meta: string[];
+  trail: string[];
+  children?: React.ReactNode;
+}) {
+  return (
+    <article className="panel flex flex-col gap-3 p-4">
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="stage-index">{step}</span>
+          <span className="text-[14px] text-[var(--ink-hi)]">{label}</span>
+        </div>
+        <StatusPill status={status} />
+      </header>
+
+      <div className="flow-row">
+        <FlowValue value={from} muted />
+        <span className="flow-arrow" aria-hidden="true">
+          →
+        </span>
+        <FlowValue value={to} />
+      </div>
+
+      {meta.length > 0 && (
+        <ul className="m-0 flex flex-wrap gap-x-3 gap-y-1 p-0">
+          {meta.map((line) => (
+            <li
+              key={line}
+              className="mono text-[11px] text-[var(--ink-dim)] list-none"
+            >
+              {line}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {trail.length > 0 && (
+        <details className="trail-details">
+          <summary className="caption cursor-pointer select-none">
+            {trail.length} rule {trail.length === 1 ? "step" : "steps"}
+          </summary>
+          <ol className="caption mt-2 m-0 list-decimal space-y-1 pl-5">
+            {trail.map((step, i) => (
+              <li key={`${i}-${step}`}>{step}</li>
+            ))}
+          </ol>
+        </details>
+      )}
+
+      {children}
+    </article>
+  );
+}
+
+function FlowValue({
   value,
+  muted = false,
 }: {
-  title: string;
-  value: Record<string, unknown>;
+  value: string | null;
+  muted?: boolean;
+}) {
+  if (value === null || value === "" || value === undefined) {
+    return <span className="pill-unknown">UNKNOWN</span>;
+  }
+  return (
+    <span
+      className="mono text-[12px] break-words"
+      style={{ color: muted ? "var(--ink-mid)" : "var(--ink-hi)" }}
+    >
+      {value}
+    </span>
+  );
+}
+
+function StatusPill({ status }: { status: Status }) {
+  const cfg: Record<Status, { glyph: string; label: string; cls: string }> = {
+    ok: { glyph: "✓", label: "Canonicalized", cls: "status-pill ok" },
+    warn: { glyph: "△", label: "Partial", cls: "status-pill warn" },
+    unknown: { glyph: "✕", label: "Unknown", cls: "status-pill bad" },
+  };
+  const c = cfg[status];
+  return (
+    <span className={c.cls}>
+      <span aria-hidden="true">{c.glyph}</span>
+      <span>{c.label}</span>
+    </span>
+  );
+}
+
+function BundleFieldTable({
+  fields,
+}: {
+  fields: BundleExtractionExplanation["fields"];
 }) {
   return (
-    <section className="panel overflow-hidden">
-      <div className="panel-hd">
-        <span className="eyebrow">{title}</span>
-      </div>
-      <pre className="mono m-0 overflow-x-auto px-4 py-4 text-[11px] leading-[1.55] text-[var(--ink-mid)]">
-        {JSON.stringify(value, null, 2)}
-      </pre>
-    </section>
-  );
-}
-
-function ExplainPanel({
-  title,
-  body,
-}: {
-  title: string;
-  body: React.ReactNode;
-}) {
-  return (
-    <section className="panel overflow-hidden">
-      <div className="panel-hd">
-        <span className="eyebrow">{title}</span>
-      </div>
-      <div className="panel-body">{body}</div>
-    </section>
-  );
-}
-
-function GpuSection({ exp }: { exp: GpuCanonicalizationExplanation }) {
-  return (
-    <div className="grid gap-3">
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-[12px]">
-        <Field label="reported_name" value={exp.reported_name} />
-        <Field
-          label="canonical_sku"
-          value={
-            exp.canonical_sku ?? <span className="pill-unknown">UNKNOWN</span>
-          }
-        />
-        <Field
-          label="gpu_variant"
-          value={exp.gpu_variant ?? <span className="pill-unknown">UNKNOWN</span>}
-        />
-        <Field label="vram_gb" value={exp.vram_gb?.toString() ?? "—"} />
-      </dl>
-      <Trail steps={exp.rules} />
-    </div>
-  );
-}
-
-function CommitmentSection({
-  exp,
-}: {
-  exp: CommitmentCanonicalizationExplanation;
-}) {
-  return (
-    <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-[12px]">
-      <Field label="reported_type" value={exp.reported_type ?? "—"} />
-      <Field label="canonical_type" value={exp.canonical_type} />
-      <Field label="rule" value={exp.rule} />
-      <Field label="matched_key" value={exp.matched_key ?? "—"} />
-    </dl>
-  );
-}
-
-function RegionSection({ exp }: { exp: RegionNormalizationExplanation }) {
-  return (
-    <div className="grid gap-3">
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-[12px]">
-        <Field label="branch" value={exp.branch} />
-        <Field label="region_reported" value={exp.region_reported ?? "—"} />
-        <Field
-          label="country"
-          value={exp.country ?? <span className="pill-unknown">UNKNOWN</span>}
-        />
-        <Field label="state" value={exp.state ?? "—"} />
-        <Field label="city" value={exp.city ?? "—"} />
-      </dl>
-      <Trail steps={exp.trail} />
-    </div>
-  );
-}
-
-function BundleSection({ exp }: { exp: BundleExtractionExplanation }) {
-  return (
-    <div className="grid gap-3">
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-[12px]">
-        <Field label="branch" value={exp.branch} />
-        <Field label="vcpus" value={exp.vcpus?.toString() ?? "—"} />
-        <Field label="ram_gb" value={exp.ram_gb?.toString() ?? "—"} />
-        <Field label="storage_gb" value={exp.storage_gb?.toString() ?? "—"} />
-        <Field
-          label="verification_tier"
-          value={exp.verification_tier ?? "—"}
-        />
-      </dl>
-
-      {exp.fields.length > 0 && (
+    <div className="border-t border-[var(--line-lo)] pt-3">
+      <div className="eyebrow mb-2">Field provenance</div>
+      <div className="overflow-x-auto">
         <table className="tbl">
           <thead>
             <tr>
@@ -285,7 +469,7 @@ function BundleSection({ exp }: { exp: BundleExtractionExplanation }) {
             </tr>
           </thead>
           <tbody>
-            {exp.fields.map((field) => (
+            {fields.map((field) => (
               <tr key={field.canonical_field}>
                 <td className="mono text-[11px] text-[var(--ink)]">
                   {field.canonical_field}
@@ -301,37 +485,44 @@ function BundleSection({ exp }: { exp: BundleExtractionExplanation }) {
             ))}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 }
 
-function Trail({ steps }: { steps: string[] }) {
-  if (steps.length === 0) {
-    return <p className="caption m-0">No explicit rules recorded.</p>;
-  }
-
-  return (
-    <ul className="caption m-0 list-disc space-y-1.5 pl-5">
-      {steps.map((step) => (
-        <li key={step}>{step}</li>
-      ))}
-    </ul>
-  );
-}
-
-function Field({
-  label,
+function CollapsibleJsonPanel({
+  title,
+  subtitle,
   value,
 }: {
-  label: string;
-  value: React.ReactNode;
+  title: string;
+  subtitle: string;
+  value: Record<string, unknown>;
 }) {
+  const [open, setOpen] = useState(false);
+  const keyCount = Object.keys(value).length;
   return (
-    <>
-      <dt className="caption">{label}</dt>
-      <dd className="mono m-0 text-[var(--ink)]">{value}</dd>
-    </>
+    <section className="panel overflow-hidden">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--panel-hi)]"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <div className="min-w-0">
+          <div className="eyebrow">{title}</div>
+          <div className="caption mt-0.5">{subtitle}</div>
+        </div>
+        <span className="mono text-[11px] text-[var(--ink-dim)]">
+          {keyCount} {keyCount === 1 ? "key" : "keys"} {open ? "▾" : "▸"}
+        </span>
+      </button>
+      {open && (
+        <pre className="mono m-0 max-h-[400px] overflow-auto border-t border-[var(--line-lo)] px-4 py-4 text-[11px] leading-[1.55] text-[var(--ink-mid)]">
+          {JSON.stringify(value, null, 2)}
+        </pre>
+      )}
+    </section>
   );
 }
 
@@ -359,6 +550,62 @@ function InspectorState({
       </p>
     </div>
   );
+}
+
+// --- status helpers ---
+
+function gpuStatus(exp: GpuCanonicalizationExplanation): Status {
+  if (exp.canonical_sku) return "ok";
+  return "unknown";
+}
+
+function commitmentStatus(
+  exp: CommitmentCanonicalizationExplanation,
+): Status {
+  if (exp.canonical_type === "unknown" || exp.canonical_type === "UNKNOWN") {
+    return "unknown";
+  }
+  if (!exp.reported_type) return "warn";
+  return "ok";
+}
+
+function regionStatus(exp: RegionNormalizationExplanation): Status {
+  if (!exp.country) return "unknown";
+  if (!exp.state && !exp.city) return "warn";
+  return "ok";
+}
+
+function bundleStatus(exp: BundleExtractionExplanation): Status {
+  const populated = [exp.vcpus, exp.ram_gb, exp.storage_gb].filter(
+    (v) => v != null,
+  ).length;
+  if (populated === 0) return "unknown";
+  if (populated < 3) return "warn";
+  return "ok";
+}
+
+function gpuMeta(exp: GpuCanonicalizationExplanation): string[] {
+  const meta: string[] = [];
+  if (exp.gpu_variant) meta.push(`variant: ${exp.gpu_variant}`);
+  if (exp.vram_gb != null) meta.push(`vram: ${exp.vram_gb} GB`);
+  return meta;
+}
+
+function formatRegionResult(exp: RegionNormalizationExplanation): string | null {
+  const parts: string[] = [];
+  if (exp.country) parts.push(exp.country);
+  if (exp.state) parts.push(exp.state);
+  if (exp.city) parts.push(exp.city);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+function formatBundleResult(exp: BundleExtractionExplanation): string | null {
+  const parts: string[] = [];
+  if (exp.vcpus != null) parts.push(`${exp.vcpus} vCPU`);
+  if (exp.ram_gb != null) parts.push(`${exp.ram_gb} GB RAM`);
+  if (exp.storage_gb != null) parts.push(`${Math.round(exp.storage_gb)} GB disk`);
+  if (exp.verification_tier) parts.push(exp.verification_tier);
+  return parts.length ? parts.join(" · ") : null;
 }
 
 function formatResult(value: unknown): string {
