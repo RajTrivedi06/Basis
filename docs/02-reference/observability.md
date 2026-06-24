@@ -71,28 +71,27 @@ LEFT JOIN canonical_offers co ON co.raw_observation_id = ro.id
 WHERE co.id IS NULL;"
 ```
 
-Ideally 0 (or whatever's been collected since the last normalization run). If this number grows unbounded, `run_normalize.py` needs to be added to cron.
+Ideally 0 (or whatever's been collected since the last scheduled run). `collect_cron.sh` runs `run_normalize.py` (and `run_analytics.py`) right after collection, so a healthy scheduled run leaves this near 0. A large backlog means a scheduled run failed partway — check the service journal.
 
 ---
 
-## Cron
+## Scheduled collection
+
+Production collection runs on EC2 via a systemd timer (not laptop cron):
 
 ```bash
-crontab -l                    # see current jobs
+# On EC2 (ssh basis-prod):
+systemctl list-timers basis-collect.timer        # last / next firing
+journalctl -u basis-collect.service -n 100       # recent run output
 ```
 
-Current schedule:
-
-```
-0 8,20 * * * /Users/raaj/Documents/CS/Basis/backend/collect_cron.sh
-```
+`basis-collect.timer` fires at **08:00 / 20:00 UTC** with `Persistent=true`, so a firing missed while the instance was off is rerun on next boot. The service runs `collect_cron.sh` (collect → normalize → analytics) and pings healthchecks.io (`HC_PING_URL`) on success, so a missing ping is a quick external signal that a run failed.
 
 **Dependencies:**
-- Laptop awake at the scheduled times.
-- Docker Desktop running (or whichever Docker engine you use).
-- `.env` has required credentials (AWS especially).
+- Docker (Postgres) running on the instance.
+- `.env` valid. On EC2, AWS credentials come from the instance IAM role (AWS key vars left blank).
 
-macOS cron will silently skip firings when the laptop is asleep. There is no retry. If you see gaps in the observation time series, that's almost always the cause.
+A gap in the time series almost always means a run errored (Docker down, bad `.env`, upstream API) — read the service journal. Local dev can run the pipeline manually instead of relying on any schedule.
 
 ---
 
@@ -104,8 +103,8 @@ macOS cron will silently skip firings when the laptop is asleep. There is no ret
 | `UnauthorizedOperation` on AWS | IAM user missing permission | Attach `AmazonEC2ReadOnlyAccess` managed policy. |
 | `Failed to parse TensorDock location` | Upstream API shape change | Inspect `provider_metadata` in recent raw rows; update `collectors/tensordock.py`. |
 | `skipped_unknown_gpu > 0` | New GPU name from a provider | Add mapping to `normalization/canonicalize.py`; re-run `run_normalize.py`. |
-| Empty log file despite cron being set | Laptop was asleep at schedule time | Run manually: `backend/collect_cron.sh`. |
-| Gaps in time series after weekend | Same — sleep + cron | Check `backend/logs/collect.log` for missing timestamps. |
+| No data for a recent firing | Scheduled run errored or timer inactive | `systemctl list-timers basis-collect.timer`; read `journalctl -u basis-collect.service`. Run manually to catch up. |
+| Missing healthchecks.io ping | A run failed before reaching the ping step | Check the service journal for where it stopped. |
 
 ---
 

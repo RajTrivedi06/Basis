@@ -31,7 +31,7 @@ Task-to-doc routing. If you're an AI agent about to work on X, this tells you wh
 | Fixing a collector bug | `context-packs/collectors-pack.md` | `docs/02-reference/data-sources.md` for the specific provider |
 | Adding a normalization rule | `docs/03-guides/add-normalization-rule.md` | `context-packs/normalization-pack.md`, `docs/01-architecture/adr/0002-conservative-normalization.md` |
 | Fixing a normalization skip | `context-packs/normalization-pack.md` | `docs/03-guides/add-normalization-rule.md` |
-| Working on analytics (Phase 3) | `context-packs/analytics-pack.md` | `docs/02-reference/database.md` |
+| Working on analytics | `context-packs/analytics-pack.md` | `docs/02-reference/database.md` |
 | Writing or fixing an API route | `docs/02-reference/api.md` | `backend/basis/api/` source |
 | Frontend chart work | `docs/02-reference/api.md` | `frontend/` source |
 | Schema change | `docs/02-reference/database.md` | `backend/basis/db/models.py` source |
@@ -47,7 +47,7 @@ Dense bundles for agents. Copy into the subagent's prompt rather than pointing t
 
 - [context-packs/collectors-pack.md](context-packs/collectors-pack.md) — Everything needed to work on collectors.
 - [context-packs/normalization-pack.md](context-packs/normalization-pack.md) — Normalization layer conventions and mappings.
-- [context-packs/analytics-pack.md](context-packs/analytics-pack.md) — Analytics layer (Phase 3, scaffolded).
+- [context-packs/analytics-pack.md](context-packs/analytics-pack.md) — Analytics layer (dispersion, basis decomposition, aggregates).
 
 ---
 

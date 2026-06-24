@@ -8,7 +8,7 @@ Basis has a four-layer pipeline architecture. Data flows in one direction: **col
 
 Scheduled jobs that pull GPU pricing data from each provider's public API or pricing page. Each collector inherits from `BaseCollector` and writes **raw observations** to the database. Raw observations are immutable -- once inserted, they are never modified.
 
-**Providers:** Vast.ai, RunPod, AWS EC2 Spot, Lambda Labs, TensorDock.
+**Providers:** Vast.ai, RunPod, AWS EC2 Spot, TensorDock. (Lambda Labs was dropped per ADR 0003 — its free API key required a payment method.)
 
 ### 2. Normalization (`backend/basis/normalization/`)
 
@@ -99,7 +99,7 @@ backend/basis/
   collectors/        -- one file per provider, all inherit BaseCollector
   normalization/     -- canonicalization, region mapping, commitment mapping
   analytics/         -- dispersion, basis decomposition, aggregation
-  scheduler/         -- APScheduler job definitions
+  scheduler/         -- unimplemented APScheduler stub (jobs.py is a TODO); production scheduling runs via cron (collect_cron.sh) / EC2 systemd timers
   api/               -- FastAPI app, dependencies, route modules
 
 frontend/

@@ -126,7 +126,7 @@ Edit `region.py`. Add a per-source branch and a parser function.
 - `gpu_sku_canonical` is always one of the values in `GPU_NAME_MAP`.
 - `commitment_type` is always one of the canonical types above.
 - `price_usd_per_hour` is copied verbatim from the raw observation (no adjustment here).
-- `normalized_price_usd_per_hour` is `NULL` until Phase 3.
+- `normalized_price_usd_per_hour` is left `NULL` by normalization; the analytics layer populates it.
 
 ## Related
 

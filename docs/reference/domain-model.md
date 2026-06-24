@@ -2,7 +2,7 @@
 title: Domain Model
 tags: [area:reference, audience:developers, status:active]
 owner: Raj
-last_updated: 2026-04-20
+last_updated: 2026-06-23
 ---
 
 # Domain Model
@@ -43,7 +43,7 @@ A normalized projection of a raw observation. Standardized enough to compare acr
 - `provider`, `commitment_type`, `region_{country,state,city}`
 - `vcpus_bundled`, `ram_gb_bundled`, `storage_gb_bundled`, `verification_tier`
 - `price_usd_per_hour` — copied from raw
-- `normalized_price_usd_per_hour` — adjusted for observable factors (populated in Phase 3)
+- `normalized_price_usd_per_hour` — adjusted for observable factors (populated by the analytics layer)
 
 **Lifecycle:** regenerable. `run_normalize.py --reset` wipes and rebuilds from raw observations.
 
@@ -121,7 +121,7 @@ Resources included in the GPU offering beyond the GPU itself: vCPUs, RAM, storag
 
 ### Daily Aggregate
 
-Pre-computed daily summary per (date, gpu_sku, provider, region). Populated in Phase 3.
+Pre-computed daily summary per (date, gpu_sku, provider, region). Populated by the analytics layer.
 
 Tracks: observation count, median, p25, p75, normalized_median.
 
@@ -158,7 +158,7 @@ Canonical Offer ──┬─ gpu_sku_canonical (→ a GPU SKU)
                   ├─ {vcpus,ram_gb,storage_gb}_bundled  (→ a Bundle)
                   └─ provider          (→ a Provider)
                       │
-                      │  (analytics pipeline, Phase 3)
+                      │  (analytics pipeline)
                       ▼
            Daily Aggregate  +  Basis Decomposition
 ```

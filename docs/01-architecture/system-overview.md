@@ -43,7 +43,7 @@ Data flows in one direction: **collect → normalize → analyze → serve**. Ea
          │
          ▼
 ┌──────────────────┐
-│   3. Analytics   │   backend/basis/analytics/ (Phase 3)
+│   3. Analytics   │   backend/basis/analytics/
 └────────┬─────────┘
          │                (dispersion, variance decomposition)
          ▼
@@ -95,13 +95,16 @@ Transforms raw observations into canonical offers. Rule-based; explicitly **not*
 
 ---
 
-## Layer 3 — Analytics (Phase 3, not yet implemented)
+## Layer 3 — Analytics
 
 Consumes canonical offers, produces aggregates.
 
-**Planned:**
-- Dispersion metrics — per (GPU SKU, day): median, p25, p75, IQR, CoV → `daily_aggregates`.
-- Basis decomposition — ANOVA-style variance attribution to region / commitment / provider / bundle / residual → `basis_decomposition`.
+**Modules (`backend/basis/analytics/`):**
+- `dispersion.py` (`compute_dispersion`) — per (GPU SKU, day): median, p25, p75, IQR, CoV → `daily_aggregates`.
+- `basis.py` (`compute_decompositions`) — sequential ANOVA on log-prices, attributing variance to region / commitment / provider / bundle / residual → `basis_decomposition`.
+- `aggregates.py` (`run_analytics`) — orchestrates both and materializes the rows.
+
+Driven by `backend/run_analytics.py` (supports `--reset`).
 
 Analytics never reads raw observations directly — it reads canonical offers. This keeps the math clean and the layer boundary strict.
 
@@ -140,7 +143,7 @@ backend/basis/
 ├── schemas/               pydantic models (raw, canonical, API)
 ├── collectors/            one file per provider
 ├── normalization/         canonicalize, commitment, region, bundle, pipeline
-├── analytics/             (Phase 3) dispersion, basis decomposition
+├── analytics/             dispersion, basis decomposition, aggregates
 ├── scheduler/             (unused; cron drives collection)
 └── api/                   FastAPI app, routes
 
@@ -149,6 +152,7 @@ backend/
 ├── tests/
 ├── run_collect.py         collector entry point
 ├── run_normalize.py       normalization entry point
+├── run_analytics.py       analytics entry point (--reset supported)
 └── collect_cron.sh        cron wrapper
 
 frontend/
@@ -159,4 +163,4 @@ frontend/
 
 ## Deployment notes
 
-Not deployed. Local dev only until the app is feature-complete. See [ADR 0004 would cover this] — none recorded yet. Planned targets are Vercel (frontend) and Railway (backend + DB) but decision is deferred.
+Deployed in production: frontend on Vercel, backend + DB on EC2. The deploy-target choice is tracked as a future ADR (see [../decisions/adr-log.md](../decisions/adr-log.md), "Proposed / pending"); the formal record is not yet written, but the system is live.

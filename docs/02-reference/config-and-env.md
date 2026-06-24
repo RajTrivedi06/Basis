@@ -33,7 +33,8 @@ If `.env` is missing, `pydantic-settings` falls back to actual shell env vars, t
 
 | Var | Default | Description |
 |-----|---------|-------------|
-| `DATABASE_URL` | `postgresql+asyncpg://basis:basis@localhost:5432/basis` | Async SQLAlchemy connection URL |
+| `DATABASE_URL` | `postgresql+asyncpg://basis:basis@localhost:5433/basis` | Async SQLAlchemy connection URL |
+| `POSTGRES_PASSWORD` | `basis` | Postgres password used by `docker-compose.yml` (`${POSTGRES_PASSWORD:-basis}`). Local dev keeps `basis`; production EC2 sets a strong random value. Read by Docker Compose, not a `Settings` field. |
 | `ENVIRONMENT` | `dev` | `dev` / `prod`. Currently unused for anything except logging. |
 
 ### Provider API keys (all optional)
@@ -42,7 +43,6 @@ If `.env` is missing, `pydantic-settings` falls back to actual shell env vars, t
 |-----|-------|
 | `VAST_API_KEY` | Optional; public endpoints work without it but may be rate-limited. Get from [vast.ai](https://vast.ai). |
 | `RUNPOD_API_KEY` | Optional; public GraphQL works without it. Get from [runpod.io](https://www.runpod.io/console/user/settings). |
-| `LAMBDA_API_KEY` | **Unused** (Lambda Labs dropped — see ADR 0003). Field kept for future re-enablement. |
 
 ### AWS (required for AWS Spot collector)
 
@@ -53,6 +53,16 @@ If `.env` is missing, `pydantic-settings` falls back to actual shell env vars, t
 | `AWS_DEFAULT_REGION` | Default `us-east-1`. Not strictly required (collector overrides per call), but good to set. |
 
 **IAM permission needed:** `ec2:DescribeSpotPriceHistory`, typically granted via the `AmazonEC2ReadOnlyAccess` managed policy.
+
+### Healthchecks.io (production only)
+
+These are read directly by the shell scripts (`collect_cron.sh`, the backup/freshness jobs), not by `Settings` — `config.py` uses `extra="ignore"`, so they live in `.env` but are not pydantic fields. Leave them blank locally; the scripts no-op when unset.
+
+| Var | Notes |
+|-----|-------|
+| `HC_PING_URL` | Ping URL hit after a successful collection run in `collect_cron.sh`. |
+| `HC_BACKUP_PING_URL` | Ping URL for the database backup job. |
+| `HC_DATA_FRESH_PING_URL` | Ping URL for the data-freshness check. |
 
 ### Frontend
 

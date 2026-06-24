@@ -2,7 +2,7 @@
 title: Project Brief
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-20
+last_updated: 2026-06-23
 ---
 
 # Project Brief
@@ -35,16 +35,17 @@ This is a study based on **public quoted prices, not executed transactions**. Tr
 
 1. **Collectors** — one file per provider, inheriting `BaseCollector`. Write immutable JSONB snapshots to `raw_observations`.
 2. **Normalization** — rule-based mapping of GPU names, commitments, regions, bundles to canonical schema. Writes to `canonical_offers`.
-3. **Analytics** — dispersion metrics and variance decomposition. Writes to `daily_aggregates` and `basis_decomposition`. (Phase 3, not yet implemented.)
+3. **Analytics** — dispersion metrics and variance decomposition. Writes to `daily_aggregates` and `basis_decomposition`. (Phase 3, shipped.)
 4. **API + Frontend** — FastAPI backend reading aggregates, Next.js dashboard for the narrative.
 
 ## Current State (summary)
 
 - **Phase 0 (scaffold) — complete.**
 - **Phase 1 (collection) — complete** with 4/5 providers. Lambda Labs dropped (ADR 0003).
-- **Phase 2 (normalization) — complete.** 9,979 canonical offers across 97 SKUs.
-- **Phase 3 (analytics) — next.**
-- **Phase 4–6 (API, frontend, writeup) — planned.**
+- **Phase 2 (normalization) — complete.** Canonical offers normalize 1:1 from raw observations with minimal skips. (For current canonical-offer and SKU counts, see [project-status.md](project-status.md) and [findings.md](findings.md) — the earlier "9,979 offers / 97 SKUs" figure was a v1 snapshot.)
+- **Phase 3 (analytics) — complete.** Dispersion + variance decomposition shipped.
+- **Phase 4–6 (API, frontend, writeup) — complete.**
+- **Phase 7 (deploy) — live.** Public site at gpu-basis.xyz / api.gpu-basis.xyz on EC2 + Vercel.
 
 Detailed status: [TASKS/README.md](TASKS/README.md). Phase roadmap: [roadmap.md](roadmap.md).
 

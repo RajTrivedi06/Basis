@@ -2,7 +2,7 @@
 title: Dev Commands
 tags: [area:overview, audience:developers, status:active]
 owner: Raj
-last_updated: 2026-05-12
+last_updated: 2026-06-23
 ---
 
 # Dev Commands
@@ -90,6 +90,20 @@ If `run_normalize.py` reports `skipped_unknown_gpu > 0`, a new GPU name has appe
 
 ---
 
+## Analytics
+
+```bash
+# Build daily aggregates + variance decomposition from canonical offers
+uv run python run_analytics.py
+
+# Wipe and rebuild analytics from scratch
+uv run python run_analytics.py --reset
+```
+
+Run after `run_normalize.py`. `collect_cron.sh` runs this as the third step (collect → normalize → analytics), so scheduled runs keep `daily_aggregates` and `basis_decomposition` current.
+
+---
+
 ## Migrations (Alembic)
 
 ```bash
@@ -160,17 +174,24 @@ uv run mypy basis/            # type check
 
 ---
 
-## Cron
+## Scheduled collection
+
+In production, collection runs on EC2 via a systemd timer (`basis-collect.timer`, 08:00 / 20:00 UTC, `Persistent=true`), not laptop cron:
+
+```bash
+# On EC2 (ssh basis-prod):
+systemctl list-timers basis-collect.timer        # last / next firing
+journalctl -u basis-collect.service -n 100       # recent run output
+```
+
+A local laptop crontab is dev-only / optional:
 
 ```bash
 crontab -l                    # see current jobs
 crontab -e                    # edit
-
-# Current schedule:
 # 0 8,20 * * * /Users/raaj/Documents/CS/Basis/backend/collect_cron.sh
 
-# Tail the log
-tail -f backend/logs/collect.log
+tail -f backend/logs/collect.log   # tail the local log
 ```
 
 ---

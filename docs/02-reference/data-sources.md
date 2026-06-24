@@ -16,7 +16,9 @@ Every provider we collect from: endpoint, auth, cadence, format, quirks. Source 
 
 All data is **free and publicly quoted pricing**. Total data cost: **$0**.
 
-| Provider | Type | Auth | Cadence | Obs/run |
+The Obs/run column below is an **approximate, dated snapshot** (early in the project) for rough sizing only — it is not kept current. For live counts, see [../project-status.md](../project-status.md).
+
+| Provider | Type | Auth | Cadence | Obs/run (approx.) |
 |----------|------|------|---------|---------|
 | Vast.ai | Marketplace (REST) | None / optional API key | Twice daily | ~2,800 |
 | RunPod | Neocloud (GraphQL) | Optional API key | Twice daily | ~190 |
@@ -34,7 +36,7 @@ All data is **free and publicly quoted pricing**. Total data cost: **$0**.
 - **Format:** JSON array of offers.
 - **Key fields in raw payload:** `gpu_name`, `dph_total`, `geolocation`, `reliability2`, `verification`, `num_gpus`, `cpu_cores_effective`, `cpu_ram` (MB), `disk_space` (GB).
 - **Collector:** `backend/basis/collectors/vast.py`
-- **Commitment types captured:** `on_demand`. (Bid / spot to be added in a future pass.)
+- **Commitment types captured:** `on_demand` and `spot`. The collector issues two queries — an on-demand query and a `"type":"bid"` query — and maps each offer via its `is_bid` field (`is_bid=true` → `spot`, otherwise `on_demand`).
 - **Notes:**
   - Richest dataset by far. Thousands of offers with detailed hardware specs and location.
   - `geolocation` format is `"<state-or-city>, <CC>"` — parsed in `normalization/region.py`.

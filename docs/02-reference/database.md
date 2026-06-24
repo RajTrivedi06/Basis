@@ -74,7 +74,7 @@ Normalized projection of raw observations. Can be **regenerated** from raw obser
 | networking_type | varchar(100) | Interconnect if disclosed (rarely populated) |
 | verification_tier | varchar(50) | `verified`, `unverified`, provider-specific tiers |
 | price_usd_per_hour | float | Raw price per GPU-hour |
-| normalized_price_usd_per_hour | float | Price after observable-factor adjustment. **NULL until Phase 3.** |
+| normalized_price_usd_per_hour | float | Price after observable-factor adjustment. NULL where the analytics layer has not assigned a normalized value. |
 
 **Index:** `(collected_at, gpu_sku_canonical, provider)`
 
@@ -84,7 +84,7 @@ Normalized projection of raw observations. Can be **regenerated** from raw obser
 
 ### `daily_aggregates`
 
-Materialized daily summaries for fast dashboard queries. **Not yet populated (Phase 3).**
+Materialized daily summaries for fast dashboard queries. Populated by the analytics layer (`run_analytics.py`) and read directly by the live API.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -105,7 +105,7 @@ Materialized daily summaries for fast dashboard queries. **Not yet populated (Ph
 
 ### `basis_decomposition`
 
-Variance attribution results, one row per (day, GPU SKU). **Not yet populated (Phase 3).**
+Variance attribution results, one row per (day, GPU SKU). Populated by the analytics layer (`run_analytics.py`) and read directly by the live API.
 
 | Column | Type | Description |
 |--------|------|-------------|

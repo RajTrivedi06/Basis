@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed (2026-04-21)
+Accepted 2026-04-21, implemented on main 2026-05-16
 
 ## Context
 
@@ -18,7 +18,7 @@ Before the port goes deep, one architectural choice warrants a decision record: 
 
 The shape of this decision:
 
-- Chart primitives live in `frontend/components/charts/` — `DecompBar`, `DispersionFan`, `DeviationBar`, `HeatCell`, `Sparkline`. Each is a typed React component that takes structured data and returns an SVG.
+- Chart primitives are typed React components that take structured data and return an SVG. As landed, they are spread across a few locations rather than all under one folder: `frontend/components/charts/DecompBar.tsx` is the shared decomposition bar; `frontend/app/dispersion/DispersionFan.tsx` holds the dispersion fan; and the remaining charts are realized as differently-named components in `frontend/components/` — `BasisDecompositionChart.tsx`, `ResidualTimeSeriesChart.tsx`, `FungibilityMatrix.tsx`, and `DispersionChart.tsx`.
 - Colors come from CSS variables (`--residual`, `--factor-provider`, etc.), never hardcoded. Tailwind's `theme.colors` exposes them as named colors so `bg-residual` and `bg-[var(--residual)]` resolve identically.
 - No competing chart library. No `recharts`, no `visx`, no `d3` wrapped in a thin React veneer. The charts are few (five primitives) and simple in shape; library overhead is not justified.
 - `@tailwindcss/typography` is also removed — the Methodology page is hand-styled rather than served by the `prose` plugin.
@@ -89,7 +89,9 @@ The shape of this decision:
   - `frontend/app/layout.tsx` — shell (sticky header, wordmark, nav, footer, fonts)
   - `frontend/components/layout/Nav.tsx` — active-link handling
   - `frontend/lib/factorColor.ts`, `frontend/lib/gpuFamily.ts`, `frontend/lib/useSku.ts`
-- Code pointers (deferred to later stages):
-  - `frontend/components/charts/` — the five hand-rolled primitives (Stage 2)
-  - `frontend/app/{page,basis,dispersion,providers,methodology}` — ports (Stage 5)
+- Code pointers (as landed):
+  - `frontend/components/charts/DecompBar.tsx` — shared decomposition bar
+  - `frontend/app/dispersion/DispersionFan.tsx` — dispersion fan
+  - `frontend/components/{BasisDecompositionChart,ResidualTimeSeriesChart,FungibilityMatrix,DispersionChart}.tsx` — the remaining hand-rolled charts
+  - `frontend/app/{page,basis,dispersion,providers,methodology}` — page ports
 - Prototype reference (not committed): standalone React artifact in `~/Downloads/{styles.css,charts.jsx,page-findings.jsx,page-basis.jsx,page-other.jsx,shell.jsx,app.jsx}`. The ported code diverges where real data contracts demand (URL-param SKU state instead of React context, real API loading/error/empty states, dynamic residual range in hero, etc.); the aesthetic is faithful.

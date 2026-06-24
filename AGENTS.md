@@ -4,7 +4,7 @@ This file is the entry point for AI coding agents (Claude Code, Cursor, Codex, e
 
 ## What Is Basis?
 
-Basis is a public-data study that quantifies GPU compute fungibility across cloud providers. It collects quoted H100 prices from 5-6 sources, normalizes them into a canonical schema, and decomposes price variance into observable factors (region, commitment type, bundled resources) vs. residual basis risk. It is a research study with an interactive dashboard, not a SaaS product or price aggregator.
+Basis is a public-data study that quantifies GPU compute fungibility across cloud providers. It collects quoted H100 prices from 4 sources, normalizes them into a canonical schema, and decomposes price variance into observable factors (region, commitment type, bundled resources) vs. residual basis risk. It is a research study with an interactive dashboard, not a SaaS product or price aggregator.
 
 ## Quick Orientation
 
@@ -29,7 +29,7 @@ Basis is a public-data study that quantifies GPU compute fungibility across clou
 | Backend Python package | `backend/basis/` |
 | Data collectors (one per provider) | `backend/basis/collectors/` |
 | Normalization logic | `backend/basis/normalization/` |
-| Analytics & decomposition (Phase 3, planned) | `backend/basis/analytics/` |
+| Analytics & decomposition (Phase 3, shipped) | `backend/basis/analytics/` |
 | FastAPI routes | `backend/basis/api/routes/` |
 | Pydantic schemas (data contracts) | `backend/basis/schemas/` |
 | SQLAlchemy ORM models | `backend/basis/db/models.py` |
@@ -102,7 +102,7 @@ This is the most common task. Follow these steps exactly:
 
 5. **Add a normalization mapping** if the provider uses non-standard names for GPU models, regions, or commitment types. See `backend/basis/normalization/canonicalize.py`.
 
-6. **Document the data source** in `docs/data_sources.md` -- what URL, what auth (if any), rate limits, data format.
+6. **Document the data source** in `docs/02-reference/data-sources.md` -- what URL, what auth (if any), rate limits, data format.
 
 7. **Add a test** in `backend/tests/test_collectors.py` that validates the collector can parse a sample API response.
 
@@ -180,11 +180,11 @@ refactor(api): extract common query parameters to deps
 
 ## What NOT to Do
 
-- **Don't add new top-level directories.** The structure is `backend/`, `frontend/`, `docs/`, plus root config files.
+- **Don't add new top-level directories.** The structure is `backend/`, `frontend/`, `docs/`, `design/`, `specs/` (if created), `temp-doc/` (if created), plus root config files.
 - **Don't mix read-path and write-path code** in the same module.
 - **Don't create collectors that bypass `BaseCollector`.**
 - **Don't add user accounts, auth, or multi-tenancy.** This is a public research tool.
-- **Don't add deployment configs** (Vercel, Railway) until the app is feature-complete.
+- **Production is live** on AWS EC2 (Caddy -> FastAPI under `nohup`) and Vercel (`gpu-basis.xyz`, `api.gpu-basis.xyz`) since ~2026-05-12. Deployment configs are expected; keep them in sync with the live setup.
 - **Don't add monitoring/observability frameworks** beyond Python's stdlib `logging`.
 - **Don't build a trading simulator or derivatives pricing.** That was explicitly rejected in the planning phase.
 - **Don't normalize too aggressively.** Conservative normalization preserves the residual variance finding.

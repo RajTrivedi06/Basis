@@ -7,7 +7,7 @@ How to run the collection pipeline manually, do dry-runs, reset, and catch up on
 ## When to read/use this
 
 - First manual run after setup.
-- Cron missed a day (laptop was asleep) and you want to catch up.
+- A scheduled run failed and you want to catch up.
 - Testing a new collector.
 - Verifying a fix.
 
@@ -52,14 +52,15 @@ Use dry-run when:
 
 ---
 
-## Catching up after missed cron runs
+## Catching up after a missed scheduled run
 
-macOS cron skips firings when the laptop is asleep — no retry, no backfill. If you see a gap in the time series, simply run manually:
+Production collection runs on an EC2 systemd timer (`basis-collect.timer`, `Persistent=true`), so firings missed while the instance was off are rerun on next boot. A run that *executed but errored* leaves a gap — to catch up, run the full chain manually (on EC2 or locally):
 
 ```bash
 cd backend
 uv run python run_collect.py        # full run, all sources
 uv run python run_normalize.py      # normalize the new rows
+uv run python run_analytics.py      # rebuild aggregates + decomposition
 ```
 
 That puts one observation per source into the DB at the current timestamp. It doesn't reconstruct missed timestamps — those gaps are permanent.
@@ -77,14 +78,14 @@ Look for days with zero rows for a source you expect to be live.
 
 ---
 
-## Full pipeline (collect → normalize)
+## Full pipeline (collect → normalize → analytics)
 
 ```bash
 cd backend
-uv run python run_collect.py && uv run python run_normalize.py
+uv run python run_collect.py && uv run python run_normalize.py && uv run python run_analytics.py
 ```
 
-This is what `collect_cron.sh` should eventually do (currently only runs the collector; add the normalize step when ready).
+`backend/collect_cron.sh` already runs the full chain — collect, then normalize, then `run_analytics.py` — so a scheduled run produces canonical offers and analytics, not just raw observations.
 
 ---
 

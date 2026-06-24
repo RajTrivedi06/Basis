@@ -1,15 +1,15 @@
 ---
 title: Testing
-tags: [area:guides, audience:developers, status:stub]
+tags: [area:guides, audience:developers, status:active]
 owner: Raj
-last_updated: 2026-04-20
+last_updated: 2026-06-23
 ---
 
 # Testing
 
-## Status: minimal
+## Status
 
-Tests live in `backend/tests/` but coverage is thin. This is a known gap — see [../TASKS/README.md](../TASKS/README.md) "Cross-cutting / nice-to-haves".
+`backend/tests/` covers all four layers: `test_collectors.py`, `test_normalization.py`, `test_analytics.py`, and `test_api.py` (~24 test functions total). The sections below describe the intent behind each layer and where to add new cases — see also [../TASKS/README.md](../TASKS/README.md) for remaining nice-to-haves.
 
 ---
 
@@ -35,10 +35,10 @@ For each collector, save a real API response as a fixture under `backend/tests/f
 def test_vast_parses_sample_response():
     with open("tests/fixtures/vast_response.json") as f:
         sample = json.load(f)
-    observations = VastCollector._parse_response(sample, utc_now())
-    assert len(observations) > 0
-    assert observations[0].source == "vast"
-    assert observations[0].price_hourly > 0
+    obs = VastCollector._parse_offer(sample[0], utc_now())
+    assert obs is not None
+    assert obs.source == "vast"
+    assert obs.price_hourly > 0
 ```
 
 This catches API shape changes the moment they happen instead of finding out at cron time.
@@ -59,13 +59,13 @@ Plus: unknown inputs return `None`, not raise.
 
 Edge cases: empty strings, missing fields, unicode, international characters.
 
-### 4. Analytics (Phase 3, once implemented)
+### 4. Analytics (`test_analytics.py`)
 
 - Percentile calculation against a hand-computed example.
 - Variance decomposition sums ≤ total variance.
 - Residual is non-negative.
 
-### 5. API endpoints (Phase 4, once wired)
+### 5. API endpoints (`test_api.py`)
 
 - Filter parameters behave as documented.
 - Responses match Pydantic response schemas.

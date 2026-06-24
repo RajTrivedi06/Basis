@@ -260,7 +260,9 @@ Local dev still works (env var unset → default `http://localhost:3000`). EC2 w
 
 ### 1.4 Update `.env.example`
 
-Current state: includes `LAMBDA_API_KEY=` (dropped per ADR 0003), missing new variables.
+> ✅ **Shipped** (commit `49f4d84`). `.env.example` was updated to the form below and `LAMBDA_API_KEY=` removed.
+
+Pre-deploy state was: included `LAMBDA_API_KEY=` (dropped per ADR 0003), missing new variables.
 
 Updated `.env.example`:
 
@@ -297,7 +299,7 @@ RUNPOD_API_KEY=
 - `ENVIRONMENT`, `VAST_API_KEY`, and `AWS_DEFAULT_REGION` are kept in the example because all three are referenced in [`backend/basis/config.py`](../backend/basis/config.py) — Settings reads them on load. Removing them from the example would lose the documentation hint even though Settings defaults cover absence at runtime.
 - `TENSORDOCK_API_KEY` is **not** in the example: neither `backend/basis/config.py` nor `backend/basis/collectors/tensordock.py` references such a variable. The TensorDock collector hits the public endpoint `https://dashboard.tensordock.com/api/v2/locations` with no auth (collector file header: "Auth: None required"). Adding the env var would be misleading.
 
-**Additional Settings cleanup:** drop the `lambda_api_key: str = ""` field from [`backend/basis/config.py`](../backend/basis/config.py) line ~34. ADR 0003 retired the Lambda Labs collector; the Settings field has been a leftover. Remove it in the same commit that updates `.env.example`.
+**Additional Settings cleanup:** ✅ **done** (commit `49f4d84`) — the `lambda_api_key` field was dropped from [`backend/basis/config.py`](../backend/basis/config.py) and `.env.example`. ADR 0003 retired the Lambda Labs collector; no Lambda config remains in Settings.
 
 ### 1.5 Update `docker-compose.yml`
 

@@ -64,4 +64,4 @@ Drop Lambda Labs as a primary data source. The collector code is kept in the rep
 
 - Code: `backend/basis/collectors/lambda_labs.py` (unused but kept)
 - Runner: `backend/run_collect.py` — `AVAILABLE` dict excludes `lambda_labs`
-- Config: `backend/basis/config.py` — `lambda_api_key` field kept but unused
+- Config: `backend/basis/config.py` — `lambda_api_key` field **removed** from Settings (commit `49f4d84`); no Lambda config remains

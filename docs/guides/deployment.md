@@ -1,51 +1,35 @@
 ---
 title: Deployment
-tags: [area:guides, audience:ops, status:stub]
+tags: [area:guides, audience:ops, status:active]
 owner: Raj
-last_updated: 2026-04-20
+last_updated: 2026-06-23
 ---
 
 # Deployment
 
-## Status: not deployed
+## Status: live
 
-Basis is a local-only project until Phase 7 (see [../roadmap.md](../roadmap.md)). This doc is a stub describing the intended approach when deployment does happen.
+Production has been live since ~2026-05-12:
 
----
-
-## Target architecture (planned)
-
-| Component | Candidate host | Rationale |
-|-----------|---------------|-----------|
-| Frontend (Next.js) | Vercel | Native Next.js target, free hobby tier, instant previews. |
-| Backend (FastAPI) | Railway or Fly.io | Simple container deploys, can run cron + web together. |
-| Postgres | Railway's Postgres addon, or Neon / Supabase | Managed, free tier covers our data volume. |
-| Cron (collection) | Same host as backend, or GitHub Actions (scheduled) | Decouple from laptop; see below. |
+| Component | Host | Notes |
+|-----------|------|-------|
+| Frontend (Next.js) | Vercel | Public site. |
+| Backend (FastAPI) | AWS EC2 | Served behind Caddy (TLS / reverse proxy); the app runs under `nohup uv run uvicorn ...`. |
+| Postgres | AWS EC2 (Docker Compose) | Same instance; `POSTGRES_PASSWORD` set to a strong random value. |
+| Collection | AWS EC2 systemd timers | `basis-collect.timer` fires at 08:00 / 20:00 UTC (`Persistent=true`), running `collect_cron.sh` (collect → normalize → analytics). Not laptop cron. |
 
 ---
 
-## Decisions still to make
+## Where the specifics live
 
-- Host choice for backend (Railway vs Fly vs Render). Will be recorded as an ADR when chosen.
-- Whether cron lives on the backend host, as a GitHub Actions schedule, or as a separate worker.
-- Whether to keep `raw_observations.raw_payload` indefinitely or prune after a retention window.
-- Public vs private deployment. Basis is a research tool, not a SaaS — likely public, read-only.
-
----
-
-## What needs to happen before deploying
-
-From [../TASKS/README.md](../TASKS/README.md):
-
-- Phase 3 (analytics) complete — there's nothing to show until this lands.
-- Phase 4 (API) wired to real data.
-- Phase 5 (frontend) rendering real charts.
-- Basic test coverage in `backend/tests/`.
-- Env-variable audit to ensure nothing secret leaks into logs.
+- **Operating the live stack** (restart uvicorn after `git pull`, health checks, systemd timers): [operations-runbook.md](operations-runbook.md) and [dev-setup.md](dev-setup.md#run-against-production-data-polish-loop).
+- **How it was built / the deployment plan:** [../basis-deployment-roadmap.md](../basis-deployment-roadmap.md).
+- **Environment variables** (including `POSTGRES_PASSWORD`, CORS, and the healthchecks.io ping URLs): [../02-reference/config-and-env.md](../02-reference/config-and-env.md).
 
 ---
 
 ## Related
 
-- [Roadmap — Phase 7 (deferred)](../roadmap.md#phase-7--deploy-deferred)
+- [Operations runbook](operations-runbook.md)
+- [Deployment roadmap](../basis-deployment-roadmap.md)
 - [Config & env reference](../02-reference/config-and-env.md)

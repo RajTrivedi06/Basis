@@ -2,7 +2,7 @@
 title: Architecture Decision Records
 tags: [area:decisions, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-21
+last_updated: 2026-06-23
 ---
 
 
@@ -55,11 +55,13 @@ The canonical structure every ADR follows: Status / Context / Decision / Options
 
 **Consequence:** Public surface of each normalization module roughly doubles. Adding a new normalization module requires adding both the value function and its explain sibling — convention, not compiler-enforced. Unblocks Basis v2 Phase B (provenance drilldown).
 
+**Status note:** Shipped — the `explain_*` siblings live at `canonicalize.py:243`, `commitment.py:64`, `region.py:183`, and `bundle.py:139`, with the AST-level guard test on `pipeline.py` in place.
+
 ---
 
 ## ADR-005: Residual-first UI and hand-rolled SVG charts
 
-**Status:** Proposed (2026-04-21)
+**Status:** Accepted 2026-04-21, implemented on main 2026-05-16
 **Location:** [../01-architecture/adr/0005-residual-first-ui.md](../01-architecture/adr/0005-residual-first-ui.md)
 
 **Decision:** Drop `@tremor/react` entirely. Every chart in the v2 frontend is hand-rolled SVG, styled via Tailwind and CSS variables defined in `globals.css`. Residual color (`--residual`, amber `#f59e0b`) is enforced by a single token used nowhere else. `@tailwindcss/typography` is also dropped; Methodology is hand-styled.

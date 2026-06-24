@@ -2,12 +2,12 @@
 title: Tasks & Status
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-05-16
+last_updated: 2026-06-23
 ---
 
 # Tasks & Status
 
-Granular snapshot of current work for Basis. Last refreshed: **2026-05-16**.
+Granular snapshot of current work for Basis. Last refreshed: **2026-06-23**.
 
 Complements [roadmap.md](../roadmap.md) (high-level phases) and [project-brief.md](../project-brief.md) (what the project is). This file is the most-updated doc — treat it like a living to-do list.
 
@@ -64,6 +64,9 @@ Basis is a public-data study measuring GPU compute fungibility across cloud prov
 - **Headline finding: H100 SXM residual variance 53%–95%** across 3 observation days — the thesis confirmation
 
 ### Phase 4 — API Endpoints
+
+> The 6 endpoints below were the Phase 4 surface; v2 Phases A/B later grew the API to **11 endpoints across 8 route modules** (added `fungibility-matrix` plus 3 provenance endpoints and the `basis/{sku}/timeseries` route).
+
 - `GET /health` — simple readiness check
 - `GET /api/offers` — filter by gpu_sku / provider / commitment_type / region_country / since / until; page + page_size pagination; total count returned
 - `GET /api/dispersion/{gpu_sku}` — time series from `daily_aggregates`, optional since/until and per-provider filter; IQR computed on the fly
@@ -136,14 +139,17 @@ Production now lives on EC2; Mac collection cron is stopped and 33,525 pre-EC2 o
 
 UI polish: local Next.js (`npm run dev`) + SSH tunnel to EC2 FastAPI against production data. Procedure: [guides/dev-setup.md](../guides/dev-setup.md#run-against-production-data-polish-loop).
 
+> **v2 redesign status (2026-06-23):** the residual-first redesign (ADR 0005) has **effectively landed on `main`** — Tremor removed, Fraunces/Inter/JetBrains fonts, hand-rolled SVG charts, redesigned methodology page. The standalone `ui-port-v2` branch is **stale/superseded** (`git diff main origin/ui-port-v2` shows main is ahead — the branch lacks `FactorStripPlot`, `ResidualTimeSeriesChart`, the methodology components, and ~1226 lines of `globals.css`). The v2 work went straight to main via PR #8, not by merging the branch. **Action:** delete `origin/ui-port-v2` once confirmed nothing unique remains.
+
 ---
 
 ## Pending / next up
 
 ### Operational (post-deployment)
 
-- [ ] **Phase 8 — reboot test on EC2** (this week). Hard reboot, verify `basis-postgres.service` brings Postgres up healthcheck-gated and all timers come back active. `Type=oneshot` units showing `Active: inactive (dead)` after success is the pass signal.
+- [ ] **Phase 8 — reboot test on EC2** (overdue — now actionable). Hard reboot, verify `basis-postgres.service` brings Postgres up healthcheck-gated and all timers come back active. `Type=oneshot` units showing `Active: inactive (dead)` after success is the pass signal.
 - [ ] **Phase 8 — weekly operational checks** (ongoing). Timer health, journal scan for `code=exited, status=0/SUCCESS`, S3 backup integrity, healthchecks.io dashboard green, disk + swap usage.
+- [ ] **v2 Phase D — Rolling stability view** (now unblocked, not built). Was blocked on ≥30 days of cron data; that threshold passed ~2026-05-17 and the window is now ~58 days. This is the main remaining v2 feature. (Phase C — slice interactivity — was intentionally **skipped**, see [`temp-doc/phase-c-scoping.md`](../../temp-doc/phase-c-scoping.md); not a gap.)
 - [ ] **Add curated providers** to reduce Vast.ai's 80% share — revisit Lambda Labs under different terms, add CoreWeave, add Crusoe. Each new collector would sharpen the segment-dependence picture in [findings.md](../findings.md) without changing methodology.
 - [ ] **Tailscale (or AWS SSM Session Manager) setup** — only if home-IP rotation continues to break the security-group whitelist often. Workarounds, in order of friction: widen to `/24` → widen to `/16` → Tailscale → SSM.
 
@@ -161,7 +167,7 @@ Tear-down checklist when the project is wound down (~3 months out). See [basis-d
 
 ### Ongoing (post-Phase-6)
 
-- [ ] **Let data accumulate.** The 18-day findings refresh shipped (above); residual estimates continue to tighten as the window grows. Re-anchor the writeup to a longer window once ≥60 days are in.
+- [ ] **Let data accumulate / re-anchor the writeup (now actionable).** The 18-day findings refresh shipped (above); residual estimates continue to tighten as the window grows. The ≥60-day window is essentially reached (data from 2026-04-26 → today ≈ 58 days), so re-anchoring the writeup to the longer window is now actionable rather than future.
 - [ ] **Monitor for `skipped_unknown_gpu`** — any new GPU name from a provider requires a `canonicalize.py` addition.
 - [ ] **Optional: screenshot reel / portfolio post.** Manual step (Raj's call) — not code.
 
@@ -179,16 +185,24 @@ Tear-down checklist when the project is wound down (~3 months out). See [basis-d
 
 No active blockers. Watch items:
 
-- **Laptop-sleep cron misses.** macOS cron silently skips firings while the laptop is asleep. Manual `backend/collect_cron.sh` runs are the current mitigation. Consider `caffeinate -d` or Power Scheduler if the pattern is chronic.
-- **Docker must be running at cron times.** If Docker Desktop isn't up, collection succeeds at the HTTP layer but fails to persist. Enable "Start on login" in Docker Desktop.
 - **Provider API shape changes.** TensorDock's `gpus` field changed shape (dict → list) once during the build. Watch parse-error logs on every run.
+
+(The former Mac-laptop-cron blockers — laptop-sleep cron misses and Docker-must-be-running-at-cron-times — are obsolete: production moved to EC2 systemd timers on 2026-04-27 and the Mac cron is stopped.)
 
 ---
 
+## Known code-level discrepancies (from 2026-06-23 audit)
+
+Mismatches between code and stated intent. Flagged, not yet resolved. Full write-up: [`temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md`](../../temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md).
+
+- [ ] **`collectors/__init__.py` still lists `LambdaLabsCollector`** in `COLLECTORS`/`__all__`, contradicting ADR 0003 and `run_collect.py`'s `AVAILABLE` dict (which excludes it). Harmless today but a latent footgun — remove from the list or annotate it as decorative.
+- [ ] **`backend/basis/scheduler/jobs.py` is an unimplemented stub** whose docstring still references "Lambda, TensorDock pricing page scrapes" — a plan superseded twice (cron/systemd drives scheduling; Lambda dropped; no scraping). Delete the module or replace the docstring with a "parked" note.
+- [ ] **Test suite is red:** `test_api.py::test_basis_timeseries` fails on a data-window assumption (picks an SKU whose decomposition predates the 30-day timeseries lookback). Fix the SKU selection to require a decomposition within the window, or skip when none qualifies. Not a product bug.
+
 ## Deprecated / parked
 
-- **Lambda Labs collector** (`backend/basis/collectors/lambda_labs.py`) — code retained but not registered in `run_collect.py`. See [decisions/adr-log.md](../decisions/adr-log.md) ADR-003.
-- **Scheduler module** (`backend/basis/scheduler/`) — APScheduler was scaffolded but not used. Cron drives collection instead.
+- **Lambda Labs collector** (`backend/basis/collectors/lambda_labs.py`) — code retained but not registered in `run_collect.py`. See [decisions/adr-log.md](../decisions/adr-log.md) ADR-003. (Note: still in `collectors/__init__.py`'s `COLLECTORS` list — see Known code-level discrepancies above.)
+- **Scheduler module** (`backend/basis/scheduler/`) — APScheduler was scaffolded but not used; `jobs.py` is a TODO stub. Cron / EC2 systemd timers drive collection instead.
 - **Playwright / BeautifulSoup scraping** — original plan for Lambda Labs + TensorDock. Not needed once API endpoints were found.
 
 ---
@@ -206,6 +220,7 @@ No active blockers. Watch items:
 
 Append a one-liner each time this file is updated.
 
+- 2026-06-23 — Full repo doc-freshness & discrepancy audit (29 files reconciled with `main`). Six stale themes fixed across the docs (v2 UI landed on main; 11 endpoints not 6; analytics shipped; prod live on EC2+Vercel; EC2 systemd not laptop cron; time-expired claims). Added: v2 **Phase D** (rolling stability, unblocked/not built) to Pending; **Known code-level discrepancies** section (Lambda still in `COLLECTORS`, scheduler stub, red `test_basis_timeseries`); `ui-port-v2` flagged stale/superseded (main is ahead). Noted v2 Phases A/B grew the API to **11 endpoints across 8 modules**. Phase 8 reboot test + ≥60-day re-anchor now **overdue/actionable** (window ≈ 58 days). Full write-up: [`temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md`](../../temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md). Companion edits in [project-status.md](../project-status.md), [roadmap.md](../roadmap.md), [project-brief.md](../project-brief.md), [INDEX.md](../INDEX.md).
 - 2026-05-16 — Polish-loop developer docs landed on `docs/polish-loop-cleanup`. README Quickstart now leads with the three-terminal polish-loop workflow; `docs/00-start-here/dev-commands.md` and `docs/guides/dev-setup.md` document the SSH-tunnel + `nohup` uvicorn procedure and the mandatory post-`git pull` restart. Phase 7 status and Operational debt sections (Phase 7.4 `basis-api.service` unshipped) added to this file and to [project-status.md](../project-status.md).
 - 2026-05-15 — Findings refresh shipped on `feat/segment-conditional-finding`. Segment-conditional framing (~59% / ~89%) replaces the v1 single-residual headline. Vast.ai dominance (80% of canonical offers) promoted from implicit to explicit caveat. Cross-SKU comparison numbers refreshed against the 18-day EC2 window. Backend: new `exclude_providers` param on `/api/basis/{sku}/timeseries`. Frontend: dual-number hero with count-up motion. Docs: [findings.md](../findings.md), [methodology.md](../methodology.md), [project-status.md](../project-status.md), and the lede in root [README.md](../../README.md) all reflect the refresh. Source: [`docs/analysis/2026-05-13-findings-refresh-analysis.md`](../analysis/2026-05-13-findings-refresh-analysis.md).
 - 2026-05-12 — Phase 7 public URLs live (`gpu-basis.xyz`, `api.gpu-basis.xyz`). Phase 7.4 `basis-api.service` remains unshipped; FastAPI under manual `nohup`; polish-loop runbook drafted under [guides/dev-setup.md](../guides/dev-setup.md).

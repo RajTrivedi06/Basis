@@ -2,7 +2,7 @@
 title: Project Status (TL;DR)
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-05-16
+last_updated: 2026-06-23
 ---
 
 # Project Status (TL;DR)
@@ -15,7 +15,7 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 
 **Basis v2 in progress.** Phase A shipped on 2026-04-21. Proposal: [temp-doc/basis-v2-proposal-r2.md](../temp-doc/basis-v2-proposal-r2.md).
 
-**UI port in progress on the `ui-port-v2` branch.** A residual-first redesign of the frontend — drop Tremor, hand-roll SVG charts, Fraunces/Inter/JetBrains Mono typography, amber-residual discipline. Decision: [ADR 0005](01-architecture/adr/0005-residual-first-ui.md). Stage 1 (tokens + fonts + shell + utilities) is shipped on the branch; pages still render v1 content with v1 colors and v1 charts until Stages 2+ port them. Not merged to main until the port is end-to-end consistent.
+**UI v2 residual-first redesign has effectively landed on `main`.** Tremor is gone from `frontend/package.json`; `layout.tsx` loads Fraunces/Inter/JetBrains Mono; `globals.css` is ~1700 lines of v2 tokens; hand-rolled SVG charts (`FactorStripPlot`, `ResidualTimeSeriesChart`, `components/charts/DecompBar`) and the redesigned methodology page are all on main. Decision: [ADR 0005](01-architecture/adr/0005-residual-first-ui.md). The standalone `ui-port-v2` branch was never formally git-merged, but main already carries the v2 styling, tokens, fonts, and chart components — main is no longer v1.
 
 ## Production state
 
@@ -43,10 +43,12 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 | A | Residual-first landing + fungibility matrix | ✅ Shipped 2026-04-21 |
 | B | Provenance drilldown (parallel `explain_*` functions) | ✅ Shipped 2026-04-21 |
 | C | Slice interactivity | ⬛ Skipped 2026-04-21 — see [`temp-doc/phase-c-scoping.md`](../temp-doc/phase-c-scoping.md) |
-| D | Rolling stability view | 🔲 Blocked on ≥30 days of cron data (earliest meaningful start ~2026-05-17) |
-| UI port | Residual-first redesign (ADR 0005) | 🟡 Stage 1 of 7 shipped on `ui-port-v2`; Stages 2+ (chart primitives, page ports, cleanup, visual QA) pending |
+| D | Rolling stability view | 🔲 Data threshold reached as of ~2026-05-17; ready to start (pending execution) |
+| UI port | Residual-first redesign (ADR 0005) | 🟢 Effectively landed on `main` (Tremor removed, v2 fonts/tokens/hand-rolled SVG charts live); the standalone `ui-port-v2` branch remains unmerged |
 
-## Data at a glance (2026-05-13, 18-day window)
+## Data at a glance (FROZEN 2026-05-13 snapshot, 18-day window)
+
+> **Caveat:** the counts below are a frozen 2026-05-13 snapshot. The live cron has continued collecting since, so current volumes are larger — see the [live dashboard](https://gpu-basis.xyz) and [findings.md](findings.md) for current numbers.
 
 - **4 collectors live:** Vast.ai, RunPod, AWS Spot, TensorDock. (Lambda Labs dropped — ADR 0003.) All four hit on every run since the vast.ai retry fix.
 - **Raw observations on EC2:** 90,161 across the 4 providers since the 2026-04-26 cutover (18 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
@@ -63,7 +65,7 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 | 1 | Data Collection | ✅ Complete (4/5 providers) |
 | 2 | Normalization | ✅ Complete |
 | 3 | Analytics | ✅ Complete |
-| 4 | API Endpoints | ✅ Complete (6 endpoints live) |
+| 4 | API Endpoints | ✅ Complete (11 endpoints across 8 route modules; v2 Phases A/B grew this from the original 6) |
 | 5 | Frontend Dashboard | ✅ Complete (4 pages, 3 charts) |
 | 6 | Analytical Writeup & Polish | ✅ Complete |
 | 7 | Deploy | 🟢 Public live (Vercel + Caddy + DNS); Phase 7.4 `basis-api.service` not shipped — manual `nohup` uvicorn |
@@ -77,6 +79,7 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 
 ## Update log
 
+- 2026-06-23 — Doc-freshness reconciliation across planning docs. Corrected API surface to **11 endpoints across 8 route modules** (was "6 endpoints"). Reframed the UI v2 redesign as **effectively landed on `main`** (Tremor removed, v2 fonts/tokens/hand-rolled SVG charts live; `ui-port-v2` branch still unmerged) — no longer "Stage 1 / not merged / pages render v1." Relabeled the "Data at a glance" block as a **frozen 2026-05-13 snapshot** with a caveat that live cron volumes are larger. Phase D reworded from blocked to "data threshold reached ~2026-05-17; ready to start." Companion edits in [TASKS/README.md](TASKS/README.md), [roadmap.md](roadmap.md), [project-brief.md](project-brief.md), [INDEX.md](INDEX.md).
 - 2026-05-16 — Polish-loop developer docs landed on `docs/polish-loop-cleanup`. README Quickstart now leads with the three-terminal SSH-tunnel + `nohup` uvicorn workflow; new [`docs/00-start-here/dev-commands.md`](00-start-here/dev-commands.md) and [`docs/guides/dev-setup.md`](guides/dev-setup.md) document the polish loop and the mandatory post-`git pull` uvicorn restart. This file and [TASKS/README.md](TASKS/README.md) updated to Phase-7-public-live wording with an Operational debt section (Phase 7.4 `basis-api.service` unshipped).
 - 2026-05-15 — Findings refresh shipped on `feat/segment-conditional-finding`. Segment-conditional framing (~59% / ~89%) replaces the v1 single-residual headline. Vast.ai dominance (80% of canonical offers) promoted from implicit to explicit caveat in both [findings.md](findings.md) and [methodology.md](methodology.md). Cross-SKU numbers (A100 24%, RTX 4090 86%) refreshed against the 18-day window. New `exclude_providers` query param on `GET /api/basis/{sku}/timeseries` powers a dual-number hero on the landing page. Investigation report: [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).
 - 2026-05-12 — Public URLs live (`https://gpu-basis.xyz`, `https://api.gpu-basis.xyz`). Phase 7.4 `basis-api.service` not shipped; FastAPI under manual `nohup`; polish-loop runbook + mandatory post-`git pull` uvicorn restart drafted under [guides/dev-setup.md](guides/dev-setup.md) and [../README.md](../README.md).
@@ -90,7 +93,7 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 - 2026-04-21 — v2 Phase A shipped: `/api/fungibility-matrix` endpoint, `FungibilityMatrix` landing-page hero, `BasisDecompositionChart` rebuilt residual-first (donut removed, hero stat + thin stacked bar). Hardcoded 3-day table dropped from `/`.
 - 2026-04-20 — Phase 6 complete: findings.md (~1200-word analytical piece) written; frontend restructured (`/` → findings, `/dispersion` → old home); README rewritten to lead with the finding.
 - 2026-04-20 — Phase 5 complete: frontend dashboard shipped (dispersion / basis / providers / methodology); React 18 + Tremor + React Query; build passes, all pages + proxied APIs return 200.
-- 2026-04-20 — Phase 4 complete: 6 REST endpoints live (health, offers, dispersion, basis, providers, gpu-skus) returning real data from canonical/aggregate tables.
+- 2026-04-20 — Phase 4 complete: 6 REST endpoints live (health, offers, dispersion, basis, providers, gpu-skus) returning real data from canonical/aggregate tables. (v2 Phases A/B later grew this to 11.)
 - 2026-04-20 — Phase 3 complete: dispersion + decomposition shipped; cron chained; first findings computed.
 - 2026-04-20 — converted to TL;DR; detailed status lives in TASKS/README.md.
 - 2026-04-20 — initial status doc after Phase 2 completion.

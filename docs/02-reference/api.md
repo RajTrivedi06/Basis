@@ -14,7 +14,7 @@ REST endpoints exposed by the FastAPI backend. Source of truth for any client (f
 
 ## Status
 
-**10 endpoints live.** The original 6 shipped 2026-04-20; `/api/fungibility-matrix` shipped 2026-04-21 as part of Basis v2 Phase A; three provenance drilldown endpoints shipped 2026-04-21 as part of Basis v2 Phase B. All return real data from `canonical_offers`, `daily_aggregates`, `basis_decomposition`, and `raw_observations`.
+**11 endpoints live.** The original 6 shipped 2026-04-20; `/api/fungibility-matrix` shipped 2026-04-21 as part of Basis v2 Phase A; three provenance drilldown endpoints shipped 2026-04-21 as part of Basis v2 Phase B; `/api/basis/{gpu_sku}/timeseries` shipped later for the segment-conditional landing hero. All return real data from `canonical_offers`, `daily_aggregates`, `basis_decomposition`, and `raw_observations`.
 
 ---
 
@@ -167,6 +167,53 @@ Variance decomposition for a (SKU, date). Defaults to the latest decomposition a
 ```
 
 **404** when no decomposition exists for that SKU (or SKU + date).
+
+---
+
+## `GET /api/basis/{gpu_sku}/timeseries`
+
+Variance decompositions for a SKU across a date window. Powers the segment-conditional hero on the landing page.
+
+**Path:**
+
+- `gpu_sku` — e.g., `h100_sxm_80gb`
+
+**Query parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `since` | date | Start date (inclusive); defaults to 30 days ago |
+| `until` | date | End date (inclusive); defaults to today |
+| `exclude_providers` | string | Comma-separated provider names to exclude (e.g. `vast` or `vast,tensordock`). When set, the response is recomputed on demand from `canonical_offers` with those providers removed, instead of reading the precomputed `basis_decomposition` table. |
+
+**Behavior:**
+- Default path reads precomputed rows from `basis_decomposition` (fast, Vast-inclusive), ordered by date ascending.
+- With `exclude_providers`: recomputes the decomposition on demand from `canonical_offers` with those providers filtered out.
+- **404** if no decompositions exist for the SKU in the window (or after excluding the given providers).
+
+**Response** (`BasisTimeseriesResponse`):
+
+```json
+{
+  "gpu_sku": "h100_sxm_80gb",
+  "points": [
+    {
+      "date": "2026-04-20",
+      "gpu_sku": "h100_sxm_80gb",
+      "total_variance": 0.301,
+      "variance_from_region": 0.086,
+      "variance_from_commitment": 0.019,
+      "variance_from_bundle": 0.035,
+      "variance_from_provider": 0.0,
+      "residual_variance": 0.161,
+      "pct_explained": 46.5,
+      "pct_residual": 53.5
+    }
+  ]
+}
+```
+
+Each point is a `BasisDecompositionResponse`. The wrapper is an object (not a bare list) so summary fields can be attached later without breaking clients.
 
 ---
 
@@ -424,7 +471,7 @@ All response models live in `backend/basis/schemas/api.py`:
 
 - `OfferSummary`, `OfferListResponse`
 - `DispersionPoint`, `DispersionResponse`
-- `BasisDecompositionResponse`
+- `BasisDecompositionResponse`, `BasisTimeseriesResponse`
 - `ProviderSummary`, `ProviderListResponse`
 - `GpuSkuSummary`, `GpuSkuListResponse`
 - `FungibilityMatrixRow`, `FungibilityMatrixResponse`
@@ -440,5 +487,5 @@ All response models live in `backend/basis/schemas/api.py`:
 1. Define / extend a Pydantic response model in `schemas/api.py`.
 2. Create or edit the route in `backend/basis/api/routes/<name>.py`.
 3. Register the router in `basis/api/main.py`.
-4. Add a smoke test once `tests/test_api.py` exists.
+4. Add a smoke test in `tests/test_api.py`.
 5. Document here: description, params, response example, errors.

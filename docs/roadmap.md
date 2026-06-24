@@ -2,7 +2,7 @@
 title: Roadmap
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-20
+last_updated: 2026-06-23
 ---
 
 # Roadmap
@@ -70,7 +70,9 @@ Status: `COMPLETE`
 - `backend/collect_cron.sh` chained: collect → normalize → analytics. Shipped.
 - First run outputs: 465 daily aggregates, 179 (date, gpu_sku) decompositions across 3 days.
 
-**Exit criterion met:** H100 SXM end-to-end verified. Integrity check (components + residual = total) passes for every row. Residual for H100 SXM ranges **53%–95%** across 3 observation days — the defensible, publishable Basis finding the project was built to produce.
+**Exit criterion met:** H100 SXM end-to-end verified. Integrity check (components + residual = total) passes for every row.
+
+**Current headline finding (segment-conditional, 18-day EC2 window):** H100 SXM residual variance is **~59% (Vast included) / ~89% (Vast excluded)** of log-price variance — the defensible, publishable Basis finding. (The first run reported a **53%–95%** range across only 3 observation days; that figure is superseded by the segment-conditional headline. See [findings.md](findings.md).)
 
 **Caveat for Phase 6 writeup:** sequential attribution order matters (region first → absorbs provider variance on AWS-heavy days). To be documented in `methodology.md`.
 
@@ -103,6 +105,8 @@ Status: `COMPLETE`
 - `DispersionChart` — Tremor `LineChart` with p25 / median / p75 lines.
 - `BasisDecompositionChart` — Tremor `DonutChart` + side panel with the residual percentage as the hero number, plus an attribution table.
 - `ProviderComparisonChart` — Tremor `BarChart` for deviation, plus coverage table.
+
+> **Note (ADR 0005):** Tremor was later removed in the v2 residual-first redesign; the charts above were replaced by hand-rolled SVG components (`FactorStripPlot`, `ResidualTimeSeriesChart`, `components/charts/DecompBar`). The Tremor descriptions here are kept as the Phase 5 historical record.
 - Four pages wired: `/` (dispersion), `/basis`, `/providers`, `/methodology`. Methodology page fully rewritten with real method description and caveats.
 - **React downgraded from 19 → 18** to match Tremor's peer constraint (ADR-worthy note — Next.js 15 supports both).
 - `npm run build` passes cleanly; `npm run dev` + backend round-trip verified (all pages and proxied API routes return 200).
@@ -126,8 +130,10 @@ Status: `COMPLETE`
 
 ---
 
-## Phase 7 — Deploy (deferred)
+## Phase 7 — Deploy
 
-Status: `DEFERRED`
+Status: `SHIPPED / LIVE` (public deploy ~2026-05-12)
 
-Deployment targets considered: Vercel (frontend), Railway or Fly.io (backend + Postgres). No decision recorded; see future ADR when the time comes.
+Production is live: **https://gpu-basis.xyz** (Vercel frontend) and **https://api.gpu-basis.xyz** (EC2 + Caddy backend). The pipeline runs on AWS EC2 (`us-east-1`) under systemd timers; Phases 0–6 of [basis-deployment-roadmap.md](basis-deployment-roadmap.md) shipped 2026-04-27 and the public surfaces went live ~2026-05-12.
+
+**Caveat — Phase 7.4 (`basis-api.service`) not shipped.** FastAPI still runs under manual `nohup` rather than as a systemd service, so a `git pull` on EC2 requires a manual uvicorn restart. See [project-status.md](project-status.md#known-operational-debt) and [basis-deployment-roadmap.md](basis-deployment-roadmap.md) Phase 7.4.

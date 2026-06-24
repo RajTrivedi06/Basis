@@ -2,7 +2,7 @@
 
 ## What this file is for
 
-Dense context for an AI agent working on Phase 3 (analytics). Layer is planned but not yet implemented.
+Dense context for an AI agent working on the analytics layer. The layer has shipped — modules, orchestrator, and entry point all exist in `backend/`.
 
 ## When to use this
 
@@ -20,17 +20,17 @@ Consume canonical offers, produce:
 
 Writes to `daily_aggregates` and `basis_decomposition` tables (schema in `docs/02-reference/database.md`).
 
-## Key file locations (planned)
+## Key file locations
 
 ```
 backend/basis/analytics/
-├── dispersion.py       Median, percentiles, IQR, CoV
-├── decomposition.py    Variance attribution (ANOVA-style)
-├── aggregate.py        Daily materialization job
+├── dispersion.py       compute_dispersion — median, percentiles, IQR, CoV
+├── basis.py            compute_decompositions — sequential ANOVA variance attribution
+├── aggregates.py       run_analytics — orchestrates both, materializes rows
 └── __init__.py
 ```
 
-Likely entry point: `backend/run_analytics.py` (mirror of `run_normalize.py` style).
+Entry point: `backend/run_analytics.py` (mirror of `run_normalize.py` style, supports `--reset`).
 
 ## Input contract
 
@@ -68,17 +68,15 @@ Sum of the components ≤ `total_variance`; `residual_variance` absorbs the rema
 - **Don't over-normalize.** Price adjustments for bundles should be conservative — e.g., subtract `per_vcpu_hr * vcpus_bundled` only when we have a credible per-unit price.
 - **Reproducibility.** Daily aggregates must be regenerable from `canonical_offers`. Add a `--reset` flag.
 
-## Variance decomposition approach (suggested)
+## Variance decomposition approach (decided)
 
-Standard sequential ANOVA on log-prices:
+Sequential ANOVA on log-prices, in a fixed factor order (region → commitment → provider → bundle → residual):
 
 ```
 log(price) ~ region + commitment + provider + bundle_score + residual
 ```
 
-Each term explains a share of the total sum of squares. `residual` is the basis risk.
-
-Alternative: fit a linear model per SKU and report R² contributions. Use `statsmodels` or numpy; no ML models.
+Each term explains a share of the total sum of squares; `residual` is the basis risk. Implemented in `backend/basis/analytics/basis.py` (`compute_decompositions`, ~line 60). See [`docs/methodology.md`](../../methodology.md) for the full treatment and rationale.
 
 ## Invariants (inherited)
 
@@ -92,9 +90,10 @@ Alternative: fit a linear model per SKU and report R² contributions. Use `stats
 - Percentiles can be computed directly in SQL via `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price_usd_per_hour)`.
 - No need for a separate OLAP layer.
 
-## Not yet decided
+## Open questions
 
-- Exact variance attribution method (sequential vs. Shapley-style).
+Settled: the variance attribution method is sequential ANOVA on log-prices (see above). Still open:
+
 - Whether to compute `normalized_price_usd_per_hour` at normalization time or analytics time.
 - Whether to bucket regions by continent for the decomposition (to avoid over-fragmented groups).
 

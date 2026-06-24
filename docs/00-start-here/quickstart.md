@@ -54,10 +54,13 @@ uv run python run_collect.py runpod
 # 7. Normalize raw observations into canonical offers
 uv run python run_normalize.py
 
-# 8. Start the backend (in its own terminal)
+# 8. Build analytics (daily aggregates + variance decomposition)
+uv run python run_analytics.py
+
+# 9. Start the backend (in its own terminal)
 uv run uvicorn basis.api.main:app --reload
 
-# 9. Start the frontend (in another terminal, from repo root)
+# 10. Start the frontend (in another terminal, from repo root)
 cd frontend
 npm install
 npm run dev
@@ -93,9 +96,11 @@ ORDER BY provider, commitment_type;"
 
 ---
 
-## Cron schedule (optional)
+## Scheduled collection
 
-Twice-daily collection is already configured in `backend/collect_cron.sh`. To install:
+In **production**, twice-daily collection runs on the EC2 instance via a systemd timer (`basis-collect.timer`, 08:00 / 20:00 UTC, `Persistent=true`) that invokes `backend/collect_cron.sh` (collect → normalize → analytics). See [../guides/operations-runbook.md](../guides/operations-runbook.md) and [../guides/deployment.md](../guides/deployment.md).
+
+For **local dev** this is optional — run the pipeline manually when you want fresh data. If you do want a local schedule, a laptop crontab works (but only fires while the machine is awake):
 
 ```bash
 crontab -e

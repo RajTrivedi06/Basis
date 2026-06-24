@@ -2,7 +2,7 @@
 title: Documentation Index
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-04-28
+last_updated: 2026-06-23
 ---
 
 # Basis Documentation Index
@@ -40,7 +40,7 @@ Central navigation hub. Every other doc links back here.
 
 ### Production & Operations
 
-Production runs on AWS EC2 (us-east-1) with systemd-driven twice-daily collection, daily `pg_dump` backup to S3, and an hourly freshness probe. Phases 0–6 of the deployment roadmap shipped 2026-04-27; Phases 7–9 (public deploy, reboot test, shutdown) are remaining.
+Production runs on AWS EC2 (us-east-1) with systemd-driven twice-daily collection, daily `pg_dump` backup to S3, and an hourly freshness probe. Phases 0–6 of the deployment roadmap shipped 2026-04-27; the **Phase 7 public deploy is live** (gpu-basis.xyz + api.gpu-basis.xyz, ~2026-05-12; Phase 7.4 `basis-api.service` still runs under manual `nohup`). Phases 8–9 (reboot test, shutdown) remain.
 
 - [basis-deployment-roadmap.md](basis-deployment-roadmap.md) — deploy-day playbook (instance, IAM, S3, systemd units, healthchecks).
 - [project-status.md](project-status.md) — current production state and data counts.
@@ -58,6 +58,8 @@ Production runs on AWS EC2 (us-east-1) with systemd-driven twice-daily collectio
 - [adr/0001-template.md](01-architecture/adr/0001-template.md) — ADR template.
 - [adr/0002-conservative-normalization.md](01-architecture/adr/0002-conservative-normalization.md) — why normalization is rule-based.
 - [adr/0003-skip-lambda-labs.md](01-architecture/adr/0003-skip-lambda-labs.md) — why Lambda Labs is dropped.
+- [adr/0004-normalization-attribution.md](01-architecture/adr/0004-normalization-attribution.md) — parallel `explain_*` functions for normalization attribution.
+- [adr/0005-residual-first-ui.md](01-architecture/adr/0005-residual-first-ui.md) — residual-first UI redesign (drop Tremor, hand-rolled SVG charts).
 
 ### Reference (numbered — `02-reference/`)
 
@@ -65,7 +67,7 @@ Schemas, APIs, env config, data sources. Updated when the underlying contract ch
 
 - [data-sources.md](02-reference/data-sources.md) — every provider: endpoint, auth, cadence, quirks.
 - [database.md](02-reference/database.md) — tables, columns, indexes.
-- [api.md](02-reference/api.md) — REST endpoints (currently stubs; wired in Phase 4).
+- [api.md](02-reference/api.md) — REST endpoints (11 live endpoints across 8 route modules).
 - [config-and-env.md](02-reference/config-and-env.md) — env vars, where `.env` lives, defaults.
 - [observability.md](02-reference/observability.md) — logs, cron output, where to look when things break.
 
@@ -91,7 +93,7 @@ Operational and lifecycle guides.
 - [dev-setup.md](guides/dev-setup.md) — thorough first-time developer setup.
 - [operations-runbook.md](guides/operations-runbook.md) — daily ops, health checks, incident response.
 - [testing.md](guides/testing.md) — current coverage and what to add.
-- [deployment.md](guides/deployment.md) — deferred; stub describing the intended approach.
+- [deployment.md](guides/deployment.md) — current live deployment (EC2 + Vercel); points to the runbook and deploy roadmap for specifics.
 
 ### Decisions (`decisions/`)
 
@@ -104,7 +106,7 @@ Optimized for AI agents (copy-paste into context or follow the routing table).
 - [DOC_MAP.md](05-llm/DOC_MAP.md) — task-to-doc routing table.
 - [context-packs/collectors-pack.md](05-llm/context-packs/collectors-pack.md) — collector layer.
 - [context-packs/normalization-pack.md](05-llm/context-packs/normalization-pack.md) — normalization layer.
-- [context-packs/analytics-pack.md](05-llm/context-packs/analytics-pack.md) — analytics layer (Phase 3 planning).
+- [context-packs/analytics-pack.md](05-llm/context-packs/analytics-pack.md) — analytics layer.
 
 ---
 

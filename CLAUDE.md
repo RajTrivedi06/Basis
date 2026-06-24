@@ -54,4 +54,4 @@ Guidance for how Claude Code should work in the Basis repository. This complemen
 - Don't bypass `BaseCollector`.
 - Don't add user accounts, auth, or multi-tenancy.
 - Don't add ML-based normalization.
-- Don't add top-level directories beyond `backend/`, `frontend/`, `docs/`, `specs/` (if created), `temp-doc/` (if created), plus root config files.
+- Don't add top-level directories beyond `backend/`, `frontend/`, `docs/`, `design/`, `specs/` (if created), `temp-doc/` (if created), plus root config files.

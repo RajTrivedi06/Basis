@@ -100,24 +100,29 @@ cd backend
 uv run alembic upgrade head
 ```
 
-### Port 5432 already in use
+### Port 5433 already in use
 
-**Cause:** A local Postgres is running outside Docker.
+**Cause:** Something else is bound to `127.0.0.1:5433` (Compose publishes `127.0.0.1:5433:5432`).
 
-**Fix:** Either stop the local Postgres or change the published port in `docker-compose.yml` (and update `DATABASE_URL` in `.env`).
+**Fix:** Either stop whatever holds the port or change the published port in `docker-compose.yml` (and update `DATABASE_URL` in `.env`).
 
 ---
 
-## Cron
+## Scheduled collection
 
-### Cron is set but no log entries appear
+In production, collection runs on EC2 via the `basis-collect.timer` systemd timer (08:00 / 20:00 UTC), which invokes `collect_cron.sh` (collect → normalize → analytics). The cases below assume that environment; the manual-run guidance also applies to local dev.
 
-**Cause:** macOS cron skips firings while the laptop is asleep.
+### A scheduled run didn't happen
+
+**Cause:** Timer inactive, or the run errored (Docker down, bad `.env`, upstream API).
 
 **Fix:**
-- Check `crontab -l` to confirm the schedule.
-- Run manually: `backend/collect_cron.sh`
-- Consider `caffeinate -d` or macOS Power Scheduler to wake the laptop at collection times, if this becomes a chronic problem.
+```bash
+# On EC2 (ssh basis-prod):
+systemctl list-timers basis-collect.timer        # confirm it is active + next firing
+journalctl -u basis-collect.service -n 100       # read the last run's output / error
+```
+If inactive: `systemctl enable --now basis-collect.timer`. If it errored, fix the cause and run the pipeline manually to catch up (`run_collect.py && run_normalize.py && run_analytics.py`). `Persistent=true` reruns firings missed while the instance was off, but not ones that ran and failed.
 
 ### `collect_cron.sh: command not found`
 
@@ -125,15 +130,15 @@ uv run alembic upgrade head
 
 **Fix:**
 ```bash
-chmod +x /Users/raaj/Documents/CS/Basis/backend/collect_cron.sh
-ls -la /Users/raaj/Documents/CS/Basis/backend/collect_cron.sh
+chmod +x ~/Basis/backend/collect_cron.sh
+ls -la ~/Basis/backend/collect_cron.sh
 ```
 
 ### Script runs but no DB writes
 
-**Cause:** `.env` not loading in the cron environment (which has a minimal shell).
+**Cause:** `.env` not loading, or Docker (Postgres) not running for the service.
 
-**Fix:** The script sources the environment explicitly. If Docker isn't running under cron, collection fails silently. Make sure Docker Desktop has "Start on login" enabled.
+**Fix:** Confirm Postgres is up (`docker ps`) and `.env` is valid. On EC2, AWS credentials come from the instance IAM role, so the AWS key vars stay blank; everything else (`DATABASE_URL`, `POSTGRES_PASSWORD`) must be set.
 
 ---
 

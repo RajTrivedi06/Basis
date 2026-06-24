@@ -85,7 +85,7 @@ price_usd_per_hour:              1.50
 normalized_price_usd_per_hour:   NULL   (populated later by analytics)
 ```
 
-**6. Analytics (Phase 3, planned)** will read all canonical offers for `h100_sxm_80gb` on a given day and compute:
+**6. Analytics** reads all canonical offers for `h100_sxm_80gb` on a given day and computes:
 - Dispersion → `daily_aggregates`
 - Variance decomposition → `basis_decomposition`
 

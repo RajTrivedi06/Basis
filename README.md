@@ -35,8 +35,8 @@ Provider APIs/Pages → collectors → raw_observations (immutable JSONB)
 - **Collectors** (one per provider, inherit `BaseCollector`) write raw observations twice daily.
 - **Normalization** maps provider-specific strings to canonical SKUs / commitments / regions via explicit lookup tables — rule-based, conservative, no ML.
 - **Analytics** runs sequential ANOVA on log-prices and writes dispersion + decomposition into materialized tables.
-- **FastAPI** serves six read endpoints (`/api/offers`, `/api/dispersion/{sku}`, `/api/basis/{sku}`, `/api/providers`, `/api/gpu-skus`, `/health`).
-- **Next.js** renders the dashboard with Tremor charts and a landing page that opens with the finding.
+- **FastAPI** serves 11 read endpoints across 8 route modules: `/health`, `/api/offers`, `/api/dispersion/{sku}`, `/api/basis/{sku}` + `/api/basis/{sku}/timeseries`, `/api/providers`, `/api/gpu-skus`, `/api/fungibility-matrix`, and 3 provenance endpoints (`/api/provenance/decomposition/{sku}/observations`, `/api/provenance/raw-observation/{id}`, `/api/provenance/raw-observation/{id}/explain`).
+- **Next.js** renders the dashboard with hand-rolled SVG charts (no Tremor) and a landing page that opens with the finding.
 
 Full architecture: **[docs/01-architecture/system-overview.md](docs/01-architecture/system-overview.md)**.
 
@@ -48,8 +48,8 @@ Full architecture: **[docs/01-architecture/system-overview.md](docs/01-architect
 | 1 — Data collection (4 providers) | ✅ |
 | 2 — Normalization (9,979 canonical offers, 97 SKUs) | ✅ |
 | 3 — Analytics (465 aggregates, 179 decompositions) | ✅ |
-| 4 — API (6 endpoints live) | ✅ |
-| 5 — Frontend (4 pages, 3 Tremor charts) | ✅ |
+| 4 — API (11 endpoints live) | ✅ |
+| 5 — Frontend (5 pages, hand-rolled SVG charts) | ✅ |
 | 6 — Writeup & polish | ✅ |
 | 7 — Deploy | 🟢 Public (Vercel + Caddy + DNS); Phase 7.4 `basis-api.service` not shipped — [manual `nohup` uvicorn](docs/guides/dev-setup.md#known-operational-debt) |
 
@@ -141,7 +141,7 @@ Basis/
 │   └── collect_cron.sh       cron wrapper (collect → normalize → analytics)
 ├── frontend/           Next.js 15 dashboard
 │   ├── app/                  routes: /, /dispersion, /basis, /providers, /methodology
-│   ├── components/           SkuPicker, DispersionChart, BasisDecompositionChart, ProviderComparisonChart
+│   ├── components/           SkuPicker, BasisDecompositionChart, FungibilityMatrix, charts/ (hand-rolled SVG, e.g. DecompBar)
 │   └── lib/                  typed API client + types
 ├── docs/               documentation (see INDEX.md)
 └── docker-compose.yml  Postgres 16

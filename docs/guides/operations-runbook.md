@@ -2,7 +2,7 @@
 title: Operations Runbook
 tags: [area:guides, audience:ops, status:active]
 owner: Raj
-last_updated: 2026-04-20
+last_updated: 2026-06-23
 ---
 
 # Operations Runbook
@@ -46,11 +46,11 @@ Expected volumes per 12-hour run: Vast ≈ 2,800, AWS Spot ≈ 300, RunPod ≈ 1
 
 ### Manual collection catch-up
 
-If cron missed a run (laptop asleep):
+In production, collection runs automatically via the EC2 systemd timer (see [Cron](#cron) below). To run the full chain by hand — locally, or on EC2 to backfill after a missed/failed timer:
 
 ```bash
 cd backend
-uv run python run_collect.py && uv run python run_normalize.py
+uv run python run_collect.py && uv run python run_normalize.py && uv run python run_analytics.py
 ```
 
 ### Re-normalize after mapping-table change
@@ -60,11 +60,11 @@ cd backend
 uv run python run_normalize.py --reset
 ```
 
-### Regenerate analytics (Phase 3, when implemented)
+### Regenerate analytics
 
 ```bash
 cd backend
-uv run python run_analytics.py --reset   # planned
+uv run python run_analytics.py --reset
 ```
 
 ### Rotate log
@@ -76,27 +76,26 @@ touch backend/logs/collect.log
 
 ---
 
-## Cron
+## Cron (EC2 systemd timer)
+
+Production collection runs on the EC2 instance via a systemd timer, **not** laptop cron:
 
 ```bash
-crontab -l       # list
-crontab -e       # edit
+# On EC2 (ssh basis-prod):
+systemctl status basis-collect.timer       # is it active / when next?
+systemctl list-timers basis-collect.timer  # last / next firing
+journalctl -u basis-collect.service -n 100 # recent run output
 ```
 
-Current schedule:
+`basis-collect.timer` fires at **08:00 and 20:00 UTC** with `Persistent=true`, so a firing missed while the instance was down (e.g. a reboot) is run on next boot — no silent gaps the way macOS cron had. The service runs `backend/collect_cron.sh` (collect → normalize → analytics) and pings healthchecks.io via `HC_PING_URL` on success.
 
-```
-0 8,20 * * * /Users/raaj/Documents/CS/Basis/backend/collect_cron.sh
-```
+**Dependencies for the timer to succeed:**
 
-**Hard dependencies for cron to actually run:**
+1. Docker (Postgres) running on the instance.
+2. `.env` valid. On EC2, AWS credentials come from the instance IAM role, so the AWS key vars are left blank.
+3. `uv` on PATH for the service user.
 
-1. Laptop is awake at 08:00 / 20:00.
-2. Docker Desktop is running.
-3. `.env` file is valid (especially AWS credentials).
-4. `uv` is on PATH for the user that owns the crontab.
-
-macOS silently skips cron firings while the laptop is asleep. There is no automatic backfill — missed runs leave permanent gaps in the time series.
+Local dev can still trigger a manual run instead — see [Manual collection catch-up](#manual-collection-catch-up).
 
 ---
 
@@ -146,22 +145,22 @@ du -sh backend/logs/
 
 Mitigation: rotate the log; consider pruning raw observations older than N months (not yet needed).
 
-### Cron hasn't run in days
+### Collection hasn't run recently
 
-Likely the laptop was asleep. Confirm:
+On EC2, check the timer and the service journal first:
 
 ```bash
-stat -f "%Sm" backend/logs/collect.log       # last modified
-grep "Starting collection" backend/logs/collect.log | tail -5   # last start lines
+systemctl list-timers basis-collect.timer       # last / next firing
+journalctl -u basis-collect.service -n 100       # recent run output, including errors
 ```
 
-Run manually to catch up. Consider installing `caffeinate` or a wake schedule if chronic.
+If the timer is inactive, `systemctl enable --now basis-collect.timer`. If a run failed (bad `.env`, Docker down, upstream API), fix the cause and trigger a manual run to catch up (`run_collect.py && run_normalize.py && run_analytics.py`). `Persistent=true` covers firings missed while the instance was off, but not ones that ran and errored.
 
 ---
 
 ## Deployment
 
-Not deployed. Local-only until Phase 7. See [../roadmap.md#phase-7--deploy-deferred](../roadmap.md).
+Production is live: FastAPI on AWS EC2 (behind Caddy, app under `nohup uvicorn`) plus the Vercel frontend, with collection driven by the EC2 systemd timer above. See [deployment.md](deployment.md) for the topology and [dev-setup.md](dev-setup.md#run-against-production-data-polish-loop) for the operate-against-prod workflow.
 
 ---
 
