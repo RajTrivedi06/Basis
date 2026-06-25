@@ -2,18 +2,18 @@
 title: Methodology
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-05-15
+last_updated: 2026-06-24
 ---
 
 # Methodology
 
 How quoted GPU prices become a residual-variance number, and what choices are frozen in the analytics layer. The narrative interpretation lives in [findings.md](findings.md); this file is the reference for *how* the numbers are computed.
 
-**Temporal note.** Numbers cited below reflect the 18-day window 2026-04-26 → 2026-05-13, the first 18 days of post-cutover EC2 collection. Investigation report: [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).
+**Temporal note.** Numbers cited below reflect the 60-day window 2026-04-26 → 2026-06-24 of post-cutover EC2 collection, refreshed 2026-06-24. The dashboard updates continuously, so live medians may differ by a few tenths of a pp. Investigation report: [`analysis/2026-06-24-findings-refresh.md`](analysis/2026-06-24-findings-refresh.md). The prior 18-day analysis is archived at [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).
 
 ## Summary
 
-With 90,054 canonical offers across 4 providers and 93 SKUs, H100 SXM 80GB log-price variance over 18 days is **~59% unexplained** when all four providers are included and **~89% unexplained** when Vast.ai is excluded. Both numbers come from the same `compute_decompositions` function, applied to the same date range, with the only difference being whether Vast rows are filtered out. See [Provider-mix dependence](#provider-mix-dependence-and-the-vastai-robustness-check) below.
+With 295,047 canonical offers across 4 providers and 96 SKUs, H100 SXM 80GB log-price variance over 60 days is **~60% unexplained** when all four providers are included and **~82% unexplained** when Vast.ai is excluded. Both numbers come from the same `compute_decompositions` function, applied to the same date range, with the only difference being whether Vast rows are filtered out. See [Provider-mix dependence](#provider-mix-dependence-and-the-vastai-robustness-check) below.
 
 ## Frozen method choices
 
@@ -31,7 +31,7 @@ Total log-price variance is partitioned sequentially. Each factor's attribution 
 
 **Order-dependence is a known property.** A different order (e.g., provider first) would redistribute attributions but leaves the residual unchanged. Reporting a second (Type III, marginal) order is a nice-to-have tracked in [TASKS/README.md](TASKS/README.md).
 
-**On-demand recomputation for provider-filtered views.** Standard outputs are read from the precomputed `basis_decomposition` table populated nightly. For provider-filtered analyses — currently exposed as the `exclude_providers` query parameter on `GET /api/basis/{gpu_sku}/timeseries` — the same `compute_decompositions` function is called live against `canonical_offers` minus the excluded providers. The two paths share code; the only difference is what rows enter the DataFrame.
+**On-demand recomputation for provider-filtered views.** Standard outputs are read from the precomputed `basis_decomposition` table, refreshed **twice daily** after each collection run (`collect_cron.sh`: collect → normalize → analytics at 08:00 and 20:00 UTC). For provider-filtered analyses — currently exposed as the `exclude_providers` query parameter on `GET /api/basis/{gpu_sku}/timeseries` — the same `compute_decompositions` function is called live against `canonical_offers` minus the excluded providers. The two paths share code; the only difference is what rows enter the DataFrame.
 
 ### Handling missing data
 
@@ -49,49 +49,49 @@ Per [ADR-0002](01-architecture/adr/0002-conservative-normalization.md), no conti
 
 ## Provider-mix dependence and the Vast.ai robustness check
 
-The headline residual is sample-mix-conditional. Vast.ai supplies ~80% of all canonical offers, so the same `compute_decompositions` over the same 18 days produces materially different residuals depending on whether Vast rows are included.
+The headline residual is sample-mix-conditional. Vast.ai supplies ~79% of all canonical offers, so the same `compute_decompositions` over the same 60 days produces materially different residuals depending on whether Vast rows are included.
 
-### Provider composition (18-day window)
+### Provider composition (60-day window)
 
 | Provider | Canonical offers | Share |
 |---|---:|---:|
-| Vast.ai | 71,770 | 79.7% |
-| AWS Spot | 10,465 | 11.6% |
-| RunPod | 6,661 | 7.4% |
-| TensorDock | 1,158 | 1.3% |
-| **Total** | **90,054** | **100%** |
+| Vast.ai | 234,100 | 79.3% |
+| AWS Spot | 35,282 | 12.0% |
+| RunPod | 23,181 | 7.9% |
+| TensorDock | 2,484 | 0.8% |
+| **Total** | **295,047** | **100%** |
 
 ### Headline shift
 
 | Series | n_days | Median % residual | Mean | Std |
 |---|---:|---:|---:|---:|
-| Full (Vast included) | 18 | **59.2** | 59.4 | 7.4 |
-| Vast excluded | 18 | **88.6** | 86.8 | 5.1 |
+| Full (Vast included) | 60 | **60.5** | 60.0 | 12.2 |
+| Vast excluded | 60 | **81.9** | 83.2 | 4.9 |
 
-**Median shift: +29.4 percentage points.** On 17 of 18 days, removing Vast pushes the H100 SXM 80GB residual share up by 20–44 pp. The single exception is 2026-05-08, where the two series match within 0.1 pp — that day is discussed at length in [findings.md](findings.md) §"The 2026-05-08 day".
+**Median shift: +21.4 percentage points.** On the 55 days where Vast offers were present, removing them pushes the H100 SXM 80GB residual share up by +5 to +48 pp (median +23). Five days coincide: four (2026-06-16, 06-17, 06-23, 06-24) are recent runs where Vast carried no H100-SXM offers, and one (2026-05-08) is the day Vast was present but its prices overlapped the rest of the market — discussed in [findings.md](findings.md) §"The outlier days".
 
 ### Methodological position
 
 The residual is intentionally **not** Vast-corrected. Reweighting or excluding Vast in the headline would silently solve the project's central question by definition — "what would the residual look like under a less marketplace-dominated population" is itself the basis-risk finding, not a noise term to suppress. The dual reporting — headline series with Vast, robustness section with Vast excluded — is how the methodology stays honest about a sample-mix dependence that exists in the underlying market, not just in the dataset.
 
-The 12% of variance that observable factors *can* touch in the no-Vast series is almost entirely commitment-type effects (on-demand vs spot vs reserved); region contributes trace amounts, bundle and provider near zero. In the full series, those same factors pick up an additional ~30 pp of explanatory power, which is what Vast's internal heterogeneity (different verified-tier hosts, geographic spread, bundled-resource diversity) gives the model to attribute against. The headline residual is the variance the model cannot explain on top of that.
+The ~18% of variance that observable factors *can* touch in the no-Vast series is almost entirely commitment-type effects (on-demand vs spot vs reserved); region contributes trace amounts, bundle and provider near zero. In the full series, those same factors pick up an additional ~21 pp of explanatory power, which is what Vast's internal heterogeneity (different verified-tier hosts, geographic spread, bundled-resource diversity) gives the model to attribute against. The headline residual is the variance the model cannot explain on top of that.
 
-## H100 SXM 80GB summary stats (18 days)
+## H100 SXM 80GB summary stats (60 days)
 
 | Sample | n_days | Median | IQR | Mean | Min | Max |
 |---|---:|---:|---:|---:|---:|---:|
-| Full (Vast included) | 18 | 59.2% | 57 – 63 | 59.4 | 45.4 | 81.3 |
-| Vast excluded | 18 | 88.6% | (see report) | 86.8 | — | — |
+| Full (Vast included) | 60 | 60.5% | 53 – 66 | 60.0 | 30.9 | 90.2 |
+| Vast excluded | 60 | 81.9% | 80 – 87 | 83.2 | 75.3 | 93.0 |
 
 Cross-SKU comparison over the same window:
 
 | SKU | n_days | Median residual | IQR |
 |---|---:|---:|---:|
-| A100 SXM 80GB | 18 | 24% | 21 – 29 |
-| H100 SXM 80GB | 18 | 59% | 57 – 63 |
-| RTX 4090 24GB | 18 | 86% | 84 – 88 |
+| A100 SXM 80GB | 60 | 29% | 23 – 34 |
+| H100 SXM 80GB | 60 | 60% | 53 – 66 |
+| RTX 4090 24GB | 60 | 80% | 74 – 85 |
 
-Full per-day tables and the 2026-05-08 deep dive: [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).
+Full per-day tables and the outlier-day deep dive: [`analysis/2026-06-24-findings-refresh.md`](analysis/2026-06-24-findings-refresh.md).
 
 ## Related
 

@@ -43,12 +43,12 @@ const LIMITATIONS: { num: string; title: string; body: string }[] = [
 
 export default function MethodologyPage() {
   return (
-    <div className="page-wide fade-up">
+    <div className="fade-up">
       <MethodologyHero />
 
       <div
         id="meth-article"
-        className="relative grid grid-cols-1 gap-12 pt-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16 xl:gap-24"
+        className="page-wide relative grid grid-cols-1 gap-12 pt-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16 xl:gap-24"
       >
         <div className="hidden lg:block">
           <MethodologyChrome items={TOC} />

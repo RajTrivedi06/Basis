@@ -2,7 +2,7 @@
 
 **Measuring basis risk in quoted GPU prices.**
 
-> For H100 SXM 80GB across 18 days of EC2-era collection, the residual share of log-price variance is **~59%** when including all four providers (Vast.ai, RunPod, AWS EC2 Spot, TensorDock), but **~89%** when excluding Vast.ai — which accounts for 80% of canonical offers. The headline depends on which segment of the market you measure, and that conditionality is itself the finding.
+> For H100 SXM 80GB across 60 days of EC2-era collection, the residual share of log-price variance is **~60%** when including all four providers (Vast.ai, RunPod, AWS EC2 Spot, TensorDock), but **~82%** when excluding Vast.ai — which accounts for ~79% of canonical offers. The headline depends on which segment of the market you measure, and that conditionality is itself the finding.
 
 Both numbers are *basis risk* benchmark designs have to live with. Read the full writeup: **[docs/findings.md](docs/findings.md)** or the rendered version at `/` once the frontend is running.
 

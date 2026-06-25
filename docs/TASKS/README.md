@@ -2,12 +2,12 @@
 title: Tasks & Status
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-06-24
 ---
 
 # Tasks & Status
 
-Granular snapshot of current work for Basis. Last refreshed: **2026-06-23**.
+Granular snapshot of current work for Basis. Last refreshed: **2026-06-24**.
 
 Complements [roadmap.md](../roadmap.md) (high-level phases) and [project-brief.md](../project-brief.md) (what the project is). This file is the most-updated doc — treat it like a living to-do list.
 
@@ -145,6 +145,10 @@ UI polish: local Next.js (`npm run dev`) + SSH tunnel to EC2 FastAPI against pro
 
 ## Pending / next up
 
+### Frontend / UI
+
+- [ ] **Mobile-responsive layout.** The dashboard is chart- and plot-heavy (hand-rolled SVG: `FactorStripPlot`, `ResidualTimeSeriesChart`, `DecompBar`, fungibility matrix, provenance drawer). Audit and adapt all pages for phone-sized viewports — readable typography, touch-friendly controls, charts that reflow or scroll without clipping, and navigation that works on narrow screens. Goal: a seamless small-screen experience, not just "doesn't break." See ADR 0005 (SVG over Tremor) and [`temp-doc/basis-frontend-reference.md`](../../temp-doc/basis-frontend-reference.md) for component inventory.
+
 ### Operational (post-deployment)
 
 - [ ] **Phase 8 — reboot test on EC2** (overdue — now actionable). Hard reboot, verify `basis-postgres.service` brings Postgres up healthcheck-gated and all timers come back active. `Type=oneshot` units showing `Active: inactive (dead)` after success is the pass signal.
@@ -167,7 +171,7 @@ Tear-down checklist when the project is wound down (~3 months out). See [basis-d
 
 ### Ongoing (post-Phase-6)
 
-- [ ] **Let data accumulate / re-anchor the writeup (now actionable).** The 18-day findings refresh shipped (above); residual estimates continue to tighten as the window grows. The ≥60-day window is essentially reached (data from 2026-04-26 → today ≈ 58 days), so re-anchoring the writeup to the longer window is now actionable rather than future.
+- [x] **Re-anchor the writeup to the 60-day window** — done 2026-06-24. findings.md / methodology.md / project-status.md recomputed against live EC2 data (H100 ~60% / ~82%; +21.4 pp shift). Report: [analysis/2026-06-24-findings-refresh.md](../analysis/2026-06-24-findings-refresh.md). Residual estimates continue to tighten; refresh again as the window grows.
 - [ ] **Monitor for `skipped_unknown_gpu`** — any new GPU name from a provider requires a `canonicalize.py` addition.
 - [ ] **Optional: screenshot reel / portfolio post.** Manual step (Raj's call) — not code.
 
@@ -220,6 +224,8 @@ Mismatches between code and stated intent. Flagged, not yet resolved. Full write
 
 Append a one-liner each time this file is updated.
 
+- 2026-06-24 — Added **mobile-responsive layout** to Pending (Frontend / UI): chart-heavy pages need phone-sized audit and polish.
+- 2026-06-24 — **Findings re-anchored to the 60-day window** (2026-04-26 → 2026-06-24) against live EC2 data. H100 SXM 80GB 59%/89% → ~60%/~82% (medians 60.5/81.9; +21.4 pp shift). Corpus 90k → 295,047 offers / 96 SKUs. New report [analysis/2026-06-24-findings-refresh.md](../analysis/2026-06-24-findings-refresh.md); findings.md, methodology.md, project-status.md, README lede updated. Flagged Vast H100-SXM dropouts on 4 recent runs (6/16, 6/17, 6/23, 6/24) as a collection-reliability watch item.
 - 2026-06-23 — Full repo doc-freshness & discrepancy audit (29 files reconciled with `main`). Six stale themes fixed across the docs (v2 UI landed on main; 11 endpoints not 6; analytics shipped; prod live on EC2+Vercel; EC2 systemd not laptop cron; time-expired claims). Added: v2 **Phase D** (rolling stability, unblocked/not built) to Pending; **Known code-level discrepancies** section (Lambda still in `COLLECTORS`, scheduler stub, red `test_basis_timeseries`); `ui-port-v2` flagged stale/superseded (main is ahead). Noted v2 Phases A/B grew the API to **11 endpoints across 8 modules**. Phase 8 reboot test + ≥60-day re-anchor now **overdue/actionable** (window ≈ 58 days). Full write-up: [`temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md`](../../temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md). Companion edits in [project-status.md](../project-status.md), [roadmap.md](../roadmap.md), [project-brief.md](../project-brief.md), [INDEX.md](../INDEX.md).
 - 2026-05-16 — Polish-loop developer docs landed on `docs/polish-loop-cleanup`. README Quickstart now leads with the three-terminal polish-loop workflow; `docs/00-start-here/dev-commands.md` and `docs/guides/dev-setup.md` document the SSH-tunnel + `nohup` uvicorn procedure and the mandatory post-`git pull` restart. Phase 7 status and Operational debt sections (Phase 7.4 `basis-api.service` unshipped) added to this file and to [project-status.md](../project-status.md).
 - 2026-05-15 — Findings refresh shipped on `feat/segment-conditional-finding`. Segment-conditional framing (~59% / ~89%) replaces the v1 single-residual headline. Vast.ai dominance (80% of canonical offers) promoted from implicit to explicit caveat. Cross-SKU comparison numbers refreshed against the 18-day EC2 window. Backend: new `exclude_providers` param on `/api/basis/{sku}/timeseries`. Frontend: dual-number hero with count-up motion. Docs: [findings.md](../findings.md), [methodology.md](../methodology.md), [project-status.md](../project-status.md), and the lede in root [README.md](../../README.md) all reflect the refresh. Source: [`docs/analysis/2026-05-13-findings-refresh-analysis.md`](../analysis/2026-05-13-findings-refresh-analysis.md).

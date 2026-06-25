@@ -1,3 +1,10 @@
+---
+title: API Reference
+tags: [area:reference, audience:developers, status:active]
+owner: Raj
+last_updated: 2026-06-24
+---
+
 # API Reference
 
 ## What this file is for
@@ -14,7 +21,11 @@ REST endpoints exposed by the FastAPI backend. Source of truth for any client (f
 
 ## Status
 
-**11 endpoints live.** The original 6 shipped 2026-04-20; `/api/fungibility-matrix` shipped 2026-04-21 as part of Basis v2 Phase A; three provenance drilldown endpoints shipped 2026-04-21 as part of Basis v2 Phase B; `/api/basis/{gpu_sku}/timeseries` shipped later for the segment-conditional landing hero. All return real data from `canonical_offers`, `daily_aggregates`, `basis_decomposition`, and `raw_observations`.
+**11 endpoints implemented** in the FastAPI backend. The original 6 shipped 2026-04-20; `/api/fungibility-matrix` shipped 2026-04-21 as part of Basis v2 Phase A; three provenance drilldown endpoints shipped 2026-04-21 as part of Basis v2 Phase B; `/api/basis/{gpu_sku}/timeseries` shipped later for the segment-conditional landing hero. All return real data from `canonical_offers`, `daily_aggregates`, `basis_decomposition`, and `raw_observations`.
+
+**Public deploy is not complete.** The domain `gpu-basis.xyz` is registered, but the app is not yet live at a public API URL. Use local dev (below) until deploy ships.
+
+**Example responses** in this doc use illustrative snapshots from early dev data (~2026-04-20). Counts, medians, and variance figures will differ in a current database — treat the JSON shapes as the contract, not the numbers.
 
 ---
 
@@ -23,6 +34,7 @@ REST endpoints exposed by the FastAPI backend. Source of truth for any client (f
 - Local dev: `http://localhost:8000`
 - OpenAPI UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
+- Planned production: `https://api.gpu-basis.xyz` (not yet deployed)
 
 ## Auth
 
@@ -30,7 +42,7 @@ REST endpoints exposed by the FastAPI backend. Source of truth for any client (f
 
 ## CORS
 
-Open to `http://localhost:3000` in dev. Configured in `basis/api/main.py`.
+Allowed origins come from the `CORS_ORIGINS` env var (comma-separated). Default: `http://localhost:3000`. Production will add the Vercel frontend origin(s) when deployed. Wired in `basis/api/main.py` via `settings.cors_origins`. Only `GET` methods are allowed.
 
 ---
 
@@ -187,7 +199,7 @@ Variance decompositions for a SKU across a date window. Powers the segment-condi
 | `exclude_providers` | string | Comma-separated provider names to exclude (e.g. `vast` or `vast,tensordock`). When set, the response is recomputed on demand from `canonical_offers` with those providers removed, instead of reading the precomputed `basis_decomposition` table. |
 
 **Behavior:**
-- Default path reads precomputed rows from `basis_decomposition` (fast, Vast-inclusive), ordered by date ascending.
+- Default path reads precomputed rows from `basis_decomposition` (fast, Vast-inclusive), ordered by date ascending. That table is refreshed **twice daily** after each collection run (`collect_cron.sh`: collect → normalize → analytics at 08:00 and 20:00 UTC).
 - With `exclude_providers`: recomputes the decomposition on demand from `canonical_offers` with those providers filtered out.
 - **404** if no decompositions exist for the SKU in the window (or after excluding the given providers).
 

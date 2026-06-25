@@ -43,11 +43,12 @@ export function MethodologyHero() {
   };
 
   return (
-    <header className="relative overflow-hidden pb-12 pt-16 sm:pt-20">
+    <div className="meth-hero-shell">
       <div className="meth-grid-bg" style={gridStyle} aria-hidden />
       <div className="meth-glow" style={glowStyle} aria-hidden />
 
-      <div className="relative z-10">
+      <header className="meth-hero">
+        <div className="meth-hero__content">
         <div
           className="eyebrow basis-fade"
           style={{ "--basis-delay": "60ms" } as CSSProperties}
@@ -103,7 +104,8 @@ export function MethodologyHero() {
           <span>Scroll to read</span>
           <span className="scroll-cue__line" />
         </div>
-      </div>
-    </header>
+        </div>
+      </header>
+    </div>
   );
 }

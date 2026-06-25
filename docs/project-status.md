@@ -2,7 +2,7 @@
 title: Project Status (TL;DR)
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-06-24
 ---
 
 # Project Status (TL;DR)
@@ -46,16 +46,17 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 | D | Rolling stability view | 🔲 Data threshold reached as of ~2026-05-17; ready to start (pending execution) |
 | UI port | Residual-first redesign (ADR 0005) | 🟢 Effectively landed on `main` (Tremor removed, v2 fonts/tokens/hand-rolled SVG charts live); the standalone `ui-port-v2` branch remains unmerged |
 
-## Data at a glance (FROZEN 2026-05-13 snapshot, 18-day window)
+## Data at a glance (2026-06-24, 60-day window)
 
-> **Caveat:** the counts below are a frozen 2026-05-13 snapshot. The live cron has continued collecting since, so current volumes are larger — see the [live dashboard](https://gpu-basis.xyz) and [findings.md](findings.md) for current numbers.
+> Refreshed 2026-06-24 against live EC2 data (window 2026-04-26 → 2026-06-24). The dashboard updates continuously, so live medians may differ by a few tenths of a pp.
 
-- **4 collectors live:** Vast.ai, RunPod, AWS Spot, TensorDock. (Lambda Labs dropped — ADR 0003.) All four hit on every run since the vast.ai retry fix.
-- **Raw observations on EC2:** 90,161 across the 4 providers since the 2026-04-26 cutover (18 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
-- **Canonical offers:** 90,054 (1:1 normalization, minimal skips). Provider mix: Vast.ai 71,770 (79.7%) · AWS Spot 10,465 (11.6%) · RunPod 6,661 (7.4%) · TensorDock 1,158 (1.3%).
-- **Canonical SKUs:** 93.
+- **4 collectors live:** Vast.ai, RunPod, AWS Spot, TensorDock. (Lambda Labs dropped — ADR 0003.)
+- **Raw observations on EC2:** 297,242 across the 4 providers since the 2026-04-26 cutover (60 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
+- **Canonical offers:** 295,047 (1:1 normalization, minimal skips). Provider mix: Vast.ai 234,100 (79.3%) · AWS Spot 35,282 (12.0%) · RunPod 23,181 (7.9%) · TensorDock 2,484 (0.8%).
+- **Canonical SKUs:** 96.
 - **Schedule:** systemd timers on EC2 — collect at `08:00 + 20:00` UTC, backup at `03:00` UTC, hourly freshness probe. The Mac cron (`backend/collect_cron.sh`) is stopped.
-- **H100 SXM 80GB residual variance:** **~59% (Vast included) / ~89% (Vast excluded)** of log-price variance is unexplained over the 18-day window — the headline Basis finding, segment-conditional. See [findings.md](findings.md) and the [2026-05-13 investigation report](analysis/2026-05-13-findings-refresh-analysis.md).
+- **H100 SXM 80GB residual variance:** **~60% (Vast included) / ~82% (Vast excluded)** of log-price variance is unexplained over the 60-day window (medians 60.5% / 81.9%, a +21.4 pp segment-conditional shift). See [findings.md](findings.md) and the [2026-06-24 refresh report](analysis/2026-06-24-findings-refresh.md).
+- **Data-quality watch:** Vast H100-SXM offers were absent on four recent collection runs (2026-06-16, 06-17, 06-23, 06-24), which inflates single-day residual on those days; the 60-day medians are robust to it. Worth checking the Vast collector / the overdue Phase 8 health pass.
 
 ## Phase status table
 
@@ -72,13 +73,14 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 
 ## Ongoing / post-Phase-6
 
-1. **Keep cron running.** Residual estimates continue to tighten as the window grows. [findings.md](findings.md) is now anchored to the 18-day window (2026-04-26 → 2026-05-13); the dashboard refreshes live and may differ by a few tenths of a pp.
+1. **Keep cron running.** Residual estimates continue to tighten as the window grows. [findings.md](findings.md) is anchored to the 60-day window (2026-04-26 → 2026-06-24); the dashboard refreshes live and may differ by a few tenths of a pp.
 2. **Watch `skipped_unknown_gpu`** in `run_normalize.py` output — a new GPU name from any provider will require adding to `canonicalize.py`.
 3. **Phase 7 (deploy)** — public frontend and API URLs are live. **Phase 7.4** (`basis-api.service`) remains open operational debt; see [guides/dev-setup.md](guides/dev-setup.md#known-operational-debt) and [basis-deployment-roadmap.md](basis-deployment-roadmap.md) Phase 7.4.
-4. **Add curated providers** (Lambda Labs revisit, CoreWeave, Crusoe) to reduce Vast.ai's 80% share of canonical offers and sharpen the segment-dependence picture.
+4. **Add curated providers** (Lambda Labs revisit, CoreWeave, Crusoe) to reduce Vast.ai's ~79% share of canonical offers and sharpen the segment-dependence picture.
 
 ## Update log
 
+- 2026-06-24 — **Findings refresh to the 60-day window** (2026-04-26 → 2026-06-24), recomputed against live EC2 data. H100 SXM 80GB headline moves **59% / 89% → ~60% / ~82%** (medians 60.5 / 81.9; +21.4 pp segment shift, narrower than the 18-day +29). Corpus 90k → **295,047 offers / 96 SKUs**. "Data at a glance" refreshed from the frozen snapshot to current numbers. Surfaced a data-quality watch item: **Vast H100-SXM offers absent on 4 recent runs** (6/16, 6/17, 6/23, 6/24). [findings.md](findings.md), [methodology.md](methodology.md), and new report [analysis/2026-06-24-findings-refresh.md](analysis/2026-06-24-findings-refresh.md) updated.
 - 2026-06-23 — Doc-freshness reconciliation across planning docs. Corrected API surface to **11 endpoints across 8 route modules** (was "6 endpoints"). Reframed the UI v2 redesign as **effectively landed on `main`** (Tremor removed, v2 fonts/tokens/hand-rolled SVG charts live; `ui-port-v2` branch still unmerged) — no longer "Stage 1 / not merged / pages render v1." Relabeled the "Data at a glance" block as a **frozen 2026-05-13 snapshot** with a caveat that live cron volumes are larger. Phase D reworded from blocked to "data threshold reached ~2026-05-17; ready to start." Companion edits in [TASKS/README.md](TASKS/README.md), [roadmap.md](roadmap.md), [project-brief.md](project-brief.md), [INDEX.md](INDEX.md).
 - 2026-05-16 — Polish-loop developer docs landed on `docs/polish-loop-cleanup`. README Quickstart now leads with the three-terminal SSH-tunnel + `nohup` uvicorn workflow; new [`docs/00-start-here/dev-commands.md`](00-start-here/dev-commands.md) and [`docs/guides/dev-setup.md`](guides/dev-setup.md) document the polish loop and the mandatory post-`git pull` uvicorn restart. This file and [TASKS/README.md](TASKS/README.md) updated to Phase-7-public-live wording with an Operational debt section (Phase 7.4 `basis-api.service` unshipped).
 - 2026-05-15 — Findings refresh shipped on `feat/segment-conditional-finding`. Segment-conditional framing (~59% / ~89%) replaces the v1 single-residual headline. Vast.ai dominance (80% of canonical offers) promoted from implicit to explicit caveat in both [findings.md](findings.md) and [methodology.md](methodology.md). Cross-SKU numbers (A100 24%, RTX 4090 86%) refreshed against the 18-day window. New `exclude_providers` query param on `GET /api/basis/{sku}/timeseries` powers a dual-number hero on the landing page. Investigation report: [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).

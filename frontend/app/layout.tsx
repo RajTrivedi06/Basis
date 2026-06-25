@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
-import Link from "next/link";
 import { AppProviders } from "@/components/providers";
-import { Nav } from "@/components/layout/Nav";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -45,33 +44,10 @@ export default function RootLayout({
       className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <body className="min-h-screen bg-[var(--bg)] text-[var(--ink)] antialiased">
-        <a href="#main" className="skip-link">Skip to main content</a>
-        <header
-          className="sticky top-0 z-50 border-b border-[var(--line)]"
-          style={{
-            background: "rgba(17,24,39,0.82)",
-            backdropFilter: "saturate(1.2) blur(12px)",
-            WebkitBackdropFilter: "saturate(1.2) blur(12px)",
-          }}
-        >
-          <div className="mx-auto flex max-w-[1480px] items-center gap-7 px-10">
-            <Link
-              href="/"
-              className="flex items-baseline gap-2.5 py-4"
-            >
-              <span
-                className="font-serif text-[19px] tracking-[-0.01em] text-[var(--ink-hi)]"
-              >
-                Basis
-              </span>
-              <span className="mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-dim)]">
-                research
-              </span>
-            </Link>
-            <Nav />
-            <div className="flex-1" />
-          </div>
-        </header>
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
+        <SiteHeader />
         <AppProviders>
           <main id="main">{children}</main>
         </AppProviders>
