@@ -1,5 +1,7 @@
 # Findings refresh — analysis (2026-05-13)
 
+> **Superseded.** This is the original 18-day investigation. Current numbers live in the [2026-07-11 refresh](2026-07-11-findings-refresh.md) (77-day window); the intermediate [2026-06-24 refresh](2026-06-24-findings-refresh.md) covers the 60-day window. Retained as the historical 18-day record.
+
 Investigation backing the upcoming refresh of `docs/findings.md` and `docs/methodology.md`. Source: production EC2 Postgres, 18 days of post-cutover data (2026-04-26 → 2026-05-13). Analytics tables only — `basis_decomposition`, `canonical_offers`, `raw_observations`. The Vast-exclusion robustness check (§2) recomputes via the production `compute_decompositions` function on a filtered DataFrame; everything else reads precomputed rows.
 
 One-off script committed at `backend/scripts/decompose_without_vast.py`.

@@ -31,8 +31,14 @@ import pandas as pd
 from basis.analytics.basis import compute_decompositions
 
 GPU_SKU = "h100_sxm_80gb"
-SINCE = date(2026, 4, 26)
-UNTIL = date(2026, 5, 13)
+# Window is env-driven so each refresh reruns without editing the file.
+# SINCE stays pinned to the EC2 cutover (2026-04-26); UNTIL defaults to today.
+SINCE = date.fromisoformat(os.environ.get("SINCE", "2026-04-26"))
+UNTIL = (
+    date.fromisoformat(os.environ["UNTIL"])
+    if os.environ.get("UNTIL")
+    else date.today()
+)
 
 
 async def fetch_offers() -> pd.DataFrame:
@@ -88,8 +94,8 @@ def main() -> None:
     full_pct = pct_residual(full)
     nv_pct = pct_residual(no_vast)
 
-    print(f"\n  date       full   no_vast   delta   n_full  n_no_vast")
-    print(f"  ---------- -----  -------  ------   ------  ---------")
+    print("\n  date       full   no_vast   delta   n_full  n_no_vast")
+    print("  ---------- -----  -------  ------   ------  ---------")
     all_dates = sorted(set(full_pct) | set(nv_pct))
     for d in all_dates:
         f = full_pct.get(d)
