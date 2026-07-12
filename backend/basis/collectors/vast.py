@@ -1,7 +1,11 @@
 """Vast.ai GPU marketplace collector.
 
 Data source: Public API at https://console.vast.ai/api/v0/bundles/
-Auth: None required (API key gives higher rate limits but is optional)
+Auth: A free API key is now effectively required. As of 2026-06-23 Vast caps
+    *unauthenticated* responses at 64 offers and silently ignores the `limit`
+    parameter; because results are ordered cheapest-first, that drops the entire
+    premium tier (H100, etc.) from collection. Set VAST_API_KEY to lift the cap.
+    See docs/analysis/2026-07-11-findings-refresh.md.
 Format: JSON with {"offers": [...]} containing ~95 fields per offer
 
 Key fields used:
@@ -24,6 +28,7 @@ from typing import Any
 import httpx
 
 from basis.collectors.base import BaseCollector
+from basis.config import settings
 from basis.schemas.raw import RawObservationCreate
 
 logger = logging.getLogger(__name__)
@@ -32,6 +37,18 @@ VAST_API_URL = "https://console.vast.ai/api/v0/bundles/"
 
 _RETRYABLE_STATUS_CODES: frozenset[int] = frozenset({429, 500, 502, 503, 504})
 _DEFAULT_BACKOFFS: tuple[float, ...] = (1.0, 2.0, 4.0)
+
+
+def _auth_headers() -> dict[str, str]:
+    """Bearer-auth header for the Vast.ai API when a key is configured.
+
+    Vast caps *unauthenticated* /bundles/ responses at 64 cheapest-first offers
+    (the `limit` param is ignored), which excludes the premium tier from
+    collection. A free API key lifts the cap. Returns an empty dict when no key
+    is set, preserving the prior keyless behaviour.
+    """
+    key = settings.vast_api_key
+    return {"Authorization": f"Bearer {key}"} if key else {}
 
 
 async def _request_with_retry(
@@ -133,7 +150,16 @@ class VastCollector(BaseCollector):
             ),
         ]
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        headers = _auth_headers()
+        if not headers:
+            logger.warning(
+                "Vast.ai API key not configured (VAST_API_KEY) — unauthenticated "
+                "requests are capped at 64 cheapest-first offers and will miss the "
+                "premium tier (e.g. H100). See "
+                "docs/analysis/2026-07-11-findings-refresh.md."
+            )
+
+        async with httpx.AsyncClient(timeout=60.0, headers=headers) as client:
             for label, q in queries:
                 try:
                     offers = await self._fetch_query(client, q)

@@ -1,11 +1,13 @@
 ---
 title: Findings refresh — 60-day window (2026-06-24)
-tags: [area:analysis, audience:all, status:active]
+tags: [area:analysis, audience:all, status:superseded]
 owner: Raj
 last_updated: 2026-06-24
 ---
 
 # Findings refresh — 60-day window (2026-06-24)
+
+> **Superseded by the [2026-07-11 refresh](2026-07-11-findings-refresh.md)** (77-day window). Retained as the historical 60-day record; numbers below are frozen as of 2026-06-24.
 
 Re-anchors [findings.md](../findings.md) and [methodology.md](../methodology.md) from the original 18-day window (2026-04-26 → 2026-05-13) to the full **60-day** window **2026-04-26 → 2026-06-24**, recomputed against live EC2 production data. Supersedes the [2026-05-13 refresh](2026-05-13-findings-refresh-analysis.md); method unchanged (sequential ANOVA on log-prices, `region → commitment → provider → bundle → residual`).
 
