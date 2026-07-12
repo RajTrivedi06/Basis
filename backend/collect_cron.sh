@@ -21,3 +21,20 @@ echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] basis-collect done"
 if [ -n "${HC_PING_URL:-}" ]; then
     curl -fsS -m 10 --retry 5 -o /dev/null "$HC_PING_URL" || true
 fi
+
+# Per-provider volume anomaly check. Non-fatal: collection already succeeded;
+# this only decides whether to raise a *separate* alert. `if` guards it from
+# `set -e`. On anomaly (exit 1) ping the /fail endpoint so healthchecks.io
+# alerts within one cycle; otherwise ping success.
+if "$UV" run python scripts/check_collection_volume.py; then
+    VOLUME_STATUS="success"
+else
+    VOLUME_STATUS="fail"
+fi
+if [ -n "${HC_VOLUME_PING_URL:-}" ]; then
+    if [ "$VOLUME_STATUS" = "success" ]; then
+        curl -fsS -m 10 --retry 5 -o /dev/null "$HC_VOLUME_PING_URL" || true
+    else
+        curl -fsS -m 10 --retry 5 -o /dev/null "$HC_VOLUME_PING_URL/fail" || true
+    fi
+fi
