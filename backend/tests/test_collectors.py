@@ -218,6 +218,67 @@ async def test_vast_collect_returns_partial_when_bid_endpoint_fails() -> None:
     assert observations[0].commitment_type_reported == "on_demand"
 
 
+async def test_vast_collect_sends_bearer_auth_when_key_configured(monkeypatch) -> None:
+    """With VAST_API_KEY set, every Vast request must carry a Bearer header.
+
+    Vast began capping *unauthenticated* /bundles/ responses at 64 cheapest-first
+    offers on 2026-06-23 (dropping the premium H100 tier from collection);
+    authenticating lifts the cap. This guards the header wiring in _fetch_offers.
+    """
+    import unittest.mock
+
+    from basis.collectors import vast as vast_module
+
+    monkeypatch.setattr(vast_module.settings, "vast_api_key", "test-key-123")
+
+    seen_auth: list[str | None] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_auth.append(request.headers.get("Authorization"))
+        return httpx.Response(200, json={"offers": []})
+
+    transport = httpx.MockTransport(handler)
+    real_client_cls = vast_module.httpx.AsyncClient
+
+    def make_client(*args: object, **kwargs: object) -> httpx.AsyncClient:
+        # Preserve the default headers (auth) while binding the mock transport.
+        return real_client_cls(transport=transport, headers=kwargs.get("headers"))
+
+    with unittest.mock.patch.object(vast_module.httpx, "AsyncClient", make_client):
+        await VastCollector().collect()
+
+    assert seen_auth, "expected at least one Vast request to be issued"
+    assert all(h == "Bearer test-key-123" for h in seen_auth), seen_auth
+
+
+async def test_vast_collect_omits_auth_header_when_no_key(monkeypatch) -> None:
+    """With no key configured, requests carry no Authorization header (the prior
+    keyless behaviour is preserved; the collector still runs, just capped)."""
+    import unittest.mock
+
+    from basis.collectors import vast as vast_module
+
+    monkeypatch.setattr(vast_module.settings, "vast_api_key", "")
+
+    seen_auth: list[str | None] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_auth.append(request.headers.get("Authorization"))
+        return httpx.Response(200, json={"offers": []})
+
+    transport = httpx.MockTransport(handler)
+    real_client_cls = vast_module.httpx.AsyncClient
+
+    def make_client(*args: object, **kwargs: object) -> httpx.AsyncClient:
+        return real_client_cls(transport=transport, headers=kwargs.get("headers"))
+
+    with unittest.mock.patch.object(vast_module.httpx, "AsyncClient", make_client):
+        await VastCollector().collect()
+
+    assert seen_auth, "expected at least one Vast request to be issued"
+    assert all(h is None for h in seen_auth), seen_auth
+
+
 def test_aws_spot_per_gpu_price_conversion() -> None:
     """AWS instance prices are divided by GPU count per _INSTANCE_MAP.
 
