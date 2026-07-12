@@ -9,7 +9,7 @@ Four tables matching the schema in Basis_Project_Proposal.md section 5.3:
 
 import datetime
 
-from sqlalchemy import DateTime, Float, Index, Integer, String, Text, ForeignKey
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -75,6 +75,10 @@ class CanonicalOffer(Base):
 
     __table_args__ = (
         Index("ix_canonical_collected_gpu_provider", "collected_at", "gpu_sku_canonical", "provider"),
+        # Backs the normalization anti-join (find raw rows without a canonical
+        # offer). A FK does not auto-create an index in Postgres; without this
+        # the NOT EXISTS / NOT IN check full-scans canonical_offers.
+        Index("ix_canonical_raw_obs_id", "raw_observation_id"),
     )
 
 
