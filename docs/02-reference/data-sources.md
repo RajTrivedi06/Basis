@@ -20,10 +20,10 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 
 | Provider | Type | Auth | Cadence | Obs/run (approx.) |
 |----------|------|------|---------|---------|
-| Vast.ai | Marketplace (REST) | None / optional API key | Twice daily | ~2,800 |
+| Vast.ai | Marketplace (REST) | **Free API key required** (keyless capped at 64 offers since 2026-06-23) | Twice daily | ~2,800 |
 | RunPod | Neocloud (GraphQL) | Optional API key | Twice daily | ~190 |
 | AWS EC2 Spot | Hyperscaler (boto3) | IAM access key + `ec2:DescribeSpotPriceHistory` | Twice daily | ~300 |
-| TensorDock | Neocloud marketplace (REST) | None | Twice daily | ~35 |
+| TensorDock | Neocloud marketplace (REST) | Public feed drained — **parked 2026-07-13** | — | — |
 | Lambda Labs | Neocloud (REST) | Requires payment method — **dropped** | — | — |
 
 ---
@@ -78,6 +78,21 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 ---
 
 ## TensorDock
+
+> **Status: parked (2026-07-13).** The public `/api/v2/locations` feed now returns
+> `{"data":{"locations":[]}}` — an empty inventory — and live data appears to have
+> moved behind an API key at `/api/v2/hostnodes` (returns `401 Unauthorized`
+> unauthenticated). Same "gate the marketplace behind a key" move as Vast, but here
+> the endpoint *and* response shape change, so restoring it is a collector rewrite,
+> not a header. TensorDock was ~0.8% of canonical offers (2,484, frozen since ~mid-June)
+> and rarely cleared the per-(date, SKU) minimum-observation threshold, so it had
+> negligible weight in the residual decomposition — dropping it does not move any
+> finding. The collector is left in place (it harmlessly returns 0 offers); if the
+> public feed ever refills, collection auto-resumes. It is excluded from the
+> per-provider volume alert (`check_collection_volume.py`) so it does not false-alarm.
+> To restore: register a (free, if available) key, confirm inventory + shape at
+> `/api/v2/hostnodes`, rewrite the collector to authenticate, and re-add `tensordock`
+> to `EXPECTED_PROVIDERS`.
 
 - **Type:** Neocloud marketplace (hosts set their own prices)
 - **Endpoint:** `https://dashboard.tensordock.com/api/v2/locations`
