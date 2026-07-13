@@ -35,7 +35,10 @@ logger = logging.getLogger("check_collection_volume")
 
 # Providers we expect to be collecting. A provider absent from this set is
 # ignored; one listed here but missing from recent data is surfaced.
-EXPECTED_PROVIDERS: tuple[str, ...] = ("vast", "runpod", "aws_spot", "tensordock")
+# TensorDock is intentionally excluded: its public /locations feed drained to
+# empty and inventory moved behind an API key (parked 2026-07-13, ~0.8% of
+# offers — see docs/02-reference/data-sources.md). Re-add it here if restored.
+EXPECTED_PROVIDERS: tuple[str, ...] = ("vast", "runpod", "aws_spot")
 
 LOOKBACK_DAYS = 21          # window for the rolling baseline
 MIN_FRACTION = 0.30         # latest < 30% of baseline median => collapse

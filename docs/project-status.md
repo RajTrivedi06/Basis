@@ -50,20 +50,20 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 
 > Refreshed 2026-07-11 against live EC2 data (window 2026-04-26 → 2026-07-11). The dashboard updates continuously, so live medians may differ by a few tenths of a pp.
 
-- **4 collectors live:** Vast.ai, RunPod, AWS Spot, TensorDock. (Lambda Labs dropped — ADR 0003.)
+- **3 active collectors:** Vast.ai, RunPod, AWS Spot. (Lambda Labs dropped — ADR 0003; **TensorDock parked 2026-07-13** — public feed drained, inventory moved behind an API key; see [data-sources.md](02-reference/data-sources.md#tensordock).)
 - **Raw observations on EC2:** 318,372 across the 4 providers since the 2026-04-26 cutover (77 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
 - **Canonical offers:** 315,743 (1:1 normalization, minimal skips). Provider mix: Vast.ai 237,746 (75.3%) · AWS Spot 45,448 (14.4%) · RunPod 30,065 (9.5%) · TensorDock 2,484 (0.8%).
 - **Canonical SKUs:** 96.
 - **Schedule:** systemd timers on EC2 — collect at `08:00 + 20:00` UTC, backup at `03:00` UTC, hourly freshness probe. The Mac cron (`backend/collect_cron.sh`) is stopped.
 - **H100 SXM 80GB residual variance:** **~60% (Vast included) / ~82% (Vast excluded)** of log-price variance is unexplained over the 77-day window (medians 60.3% / 81.9%, a +21.6 pp segment-conditional shift — essentially unchanged from the 60-day refresh). See [findings.md](findings.md) and the [2026-07-11 refresh report](analysis/2026-07-11-findings-refresh.md).
-- **🚨 Data-quality — Vast collection collapse (surfaces as H100-SXM outage):** Vast has returned **zero H100-SXM offers for 21 days** (isolated misses 2026-06-16/06-17, then a sustained 19-day outage 2026-06-23 → 07-11). All ten of the window's top residual days sit inside it — the recent ~90% dashboard reading is a collection artifact, not a market signal. **Root-caused 2026-07-11: Vast's *entire* daily collection collapsed ~97% (from ~6,400 to ~220 offers/day) on 06-23**, not an H100-specific or canonicalizer issue (raw rows stop after 06-22 with no rename). A live probe (`backend/scripts/probe_vast_api.py`) confirmed it: **Vast now hard-caps unauthenticated requests at 64 offers** (our `limit` is silently ignored), returning only the cheapest band, so the expensive H100 tier is structurally excluded. Reproduces off-EC2 → global keyless cap, not an IP throttle. **Fix: authenticate with a free Vast API key** (`Authorization: Bearer`; the collector currently sends none). Diagnosis + fix path in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md). **Escalated from a watch item to an operational priority.** (TensorDock also added no new offers this window — a secondary collection item.)
+- **🚨 Data-quality — Vast collection collapse (surfaces as H100-SXM outage):** Vast has returned **zero H100-SXM offers for 21 days** (isolated misses 2026-06-16/06-17, then a sustained 19-day outage 2026-06-23 → 07-11). All ten of the window's top residual days sit inside it — the recent ~90% dashboard reading is a collection artifact, not a market signal. **Root-caused 2026-07-11: Vast's *entire* daily collection collapsed ~97% (from ~6,400 to ~220 offers/day) on 06-23**, not an H100-specific or canonicalizer issue (raw rows stop after 06-22 with no rename). A live probe (`backend/scripts/probe_vast_api.py`) confirmed it: **Vast now hard-caps unauthenticated requests at 64 offers** (our `limit` is silently ignored), returning only the cheapest band, so the expensive H100 tier is structurally excluded. Reproduces off-EC2 → global keyless cap, not an IP throttle. **Fix: authenticate with a free Vast API key** (`Authorization: Bearer`; the collector currently sends none). Diagnosis + fix path in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md). **Escalated from a watch item to an operational priority.** (TensorDock's public feed also drained to empty and moved behind an API key — **parked 2026-07-13**, ~0.8% of offers, no analytical impact; see [data-sources.md](02-reference/data-sources.md#tensordock).)
 
 ## Phase status table
 
 | # | Phase | Status |
 |---|-------|--------|
 | 0 | Scaffold | ✅ Complete |
-| 1 | Data Collection | ✅ Complete (4/5 providers) |
+| 1 | Data Collection | ✅ Complete (3 active of 5 evaluated — Lambda dropped, TensorDock parked) |
 | 2 | Normalization | ✅ Complete |
 | 3 | Analytics | ✅ Complete |
 | 4 | API Endpoints | ✅ Complete (11 endpoints across 8 route modules; v2 Phases A/B grew this from the original 6) |
