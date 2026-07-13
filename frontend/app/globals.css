@@ -501,9 +501,9 @@ button {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px 6px 6px;
+  padding: 4px 8px 4px 4px;
   border-radius: 12px;
+  color: var(--ink-hi);
   transition: background-color 140ms ease;
 }
 
@@ -516,45 +516,84 @@ button {
   outline-offset: 2px;
 }
 
-.site-header-island__mark {
-  display: grid;
-  place-items: center;
+/* Basis wordmark lockup (mark + divider + basis / residual research) */
+.basis-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1;
+}
+
+.basis-logo__mark {
+  display: block;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: var(--ink-hi);
+}
+
+.basis-logo__divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 26px;
+  background: var(--ink-hi);
+  opacity: 0.18;
+}
+
+.basis-logo__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.basis-logo__word {
+  font-family: var(--f-mono);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink-hi);
+}
+
+.basis-logo__cap {
+  font-family: var(--f-sans);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-hi);
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+.basis-logo--footer {
+  gap: 10px;
+}
+
+.basis-logo--footer .basis-logo__mark {
+  width: 22px;
+  height: 22px;
+}
+
+.basis-logo--footer .basis-logo__divider {
+  height: 22px;
+}
+
+.basis-logo--footer .basis-logo__word {
+  font-size: 13px;
+}
+
+.basis-logo--footer .basis-logo__cap {
+  font-size: 7px;
+}
+
+.basis-logo--header .basis-logo__cap {
+  display: none;
+}
+
+.basis-logo--mark .basis-logo__mark {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
-  border: 1px solid var(--line-hi);
-  background: linear-gradient(
-    160deg,
-    rgba(245, 158, 11, 0.14) 0%,
-    rgba(15, 23, 39, 0.4) 100%
-  );
-  font-family: var(--f-serif);
-  font-size: 15px;
-  font-style: italic;
-  color: var(--ink-hi);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.site-header-island__wordmark {
-  display: grid;
-  gap: 1px;
-}
-
-.site-header-island__name {
-  font-family: var(--f-serif);
-  font-size: 16px;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: var(--ink-hi);
-}
-
-.site-header-island__tag {
-  font-family: var(--f-mono);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  white-space: nowrap;
 }
 
 .site-header-island__divider {
@@ -877,7 +916,7 @@ button {
 }
 
 @media (min-width: 1024px) {
-  .site-header-island__tag {
+  .basis-logo--header .basis-logo__cap {
     display: block;
   }
 
@@ -902,13 +941,16 @@ button {
 }
 
 @media (max-width: 1023px) {
-  .site-header-island__divider,
-  .site-header-island__tag {
+  .site-header-island__divider {
     display: none;
   }
 
-  .site-header-island__wordmark {
-    gap: 0;
+  .basis-logo--header .basis-logo__divider {
+    display: none;
+  }
+
+  .basis-logo--header {
+    gap: 8px;
   }
 }
 

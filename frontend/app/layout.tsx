@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers";
+import { BasisLogo } from "@/components/layout/BasisLogo";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
 
@@ -61,8 +62,8 @@ function Footer() {
   return (
     <footer className="mx-auto mt-20 max-w-[1480px] border-t border-[var(--line-lo)] px-10 py-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-baseline gap-3">
-          <span className="font-serif text-sm text-[var(--ink)]">Basis</span>
+        <div className="flex flex-wrap items-center gap-4">
+          <BasisLogo variant="footer" />
           <span className="caption mono">
             research artifact · public data · 2026
           </span>
