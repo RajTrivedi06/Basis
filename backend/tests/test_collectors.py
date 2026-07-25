@@ -218,6 +218,70 @@ async def test_vast_collect_returns_partial_when_bid_endpoint_fails() -> None:
     assert observations[0].commitment_type_reported == "on_demand"
 
 
+async def test_vast_bid_offers_labeled_spot_and_not_cross_deduped() -> None:
+    """Commitment type comes from the query, not the payload's `is_bid`.
+
+    The Vast /bundles/ API returns `is_bid: false` on every offer of BOTH
+    the on-demand and bid queries (verified live 2026-07-25; all 315,685
+    pre-fix rows carried is_bid=false). A machine listed by both queries has
+    two different prices — its fixed on-demand price and its current
+    interruptible bid price — so cross-query dedup must NOT collapse them.
+    See docs/analysis/2026-07-24-vast-bid-bug.md.
+    """
+    dual_od = {
+        "id": 1,
+        "gpu_name": "H100_SXM5",
+        "num_gpus": 1,
+        "dph_total": 3.25,
+        "geolocation": "US",
+        "is_bid": False,  # what the API really sends, even for bid offers
+    }
+    dual_bid = {**dual_od, "dph_total": 2.75}
+    bid_only = {
+        "id": 2,
+        "gpu_name": "RTX 4090",
+        "num_gpus": 1,
+        "dph_total": 0.30,
+        "geolocation": "PL",
+        "is_bid": False,
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        q = request.url.params.get("q", "")
+        if '"type":"on-demand"' in q:
+            return httpx.Response(200, json={"offers": [dual_od]})
+        return httpx.Response(200, json={"offers": [dual_bid, bid_only]})
+
+    transport = httpx.MockTransport(handler)
+
+    import unittest.mock
+
+    from basis.collectors import vast as vast_module
+
+    real_client_cls = vast_module.httpx.AsyncClient
+
+    def make_client(*args: object, **kwargs: object) -> httpx.AsyncClient:
+        return real_client_cls(transport=transport)
+
+    with unittest.mock.patch.object(vast_module.httpx, "AsyncClient", make_client):
+        observations = await VastCollector().collect()
+
+    assert len(observations) == 3, (
+        "Dual-listed machine must yield BOTH its on-demand and bid observations"
+    )
+    by_key = {
+        (obs.provider_metadata["offer_id"], obs.commitment_type_reported): obs
+        for obs in observations
+    }
+    assert by_key[(1, "on_demand")].price_hourly == 3.25
+    assert by_key[(1, "spot")].price_hourly == 2.75
+    assert by_key[(2, "spot")].price_hourly == 0.30
+    assert by_key[(1, "on_demand")].provider_metadata["query_type"] == "on-demand"
+    assert by_key[(1, "spot")].provider_metadata["query_type"] == "bid"
+    # The payload is stored untouched — is_bid stays false even on spot rows.
+    assert all(obs.raw_payload["is_bid"] is False for obs in observations)
+
+
 async def test_vast_collect_sends_bearer_auth_when_key_configured(monkeypatch) -> None:
     """With VAST_API_KEY set, every Vast request must carry a Bearer header.
 

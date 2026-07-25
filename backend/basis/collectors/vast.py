@@ -12,11 +12,18 @@ Key fields used:
 - gpu_name: GPU model (e.g., "RTX 4090", "H100 NVL")
 - dph_total: total price per hour in USD (GPU + storage + bandwidth)
 - geolocation: location string (e.g., "Washington, US")
-- is_bid: false = on-demand, true = interruptible/spot
 - verification: "verified", "unverified", or "deverified"
 - reliability: 0-1 reliability score
 - num_gpus: number of GPUs in the offer
 - cpu_cores_effective, cpu_ram, disk_space: bundled resources
+
+Commitment type comes from WHICH query returned the offer (type=on-demand vs
+type=bid), NOT from the payload's `is_bid` field: /bundles/ responses carry
+`is_bid: false` on every offer of BOTH queries (verified live 2026-07-25 and
+across all 315,685 pre-fix stored rows). A machine listed by both queries
+yields TWO observations with different prices — its fixed on-demand price and
+its current interruptible (bid) price. These are distinct commitment products,
+not duplicates. See docs/analysis/2026-07-24-vast-bid-bug.md.
 
 See docs/data_sources.md for full documentation.
 """
@@ -115,9 +122,9 @@ class VastCollector(BaseCollector):
         offers = await self._fetch_offers()
         observations: list[RawObservationCreate] = []
 
-        for offer in offers:
+        for offer, commitment_type in offers:
             try:
-                obs = self._parse_offer(offer, now)
+                obs = self._parse_offer(offer, now, commitment_type)
                 if obs is not None:
                     observations.append(obs)
             except Exception:
@@ -125,27 +132,35 @@ class VastCollector(BaseCollector):
 
         return observations
 
-    async def _fetch_offers(self) -> list[dict]:
-        """Call the Vast.ai API and return the list of offer dicts.
+    async def _fetch_offers(self) -> list[tuple[dict, str]]:
+        """Call the Vast.ai API and return (offer, commitment_type) pairs.
 
         Fetches both on-demand and spot (bid) offers separately, since
         the API's type filter only accepts one at a time.
         The default API limit is 64, so we set a high limit to get everything.
 
+        The commitment type of each offer is the query that returned it —
+        the payload's `is_bid` field is always false and cannot be used
+        (see module docstring). Offers are deduplicated WITHIN a query only:
+        a machine listed by both queries is two distinct price observations
+        (fixed on-demand price vs current interruptible bid price), so no
+        cross-query dedup is applied.
+
         If one query fails after retries (e.g. persistent 429), the other
         query's offers are still returned. Both failing yields an empty list,
         matching the prior all-or-nothing behavior at that boundary.
         """
-        all_offers: list[dict] = []
-        seen_ids: set[int] = set()
+        all_offers: list[tuple[dict, str]] = []
 
-        queries: list[tuple[str, str]] = [
+        queries: list[tuple[str, str, str]] = [
             (
                 "on-demand",
+                "on_demand",
                 '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"on-demand","limit":10000}',
             ),
             (
                 "bid",
+                "spot",
                 '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"bid","limit":10000}',
             ),
         ]
@@ -160,7 +175,7 @@ class VastCollector(BaseCollector):
             )
 
         async with httpx.AsyncClient(timeout=60.0, headers=headers) as client:
-            for label, q in queries:
+            for label, commitment_type, q in queries:
                 try:
                     offers = await self._fetch_query(client, q)
                 except (httpx.HTTPError, httpx.TransportError) as exc:
@@ -170,13 +185,14 @@ class VastCollector(BaseCollector):
                         exc,
                     )
                     continue
+                seen_ids: set[int] = set()
                 for offer in offers:
                     oid = offer.get("id")
                     if oid not in seen_ids:
                         seen_ids.add(oid)
-                        all_offers.append(offer)
+                        all_offers.append((offer, commitment_type))
                 logger.info(
-                    "Vast.ai %s query returned %d offers (total unique: %d)",
+                    "Vast.ai %s query returned %d offers (running total: %d)",
                     label,
                     len(offers),
                     len(all_offers),
@@ -197,8 +213,16 @@ class VastCollector(BaseCollector):
         return offers
 
     @staticmethod
-    def _parse_offer(offer: dict, collected_at) -> RawObservationCreate | None:
+    def _parse_offer(
+        offer: dict, collected_at, commitment_type: str = "on_demand"
+    ) -> RawObservationCreate | None:
         """Convert a single Vast.ai offer dict into a RawObservationCreate.
+
+        ``commitment_type`` is supplied by the caller from the query that
+        returned the offer ("on_demand" or "spot"); the payload's `is_bid`
+        field is always false and must not be consulted (see module
+        docstring). The default exists for fixture-driven tests that parse
+        offers without query context.
 
         Returns None if the offer is missing required fields or has invalid data.
         """
@@ -212,10 +236,6 @@ class VastCollector(BaseCollector):
 
         # Compute per-GPU price if the offer bundles multiple GPUs
         price_per_gpu = dph_total / num_gpus if num_gpus > 1 else dph_total
-
-        # Determine commitment type from the is_bid field
-        is_bid = offer.get("is_bid", False)
-        commitment_type = "spot" if is_bid else "on_demand"
 
         return RawObservationCreate(
             source="vast",
@@ -247,5 +267,8 @@ class VastCollector(BaseCollector):
                 "pcie_bw": offer.get("pcie_bw"),
                 "machine_id": offer.get("machine_id"),
                 "offer_id": offer.get("id"),
+                # Which /bundles/ query produced this row. raw_payload cannot
+                # answer this (is_bid is always false), so record it here.
+                "query_type": "bid" if commitment_type == "spot" else "on-demand",
             },
         )
