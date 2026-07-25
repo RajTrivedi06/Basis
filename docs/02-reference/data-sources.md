@@ -36,7 +36,7 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 - **Format:** JSON array of offers.
 - **Key fields in raw payload:** `gpu_name`, `dph_total`, `geolocation`, `reliability2`, `verification`, `num_gpus`, `cpu_cores_effective`, `cpu_ram` (MB), `disk_space` (GB).
 - **Collector:** `backend/basis/collectors/vast.py`
-- **Commitment types captured:** `on_demand` and `spot`. The collector issues two queries — an on-demand query and a `"type":"bid"` query — and maps each offer via its `is_bid` field (`is_bid=true` → `spot`, otherwise `on_demand`).
+- **Commitment types captured:** `on_demand` and `spot`. The collector issues two queries — an on-demand query and a `"type":"bid"` query — and labels each offer by **which query returned it** (`type=bid` → `spot`). The payload's `is_bid` field is `false` on every offer of both queries and cannot be used; a machine listed by both queries yields two observations with different prices (fixed on-demand vs current interruptible bid). Rows collected before the 2026-07-25 fix are all labeled `on_demand` regardless of product — see [analysis/2026-07-24-vast-bid-bug.md](../analysis/2026-07-24-vast-bid-bug.md).
 - **Notes:**
   - Richest dataset by far. Thousands of offers with detailed hardware specs and location.
   - `geolocation` format is `"<state-or-city>, <CC>"` — parsed in `normalization/region.py`.
