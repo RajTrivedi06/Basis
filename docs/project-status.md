@@ -50,7 +50,7 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 
 > Refreshed 2026-07-11 against live EC2 data (window 2026-04-26 → 2026-07-11). The dashboard updates continuously, so live medians may differ by a few tenths of a pp.
 
-- **3 active collectors:** Vast.ai, RunPod, AWS Spot. (Lambda Labs dropped — ADR 0003; **TensorDock parked 2026-07-13** — public feed drained, inventory moved behind an API key; see [data-sources.md](02-reference/data-sources.md#tensordock).)
+- **3 active collectors:** Vast.ai, RunPod, AWS Spot. (Lambda Labs dropped — ADR 0003; **TensorDock parked 2026-07-13, deregistered from `run_collect.py` 2026-07-24** — public feed drained, inventory moved behind an API key; see [data-sources.md](02-reference/data-sources.md#tensordock).)
 - **Raw observations on EC2:** 318,372 across the 4 providers since the 2026-04-26 cutover (77 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
 - **Canonical offers:** 315,743 (1:1 normalization, minimal skips). Provider mix: Vast.ai 237,746 (75.3%) · AWS Spot 45,448 (14.4%) · RunPod 30,065 (9.5%) · TensorDock 2,484 (0.8%).
 - **Canonical SKUs:** 96.

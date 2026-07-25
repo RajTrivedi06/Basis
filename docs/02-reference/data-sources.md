@@ -87,12 +87,13 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 > not a header. TensorDock was ~0.8% of canonical offers (2,484, frozen since ~mid-June)
 > and rarely cleared the per-(date, SKU) minimum-observation threshold, so it had
 > negligible weight in the residual decomposition — dropping it does not move any
-> finding. The collector is left in place (it harmlessly returns 0 offers); if the
-> public feed ever refills, collection auto-resumes. It is excluded from the
-> per-provider volume alert (`check_collection_volume.py`) so it does not false-alarm.
+> finding. The collector file and its tests are kept, but as of 2026-07-24 the
+> collector is **deregistered** from `AVAILABLE` in `run_collect.py` — it no longer
+> runs at all. It is also excluded from the per-provider volume alert
+> (`check_collection_volume.py`) so it does not false-alarm.
 > To restore: register a (free, if available) key, confirm inventory + shape at
-> `/api/v2/hostnodes`, rewrite the collector to authenticate, and re-add `tensordock`
-> to `EXPECTED_PROVIDERS`.
+> `/api/v2/hostnodes`, rewrite the collector to authenticate, then re-add
+> `tensordock` to `AVAILABLE` in `run_collect.py` and to `EXPECTED_PROVIDERS`.
 
 - **Type:** Neocloud marketplace (hosts set their own prices)
 - **Endpoint:** `https://dashboard.tensordock.com/api/v2/locations`

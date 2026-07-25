@@ -14,7 +14,6 @@ from basis.collectors.vast import VastCollector
 from basis.collectors.runpod import RunPodCollector
 from basis.collectors.aws_spot import AWSSpotCollector
 from basis.collectors.lambda_labs import LambdaLabsCollector
-from basis.collectors.tensordock import TensorDockCollector
 from basis.collectors.persist import save_observations
 from basis.db.engine import async_session_factory
 
@@ -27,11 +26,12 @@ logger = logging.getLogger(__name__)
 
 # Map of collector name -> class. Add new collectors here as they're implemented.
 # Lambda Labs requires a payment method for API access — excluded to keep costs at $0.
+# TensorDock parked 2026-07-13 (feed drained; collector + tests kept, see
+# docs/02-reference/data-sources.md for the restore recipe).
 AVAILABLE = {
     "vast": VastCollector,
     "runpod": RunPodCollector,
     "aws_spot": AWSSpotCollector,
-    "tensordock": TensorDockCollector,
 }
 
 
