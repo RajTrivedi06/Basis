@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "dev"  # "dev" or "prod"
     cors_origins: str = "http://localhost:3000"
+    sentry_dsn: str = ""
 
     # Provider API keys (optional -- public endpoints work without these)
     vast_api_key: str = ""
