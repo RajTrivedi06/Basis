@@ -72,6 +72,19 @@ The canonical structure every ADR follows: Status / Context / Decision / Options
 
 ---
 
+## ADR-006: The ML/research layer reads `raw_payload` directly, read-only
+
+**Status:** Accepted (2026-07-24)
+**Location:** [../01-architecture/adr/0006-ml-layer-raw-payload-access.md](../01-architecture/adr/0006-ml-layer-raw-payload-access.md)
+
+**Decision:** The v3 ML/research layer may read `raw_observations.raw_payload` READ-ONLY, joining through `canonical_offers.raw_observation_id`, for feature extraction. No provider-specific feature columns are added to `canonical_offers`, and nothing ML-derived feeds back into normalization or the residual decomposition — ADR-0002 is untouched.
+
+**Rationale:** The useful features (reliability, verification, host identity, bandwidths) are provider-specific by nature, not canonical; the provenance explain endpoints (ADR-0004) already established read-only raw-payload access; the canonical→raw FK join is indexed.
+
+**Consequence (stated honestly):** ML results are Vast-feature-rich and provider-asymmetric — cross-provider features are limited to region, commitment type, and provider. Payload-shape drift breaks extraction at read time; mitigated by presence-rate checks, not schema.
+
+---
+
 ## Resolved without a formal ADR
 
 Decisions that were listed as pending in earlier revisions of this log but were settled informally and documented elsewhere. Preserved here as a reasoning trail.
