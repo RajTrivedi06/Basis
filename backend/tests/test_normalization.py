@@ -68,6 +68,7 @@ _FIDELITY_SEED = 20260421
 _FIDELITY_SAMPLE_SIZE = 50
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_canonicalization_fidelity_via_explain(db_session: AsyncSession) -> None:
     """ADR 0004 fidelity invariant, self-enforcing.
@@ -239,6 +240,7 @@ _REGRESSION_BATCH_SIZE = 2000
 _DESTRUCTIVE_OPT_IN = os.environ.get("BASIS_ALLOW_DESTRUCTIVE_TESTS") == "1"
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 @pytest.mark.skipif(
     not _DESTRUCTIVE_OPT_IN,

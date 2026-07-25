@@ -25,6 +25,7 @@ from basis.db.models import BasisDecomposition, CanonicalOffer, DailyAggregate
 DECOMP_TOLERANCE = 1e-9
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_decomposition_components_sum_to_total(db_session: AsyncSession) -> None:
     """For every basis_decomposition row, components + residual == total.
@@ -60,6 +61,7 @@ async def test_decomposition_components_sum_to_total(db_session: AsyncSession) -
     )
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_dispersion_threshold_respected(db_session: AsyncSession) -> None:
     """Every daily_aggregates row has observation_count >= DISP_MIN (3)."""
@@ -86,6 +88,7 @@ async def test_dispersion_threshold_respected(db_session: AsyncSession) -> None:
     )
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_decomposition_threshold_respected(db_session: AsyncSession) -> None:
     """Every basis_decomposition row comes from >= DECOMP_MIN (5) canonical offers.
