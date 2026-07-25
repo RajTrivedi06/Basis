@@ -3,6 +3,7 @@
 Run with: uvicorn basis.api.main:app --reload
 """
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,6 +18,13 @@ from basis.api.routes import (
     provenance,
 )
 from basis.config import settings
+
+if settings.sentry_dsn:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.environment,
+        traces_sample_rate=0.0,
+    )
 
 app = FastAPI(
     title="Basis API",

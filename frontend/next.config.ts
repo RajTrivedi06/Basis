@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Proxy /api/* to the local FastAPI backend during `next dev`.
@@ -15,4 +16,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const sentryEnabled = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+export default sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      // Client-side capture only this stage — no source-map upload (needs SENTRY_AUTH_TOKEN).
+      silent: true,
+      sourcemaps: {
+        disable: true,
+      },
+    })
+  : nextConfig;
