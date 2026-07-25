@@ -1,11 +1,19 @@
-name: Frontend Build Check
+name: Frontend
 
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +25,10 @@ jobs:
       - working-directory: frontend
         run: npm ci
       - working-directory: frontend
+        run: npm run lint
+      - working-directory: frontend
         run: npx tsc --noEmit
+      - working-directory: frontend
+        run: npm test
       - working-directory: frontend
         run: npm run build
