@@ -5,6 +5,7 @@ Test every mapping rule explicitly.
 """
 
 import ast
+import os
 import random
 from pathlib import Path
 
@@ -12,6 +13,7 @@ import pytest
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from basis.config import settings
 from basis.db.models import CanonicalOffer, RawObservation
 from basis.normalization.bundle import explain_extract_bundle
 from basis.normalization.canonicalize import canonicalize_gpu, explain_canonicalize_gpu
@@ -224,8 +226,27 @@ def _diff_canonical_against_explain(
 # offset/filter interaction bug on pre-fix code.
 _REGRESSION_BATCH_SIZE = 2000
 
+# =============================================================================
+# DANGER — DESTRUCTIVE TEST BELOW
+#
+# test_run_normalization_processes_all_rows_when_exceeding_batch_size DELETES
+# every row in canonical_offers on whatever database settings.database_url
+# points at, then rebuilds the table by re-running normalization. It is
+# SKIPPED by default and only runs when BASIS_ALLOW_DESTRUCTIVE_TESTS=1 is
+# set. Even then, it REFUSES to run when ENVIRONMENT=prod. Never point
+# DATABASE_URL at a database you care about while opting in.
+# =============================================================================
+_DESTRUCTIVE_OPT_IN = os.environ.get("BASIS_ALLOW_DESTRUCTIVE_TESTS") == "1"
+
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    not _DESTRUCTIVE_OPT_IN,
+    reason=(
+        "Destructive: deletes and rebuilds canonical_offers on the configured "
+        "DB. Set BASIS_ALLOW_DESTRUCTIVE_TESTS=1 to opt in."
+    ),
+)
 async def test_run_normalization_processes_all_rows_when_exceeding_batch_size(
     db_session: AsyncSession,
 ) -> None:
@@ -249,6 +270,13 @@ async def test_run_normalization_processes_all_rows_when_exceeding_batch_size(
     would need to run after this one, which pytest's default ordering
     handles.
     """
+    if settings.environment == "prod":
+        pytest.fail(
+            "REFUSING to run destructive normalization test: ENVIRONMENT=prod. "
+            "This test deletes canonical_offers. Unset "
+            "BASIS_ALLOW_DESTRUCTIVE_TESTS or run against a non-prod database."
+        )
+
     raw_rows = (await db_session.execute(select(RawObservation))).scalars().all()
     eligible = sum(
         1 for r in raw_rows if canonicalize_gpu(r.gpu_model_reported) is not None
