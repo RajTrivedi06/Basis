@@ -29,31 +29,23 @@ The path resolution in `basis/config.py` walks up three directories from `config
 
 **Fix:** In AWS Console → IAM → Users → your user → Add permissions → attach `AmazonEC2ReadOnlyAccess` managed policy.
 
-### TensorDock requests time out
+### TensorDock returns zero locations
 
-**Cause:** Their API is occasionally slow.
+**Cause:** TensorDock's public `/api/v2/locations` feed drained to empty (2026-07-13). Live inventory moved behind an API key at `/api/v2/hostnodes`.
 
-**Fix:** Retry. If persistent, inspect directly:
+**Status:** **Parked.** Collector harmlessly returns 0 offers. No action required unless restoring with a new authenticated collector. See [data-sources.md](../02-reference/data-sources.md#tensordock).
 
-```bash
-curl -s https://dashboard.tensordock.com/api/v2/locations | jq '.data.locations | length'
-```
+### Vast.ai returns very few offers (~64) or H100 tier missing
 
-If curl also fails, it's upstream — try again later.
+**Cause:** Since 2026-06-23, Vast caps *unauthenticated* `/bundles/` responses at 64 cheapest-first offers. The `limit` parameter is ignored, so the premium tier (H100, etc.) is structurally excluded.
 
-### Vast.ai returns very few offers
+**Fix:** Get a free key from [cloud.vast.ai](https://cloud.vast.ai/) and add `VAST_API_KEY=...` to `.env`. Verify: `cd backend && uv run python scripts/probe_vast_api.py`. The collector sends `Authorization: Bearer` when the key is set.
 
-**Cause:** Rate limiting without an API key.
-
-**Fix:** Get a free key from Vast.ai and add `VAST_API_KEY=...` to `.env`.
-
-### `Failed to parse TensorDock location <id>`
+### `Failed to parse TensorDock location <id>` (historical — collector now parked)
 
 **Cause:** Upstream API shape changed (happened once when `gpus` was a list instead of a dict).
 
-**Fix:**
-- Inspect a fresh response: `curl -s https://dashboard.tensordock.com/api/v2/locations | jq '.data.locations[0]' | head -50`
-- Update `collectors/tensordock.py` `_parse_location` to match.
+**Fix:** Inspect a fresh response and update `collectors/tensordock.py` if restoring the collector.
 
 ---
 

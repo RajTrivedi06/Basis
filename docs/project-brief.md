@@ -2,14 +2,14 @@
 title: Project Brief
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-07-24
 ---
 
 # Project Brief
 
 ## Overview
 
-Basis is a public-data study that quantifies **GPU compute fungibility** across cloud providers. It collects quoted GPU prices from five (now four, after dropping Lambda Labs) provider sources, normalizes them into a canonical schema, and decomposes observed price dispersion into observable factors (region, commitment type, bundled resources, provider identity) vs. **residual basis risk**.
+Basis is a public-data study that quantifies **GPU compute fungibility** across cloud providers. It collects quoted GPU prices from provider sources (currently **3 active**: Vast.ai, RunPod, AWS EC2 Spot), normalizes them into a canonical schema, and decomposes observed price dispersion into observable factors (region, commitment type, bundled resources, provider identity) vs. **residual basis risk**. TensorDock is parked (2026-07-13); Lambda Labs was dropped (ADR 0003).
 
 It is a research study with an interactive dashboard. It is explicitly not a SaaS product, a price aggregator, or a derivatives pricing engine.
 
@@ -21,7 +21,7 @@ Ornn AI (now on the Bloomberg Terminal) is building exactly this infrastructure 
 
 ## What This System Does
 
-1. **Collects** quoted prices twice daily from Vast.ai, RunPod, AWS EC2 Spot, and TensorDock.
+1. **Collects** quoted prices twice daily from Vast.ai, RunPod, and AWS EC2 Spot (TensorDock parked; Lambda Labs dropped).
 2. **Normalizes** provider-specific GPU names, commitment types, regions, and bundled resources into a canonical schema — rule-based, conservative, interpretable.
 3. **Decomposes** price variance per (GPU SKU, day) into region / commitment / provider / bundle / residual components.
 4. **Visualizes** dispersion and decomposition through an interactive dashboard.
@@ -41,7 +41,7 @@ This is a study based on **public quoted prices, not executed transactions**. Tr
 ## Current State (summary)
 
 - **Phase 0 (scaffold) — complete.**
-- **Phase 1 (collection) — complete** with 4/5 providers. Lambda Labs dropped (ADR 0003).
+- **Phase 1 (collection) — complete** with 3 active collectors. Lambda Labs dropped (ADR 0003); TensorDock parked (2026-07-13).
 - **Phase 2 (normalization) — complete.** Canonical offers normalize 1:1 from raw observations with minimal skips. (For current canonical-offer and SKU counts, see [project-status.md](project-status.md) and [findings.md](findings.md) — the earlier "9,979 offers / 97 SKUs" figure was a v1 snapshot.)
 - **Phase 3 (analytics) — complete.** Dispersion + variance decomposition shipped.
 - **Phase 4–6 (API, frontend, writeup) — complete.**

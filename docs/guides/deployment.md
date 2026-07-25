@@ -2,7 +2,7 @@
 title: Deployment
 tags: [area:guides, audience:ops, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-07-24
 ---
 
 # Deployment

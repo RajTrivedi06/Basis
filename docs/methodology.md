@@ -2,14 +2,16 @@
 title: Methodology
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-07-11
+last_updated: 2026-07-24
 ---
 
 # Methodology
 
 How quoted GPU prices become a residual-variance number, and what choices are frozen in the analytics layer. The narrative interpretation lives in [findings.md](findings.md); this file is the reference for *how* the numbers are computed.
 
-**Temporal note.** Numbers cited below reflect the 77-day window 2026-04-26 → 2026-07-11 of post-cutover EC2 collection, refreshed 2026-07-11. The dashboard updates continuously, so live medians may differ by a few tenths of a pp. Investigation report: [`analysis/2026-07-11-findings-refresh.md`](analysis/2026-07-11-findings-refresh.md). Prior refreshes are archived at [`analysis/2026-06-24-findings-refresh.md`](analysis/2026-06-24-findings-refresh.md) and [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).
+**Temporal note.** Numbers cited below reflect the 77-day window 2026-04-26 → 2026-07-11 of post-cutover EC2 collection, refreshed 2026-07-11. The dashboard updates continuously, so live medians may differ by a few tenths of a pp. **Operational note (2026-07-24):** Vast collector auth (`VAST_API_KEY`) and per-provider volume alerting shipped 2026-07-12; TensorDock parked 2026-07-13. Collection today runs on 3 active providers — numbers below are unchanged until the next findings refresh.
+
+Investigation report: [`analysis/2026-07-11-findings-refresh.md`](analysis/2026-07-11-findings-refresh.md). Prior refreshes: [`analysis/2026-06-24-findings-refresh.md`](analysis/2026-06-24-findings-refresh.md), [`analysis/2026-05-13-findings-refresh-analysis.md`](analysis/2026-05-13-findings-refresh-analysis.md).
 
 ## Summary
 

@@ -2,7 +2,7 @@
 title: Operations Runbook
 tags: [area:guides, audience:ops, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-07-24
 ---
 
 # Operations Runbook
@@ -38,7 +38,7 @@ curl -sf http://localhost:8000/docs > /dev/null && echo OK || echo DOWN
 curl -sf http://localhost:3000 > /dev/null && echo OK || echo DOWN
 ```
 
-Expected volumes per 12-hour run: Vast ≈ 2,800, AWS Spot ≈ 300, RunPod ≈ 190, TensorDock ≈ 35.
+Expected volumes per 12-hour run (with `VAST_API_KEY` on EC2): Vast ≈ 2,800–6,400, AWS Spot ≈ 300, RunPod ≈ 190. TensorDock is parked (0). Sudden drops page via `check_collection_volume.py` + `HC_VOLUME_PING_URL`.
 
 ---
 
@@ -87,7 +87,7 @@ systemctl list-timers basis-collect.timer  # last / next firing
 journalctl -u basis-collect.service -n 100 # recent run output
 ```
 
-`basis-collect.timer` fires at **08:00 and 20:00 UTC** with `Persistent=true`, so a firing missed while the instance was down (e.g. a reboot) is run on next boot — no silent gaps the way macOS cron had. The service runs `backend/collect_cron.sh` (collect → normalize → analytics) and pings healthchecks.io via `HC_PING_URL` on success.
+`basis-collect.timer` fires at **08:00 and 20:00 UTC** with `Persistent=true`, so a firing missed while the instance was down (e.g. a reboot) is run on next boot — no silent gaps the way macOS cron had. The service runs `backend/collect_cron.sh` (collect → normalize → analytics → volume check) and pings healthchecks.io via `HC_PING_URL` on success. Volume anomalies ping `HC_VOLUME_PING_URL/fail`.
 
 **Dependencies for the timer to succeed:**
 

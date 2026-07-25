@@ -32,7 +32,7 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 
 - **Type:** GPU marketplace with public API
 - **Endpoint:** `https://console.vast.ai/api/v0/bundles/?q={...}`
-- **Auth:** None required; `VAST_API_KEY` grants higher rate limits.
+- **Auth:** **Free API key effectively required** since 2026-06-23. Unauthenticated `/bundles/` responses are capped at 64 cheapest-first offers (`limit` ignored), which excludes the premium tier (H100, etc.). Set `VAST_API_KEY`; the collector sends `Authorization: Bearer <key>`. Without a key, collection falls back to keyless behaviour with a loud warning.
 - **Format:** JSON array of offers.
 - **Key fields in raw payload:** `gpu_name`, `dph_total`, `geolocation`, `reliability2`, `verification`, `num_gpus`, `cpu_cores_effective`, `cpu_ram` (MB), `disk_space` (GB).
 - **Collector:** `backend/basis/collectors/vast.py`

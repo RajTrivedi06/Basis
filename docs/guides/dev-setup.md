@@ -2,7 +2,7 @@
 title: Development Setup
 tags: [area:guides, audience:developers, status:active]
 owner: Raj
-last_updated: 2026-05-12
+last_updated: 2026-07-24
 ---
 
 # Development Setup
@@ -217,7 +217,7 @@ Edit `.env`:
 
 - `DATABASE_URL` — leave the default for local dev.
 - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — required for AWS Spot collector. Create an IAM user with `AmazonEC2ReadOnlyAccess` managed policy. See [../02-reference/config-and-env.md#aws-required-for-aws-spot-collector](../02-reference/config-and-env.md#aws-required-for-aws-spot-collector).
-- `VAST_API_KEY` / `RUNPOD_API_KEY` — optional, grant higher rate limits.
+- `VAST_API_KEY` — **effectively required** for Vast.ai since 2026-06-23 (64-offer keyless cap). Free key at cloud.vast.ai. `RUNPOD_API_KEY` — optional, grants higher rate limits.
 
 ### 3. Start Postgres
 

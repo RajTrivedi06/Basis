@@ -2,7 +2,7 @@
 title: Roadmap
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-07-24
 ---
 
 # Roadmap
@@ -27,13 +27,13 @@ Status: `COMPLETE`
 
 ## Phase 1 — Data Collection
 
-Status: `COMPLETE` (4/5 providers; Lambda Labs dropped)
+Status: `COMPLETE` (3 active collectors; Lambda Labs dropped; TensorDock parked 2026-07-13)
 
 - `BaseCollector` contract (async `collect()` returning `list[RawObservationCreate]`).
 - **Vast.ai** collector (REST) — ~2,800 obs/run.
 - **RunPod** collector (GraphQL) — ~190 obs/run.
 - **AWS EC2 Spot** collector (boto3) — ~300 obs/run across 7 regions.
-- **TensorDock** collector (REST) — ~35 obs/run across 22 locations.
+- **TensorDock** collector (REST) — **parked 2026-07-13** (public feed empty; ~0.8% of historical offers).
 - **Lambda Labs** — code written but dropped (required payment method to issue free API key — see ADR 0003).
 - Cron schedule: 08:00 and 20:00 daily via `backend/collect_cron.sh`.
 - Persistence layer (`collectors/persist.py`).

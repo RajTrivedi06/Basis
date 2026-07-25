@@ -2,7 +2,7 @@
 title: Documentation Index
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-07-24
 ---
 
 # Basis Documentation Index
@@ -40,7 +40,7 @@ Central navigation hub. Every other doc links back here.
 
 ### Production & Operations
 
-Production runs on AWS EC2 (us-east-1) with systemd-driven twice-daily collection, daily `pg_dump` backup to S3, and an hourly freshness probe. Phases 0–6 of the deployment roadmap shipped 2026-04-27; the **Phase 7 public deploy is live** (gpu-basis.xyz + api.gpu-basis.xyz, ~2026-05-12; Phase 7.4 `basis-api.service` still runs under manual `nohup`). Phases 8–9 (reboot test, shutdown) remain.
+Production runs on AWS EC2 (us-east-1) with systemd-driven twice-daily collection, daily `pg_dump` backup to S3, hourly freshness probe, and per-provider volume alerting. Phases 0–6 of the deployment roadmap shipped 2026-04-27; **Phase 7 public deploy is live** (gpu-basis.xyz + api.gpu-basis.xyz, ~2026-05-12; Phase 7.4 `basis-api.service` still runs under manual `nohup`). **3 active collectors** (Vast, RunPod, AWS Spot); TensorDock parked 2026-07-13. Phases 8–9 (reboot test, shutdown) remain.
 
 - [basis-deployment-roadmap.md](basis-deployment-roadmap.md) — deploy-day playbook (instance, IAM, S3, systemd units, healthchecks).
 - [project-status.md](project-status.md) — current production state and data counts.

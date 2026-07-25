@@ -123,8 +123,8 @@ GROUP BY source ORDER BY source;"
 |-------|-----|
 | `AWS credentials not configured` | `.env` not picked up — ensure you run from `backend/` with `uv run`. |
 | AWS `UnauthorizedOperation` | Attach `AmazonEC2ReadOnlyAccess` IAM policy to the user. |
-| TensorDock timeouts | Their API is slow; the client uses `timeout=30.0`. Retry. |
-| Very low Vast.ai count | Check for API rate limiting; set `VAST_API_KEY`. |
+| TensorDock zero locations | Public feed drained (parked 2026-07-13). Expected — no action. |
+| Very low Vast.ai count (~64) | Missing `VAST_API_KEY` — Vast caps keyless requests at 64 cheapest offers since 2026-06-23. |
 | `skipped_unknown_gpu > 0` | New GPU name from a provider — add to `canonicalize.py` and re-run. |
 
 See [troubleshooting.md](troubleshooting.md) for more.

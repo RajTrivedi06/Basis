@@ -286,6 +286,7 @@ CORS_ORIGINS=http://localhost:3000
 HC_PING_URL=
 HC_BACKUP_PING_URL=
 HC_DATA_FRESH_PING_URL=
+HC_VOLUME_PING_URL=
 
 # Provider API keys
 VAST_API_KEY=
@@ -296,8 +297,8 @@ RUNPOD_API_KEY=
 
 **Notes:**
 
-- `ENVIRONMENT`, `VAST_API_KEY`, and `AWS_DEFAULT_REGION` are kept in the example because all three are referenced in [`backend/basis/config.py`](../backend/basis/config.py) — Settings reads them on load. Removing them from the example would lose the documentation hint even though Settings defaults cover absence at runtime.
-- `TENSORDOCK_API_KEY` is **not** in the example: neither `backend/basis/config.py` nor `backend/basis/collectors/tensordock.py` references such a variable. The TensorDock collector hits the public endpoint `https://dashboard.tensordock.com/api/v2/locations` with no auth (collector file header: "Auth: None required"). Adding the env var would be misleading.
+- `ENVIRONMENT`, `VAST_API_KEY`, and `AWS_DEFAULT_REGION` are kept in the example because all three are referenced in [`backend/basis/config.py`](../backend/basis/config.py). **`VAST_API_KEY` is effectively required on EC2** since 2026-06-23 (64-offer keyless cap).
+- `TENSORDOCK_API_KEY` is **not** in the example. TensorDock is **parked** (2026-07-13): public `/locations` feed returns empty; restoring collection requires a collector rewrite against the authenticated endpoint.
 
 **Additional Settings cleanup:** ✅ **done** (commit `49f4d84`) — the `lambda_api_key` field was dropped from [`backend/basis/config.py`](../backend/basis/config.py) and `.env.example`. ADR 0003 retired the Lambda Labs collector; no Lambda config remains in Settings.
 
@@ -658,14 +659,15 @@ uv run python run_analytics.py
 
 # Verify data
 docker compose exec db psql -U basis -d basis -c "SELECT COUNT(*) FROM raw_observations;"
-# Expect: ~1,500-1,700 (single run, four providers)
+# Expect: ~1,500-1,700 (single run, 3 active providers + TensorDock parked at 0)
 ```
 
 If any collector fails:
 
 - AWS Spot fails with credential error → IAM role isn't attached or policy is wrong; verify with `aws sts get-caller-identity`
-- RunPod or TensorDock fails → check their API keys in `.env`
-- Vast.ai fails → no auth needed; likely network or API change
+- RunPod fails → check `RUNPOD_API_KEY` in `.env` (optional but helps)
+- TensorDock returns 0 → **expected** (parked 2026-07-13; public feed empty)
+- Vast.ai returns ~64 offers or missing H100 → set `VAST_API_KEY` (required since 2026-06-23 keyless cap)
 
 ---
 

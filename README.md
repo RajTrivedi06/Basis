@@ -2,9 +2,9 @@
 
 **Measuring basis risk in quoted GPU prices.**
 
-> For H100 SXM 80GB across 60 days of EC2-era collection, the residual share of log-price variance is **~60%** when including all four providers (Vast.ai, RunPod, AWS EC2 Spot, TensorDock), but **~82%** when excluding Vast.ai — which accounts for ~79% of canonical offers. The headline depends on which segment of the market you measure, and that conditionality is itself the finding.
+> For H100 SXM 80GB across **77 days** of EC2-era collection (2026-04-26 → 2026-07-11), the residual share of log-price variance is **~60%** when including all providers in the corpus (Vast.ai, RunPod, AWS EC2 Spot, TensorDock), but **~82%** when excluding Vast.ai — which accounts for ~75% of canonical offers in that window. The headline depends on which segment of the market you measure, and that conditionality is itself the finding.
 
-Both numbers are *basis risk* benchmark designs have to live with. Read the full writeup: **[docs/findings.md](docs/findings.md)** or the rendered version at `/` once the frontend is running.
+Both numbers are *basis risk* benchmark designs have to live with. Read the full writeup: **[docs/findings.md](docs/findings.md)** or the live dashboard at **https://gpu-basis.xyz**.
 
 ---
 
@@ -13,7 +13,7 @@ Both numbers are *basis risk* benchmark designs have to live with. Read the full
 In commodity derivatives, *basis* is the gap between a benchmark price and what a specific buyer actually pays. For GPU compute, that gap is enormous — H100 prices vary by 15× across providers on the same day for the same nominal hardware. Basis is a public-data study that quantifies how much of that dispersion is explainable by observable factors and how much remains as genuine, irreducible basis.
 
 - **Study, not a SaaS.** No user accounts, no pricing, no product.
-- **Public data, zero cost.** Four providers. Lambda Labs was dropped because the free API key required a payment method.
+- **Public data, zero cost.** **3 active collectors** (Vast.ai, RunPod, AWS EC2 Spot). Lambda Labs was dropped (payment method required for API key). TensorDock is parked (public feed drained, 2026-07-13).
 - **Quoted prices, not transactions.** Transaction benchmarks like Ornn's OCPI are gated — the gap between quoted and transacted is exactly the market friction Basis exists to quantify.
 
 ## The four-layer pipeline
@@ -45,9 +45,9 @@ Full architecture: **[docs/01-architecture/system-overview.md](docs/01-architect
 | Phase | Status |
 |-------|--------|
 | 0 — Scaffold | ✅ |
-| 1 — Data collection (4 providers) | ✅ |
-| 2 — Normalization (9,979 canonical offers, 97 SKUs) | ✅ |
-| 3 — Analytics (465 aggregates, 179 decompositions) | ✅ |
+| 1 — Data collection (3 active; TensorDock parked) | ✅ |
+| 2 — Normalization | ✅ (see [project-status](docs/project-status.md) for current volumes) |
+| 3 — Analytics | ✅ |
 | 4 — API (11 endpoints live) | ✅ |
 | 5 — Frontend (5 pages, hand-rolled SVG charts) | ✅ |
 | 6 — Writeup & polish | ✅ |

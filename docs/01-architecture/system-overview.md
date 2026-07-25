@@ -18,7 +18,7 @@ Data flows in one direction: **collect → normalize → analyze → serve**. Ea
 
 ```
 ┌──────────────────┐
-│   Provider APIs  │   Vast.ai, RunPod, AWS EC2 Spot, TensorDock
+│   Provider APIs  │   Vast.ai, RunPod, AWS EC2 Spot (+ TensorDock parked)
 └────────┬─────────┘
          │
          ▼
@@ -75,7 +75,7 @@ Each collector inherits from `BaseCollector` (`backend/basis/collectors/base.py`
 - Store the **full** provider response in `raw_payload` (JSONB) — never discard fields.
 - Log and skip on error; don't crash the whole run.
 
-**Live collectors (4):** Vast.ai, RunPod, AWS Spot, TensorDock.
+**Active collectors (3):** Vast.ai, RunPod, AWS Spot. **Parked:** TensorDock (public feed empty since 2026-07-13; collector returns 0). **Dropped:** Lambda Labs (ADR 0003).
 
 See [../02-reference/data-sources.md](../02-reference/data-sources.md) for per-provider details.
 

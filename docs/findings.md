@@ -2,7 +2,7 @@
 title: Findings — How fungible is GPU compute?
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-07-11
+last_updated: 2026-07-24
 ---
 
 # How fungible is GPU compute? Measuring basis risk in quoted H100 prices
@@ -15,7 +15,7 @@ Both numbers are basis risk benchmark designs have to live with. Single-residual
 
 ## What Basis is
 
-Basis is a research study, not a SaaS. It collects quoted prices from four providers — Vast.ai (marketplace), RunPod (neocloud), AWS EC2 Spot (hyperscaler), and TensorDock (neocloud marketplace) — via twice-daily cron. Over 77 days of post-cutover EC2 collection (2026-04-26 → 2026-07-11) it has accumulated 315,743 canonical offers across 96 canonical GPU SKUs, drawn from 318,372 raw observations. Lambda Labs was considered but dropped: its free API key now requires a payment method, which violated the study's zero-data-cost constraint.
+Basis is a research study, not a SaaS. For the 77-day analytical window (2026-04-26 → 2026-07-11) it drew on quoted prices from four providers in the corpus — Vast.ai (marketplace), RunPod (neocloud), AWS EC2 Spot (hyperscaler), and TensorDock (neocloud marketplace) — collected twice daily via systemd timers on EC2. Over that window it accumulated 315,743 canonical offers across 96 canonical GPU SKUs, drawn from 318,372 raw observations. **As of 2026-07-24, collection runs on 3 active providers** (Vast, RunPod, AWS Spot); TensorDock is parked (public feed empty since 2026-07-13) and Lambda Labs was never activated (its free API key requires a payment method, violating the study's zero-data-cost constraint).
 
 The positioning is important. **These are quoted prices, not executed transactions.** Transaction-based benchmarks like Ornn's OCPI are gated behind enterprise subscriptions, and the fact that they *are* is itself part of the problem Basis exists to quantify. A public study of quoted prices is an honest lower bound on what benchmark builders have to contend with — real transactions likely compress this dispersion but we cannot directly observe by how much.
 
@@ -71,7 +71,7 @@ This is the single most important caveat to surface, and it is itself the findin
 
 Over 77 days the residual share has two kinds of high day, worth separating because they mean different things.
 
-**Missing-data spikes — now a sustained outage.** All ten of the highest-residual days in the window (2026-06-23 → 07-02, ranging 86–92%) fall inside a three-week stretch where Vast carried *no* H100-SXM offers at all. With Vast absent, the population collapses to the narrow-band AWS/RunPod/TensorDock prices and the Vast-included and Vast-excluded series coincide. These are collection artifacts, not market structure (the same mechanism as v1's 2026-04-18 Vast cron miss), but what was an intermittent watch item at the last refresh is now a **21-day outage** and an active operational priority. a live API probe traced it to the collector, not the market: Vast now hard-caps *unauthenticated* requests at 64 offers (our `limit` is silently ignored), and because the query returns the cheapest offers first, that 64-offer page never reaches the expensive H100 tier. Total Vast collection fell ~97% (from ~6,400 to ~220 offers/day) on 2026-06-23 as a result. The fix is a free Vast API key (details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md)). The window medians are robust to it; the recent single-day dashboard numbers near 90% are not, and should be read as "Vast is missing," not "basis widened."
+**Missing-data spikes — a sustained outage within the window.** All ten of the highest-residual days in the window (2026-06-23 → 07-02, ranging 86–92%) fall inside a three-week stretch where Vast carried *no* H100-SXM offers at all. With Vast absent, the population collapses to the narrow-band AWS/RunPod/TensorDock prices and the Vast-included and Vast-excluded series coincide. These are collection artifacts, not market structure (the same mechanism as v1's 2026-04-18 Vast cron miss). A live API probe traced it to Vast's new **64-offer cap on unauthenticated requests** (cheapest-first; `limit` ignored), which collapsed total Vast collection ~97% on 2026-06-23. **The collector fix shipped 2026-07-12** (`Authorization: Bearer` when `VAST_API_KEY` is set); a per-provider volume alert also shipped. The 77-day window medians are robust to the outage; single-day readings near 90% inside the tail should be read as "Vast is missing," not "basis widened." Details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md).
 
 Inside that outage sits a genuinely *substantive* second finding. The curated-only residual is not constant while Vast is gone: it ran ~86–92% through 2026-07-02, then **halved to ~50–55% from 2026-07-03 onward** — same three providers, same 42 offers per day. The lever is cross-region price dispersion: AWS Spot prices spread across regions (US ~$2/hr vs Japan $8.60/hr), so *region* suddenly became a strong explainer and pulled ~40 pp of variance out of the residual. Even a marketplace-free basket carries large, time-varying basis, and the single thing moving it is one provider's regional spread — the cleanest argument yet for a dedicated cross-region view.
 
@@ -104,9 +104,9 @@ The deeper response is stratification (report H100-SXM-on-demand-US-East separat
 ## Limitations
 
 - **Quoted vs transacted.** Enterprise transaction prices likely compress dispersion, but by how much is the exact question that remains inaccessible without paid benchmarks. Basis is an honest lower bound, not a transaction benchmark.
-- **Four providers, Vast-heavy.** OCI, GCP, Azure, CoreWeave, Crusoe, Lambda Labs (and others) are missing, and each would add its own price discovery mechanism. With Vast at ~75% of canonical offers, the population is structurally tilted toward marketplace pricing; the Vast-exclusion section above is the explicit attempt to bound how much that tilt is doing the work.
+- **Four providers in corpus, three active today, Vast-heavy.** The 77-day numbers include TensorDock (~0.8% of offers); TensorDock is parked as of 2026-07-13. OCI, GCP, Azure, CoreWeave, Crusoe, Lambda Labs (and others) are missing. With Vast at ~75% of canonical offers in the window, the population is structurally tilted toward marketplace pricing; the Vast-exclusion section above bounds how much that tilt does the work.
 - **Conservative normalization is a choice.** Reliability, interconnect type, and datacenter tier are deliberately left in the residual because normalizing them would be pretending to measure what we can't.
-- **Vast H100-SXM outage.** Vast returned no H100-SXM offers for 21 days — two isolated misses (2026-06-16, 06-17), then a sustained 19-day outage (2026-06-23 → 07-11) — inflating single-day residual across that entire tail. Window medians are robust, but this is now an active operational item: Vast began hard-capping unauthenticated requests at 64 (cheapest-first) offers on 2026-06-23, collapsing total collection ~97% (~6,400 → ~220 offers/day) and structurally excluding the expensive H100 tier — a Vast API-policy change, not a market shift. Fix is a free API key. Details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md).
+- **Vast H100-SXM outage (within window).** Vast returned no H100-SXM offers for 21 days in the 77-day window — root-caused to Vast's 64-offer keyless cap (2026-06-23). Collector auth fix shipped 2026-07-12; the outage tail remains in the frozen analytical window. Details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md).
 - **The SKU table is 77 days, not 18 months.** Long-run stability and seasonality are the obvious follow-ons, neither of which 77 days can fully settle.
 
 ## What's next

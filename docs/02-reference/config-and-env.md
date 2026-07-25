@@ -37,12 +37,14 @@ If `.env` is missing, `pydantic-settings` falls back to actual shell env vars, t
 | `POSTGRES_PASSWORD` | `basis` | Postgres password used by `docker-compose.yml` (`${POSTGRES_PASSWORD:-basis}`). Local dev keeps `basis`; production EC2 sets a strong random value. Read by Docker Compose, not a `Settings` field. |
 | `ENVIRONMENT` | `dev` | `dev` / `prod`. Currently unused for anything except logging. |
 
-### Provider API keys (all optional)
+### Provider API keys
 
 | Var | Notes |
 |-----|-------|
-| `VAST_API_KEY` | Optional; public endpoints work without it but may be rate-limited. Get from [vast.ai](https://vast.ai). |
+| `VAST_API_KEY` | **Effectively required** for Vast.ai since 2026-06-23. Unauthenticated requests return only 64 cheapest-first offers. Free key at [cloud.vast.ai](https://cloud.vast.ai/) → Account → API Keys. Collector sends `Authorization: Bearer`. |
 | `RUNPOD_API_KEY` | Optional; public GraphQL works without it. Get from [runpod.io](https://www.runpod.io/console/user/settings). |
+
+Previously this section was labeled "all optional" — that is no longer true for Vast.
 
 ### AWS (required for AWS Spot collector)
 
@@ -63,6 +65,7 @@ These are read directly by the shell scripts (`collect_cron.sh`, the backup/fres
 | `HC_PING_URL` | Ping URL hit after a successful collection run in `collect_cron.sh`. |
 | `HC_BACKUP_PING_URL` | Ping URL for the database backup job. |
 | `HC_DATA_FRESH_PING_URL` | Ping URL for the data-freshness check. |
+| `HC_VOLUME_PING_URL` | Ping URL for the per-provider collection-volume check (`check_collection_volume.py`). Success ping on healthy volumes; `/fail` suffix on collapse. |
 
 ### Frontend
 

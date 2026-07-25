@@ -2,12 +2,12 @@
 title: Tasks & Status
 tags: [area:planning, audience:all, status:active]
 owner: Raj
-last_updated: 2026-06-24
+last_updated: 2026-07-24
 ---
 
 # Tasks & Status
 
-Granular snapshot of current work for Basis. Last refreshed: **2026-06-24**.
+Granular snapshot of current work for Basis. Last refreshed: **2026-07-24**.
 
 Complements [roadmap.md](../roadmap.md) (high-level phases) and [project-brief.md](../project-brief.md) (what the project is). This file is the most-updated doc — treat it like a living to-do list.
 
@@ -129,6 +129,13 @@ Production now lives on EC2; Mac collection cron is stopped and 33,525 pre-EC2 o
 - `d164642` (direct to main) — `backend/scripts/backup.sh` cleanup `find` scoped to `/tmp` top level with `-maxdepth 1 ... 2>/dev/null || true`, so unrelated permission denials in `/tmp` subdirs don't fail the backup unit.
 - DNS for `gpu-basis.xyz` / `api.gpu-basis.xyz` live (Vercel + Caddy); Phase 7.4 `basis-api.service` not shipped — see **Operational debt** below.
 
+### Operational fixes (2026-07-12 — 2026-07-13)
+
+- **Vast API key auth shipped (#10, 2026-07-12).** Collector sends `Authorization: Bearer` when `VAST_API_KEY` is set, bypassing Vast's 64-offer keyless cap (root cause of the June H100-SXM outage). Regression tests + `scripts/probe_vast_api.py`.
+- **Per-provider volume alert shipped (#13, 2026-07-12).** `scripts/check_collection_volume.py` runs at end of `collect_cron.sh`; compares latest run per provider to 21-day rolling median; pings `HC_VOLUME_PING_URL` / `HC_VOLUME_PING_URL/fail`.
+- **Normalization anti-join fix (#12, 2026-07-12).** `NOT EXISTS` anti-join + index on `raw_observation_id` — idempotent re-normalization without duplicates.
+- **TensorDock parked (#14, 2026-07-13).** Public feed empty; removed from `EXPECTED_PROVIDERS` in volume check. Collector left in place (returns 0). **3 active collectors:** Vast, RunPod, AWS Spot.
+
 ### Phase 7+ — Post-deploy analysis
 
 - **Findings refresh shipped (2026-05-15).** First 18 days of EC2 collection (2026-04-26 → 2026-05-13) decomposed and written up. Segment-conditional headline (~59% / ~89%) replaces the v1 3-day 53–95% range. Vast.ai dominance promoted from implicit to explicit caveat in [findings.md](../findings.md) and [methodology.md](../methodology.md). Cross-SKU numbers refreshed (A100 SXM 80GB 24%, RTX 4090 24GB 86%). New backend param `exclude_providers` on `GET /api/basis/{sku}/timeseries` recomputes on demand against `canonical_offers`; new frontend hero renders both numbers side-by-side. Investigation report committed at [`docs/analysis/2026-05-13-findings-refresh-analysis.md`](../analysis/2026-05-13-findings-refresh-analysis.md). Branch: `feat/segment-conditional-finding`.
@@ -154,7 +161,7 @@ UI polish: local Next.js (`npm run dev`) + SSH tunnel to EC2 FastAPI against pro
 - [ ] **Phase 8 — reboot test on EC2** (overdue — now actionable). Hard reboot, verify `basis-postgres.service` brings Postgres up healthcheck-gated and all timers come back active. `Type=oneshot` units showing `Active: inactive (dead)` after success is the pass signal.
 - [ ] **Phase 8 — weekly operational checks** (ongoing). Timer health, journal scan for `code=exited, status=0/SUCCESS`, S3 backup integrity, healthchecks.io dashboard green, disk + swap usage.
 - [ ] **v2 Phase D — Rolling stability view** (now unblocked, not built). Was blocked on ≥30 days of cron data; that threshold passed ~2026-05-17 and the window is now ~58 days. This is the main remaining v2 feature. (Phase C — slice interactivity — was intentionally **skipped**, see [`temp-doc/phase-c-scoping.md`](../../temp-doc/phase-c-scoping.md); not a gap.)
-- [ ] **Add curated providers** to reduce Vast.ai's 80% share — revisit Lambda Labs under different terms, add CoreWeave, add Crusoe. Each new collector would sharpen the segment-dependence picture in [findings.md](../findings.md) without changing methodology.
+- [ ] **Add curated providers** to reduce Vast.ai's ~75% share — revisit Lambda Labs under different terms, add CoreWeave, add Crusoe. Each new collector would sharpen the segment-dependence picture in [findings.md](../findings.md) without changing methodology.
 - [ ] **Tailscale (or AWS SSM Session Manager) setup** — only if home-IP rotation continues to break the security-group whitelist often. Workarounds, in order of friction: widen to `/24` → widen to `/16` → Tailscale → SSM.
 
 ### Operational debt
@@ -171,8 +178,12 @@ Tear-down checklist when the project is wound down (~3 months out). See [basis-d
 
 ### Ongoing (post-Phase-6)
 
-- [x] **Re-anchor the writeup to the 60-day window** — done 2026-06-24. findings.md / methodology.md / project-status.md recomputed against live EC2 data (H100 ~60% / ~82%; +21.4 pp shift). Report: [analysis/2026-06-24-findings-refresh.md](../analysis/2026-06-24-findings-refresh.md). Residual estimates continue to tighten; refresh again as the window grows.
-- [ ] **Monitor for `skipped_unknown_gpu`** — any new GPU name from a provider requires a `canonicalize.py` addition.
+- [x] **Re-anchor the writeup to the 60-day window** — done 2026-06-24.
+- [x] **Re-anchor to the 77-day window** — done 2026-07-11. H100 ~60% / ~82%; report [analysis/2026-07-11-findings-refresh.md](../analysis/2026-07-11-findings-refresh.md).
+- [x] **Fix Vast collection collapse** — collector auth shipped 2026-07-12 (#10). Ensure `VAST_API_KEY` on EC2.
+- [x] **Per-provider volume alert** — shipped 2026-07-12 (#13).
+- [ ] **Next findings refresh** — when window grows materially past 77 days (TBD).
+- [ ] **Monitor for `skipped_unknown_gpu`**
 - [ ] **Optional: screenshot reel / portfolio post.** Manual step (Raj's call) — not code.
 
 ### Cross-cutting / nice-to-haves
@@ -189,7 +200,7 @@ Tear-down checklist when the project is wound down (~3 months out). See [basis-d
 
 No active blockers. Watch items:
 
-- **Provider API shape changes.** TensorDock's `gpus` field changed shape (dict → list) once during the build. Watch parse-error logs on every run.
+- **Provider API shape changes.** TensorDock's `gpus` field changed shape once during the build. TensorDock is now parked (empty public feed). Watch parse-error logs on active collectors.
 
 (The former Mac-laptop-cron blockers — laptop-sleep cron misses and Docker-must-be-running-at-cron-times — are obsolete: production moved to EC2 systemd timers on 2026-04-27 and the Mac cron is stopped.)
 
@@ -205,7 +216,8 @@ Mismatches between code and stated intent. Flagged, not yet resolved. Full write
 
 ## Deprecated / parked
 
-- **Lambda Labs collector** (`backend/basis/collectors/lambda_labs.py`) — code retained but not registered in `run_collect.py`. See [decisions/adr-log.md](../decisions/adr-log.md) ADR-003. (Note: still in `collectors/__init__.py`'s `COLLECTORS` list — see Known code-level discrepancies above.)
+- **Lambda Labs collector** (`backend/basis/collectors/lambda_labs.py`) — code retained but not registered in `run_collect.py`. See ADR-003.
+- **TensorDock collector** — **parked 2026-07-13.** Public feed returns empty inventory; still in `run_collect.py` `AVAILABLE` but returns 0 offers. Excluded from volume alert. See [data-sources.md](../02-reference/data-sources.md#tensordock).
 - **Scheduler module** (`backend/basis/scheduler/`) — APScheduler was scaffolded but not used; `jobs.py` is a TODO stub. Cron / EC2 systemd timers drive collection instead.
 - **Playwright / BeautifulSoup scraping** — original plan for Lambda Labs + TensorDock. Not needed once API endpoints were found.
 
@@ -224,6 +236,7 @@ Mismatches between code and stated intent. Flagged, not yet resolved. Full write
 
 Append a one-liner each time this file is updated.
 
+- 2026-07-24 — **Doc reconciliation.** Operational fixes documented: Vast auth (#10), volume alert (#13), TensorDock parked (#14). 3 active collectors. Ongoing/pending updated; 77-day findings refresh marked done; next refresh TBD.
 - 2026-06-24 — Added **mobile-responsive layout** to Pending (Frontend / UI): chart-heavy pages need phone-sized audit and polish.
 - 2026-06-24 — **Findings re-anchored to the 60-day window** (2026-04-26 → 2026-06-24) against live EC2 data. H100 SXM 80GB 59%/89% → ~60%/~82% (medians 60.5/81.9; +21.4 pp shift). Corpus 90k → 295,047 offers / 96 SKUs. New report [analysis/2026-06-24-findings-refresh.md](../analysis/2026-06-24-findings-refresh.md); findings.md, methodology.md, project-status.md, README lede updated. Flagged Vast H100-SXM dropouts on 4 recent runs (6/16, 6/17, 6/23, 6/24) as a collection-reliability watch item.
 - 2026-06-23 — Full repo doc-freshness & discrepancy audit (29 files reconciled with `main`). Six stale themes fixed across the docs (v2 UI landed on main; 11 endpoints not 6; analytics shipped; prod live on EC2+Vercel; EC2 systemd not laptop cron; time-expired claims). Added: v2 **Phase D** (rolling stability, unblocked/not built) to Pending; **Known code-level discrepancies** section (Lambda still in `COLLECTORS`, scheduler stub, red `test_basis_timeseries`); `ui-port-v2` flagged stale/superseded (main is ahead). Noted v2 Phases A/B grew the API to **11 endpoints across 8 modules**. Phase 8 reboot test + ≥60-day re-anchor now **overdue/actionable** (window ≈ 58 days). Full write-up: [`temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md`](../../temp-doc/2026-06-23-doc-freshness-and-discrepancy-audit.md). Companion edits in [project-status.md](../project-status.md), [roadmap.md](../roadmap.md), [project-brief.md](../project-brief.md), [INDEX.md](../INDEX.md).

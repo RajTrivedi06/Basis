@@ -2,7 +2,7 @@
 title: Architecture Decision Records
 tags: [area:decisions, audience:all, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-07-24
 ---
 
 
@@ -40,7 +40,7 @@ The canonical structure every ADR follows: Status / Context / Decision / Options
 
 **Rationale:** Lambda Labs requires a payment method on file before issuing a free API key. The project has a hard constraint: **total data cost must remain $0.** Four providers (Vast.ai, RunPod, AWS Spot, TensorDock) already cover the marketplace / neocloud / hyperscaler spread the thesis needs.
 
-**Consequence:** One fewer neocloud data point. Collector log is quieter (no recurring "key not configured" warning). Collector can be re-enabled by adding a key and re-registering if the constraint ever changes.
+**Consequence:** One fewer neocloud data point. Collector log is quieter (no recurring "key not configured" warning). Collector can be re-enabled by adding a key and re-registering if the constraint ever changes. **Update (2026-07-13):** TensorDock is also parked (public feed empty); **3 active collectors** remain.
 
 ---
 

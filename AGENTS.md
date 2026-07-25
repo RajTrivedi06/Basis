@@ -4,7 +4,7 @@ This file is the entry point for AI coding agents (Claude Code, Cursor, Codex, e
 
 ## What Is Basis?
 
-Basis is a public-data study that quantifies GPU compute fungibility across cloud providers. It collects quoted H100 prices from 4 sources, normalizes them into a canonical schema, and decomposes price variance into observable factors (region, commitment type, bundled resources) vs. residual basis risk. It is a research study with an interactive dashboard, not a SaaS product or price aggregator.
+Basis is a public-data study that quantifies GPU compute fungibility across cloud providers. It collects quoted H100 prices from **3 active sources** (Vast.ai, RunPod, AWS EC2 Spot), normalizes them into a canonical schema, and decomposes price variance into observable factors (region, commitment type, bundled resources) vs. residual basis risk. TensorDock is parked; Lambda Labs was dropped. It is a research study with an interactive dashboard at **https://gpu-basis.xyz**, not a SaaS product or price aggregator.
 
 ## Quick Orientation
 

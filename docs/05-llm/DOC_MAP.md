@@ -57,6 +57,7 @@ Dense bundles for agents. Copy into the subagent's prompt rather than pointing t
 - All timestamps UTC. All prices USD/GPU/hour.
 - Every collector inherits `BaseCollector`.
 - Normalization is rule-based, conservative, explicit. No ML.
+- **3 active collectors** (Vast, RunPod, AWS Spot); TensorDock parked; Lambda dropped.
 - Do not silently update `docs/`. Ask the user.
 - Do not add new top-level directories.
 

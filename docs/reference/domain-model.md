@@ -2,7 +2,7 @@
 title: Domain Model
 tags: [area:reference, audience:developers, status:active]
 owner: Raj
-last_updated: 2026-06-23
+last_updated: 2026-07-24
 ---
 
 # Domain Model
@@ -85,16 +85,23 @@ How long the buyer is committed; correlates strongly with price.
 
 ### Provider
 
-The cloud service the observation came from. Four live providers:
+The cloud service the observation came from.
+
+**Active providers (3):** `vast`, `runpod`, `aws_spot`.
+
+**Parked:** `tensordock` (public feed empty since 2026-07-13).
+
+**Dropped:** `lambda_labs` (ADR 0003).
+
+Historical canonical data includes all four non-Lambda providers. Provider table:
 
 | Id | Name | Type |
 |----|------|------|
 | `vast` | Vast.ai | Marketplace (individual sellers) |
 | `runpod` | RunPod | Neocloud (curated datacenters) |
 | `aws_spot` | AWS EC2 Spot | Hyperscaler spot market |
-| `tensordock` | TensorDock | Neocloud marketplace |
-
-Lambda Labs (`lambda_labs`) is coded but dropped. See [../decisions/adr-log.md](../decisions/adr-log.md) ADR-003.
+| `tensordock` | TensorDock | Neocloud marketplace (parked) |
+| `lambda_labs` | Lambda Labs | Neocloud (dropped — ADR 0003) |
 
 ---
 

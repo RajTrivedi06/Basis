@@ -2,7 +2,7 @@
 title: API Reference
 tags: [area:reference, audience:developers, status:active]
 owner: Raj
-last_updated: 2026-06-24
+last_updated: 2026-07-24
 ---
 
 # API Reference
@@ -23,7 +23,7 @@ REST endpoints exposed by the FastAPI backend. Source of truth for any client (f
 
 **11 endpoints implemented** in the FastAPI backend. The original 6 shipped 2026-04-20; `/api/fungibility-matrix` shipped 2026-04-21 as part of Basis v2 Phase A; three provenance drilldown endpoints shipped 2026-04-21 as part of Basis v2 Phase B; `/api/basis/{gpu_sku}/timeseries` shipped later for the segment-conditional landing hero. All return real data from `canonical_offers`, `daily_aggregates`, `basis_decomposition`, and `raw_observations`.
 
-**Public deploy is not complete.** The domain `gpu-basis.xyz` is registered, but the app is not yet live at a public API URL. Use local dev (below) until deploy ships.
+**Public deploy is live.** Frontend at **https://gpu-basis.xyz** (Vercel). API at **https://api.gpu-basis.xyz** (EC2 behind Caddy). Local dev URLs below are for polish-loop work against a tunneled EC2 backend.
 
 **Example responses** in this doc use illustrative snapshots from early dev data (~2026-04-20). Counts, medians, and variance figures will differ in a current database — treat the JSON shapes as the contract, not the numbers.
 
@@ -34,7 +34,7 @@ REST endpoints exposed by the FastAPI backend. Source of truth for any client (f
 - Local dev: `http://localhost:8000`
 - OpenAPI UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
-- Planned production: `https://api.gpu-basis.xyz` (not yet deployed)
+- Production: `https://api.gpu-basis.xyz`
 
 ## Auth
 
@@ -42,7 +42,7 @@ REST endpoints exposed by the FastAPI backend. Source of truth for any client (f
 
 ## CORS
 
-Allowed origins come from the `CORS_ORIGINS` env var (comma-separated). Default: `http://localhost:3000`. Production will add the Vercel frontend origin(s) when deployed. Wired in `basis/api/main.py` via `settings.cors_origins`. Only `GET` methods are allowed.
+Allowed origins come from the `CORS_ORIGINS` env var (comma-separated). Default: `http://localhost:3000`. Production EC2 sets this to include `https://gpu-basis.xyz` (and any Vercel preview origins as needed). Wired in `basis/api/main.py` via `settings.cors_origins`. Only `GET` methods are allowed.
 
 ---
 

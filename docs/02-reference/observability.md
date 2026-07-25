@@ -58,7 +58,7 @@ WHERE collected_at > now() - interval '24 hours'
 GROUP BY source ORDER BY source;"
 ```
 
-Expected rough volumes per 12-hour run: Vast ≈ 2,800, AWS Spot ≈ 300, RunPod ≈ 190, TensorDock ≈ 35.
+Expected rough volumes per 12-hour run (healthy, with `VAST_API_KEY` set): Vast ≈ 2,800–6,400, AWS Spot ≈ 300, RunPod ≈ 190. TensorDock is parked (0 offers). A sudden drop below ~30% of the 21-day rolling median triggers `check_collection_volume.py` (exit 1) and a healthchecks.io `/fail` ping when `HC_VOLUME_PING_URL` is set.
 
 ### Is normalization keeping up?
 
@@ -85,7 +85,7 @@ systemctl list-timers basis-collect.timer        # last / next firing
 journalctl -u basis-collect.service -n 100       # recent run output
 ```
 
-`basis-collect.timer` fires at **08:00 / 20:00 UTC** with `Persistent=true`, so a firing missed while the instance was off is rerun on next boot. The service runs `collect_cron.sh` (collect → normalize → analytics) and pings healthchecks.io (`HC_PING_URL`) on success, so a missing ping is a quick external signal that a run failed.
+`basis-collect.timer` fires at **08:00 / 20:00 UTC** with `Persistent=true`, so a firing missed while the instance was off is rerun on next boot. The service runs `collect_cron.sh` (collect → normalize → analytics → **volume check**) and pings healthchecks.io (`HC_PING_URL`) on success. A separate volume alert fires via `HC_VOLUME_PING_URL` when `check_collection_volume.py` detects a per-provider collapse.
 
 **Dependencies:**
 - Docker (Postgres) running on the instance.
@@ -103,6 +103,8 @@ A gap in the time series almost always means a run errored (Docker down, bad `.e
 | `UnauthorizedOperation` on AWS | IAM user missing permission | Attach `AmazonEC2ReadOnlyAccess` managed policy. |
 | `Failed to parse TensorDock location` | Upstream API shape change | Inspect `provider_metadata` in recent raw rows; update `collectors/tensordock.py`. |
 | `skipped_unknown_gpu > 0` | New GPU name from a provider | Add mapping to `normalization/canonicalize.py`; re-run `run_normalize.py`. |
+| Vast count suddenly ~64 or H100 tier missing | Keyless cap or missing `VAST_API_KEY` | Set `VAST_API_KEY` in `.env`; verify with `uv run python scripts/probe_vast_api.py`. |
+| Volume check exit 1 | One provider collapsed vs 21-day median | `journalctl -u basis-collect.service`; dry-run the failing source; check healthchecks.io volume endpoint. |
 | No data for a recent firing | Scheduled run errored or timer inactive | `systemctl list-timers basis-collect.timer`; read `journalctl -u basis-collect.service`. Run manually to catch up. |
 | Missing healthchecks.io ping | A run failed before reaching the ping step | Check the service journal for where it stopped. |
 
@@ -114,9 +116,5 @@ By choice:
 
 - No APM, no OpenTelemetry, no Sentry.
 - No Prometheus / Grafana.
-- No alerting.
 
-This is a research tool, not a production service. Adding observability frameworks is explicitly out of scope per `AGENTS.md`. If we deploy publicly in the future, consider:
-- Request logs at the ingress
-- Daily digest email of `collect.log`
-- Simple status endpoint that returns last-collection timestamps per source
+This is a research tool, not a production SaaS. Alerting is limited to healthchecks.io (collection success, backup, freshness, **volume anomalies**) and stdlib logging. Adding observability frameworks is explicitly out of scope per `AGENTS.md`.
