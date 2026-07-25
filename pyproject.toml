@@ -42,6 +42,19 @@ ignore = ["E501"]
 [tool.ruff.lint.isort]
 known-first-party = ["basis"]
 
+[tool.ruff.lint.per-file-ignores]
+"backend/alembic/env.py" = ["I001"]
+"backend/alembic/versions/fac2a232ed22_initial_schema.py" = ["I001", "UP007", "UP035", "W291"]
+"backend/basis/api/deps.py" = ["F401"]
+"backend/basis/api/main.py" = ["I001"]
+"backend/basis/api/routes/*.py" = ["B008"]
+"backend/basis/api/routes/health.py" = ["I001"]
+"backend/basis/collectors/__init__.py" = ["I001", "RUF022"]
+"backend/basis/collectors/aws_spot.py" = ["B905", "F401"]
+"backend/basis/collectors/base.py" = ["UP017"]
+"backend/run_collect.py" = ["F401", "I001"]
+"backend/tests/fixtures/capture_fixtures.py" = ["I001"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
@@ -56,3 +69,6 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "slow: scans or recomputes against a large database corpus",
+]

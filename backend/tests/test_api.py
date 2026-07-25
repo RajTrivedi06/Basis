@@ -16,6 +16,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from basis.api.routes.basis import _compute_filtered_timeseries
 from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
 from basis.schemas.api import (
     BasisDecompositionResponse,
@@ -112,59 +113,56 @@ async def test_basis_timeseries(
     assert dates == sorted(dates)
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_basis_timeseries_exclude_vast(
     api_client: AsyncClient, db_session: AsyncSession
 ) -> None:
-    """Exclusion path: recompute on demand with Vast filtered out.
+    """Validate both timeseries paths without encoding a market claim.
 
-    Pinned to ``h100_sxm_80gb`` — the SKU the segment-conditional headline
-    is anchored to. The 2026-05-13 analysis report shows median residual
-    share moving from ~59% (Vast incl.) to ~89% (Vast excl.) over an
-    18-day window. We assert a much weaker version of the same claim:
-    residual must rise by at least 5 pp.
-
-    Skips when the DB doesn't carry the H100 SXM 80GB decomposition or
-    when fewer than 10 days of data are present — the direction of the
-    Vast shift is only stable on production-era samples; on the v1
-    3-day fixture both means land within ~1 pp of each other.
+    The previous direction assertion inverted as the provider mix changed;
+    see ``docs/analysis/2026-07-24-exclude-vast-collapse.md``. This regression
+    therefore checks response structure and verifies that an unfiltered
+    on-demand recomputation agrees with the precomputed full sample.
     """
     sku = "h100_sxm_80gb"
     if not await _has_decomposition(db_session, sku):
         pytest.skip(f"No decomposition for {sku} in this DB.")
 
     baseline = await api_client.get(f"/api/basis/{sku}/timeseries")
-    if baseline.status_code != 200:
-        pytest.skip(f"Baseline timeseries unavailable: {baseline.status_code}")
+    assert baseline.status_code == 200, baseline.text
     base_body = BasisTimeseriesResponse.model_validate(baseline.json())
+    assert base_body.gpu_sku == sku
+    assert base_body.points
 
-    # Sanity that the basic endpoint contract still holds under the
-    # filter, even when the small-sample assertion can't fire.
     filtered = await api_client.get(
         f"/api/basis/{sku}/timeseries", params={"exclude_providers": "vast"}
     )
-    if filtered.status_code == 404:
-        pytest.skip("Excluding Vast left nothing to decompose.")
     assert filtered.status_code == 200, filtered.text
     filt_body = BasisTimeseriesResponse.model_validate(filtered.json())
     assert filt_body.gpu_sku == sku
-    assert len(filt_body.points) >= 1
+    assert filt_body.points
 
-    if len(base_body.points) < 10:
-        pytest.skip(
-            f"Need ≥10 days for the Vast-shift assertion; got {len(base_body.points)}."
-        )
-
-    base_mean = sum(p.pct_residual for p in base_body.points) / len(base_body.points)
-    filt_mean = sum(p.pct_residual for p in filt_body.points) / len(filt_body.points)
-    # Direction-specific to H100 SXM 80GB: Vast contributes large
-    # attributable variance (different verified-tier hosts, geographic
-    # spread, bundled-resource diversity); removing it strips out the
-    # offers observable factors can explain, raising residual share.
-    assert filt_mean > base_mean + 5.0, (
-        f"Excluding vast did not raise residual share for {sku} as expected: "
-        f"base={base_mean:.1f}% filtered={filt_mean:.1f}%"
+    recomputed = await _compute_filtered_timeseries(
+        db_session,
+        sku,
+        base_body.points[0].date,
+        base_body.points[-1].date,
+        [],
     )
+    base_by_date = {point.date: point for point in base_body.points}
+    recomputed_by_date = {point.date: point for point in recomputed}
+    overlapping_dates = base_by_date.keys() & recomputed_by_date.keys()
+    assert overlapping_dates == base_by_date.keys() == recomputed_by_date.keys()
+
+    for date in overlapping_dates:
+        row = recomputed_by_date[date]
+        recomputed_pct_residual = (
+            row.residual_variance / row.total_variance * 100.0
+            if row.total_variance > 0
+            else 0.0
+        )
+        assert abs(base_by_date[date].pct_residual - recomputed_pct_residual) <= 0.05
 
 
 @pytest.mark.asyncio

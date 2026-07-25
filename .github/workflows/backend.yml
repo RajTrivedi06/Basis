@@ -1,0 +1,85 @@
+name: Backend
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Ruff check
+        run: uv run ruff check .
+
+  mypy:
+    name: Mypy (report only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Mypy
+        continue-on-error: true
+        working-directory: backend
+        run: uv run --project .. mypy --config-file ../pyproject.toml basis/
+
+  pytest:
+    name: Pytest
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+asyncpg://basis:basis@localhost:5432/basis
+      ENVIRONMENT: test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: basis
+          POSTGRES_PASSWORD: basis
+          POSTGRES_DB: basis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U basis -d basis"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Seed deterministic fixture
+        working-directory: backend
+        run: uv run --project .. python -m tests.fixtures.seed_db
+      - name: Run deterministic test suite
+        working-directory: backend
+        run: uv run --project .. pytest -m "not slow"
