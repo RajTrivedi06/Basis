@@ -7,6 +7,8 @@ last_updated: 2026-07-24
 
 # Methodology
 
+> **⚠ Headline under revision (2026-07-25).** The ~82% exclude-Vast figure cited below predates a 2026-07-03 structural break in the non-Vast baseline; the exclude-Vast gap has since inverted (≈ −4pp as of 07-23). See [analysis/2026-07-24-exclude-vast-collapse.md](analysis/2026-07-24-exclude-vast-collapse.md). Full treatment awaits the scheduled findings rewrite.
+
 How quoted GPU prices become a residual-variance number, and what choices are frozen in the analytics layer. The narrative interpretation lives in [findings.md](findings.md); this file is the reference for *how* the numbers are computed.
 
 **Temporal note.** Numbers cited below reflect the 77-day window 2026-04-26 → 2026-07-11 of post-cutover EC2 collection, refreshed 2026-07-11. The dashboard updates continuously, so live medians may differ by a few tenths of a pp. **Operational note (2026-07-24):** Vast collector auth (`VAST_API_KEY`) and per-provider volume alerting shipped 2026-07-12; TensorDock parked 2026-07-13. Collection today runs on 3 active providers — numbers below are unchanged until the next findings refresh.

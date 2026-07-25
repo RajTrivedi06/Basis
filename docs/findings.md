@@ -7,6 +7,8 @@ last_updated: 2026-07-24
 
 # How fungible is GPU compute? Measuring basis risk in quoted H100 prices
 
+> **⚠ Headline under revision (2026-07-25).** The exclude-Vast conditional below (~82%) predates a structural break: on 2026-07-03 the non-Vast baseline collapsed (four AWS Virginia spot offers repriced) and the exclude-Vast gap has since inverted to ≈ −4pp. See [analysis/2026-07-24-exclude-vast-collapse.md](analysis/2026-07-24-exclude-vast-collapse.md). Numbers below remain the 77-day-window record until the scheduled narrative rewrite.
+
 On 2026-07-11, an NVIDIA H100 SXM 80GB rented for $1.99/hr on AWS Spot in US-East and $8.60/hr on AWS Spot in Japan — **4.3×** spread, same day, same provider, same spot-pricing mechanism, differing only by region. Widen the lens to all four providers and the gap is larger still. Conventional wisdom says most of that variance comes from the obvious stuff — region, commitment type, who's selling it. I built **Basis**, a public-data study that collects quoted GPU prices twice daily from four providers and decomposes the cross-sectional variance into observable factors and a residual. The finding, across 77 days of EC2-era collection:
 
 > **For H100 SXM 80GB, ~60% of log-price variance is unexplained when all four providers are included — and ~82% when Vast.ai is excluded.** The headline depends on which segment of the market you measure, and that conditionality is itself the finding.
