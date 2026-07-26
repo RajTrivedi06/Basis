@@ -23,6 +23,7 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 | Vast.ai | Marketplace (REST) | **Free API key required** (keyless capped at 64 offers since 2026-06-23) | Twice daily | ~2,800 |
 | RunPod | Neocloud (GraphQL) | Optional API key | Twice daily | ~190 |
 | AWS EC2 Spot | Hyperscaler (boto3) | IAM access key + `ec2:DescribeSpotPriceHistory` | Twice daily | ~300 |
+| Azure Retail Prices | Hyperscaler (REST) | None | Twice daily | Varies by region/SKU |
 | TensorDock | Neocloud marketplace (REST) | Public feed drained — **parked 2026-07-13** | — | — |
 | Lambda Labs | Neocloud (REST) | Requires payment method — **dropped** | — | — |
 
@@ -74,6 +75,28 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 - **Notes:**
   - `availability_zone` (e.g., `us-east-1a`) is stored in `region_reported`; the trailing letter is stripped during region normalization.
   - Only spot prices. On-demand and reserved AWS pricing is not collected (that's a separate pricing API).
+
+---
+
+## Azure Retail Prices
+
+- **Type:** Hyperscaler retail price catalog
+- **Endpoint:** `https://prices.azure.com/api/retail/prices`
+- **Auth:** None.
+- **Format:** Paginated JSON with up to 1,000 full retail-price items per page. The collector follows `NextPageLink` until it is null.
+- **Collector:** `backend/basis/collectors/azure.py`
+- **VM sizes tracked:** 13 explicitly mapped full-GPU sizes across ND H100 v5, ND A100 v4, NC A100 v4, NCasT4 v3, and NVadsA10 v5. Fractional A10 profiles and undocumented aliases are excluded rather than guessed.
+- **Regions:** Azure Resource Manager names such as `eastus`, `westus3`, and `westeurope`; 20 GPU-relevant commercial regions are explicitly mapped in `normalization/region.py`. Unknown regions return empty normalized fields and are logged.
+- **Commitment types captured:** `on_demand`, `spot`, `reserved_1y`, and `reserved_3y`.
+- **Price handling:**
+  - Consumption prices are quoted in USD per VM-hour and divided by the VM's explicit GPU count.
+  - Reservation prices are upfront totals. The collector divides by 8,760 hours for one year or 26,280 hours for three years, then divides by GPU count. The source total, term hours, effective instance-hour price, and formula are retained in `provider_metadata.price_conversion`.
+- **Filtering and skips:**
+  - The OData `$filter` restricts results to `serviceName eq 'Virtual Machines'`, documented GPU-family predicates, Linux products, `Consumption`/supported `Reservation` prices, and non-Low-Priority meters. The collector's exact 13-SKU table remains the authoritative allowlist.
+  - `Consumption` items containing `Spot` in `skuName` or `meterName` are labeled `spot`; other supported consumption items are `on_demand`.
+  - Legacy `Low Priority`, Dev/Test consumption, unsupported reservation terms, non-USD prices, non-hourly consumption meters, and unmapped VM sizes are skipped and logged.
+  - Transient 429/5xx and transport failures use bounded 1/2/4-second backoff.
+- **Raw-data fidelity:** Each observation stores the complete retail-price item unchanged in `raw_payload`.
 
 ---
 

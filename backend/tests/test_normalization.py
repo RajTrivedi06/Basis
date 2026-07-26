@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from basis.config import settings
 from basis.db.models import CanonicalOffer, RawObservation
-from basis.normalization.bundle import explain_extract_bundle
+from basis.normalization.bundle import explain_extract_bundle, extract_bundle
 from basis.normalization.canonicalize import canonicalize_gpu, explain_canonicalize_gpu
 from basis.normalization.commitment import explain_canonicalize_commitment
 from basis.normalization.pipeline import run_normalization
@@ -153,6 +153,63 @@ def test_vast_iso2_passthrough_still_works() -> None:
     """
     assert normalize_region("vast", "Virginia, US").country == "US"
     assert normalize_region("vast", "Tokyo, JP").country == "JP"
+
+
+def test_azure_region_write_and_explain_paths_match() -> None:
+    """Azure ARM region lookup is identical on write and explain paths."""
+    region = normalize_region("azure", "eastus")
+    explanation = explain_normalize_region("azure", "eastus")
+
+    assert (region.country, region.state, region.city) == (
+        explanation.country,
+        explanation.state,
+        explanation.city,
+    )
+    assert (region.country, region.state, region.city) == (
+        "US",
+        "Virginia",
+        None,
+    )
+    assert explanation.branch == "azure"
+
+
+def test_unknown_azure_region_returns_empty_on_both_paths() -> None:
+    """Unknown Azure regions are not guessed (ADR-0002)."""
+    region = normalize_region("azure", "moonbasecentral")
+    explanation = explain_normalize_region("azure", "moonbasecentral")
+
+    assert (region.country, region.state, region.city) == (None, None, None)
+    assert (explanation.country, explanation.state, explanation.city) == (
+        None,
+        None,
+        None,
+    )
+    assert "no match" in explanation.trail[-1]
+
+
+def test_azure_bundle_fields_are_all_missing() -> None:
+    """Azure follows the hyperscaler pattern: no inferred bundle fields."""
+    bundle = extract_bundle(
+        "azure", {"instance_type": "Standard_ND96isr_H100_v5"}
+    )
+    explanation = explain_extract_bundle(
+        "azure", {"instance_type": "Standard_ND96isr_H100_v5"}
+    )
+
+    assert (
+        bundle.vcpus,
+        bundle.ram_gb,
+        bundle.storage_gb,
+        bundle.networking_type,
+        bundle.verification_tier,
+    ) == (None, None, None, None, None)
+    assert (
+        explanation.vcpus,
+        explanation.ram_gb,
+        explanation.storage_gb,
+        explanation.networking_type,
+        explanation.verification_tier,
+    ) == (None, None, None, None, None)
 
 
 def _diff_canonical_against_explain(

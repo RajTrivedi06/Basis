@@ -27,6 +27,7 @@ import httpx
 import pytest
 
 from basis.collectors.aws_spot import AWSSpotCollector
+from basis.collectors.azure import AzureCollector
 from basis.collectors.runpod import RunPodCollector
 from basis.collectors.tensordock import TensorDockCollector
 from basis.collectors.vast import VastCollector, _request_with_retry
@@ -42,6 +43,7 @@ _MIN_OBS = {
     "runpod": 10,
     "tensordock": 10,
     "aws_spot": 5,
+    "azure": 5,
 }
 
 
@@ -125,6 +127,204 @@ def test_aws_spot_collector_parses_fixture() -> None:
         if obs is not None:
             observations.append(obs)
     _assert_valid_observations(observations, "aws_spot", _MIN_OBS["aws_spot"])
+
+
+def test_azure_collector_parses_committed_fixture() -> None:
+    """AzureCollector parses a trimmed real Retail Prices response page."""
+    page = json.loads((FIXTURES_DIR / "azure_sample.json").read_text())
+    now = datetime.datetime.now(datetime.UTC)
+    observations: list[RawObservationCreate] = []
+    for item in page["Items"]:
+        obs = AzureCollector._parse_item(item, now)
+        if obs is not None:
+            observations.append(obs)
+
+    _assert_valid_observations(observations, "azure", _MIN_OBS["azure"])
+    assert len(observations) == 7
+    assert all(obs.raw_payload in page["Items"] for obs in observations)
+
+
+def _azure_item(
+    *,
+    arm_sku_name: str = "Standard_ND96isr_H100_v5",
+    retail_price: float = 32.0,
+    price_type: str = "Consumption",
+    sku_name: str = "ND96isrH100v5",
+    meter_name: str = "ND96isrH100v5",
+    reservation_term: str | None = None,
+) -> dict:
+    return {
+        "currencyCode": "USD",
+        "retailPrice": retail_price,
+        "unitPrice": retail_price,
+        "armRegionName": "eastus",
+        "meterId": "test-meter",
+        "meterName": meter_name,
+        "productName": "Virtual Machines GPU Series",
+        "skuName": sku_name,
+        "serviceName": "Virtual Machines",
+        "unitOfMeasure": "1 Hour",
+        "type": price_type,
+        "armSkuName": arm_sku_name,
+        **(
+            {"reservationTerm": reservation_term}
+            if reservation_term is not None
+            else {}
+        ),
+    }
+
+
+def test_azure_per_instance_to_per_gpu_price_conversion() -> None:
+    """An 8x H100 VM's hourly instance price is divided by eight."""
+    item = _azure_item(retail_price=32.0)
+    obs = AzureCollector._parse_item(item, datetime.datetime.now(datetime.UTC))
+
+    assert obs is not None
+    assert obs.price_hourly == pytest.approx(4.0)
+    assert obs.gpu_model_reported == "H100 SXM"
+    assert obs.provider_metadata["gpu_count"] == 8
+    assert obs.provider_metadata["price_conversion"]["formula"] == (
+        "retailPrice / gpu_count"
+    )
+    assert obs.raw_payload == item
+
+
+@pytest.mark.parametrize(
+    ("sku_name", "meter_name", "expected_commitment"),
+    [
+        ("ND96isrH100v5", "ND96isrH100v5", "on_demand"),
+        ("ND96isrH100v5 Spot", "ND96isrH100v5 Spot", "spot"),
+    ],
+)
+def test_azure_consumption_commitment_classification(
+    sku_name: str, meter_name: str, expected_commitment: str
+) -> None:
+    item = _azure_item(sku_name=sku_name, meter_name=meter_name)
+    obs = AzureCollector._parse_item(item, datetime.datetime.now(datetime.UTC))
+
+    assert obs is not None
+    assert obs.commitment_type_reported == expected_commitment
+
+
+@pytest.mark.parametrize(
+    ("term", "term_hours", "commitment"),
+    [
+        ("1 Year", 365 * 24, "reserved_1y"),
+        ("3 Years", 3 * 365 * 24, "reserved_3y"),
+    ],
+)
+def test_azure_reservation_total_converted_to_effective_gpu_hour(
+    term: str, term_hours: int, commitment: str
+) -> None:
+    # Choose an upfront total that converts to exactly $2/GPU/hour for 8 GPUs.
+    upfront_total = 2.0 * 8 * term_hours
+    item = _azure_item(
+        retail_price=upfront_total,
+        price_type="Reservation",
+        reservation_term=term,
+    )
+    obs = AzureCollector._parse_item(item, datetime.datetime.now(datetime.UTC))
+
+    assert obs is not None
+    assert obs.commitment_type_reported == commitment
+    assert obs.price_hourly == pytest.approx(2.0)
+    conversion = obs.provider_metadata["price_conversion"]
+    assert conversion["source_price_basis"] == "USD upfront total"
+    assert conversion["term_hours"] == term_hours
+    assert conversion["formula"] == "retailPrice / term_hours / gpu_count"
+
+
+def test_azure_low_priority_is_skipped() -> None:
+    item = _azure_item(
+        sku_name="ND96isrH100v5 Low Priority",
+        meter_name="ND96isrH100v5 Low Priority",
+    )
+    assert (
+        AzureCollector._parse_item(item, datetime.datetime.now(datetime.UTC))
+        is None
+    )
+
+
+def test_azure_unmapped_sku_is_skipped() -> None:
+    item = _azure_item(arm_sku_name="Standard_NC999_Unknown_v1")
+    assert (
+        AzureCollector._parse_item(item, datetime.datetime.now(datetime.UTC))
+        is None
+    )
+
+
+async def test_azure_retry_succeeds_after_transient_429s() -> None:
+    """Azure requests use the same bounded transient-failure retry pattern."""
+    from basis.collectors.azure import _request_with_retry as azure_request
+
+    attempts = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        attempts["n"] += 1
+        if attempts["n"] < 3:
+            return httpx.Response(429, json={"error": "rate limited"})
+        return httpx.Response(200, json={"Items": [], "NextPageLink": None})
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler)
+    ) as client:
+        response = await azure_request(
+            client, "https://example.invalid/", backoffs=(0.0, 0.0, 0.0)
+        )
+
+    assert response.status_code == 200
+    assert attempts["n"] == 3
+
+
+async def test_azure_collect_follows_next_page_link() -> None:
+    """A non-null NextPageLink is fetched and its items are retained."""
+    import unittest.mock
+
+    from basis.collectors import azure as azure_module
+
+    first_item = _azure_item(retail_price=32.0)
+    second_item = _azure_item(
+        retail_price=24.0,
+        sku_name="ND96isrH100v5 Spot",
+        meter_name="ND96isrH100v5 Spot",
+    )
+    requested_urls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested_urls.append(str(request.url))
+        if request.url.params.get("$skip") == "1":
+            return httpx.Response(
+                200,
+                json={"Items": [second_item], "NextPageLink": None},
+            )
+        return httpx.Response(
+            200,
+            json={
+                "Items": [first_item],
+                "NextPageLink": (
+                    "https://prices.azure.com/api/retail/prices?$skip=1"
+                ),
+            },
+        )
+
+    transport = httpx.MockTransport(handler)
+    real_client_cls = azure_module.httpx.AsyncClient
+
+    def make_client(*args: object, **kwargs: object) -> httpx.AsyncClient:
+        return real_client_cls(transport=transport)
+
+    with unittest.mock.patch.object(
+        azure_module.httpx, "AsyncClient", make_client
+    ):
+        observations = await AzureCollector().collect()
+
+    assert len(observations) == 2
+    assert [obs.commitment_type_reported for obs in observations] == [
+        "on_demand",
+        "spot",
+    ]
+    assert len(requested_urls) == 2
+    assert "$skip=1" in requested_urls[1]
 
 
 async def test_vast_retry_succeeds_after_transient_429s() -> None:
