@@ -69,3 +69,16 @@ Persisted Vast volume rises from ~3,100 to ~4,100 rows/run (the formerly-discard
 - Era-D boundary date to be recorded in `findings.md`/`methodology.md` at the Stage-5 narrative rewrite.
 - `docs/02-reference/data-sources.md` still documents `is_bid` as the commitment discriminator for Vast — its Vast section needs a correction pass (flagged, not silently edited; outside this task's file list).
 - Backfill of `spot` labels for historical rows: rejected (see above). If Vast ever exposes an authoritative per-offer commitment flag, revisit.
+
+## Era D — fix deployed to production (2026-07-26)
+
+The fix reached production on **2026-07-26 ~02:50 UTC** (EC2 pulled main `de20acb`, uvicorn restarted per the standing rule). The first scheduled collection with the fix ran **2026-07-26 08:00 UTC** and persisted Vast spot rows for the first time:
+
+```
+ commitment_type_reported | count
+--------------------------+-------
+ on_demand                |  2428
+ spot                     |  1677
+```
+
+**Vast spot offers are present from the 2026-07-26 08:00 UTC run onward. All decomposition series have a regime boundary here (era D):** from this date, the commitment factor can absorb Vast price variance it structurally could not see before, and Vast per-run volume steps up ~+1,700 rows. Any before/after comparison across 2026-07-26 must account for both.

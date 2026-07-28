@@ -21,6 +21,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
+from pathlib import Path
+
+# collect_cron.sh invokes this as `uv run python scripts/check_collection_volume.py`,
+# which puts backend/scripts/ (not backend/) at sys.path[0] — `import basis` then
+# fails. Bootstrap the backend dir onto the path so the script works regardless of
+# how it is invoked. (This crash silently killed the volume alert in production
+# from 2026-07-13 to 2026-07-26.)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sqlalchemy import text
 
