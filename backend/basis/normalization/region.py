@@ -5,7 +5,10 @@ We normalize to country at minimum. State and city are included when clearly
 identifiable from the source data.
 """
 
+import logging
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -31,6 +34,31 @@ AWS_REGION_MAP: dict[str, tuple[str, str | None]] = {
     "ap-south-1": ("IN", "Mumbai"),
     "ca-central-1": ("CA", "Montreal"),
     "sa-east-1": ("BR", "São Paulo"),
+}
+
+# Azure Resource Manager region -> (country, state/city).
+# Kept to GPU-relevant commercial-cloud regions observed in the retail feed.
+AZURE_REGION_MAP: dict[str, tuple[str, str | None]] = {
+    "eastus": ("US", "Virginia"),
+    "eastus2": ("US", "Virginia"),
+    "centralus": ("US", "Iowa"),
+    "northcentralus": ("US", "Illinois"),
+    "southcentralus": ("US", "Texas"),
+    "westus": ("US", "California"),
+    "westus2": ("US", "Washington"),
+    "westus3": ("US", "Arizona"),
+    "canadacentral": ("CA", "Ontario"),
+    "northeurope": ("IE", "Ireland"),
+    "westeurope": ("NL", "Netherlands"),
+    "uksouth": ("GB", "London"),
+    "francecentral": ("FR", "Paris"),
+    "germanywestcentral": ("DE", "Frankfurt"),
+    "swedencentral": ("SE", "Gävle"),
+    "polandcentral": ("PL", "Warsaw"),
+    "japaneast": ("JP", "Tokyo"),
+    "southeastasia": ("SG", "Singapore"),
+    "australiaeast": ("AU", "New South Wales"),
+    "centralindia": ("IN", "Pune"),
 }
 
 # ISO-2 country codes we pass through as-is.
@@ -99,6 +127,8 @@ def normalize_region(source: str, region_reported: str | None) -> NormalizedRegi
 
     if source == "aws_spot":
         return _normalize_aws_region(region_reported)
+    elif source == "azure":
+        return _normalize_azure_region(region_reported)
     elif source == "vast":
         return _normalize_vast_region(region_reported)
     elif source == "tensordock":
@@ -115,6 +145,15 @@ def _normalize_aws_region(az: str) -> NormalizedRegion:
     info = AWS_REGION_MAP.get(region)
     if info:
         return NormalizedRegion(country=info[0], state=info[1])
+    return NormalizedRegion()
+
+
+def _normalize_azure_region(region: str) -> NormalizedRegion:
+    """Normalize an Azure ARM region such as 'eastus' to region info."""
+    info = AZURE_REGION_MAP.get(region)
+    if info:
+        return NormalizedRegion(country=info[0], state=info[1])
+    logger.warning("Unknown Azure ARM region %r; returning empty region", region)
     return NormalizedRegion()
 
 
@@ -163,6 +202,7 @@ class RegionNormalizationExplanation:
 
     `branch` names the source-specific code path taken:
       "aws_spot"   — AWS availability-zone parsing
+      "azure"      — Azure ARM-region lookup
       "vast"       — Vast.ai 'City, CC' or 'CC' geolocation parsing
       "tensordock" — TensorDock three-part region strings
       "empty"      — region_reported was None/empty
@@ -197,6 +237,8 @@ def explain_normalize_region(
 
     if source == "aws_spot":
         return _explain_aws_region(region_reported)
+    if source == "azure":
+        return _explain_azure_region(region_reported)
     if source == "vast":
         return _explain_vast_region(region_reported)
     if source == "tensordock":
@@ -234,6 +276,37 @@ def _explain_aws_region(az: str) -> RegionNormalizationExplanation:
         source="aws_spot",
         region_reported=az,
         branch="aws_spot",
+        country=None,
+        state=None,
+        city=None,
+        trail=trail,
+    )
+
+
+def _explain_azure_region(region: str) -> RegionNormalizationExplanation:
+    trail = [f"input: Azure ARM region {region!r}"]
+    info = AZURE_REGION_MAP.get(region)
+    if info:
+        trail.append(
+            f"AZURE_REGION_MAP[{region!r}] -> "
+            f"(country={info[0]!r}, state={info[1]!r})"
+        )
+        return RegionNormalizationExplanation(
+            source="azure",
+            region_reported=region,
+            branch="azure",
+            country=info[0],
+            state=info[1],
+            city=None,
+            trail=trail,
+        )
+    trail.append(
+        f"AZURE_REGION_MAP[{region!r}] -> no match; returning empty region"
+    )
+    return RegionNormalizationExplanation(
+        source="azure",
+        region_reported=region,
+        branch="azure",
         country=None,
         state=None,
         city=None,

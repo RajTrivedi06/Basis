@@ -8,8 +8,10 @@ Usage:
 
 import asyncio
 import logging
+import statistics
 import sys
 
+from basis.collectors.azure import AzureCollector
 from basis.collectors.vast import VastCollector
 from basis.collectors.runpod import RunPodCollector
 from basis.collectors.aws_spot import AWSSpotCollector
@@ -32,6 +34,7 @@ AVAILABLE = {
     "vast": VastCollector,
     "runpod": RunPodCollector,
     "aws_spot": AWSSpotCollector,
+    "azure": AzureCollector,
 }
 
 
@@ -59,14 +62,49 @@ async def main() -> None:
 
         # Print a summary
         gpu_counts: dict[str, int] = {}
+        gpu_prices: dict[str, list[float]] = {}
+        gpu_commitment_prices: dict[tuple[str, str], list[float]] = {}
+        commitment_counts: dict[str, int] = {}
         for obs in observations:
             gpu_counts[obs.gpu_model_reported] = gpu_counts.get(obs.gpu_model_reported, 0) + 1
+            gpu_prices.setdefault(obs.gpu_model_reported, []).append(obs.price_hourly)
+            commitment = obs.commitment_type_reported or "unknown"
+            commitment_counts[commitment] = commitment_counts.get(commitment, 0) + 1
+            gpu_commitment_prices.setdefault(
+                (obs.gpu_model_reported, commitment), []
+            ).append(obs.price_hourly)
 
         logger.info(
             "%s: %d observations across %d GPU types", name, len(observations), len(gpu_counts)
         )
         for gpu, count in sorted(gpu_counts.items(), key=lambda x: -x[1]):
-            logger.info("  %-25s %d offers", gpu, count)
+            prices = gpu_prices[gpu]
+            logger.info(
+                "  %-25s %d offers | $%.2f-$%.2f/GPU-hr (median $%.2f)",
+                gpu,
+                count,
+                min(prices),
+                max(prices),
+                statistics.median(prices),
+            )
+            for commitment in sorted(commitment_counts):
+                commitment_prices = gpu_commitment_prices.get((gpu, commitment))
+                if commitment_prices:
+                    logger.info(
+                        "    %-13s %4d | $%.2f-$%.2f/GPU-hr (median $%.2f)",
+                        commitment,
+                        len(commitment_prices),
+                        min(commitment_prices),
+                        max(commitment_prices),
+                        statistics.median(commitment_prices),
+                    )
+        logger.info(
+            "  commitment mix: %s",
+            ", ".join(
+                f"{commitment}={count}"
+                for commitment, count in sorted(commitment_counts.items())
+            ),
+        )
 
         if dry_run:
             logger.info("Dry run — skipping database save")
