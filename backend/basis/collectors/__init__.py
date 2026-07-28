@@ -8,6 +8,7 @@ from basis.collectors.vast import VastCollector
 from basis.collectors.runpod import RunPodCollector
 from basis.collectors.aws_spot import AWSSpotCollector
 from basis.collectors.azure import AzureCollector
+from basis.collectors.gcp import GCPCollector
 from basis.collectors.lambda_labs import LambdaLabsCollector
 from basis.collectors.tensordock import TensorDockCollector
 
@@ -16,6 +17,7 @@ COLLECTORS = [
     RunPodCollector,
     AWSSpotCollector,
     AzureCollector,
+    GCPCollector,
     LambdaLabsCollector,
     TensorDockCollector,
 ]
@@ -26,6 +28,7 @@ __all__ = [
     "RunPodCollector",
     "AWSSpotCollector",
     "AzureCollector",
+    "GCPCollector",
     "LambdaLabsCollector",
     "TensorDockCollector",
 ]
