@@ -1,16 +1,13 @@
 name: Backend
 
+# No paths filter: Ruff/Pytest are required checks on protected main, and a
+# paths-filtered required check never reports on (e.g.) docs-only PRs, which
+# blocks their merge forever. Running on every PR is cheap (<1 min).
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend.yml"
   push:
     branches: [main]
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend.yml"
 
 permissions:
   contents: read
