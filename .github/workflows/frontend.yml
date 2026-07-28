@@ -1,16 +1,13 @@
 name: Frontend
 
+# No paths filter: the "test" job is a required check on protected main, and a
+# paths-filtered required check never reports on (e.g.) docs-only PRs, which
+# blocks their merge forever. Running on every PR is cheap (~1 min).
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend.yml"
   push:
     branches: [main]
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend.yml"
 
 jobs:
   test:
