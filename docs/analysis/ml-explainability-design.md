@@ -1,6 +1,6 @@
 # ML Explainability Design — XGBoost Bound + Host Effects (Stage 3, Task 3.0)
 
-**Status:** DRAFT — awaiting Director sign-off. No training runs until approved AND Stage 2 exit gate confirmed.
+**Status:** APPROVED — Director sign-off 2026-07-29, conditional on Amendments 1–2 (provider scope this cycle; schema + era-derivation touches), both incorporated below. Training runs remain gated on Stage 2 close.
 **Author:** Manager (Claude), 2026-07-29. Payload inventory verified against the local corpus (restored 2026-07-29: 507,522 raw rows, 5 sources).
 **Governing ADRs:** ADR-0002 (normalization stays rule-based; ML is a separate analysis layer), ADR-0006 (raw_payload access is read-only via FK join).
 
@@ -14,12 +14,12 @@ Establish a defensible upper bound on how much of GPU price variance is explaina
 
 - **SKU:** `h100_sxm_80gb` only. Per-SKU analysis; no pooling — different SKUs are different markets with different provider mixes and price levels; pooling would let the model "explain" cross-SKU level differences and inflate R² meaninglessly.
 - **Current sample (local corpus, 2026-07-29):** ~12,200 canonical H100-SXM rows over 95 distinct days. Provider mix: aws_spot 5,770 (incl. 90-day backfill) · vast 5,157 · runpod 1,134 · azure 96 · tensordock 48.
-- **Providers:** all except **tensordock** (deregistered in Stage 0; 48 rows ending 06-12; too small to model, would only add a near-empty categorical level). GCP rows (first cron data expected 07-30) flow in automatically at train time — the extraction is source-agnostic over canonical rows.
-- **Eras.** A = 04-26→06-15 (pre-cap) · B = 06-16→07-11 (Vast cap/outage; 21 zero-Vast days) · C = 07-12→07-25 (post-auth-fix) · D = 07-26→ (Vast spot rows begin).
+- **Providers (Director Amendment 1):** this training cycle trains and evaluates on **vast, runpod, aws_spot, and historical tensordock only**. Azure (one run of history) and GCP (zero at gate day) are **excluded this cycle**: their rows would sit in the holdout with essentially no training history and drag OOS R² down as an artifact of onboarding timing, not of the thesis. They join at the first retrain once they have real history (§ runbook retrain triggers anticipate exactly this). The trained-provider list is recorded in `metadata.trained_providers` and disclosed in the frontend caveat copy. Extraction takes an explicit provider allowlist parameter.
+- **Eras.** A = 04-26→06-15 (pre-cap) · B = 06-16→07-11 (Vast cap/outage; 21 zero-Vast days) · C = 07-12→07-25 (post-auth-fix) · D = 07-26→ (Vast spot rows begin). **Era derivation is total (Amendment 2):** any date before 2026-04-26 maps to label `era_0_backfill` rather than erroring. Factual note: the current corpus has no such rows (backfill min day is 04-30 ≥ era-A start), but future retrains may backfill deeper — the label is defensive and its (currently empty) presence is harmless.
   - **Primary fit: full corpus with `era` as a categorical feature.** Rationale: (a) time-based CV needs the long history — eras C+D alone are ~18 days, too few for expanding-window folds; (b) era-B composition shift (Vast absent) is exactly the kind of observable regime information the model should be allowed to condition on, and SHAP will show honestly how much work the era label does; (c) dropping era B would delete most AWS backfill days too.
   - **Robustness fit: eras C+D only** (healthy collection, Vast spot visible). Reported alongside the primary in the artifact. If the two disagree materially (>0.1 in holdout R²), that is a finding to flag, not smooth over.
   - Era-B capped days need no special handling beyond the label: Vast simply has no rows there; the model sees the surviving providers.
-- **AWS backfill rows** carry `provider_metadata.backfill=true` but real historical timestamps; they are treated by their observed day like any row. The spot-history API is the same source cron uses, so no schema drift.
+- **AWS backfill rows** carry `provider_metadata.backfill=true` but real historical timestamps; they are treated by their observed day like any row. The spot-history API is the same source cron uses, so no schema drift. Per Amendment 2, the extraction layer surfaces the `backfill` flag (available for filtering and labeling); ruling on its use: it is **not a model feature** — it is collection provenance, perfectly confounded with source × date range, and the era label already carries regime information. It exists in the feature frame as a non-feature metadata column.
 
 ## 2. Target & unit of observation
 
@@ -50,7 +50,8 @@ Establish a defensible upper bound on how much of GPU price variance is explaina
 | normalized_price_usd_per_hour | **BANNED** | derived from the target |
 | id, raw_observation_id | exclude | identifiers |
 | collected_at | exclude as feature | used ONLY for splits/dedup. No continuous calendar-time feature: under time-based CV the model would extrapolate a fitted trend into test windows — that measures trend persistence, not feature explanatory power |
-| *(engineered)* era ∈ {A,B,C,D} | **include** | regime label, §1 rationale |
+| *(engineered)* era ∈ {era_0_backfill,A,B,C,D} | **include** | regime label, §1 rationale; era_0_backfill defensive (empty in current corpus) |
+| *(metadata, non-feature)* provider_metadata.backfill | exclude as feature | provenance flag surfaced by extraction for filtering/labeling only (Amendment 2, §1 ruling) |
 
 ### 3.2 Vast `raw_payload` keys — full triage (100 keys, verified against corpus 2026-07-29)
 
@@ -121,6 +122,7 @@ Time-based splits only, split on **UTC day** (never rows): same offer/host recur
 - **CV folds:** expanding-window over the remaining ~85 days, 4 folds, test windows of ~15 days: F1 train d1–25 / test d26–40 · F2 ≤40 / 41–55 · F3 ≤55 / 56–70 · F4 ≤70 / 71–85 (day indices over sorted distinct days; recomputed at train time as the corpus grows).
 - Report **per-fold** n_train / n_test / provider mix / R² — fold composition varies a lot across eras (era-B folds are Vast-free) and a single averaged R² would hide that. Refuse single-number reporting.
 - Holdout model trains on all pre-holdout days with the same feature pipeline.
+- **Per-provider holdout R² (Amendment 1):** report holdout R² per trained provider alongside the aggregate — if one provider is carrying or tanking the number, that must be visible, not averaged away. Goes into `metrics.r2_holdout_by_provider`.
 - Hyperparameters: fixed modest defaults (depth ≤ 6, ≤ 600 trees, early stopping on the last CV fold). No hyperparameter search against the holdout, ever.
 - **Automated leakage tests:** (a) per-fold assertion max(train day) < min(test day); (b) permuted-target run — shuffle y within the training set, refit, holdout R² must be ≤ 0.05 (†if it isn't, features encode the target — stop); (c) duplicate-row check across train/test after dedup.
 
@@ -153,6 +155,7 @@ One versioned JSON + one model file (`.ubj`), uploaded to `s3://basis-backups-ra
   "metadata": {
     "trained_at": "2026-07-31T18:00:00Z",
     "sku": "h100_sxm_80gb",
+    "trained_providers": ["vast", "runpod", "aws_spot", "tensordock"],
     "corpus_through": "2026-07-30",
     "corpus_rows": 0,
     "n_rows_after_dedup": 0,
@@ -167,6 +170,7 @@ One versioned JSON + one model file (`.ubj`), uploaded to `s3://basis-backups-ra
        "r2_oos": 0.0, "rmse_log": 0.0, "provider_mix_test": {"vast": 0.0}}
     ],
     "holdout": {"n_days": 10, "n_test": 0, "r2_oos": 0.0, "r2_oos_pooled": 0.0, "rmse_log": 0.0},
+    "r2_holdout_by_provider": {"vast": 0.0, "runpod": 0.0, "aws_spot": 0.0, "tensordock": 0.0},
     "anova_explained_same_days": 0.0,
     "gap": 0.0,
     "permuted_target_r2": 0.0,
@@ -186,7 +190,8 @@ One versioned JSON + one model file (`.ubj`), uploaded to `s3://basis-backups-ra
   "caveats": [
     "observable-features bound; says nothing about unobserved attributes",
     "Vast-feature-rich: non-Vast providers described by canonical columns only",
-    "corpus window 2026-04-26 → <corpus_through>; era B has 21 zero-Vast days"
+    "corpus window 2026-04-26 → <corpus_through>; era B has 21 zero-Vast days",
+    "trained on vast/runpod/aws_spot/tensordock only; Azure and GCP join at first retrain with real history"
   ],
   "model_file": "models/explainability_v1.0.0_20260731.ubj"
 }
