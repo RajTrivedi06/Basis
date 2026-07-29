@@ -24,6 +24,7 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 | RunPod | Neocloud (GraphQL) | Optional API key | Twice daily | ~190 |
 | AWS EC2 Spot | Hyperscaler (boto3) | IAM access key + `ec2:DescribeSpotPriceHistory` | Twice daily | ~300 |
 | Azure Retail Prices | Hyperscaler (REST) | None | Twice daily | Varies by region/SKU |
+| GCP Cloud Billing | Hyperscaler (REST) | GCP API key (`GCP_API_KEY`) | Twice daily | TBD |
 | TensorDock | Neocloud marketplace (REST) | Public feed drained — **parked 2026-07-13** | — | — |
 | Lambda Labs | Neocloud (REST) | Requires payment method — **dropped** | — | — |
 
@@ -97,6 +98,21 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
   - Legacy `Low Priority`, Dev/Test consumption, unsupported reservation terms, non-USD prices, non-hourly consumption meters, and unmapped VM sizes are skipped and logged.
   - Transient 429/5xx and transport failures use bounded 1/2/4-second backoff.
 - **Raw-data fidelity:** Each observation stores the complete retail-price item unchanged in `raw_payload`.
+## GCP Cloud Billing Catalog
+
+- **Type:** Hyperscaler public pricing catalog
+- **Endpoint:** `https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=<GCP_API_KEY>`
+- **Auth:** GCP API key with Cloud Billing API enabled. Set `GCP_API_KEY`. Without a key, the collector logs a warning and returns an empty list (still registered).
+- **Format:** Paginated JSON SKU list (`nextPageToken`). Service ID `6F81-5844-456A` is Compute Engine (verified via the services list endpoint).
+- **Collector:** `backend/basis/collectors/gcp.py`
+- **SKUs collected:** `category.resourceGroup == "GPU"` attach/on-demand GPU line items for mapped models (H100 80GB, A100 80GB, A100 40GB, L4, T4, V100, P100).
+- **Commitment types captured:** `on_demand`, `spot` (Spot/Preemptible), `reserved_1y`, `reserved_3y` (Commitment v1 CUD when term is explicit). Ambiguous descriptions are skipped per ADR-0002.
+- **Price handling:** Prices are **already per-GPU-hour** from `pricingInfo[0].pricingExpression.tieredRates[-1].unitPrice` (`units` + `nanos/1e9` USD). No division by GPU count. `usageUnit` must be `h`.
+- **Region handling:** Concrete region IDs (e.g. `us-central1`, `europe-west4`) map via `GCP_REGION_MAP` in `normalization/region.py`. Multi-region strings (`Americas`, `global`, etc.) are stored as-is in `region_reported` and normalize to empty country (honest `None`). The collector logs multi-region SKU share each run.
+- **Bundle fields:** All `None`. GCP's per-GPU price is the GPU **attach** price; the host VM is billed separately (analogous to TensorDock's `price_per_hr` caveat).
+- **Notes:**
+  - Full SKU JSON is stored in `raw_payload`.
+  - Unknown GPU descriptions and ambiguous commitment shapes are skip-and-log.
 
 ---
 

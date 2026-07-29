@@ -61,6 +61,48 @@ AZURE_REGION_MAP: dict[str, tuple[str, str | None]] = {
     "centralindia": ("IN", "Pune"),
 }
 
+# GCP regions with GPU availability (region_id -> (country, city/state))
+GCP_REGION_MAP: dict[str, tuple[str, str | None]] = {
+    "us-central1": ("US", "Iowa"),
+    "us-east1": ("US", "South Carolina"),
+    "us-east4": ("US", "Northern Virginia"),
+    "us-east5": ("US", "Columbus"),
+    "us-south1": ("US", "Dallas"),
+    "us-west1": ("US", "Oregon"),
+    "us-west2": ("US", "Los Angeles"),
+    "us-west3": ("US", "Salt Lake City"),
+    "us-west4": ("US", "Las Vegas"),
+    "northamerica-northeast1": ("CA", "Montreal"),
+    "northamerica-northeast2": ("CA", "Toronto"),
+    "southamerica-east1": ("BR", "São Paulo"),
+    "europe-west1": ("BE", "St. Ghislain"),
+    "europe-west2": ("GB", "London"),
+    "europe-west3": ("DE", "Frankfurt"),
+    "europe-west4": ("NL", "Eemshaven"),
+    "europe-west6": ("CH", "Zurich"),
+    "europe-west8": ("IT", "Milan"),
+    "europe-west9": ("FR", "Paris"),
+    "europe-west10": ("DE", "Berlin"),
+    "europe-west12": ("IT", "Turin"),
+    "europe-north1": ("FI", "Hamina"),
+    "europe-central2": ("PL", "Warsaw"),
+    "asia-east1": ("TW", "Changhua County"),
+    "asia-east2": ("HK", "Hong Kong"),
+    "asia-northeast1": ("JP", "Tokyo"),
+    "asia-northeast2": ("JP", "Osaka"),
+    "asia-northeast3": ("KR", "Seoul"),
+    "asia-south1": ("IN", "Mumbai"),
+    "asia-south2": ("IN", "Delhi"),
+    "asia-southeast1": ("SG", "Singapore"),
+    "asia-southeast2": ("ID", "Jakarta"),
+    "australia-southeast1": ("AU", "Sydney"),
+    "australia-southeast2": ("AU", "Melbourne"),
+    "me-west1": ("IL", "Tel Aviv"),
+    "me-central1": ("SA", "Dammam"),
+    "me-central2": ("SA", "Dammam"),
+    "africa-south1": ("ZA", "Johannesburg"),
+}
+
 # ISO-2 country codes we pass through as-is.
 # Vast.ai format: "City, CC" or "State, CC" or just "CC".
 _ISO2_CODES: dict[str, str] = {
@@ -129,6 +171,8 @@ def normalize_region(source: str, region_reported: str | None) -> NormalizedRegi
         return _normalize_aws_region(region_reported)
     elif source == "azure":
         return _normalize_azure_region(region_reported)
+    elif source == "gcp":
+        return _normalize_gcp_region(region_reported)
     elif source == "vast":
         return _normalize_vast_region(region_reported)
     elif source == "tensordock":
@@ -154,6 +198,14 @@ def _normalize_azure_region(region: str) -> NormalizedRegion:
     if info:
         return NormalizedRegion(country=info[0], state=info[1])
     logger.warning("Unknown Azure ARM region %r; returning empty region", region)
+    return NormalizedRegion()
+
+
+def _normalize_gcp_region(region_id: str) -> NormalizedRegion:
+    """Normalize a GCP region id like 'us-central1' to region info."""
+    info = GCP_REGION_MAP.get(region_id)
+    if info:
+        return NormalizedRegion(country=info[0], state=info[1])
     return NormalizedRegion()
 
 
@@ -203,6 +255,7 @@ class RegionNormalizationExplanation:
     `branch` names the source-specific code path taken:
       "aws_spot"   — AWS availability-zone parsing
       "azure"      — Azure ARM-region lookup
+      "gcp"        — GCP region-id parsing
       "vast"       — Vast.ai 'City, CC' or 'CC' geolocation parsing
       "tensordock" — TensorDock three-part region strings
       "empty"      — region_reported was None/empty
@@ -239,6 +292,8 @@ def explain_normalize_region(
         return _explain_aws_region(region_reported)
     if source == "azure":
         return _explain_azure_region(region_reported)
+    if source == "gcp":
+        return _explain_gcp_region(region_reported)
     if source == "vast":
         return _explain_vast_region(region_reported)
     if source == "tensordock":
@@ -307,6 +362,34 @@ def _explain_azure_region(region: str) -> RegionNormalizationExplanation:
         source="azure",
         region_reported=region,
         branch="azure",
+        country=None,
+        state=None,
+        city=None,
+        trail=trail,
+    )
+
+
+def _explain_gcp_region(region_id: str) -> RegionNormalizationExplanation:
+    trail = [f"input: region id {region_id!r}"]
+    info = GCP_REGION_MAP.get(region_id)
+    if info:
+        trail.append(
+            f"GCP_REGION_MAP[{region_id!r}] -> (country={info[0]!r}, state={info[1]!r})"
+        )
+        return RegionNormalizationExplanation(
+            source="gcp",
+            region_reported=region_id,
+            branch="gcp",
+            country=info[0],
+            state=info[1],
+            city=None,
+            trail=trail,
+        )
+    trail.append(f"GCP_REGION_MAP[{region_id!r}] -> no match; returning empty region")
+    return RegionNormalizationExplanation(
+        source="gcp",
+        region_reported=region_id,
+        branch="gcp",
         country=None,
         state=None,
         city=None,

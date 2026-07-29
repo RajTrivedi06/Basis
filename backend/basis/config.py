@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     # Provider API keys (optional -- public endpoints work without these)
     vast_api_key: str = ""
     runpod_api_key: str = ""
+    gcp_api_key: str = ""
 
     # AWS credentials (for EC2 Spot price history)
     aws_access_key_id: str = ""

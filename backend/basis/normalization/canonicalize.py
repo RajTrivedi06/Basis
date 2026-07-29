@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 # fmt: off
 GPU_NAME_MAP: dict[str, str] = {
     # === H100 ===
+    "H100 80GB":                    "h100_sxm_80gb",
     "H100 SXM":                     "h100_sxm_80gb",
     "H100_SXM5":                    "h100_sxm_80gb",
     "H100 SXM5 80GB":              "h100_sxm_80gb",
@@ -33,6 +34,8 @@ GPU_NAME_MAP: dict[str, str] = {
     "B300":                         "b300_sxm_288gb",
 
     # === A100 ===
+    "A100 80GB":                    "a100_sxm_80gb",
+    "A100":                         "a100_sxm_40gb",
     "A100 SXM":                     "a100_sxm_80gb",
     "A100 SXM4":                    "a100_sxm_80gb",
     "A100 SXM 80GB":               "a100_sxm_80gb",
@@ -56,6 +59,7 @@ GPU_NAME_MAP: dict[str, str] = {
     "NVIDIA L40S PCIe 48GB":       "l40s_pcie_48gb",
     "L4":                           "l4_pcie_24gb",
     "NVIDIA L4 PCIe 24GB":         "l4_pcie_24gb",
+    "T4":                           "t4_pcie_16gb",
 
     # === RTX 4090 ===
     "RTX 4090":                     "rtx_4090_24gb",
@@ -156,11 +160,13 @@ GPU_NAME_MAP: dict[str, str] = {
 
     # === Tesla (data center, older) ===
     "Tesla V100":                   "v100_pcie_16gb",
+    "V100":                         "v100_pcie_16gb",
     "V100 SXM2":                    "v100_sxm2_16gb",
     "NVIDIA Tesla V100 SXM2 16GB": "v100_sxm2_16gb",
     "NVIDIA Tesla V100 SXM3 32GB": "v100_sxm3_32gb",
     "Tesla T4":                     "t4_pcie_16gb",
     "Tesla P100":                   "p100_pcie_16gb",
+    "P100":                         "p100_pcie_16gb",
     "Tesla P40":                    "p40_pcie_24gb",
     "Tesla P4":                     "p4_pcie_8gb",
     "Tesla M40":                    "m40_pcie_12gb",

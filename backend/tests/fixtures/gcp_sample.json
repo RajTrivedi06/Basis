@@ -1,0 +1,366 @@
+[
+  {
+    "name": "services/6F81-5844-456A/skus/DD90-547C-2AAA",
+    "skuId": "DD90-547C-2AAA",
+    "description": "Nvidia Tesla A100 80GB GPU attached to Spot Preemptible VMs running in Americas",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "Preemptible"
+    },
+    "serviceRegions": ["Americas"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "0",
+                "nanos": 350000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/EDA0-3A70-3138",
+    "skuId": "EDA0-3A70-3138",
+    "description": "Nvidia Tesla A100 80GB GPU running in Americas",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["Americas"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "2",
+                "nanos": 48000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/7AE6-A1F9-277A",
+    "skuId": "7AE6-A1F9-277A",
+    "description": "Nvidia Tesla A100 80GB GPU running in Columbus",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["us-east5"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "3",
+                "nanos": 673000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/039F-D0DA-4055",
+    "skuId": "039F-D0DA-4055",
+    "description": "Nvidia Tesla A100 GPU running in Americas",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["Americas"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "2",
+                "nanos": 933000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/H100-SPOT-US",
+    "skuId": "H100-SPOT-US",
+    "description": "Nvidia H100 80GB GPU attached to Spot Preemptible VMs running in us-central1",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "Preemptible"
+    },
+    "serviceRegions": ["us-central1"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "1",
+                "nanos": 950000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/H100-OD-EU",
+    "skuId": "H100-OD-EU",
+    "description": "Nvidia H100 80GB GPU running in europe-west4",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["europe-west4"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "3",
+                "nanos": 800000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/L4-OD-1",
+    "skuId": "L4-OD-1",
+    "description": "Nvidia L4 GPU running in us-west1",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["us-west1"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "0",
+                "nanos": 730000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/T4-ATTACH-1",
+    "skuId": "T4-ATTACH-1",
+    "description": "Nvidia Tesla T4 GPU attached to VMs running in asia-southeast1",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["asia-southeast1"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "0",
+                "nanos": 350000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/V100-OD-1",
+    "skuId": "V100-OD-1",
+    "description": "Nvidia Tesla V100 GPU running in europe-west3",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["europe-west3"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "2",
+                "nanos": 480000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/P100-OD-1",
+    "skuId": "P100-OD-1",
+    "description": "Nvidia Tesla P100 GPU running in us-east1",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["us-east1"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "1",
+                "nanos": 460000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/CUD-A100-1Y",
+    "skuId": "CUD-A100-1Y",
+    "description": "Commitment v1: Nvidia Tesla A100 80GB GPU running in us-central1 for 1 Year",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "Commit1Yr"
+    },
+    "serviceRegions": ["us-central1"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "1",
+                "nanos": 800000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/CUD-H100-3Y",
+    "skuId": "CUD-H100-3Y",
+    "description": "Commitment v1: Nvidia H100 80GB GPU running in us-west4 for 3 Year",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "GPU",
+      "usageType": "Commit3Yr"
+    },
+    "serviceRegions": ["us-west4"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "2",
+                "nanos": 100000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "services/6F81-5844-456A/skus/CPU-NOT-GPU",
+    "skuId": "CPU-NOT-GPU",
+    "description": "N2 Instance Core running in Americas",
+    "category": {
+      "serviceDisplayName": "Compute Engine",
+      "resourceFamily": "Compute",
+      "resourceGroup": "CPU",
+      "usageType": "OnDemand"
+    },
+    "serviceRegions": ["Americas"],
+    "pricingInfo": [
+      {
+        "pricingExpression": {
+          "usageUnit": "h",
+          "tieredRates": [
+            {
+              "unitPrice": {
+                "currencyCode": "USD",
+                "units": "0",
+                "nanos": 31000000
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

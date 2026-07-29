@@ -28,9 +28,17 @@ import pytest
 
 from basis.collectors.aws_spot import AWSSpotCollector
 from basis.collectors.azure import AzureCollector
+from basis.collectors.gcp import (
+    GPU_DESCRIPTION_MAP,
+    GCPCollector,
+    classify_commitment,
+    match_gpu_model,
+    unit_price_to_usd,
+)
 from basis.collectors.runpod import RunPodCollector
 from basis.collectors.tensordock import TensorDockCollector
 from basis.collectors.vast import VastCollector, _request_with_retry
+from basis.normalization.region import normalize_region
 from basis.schemas.raw import RawObservationCreate
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -44,6 +52,7 @@ _MIN_OBS = {
     "tensordock": 10,
     "aws_spot": 5,
     "azure": 5,
+    "gcp": 10,
 }
 
 
@@ -325,6 +334,93 @@ async def test_azure_collect_follows_next_page_link() -> None:
     ]
     assert len(requested_urls) == 2
     assert "$skip=1" in requested_urls[1]
+def test_gcp_collector_parses_fixture() -> None:
+    """GCPCollector parses a saved Cloud Billing SKU page into valid observations."""
+    skus = _load_fixture("gcp_sample.json")
+    now = datetime.datetime.now(datetime.UTC)
+    observations: list[RawObservationCreate] = []
+    for sku in skus:
+        obs, _ = GCPCollector._parse_sku(sku, now)
+        if obs is not None:
+            observations.append(obs)
+    _assert_valid_observations(observations, "gcp", _MIN_OBS["gcp"])
+
+
+def test_gcp_unit_price_nanos_conversion() -> None:
+    """GCP Money units+nanos must convert to USD float correctly."""
+    assert unit_price_to_usd(0, 350000000) == pytest.approx(0.35)
+    assert unit_price_to_usd(2, 48000000) == pytest.approx(2.048)
+
+
+def test_gcp_gpu_description_map() -> None:
+    """GPU model map uses ordered exact-substring rules."""
+    assert match_gpu_model("Nvidia H100 80GB GPU running in us-central1") == "H100 80GB"
+    assert match_gpu_model("Nvidia Tesla A100 80GB GPU running in Americas") == "A100 80GB"
+    assert match_gpu_model("Nvidia Tesla A100 GPU running in Americas") == "A100"
+    assert match_gpu_model("Nvidia L4 GPU running in us-west1") == "L4"
+    assert match_gpu_model("Nvidia Tesla T4 GPU attached to VMs") == "T4"
+    assert match_gpu_model("Nvidia Tesla V100 GPU running in europe-west3") == "V100"
+    assert match_gpu_model("Nvidia Tesla P100 GPU running in us-east1") == "P100"
+    assert match_gpu_model("Nvidia RTX 4090 GPU running in us-central1") is None
+    needles = [needle for needle, _ in GPU_DESCRIPTION_MAP]
+    assert needles.index("H100 80GB") < needles.index("A100")
+    assert needles.index("A100 80GB") < needles.index("A100")
+
+
+@pytest.mark.parametrize(
+    ("description", "expected"),
+    [
+        (
+            "Nvidia Tesla A100 80GB GPU attached to Spot Preemptible VMs running in Americas",
+            "spot",
+        ),
+        (
+            "Nvidia Tesla T4 GPU attached to VMs running in asia-southeast1",
+            "on_demand",
+        ),
+        (
+            "Nvidia Tesla A100 80GB GPU running in Columbus",
+            "on_demand",
+        ),
+        (
+            "Commitment v1: Nvidia Tesla A100 80GB GPU running in us-central1 for 1 Year",
+            "reserved_1y",
+        ),
+        (
+            "Commitment v1: Nvidia H100 80GB GPU running in us-west4 for 3 Year",
+            "reserved_3y",
+        ),
+        ("Nvidia Tesla A100 GPU with unknown billing shape", None),
+    ],
+)
+def test_gcp_commitment_classification(description: str, expected: str | None) -> None:
+    assert classify_commitment(description) == expected
+
+
+def test_gcp_multi_region_normalizes_to_empty_country() -> None:
+    """Multi-region strings like 'Americas' stay in region_reported but map to None."""
+    result = normalize_region("gcp", "Americas")
+    assert result.country is None
+    assert result.state is None
+
+    concrete = normalize_region("gcp", "us-central1")
+    assert concrete.country == "US"
+    assert concrete.state == "Iowa"
+
+
+async def test_gcp_collect_returns_empty_when_no_api_key(monkeypatch, caplog) -> None:
+    """Without GCP_API_KEY the collector warns and returns []."""
+    import logging
+
+    from basis.collectors import gcp as gcp_module
+
+    monkeypatch.setattr(gcp_module.settings, "gcp_api_key", "")
+
+    with caplog.at_level(logging.WARNING):
+        observations = await GCPCollector().collect()
+
+    assert observations == []
+    assert any("GCP API key not configured" in record.message for record in caplog.records)
 
 
 async def test_vast_retry_succeeds_after_transient_429s() -> None:
