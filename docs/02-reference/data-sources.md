@@ -73,6 +73,18 @@ The Obs/run column below is an **approximate, dated snapshot** (early in the pro
 - **Regions tracked:** `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-central-1`, `ap-northeast-1`, `ap-southeast-1`.
 - **Price handling:** The API returns per-instance price. We divide by the GPU count (stored in `GPU_INSTANCE_TYPES` in the collector) to get **USD per GPU per hour**.
 - **Window:** Last 24 hours per run. Most-recent price per `(instance_type, AZ)` is kept to avoid duplicating stable prices.
+- **Historical backfill:** `backend/run_backfill_aws.py` is a one-shot, paginated 90-day
+  backfill. Backfilled rows use the provider record's own UTC `Timestamp` as
+  `collected_at`, so daily analytics retain the historical price-observation date.
+  Every backfilled row carries `provider_metadata.backfill = true` and
+  `provider_metadata.backfill_executed_at` with the actual UTC run time. Before
+  insert, one query loads existing AWS Spot raws and deduplicates on
+  `(InstanceType, AvailabilityZone, raw_payload.Timestamp)`; existing instance/AZ
+  values prefer `provider_metadata` and fall back to `raw_payload`, while the
+  timestamp always comes from `raw_payload`.
+- **Production backfill execution:** Pending Manager execution in the Raj-approved
+  EC2 window coordinated with Task 2.4. Execution date and inserted row count:
+  **pending**.
 - **Notes:**
   - `availability_zone` (e.g., `us-east-1a`) is stored in `region_reported`; the trailing letter is stripped during region normalization.
   - Only spot prices. On-demand and reserved AWS pricing is not collected (that's a separate pricing API).
