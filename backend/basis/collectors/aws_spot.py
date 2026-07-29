@@ -20,14 +20,15 @@ See docs/data_sources.md for full documentation.
 
 import asyncio
 import logging
-from datetime import timedelta
+from collections.abc import Sequence
+from datetime import datetime, timedelta
 from functools import partial
+from typing import Any
 
 import boto3
 from botocore.config import Config as BotoConfig
 
 from basis.collectors.base import BaseCollector
-from basis.config import settings
 from basis.schemas.raw import RawObservationCreate
 
 logger = logging.getLogger(__name__)
@@ -57,8 +58,7 @@ GPU_INSTANCE_TYPES: list[tuple[str, int, str, int]] = [
 
 # Build a lookup from instance type to (gpu_count, gpu_model, vram_gb)
 _INSTANCE_MAP: dict[str, tuple[int, str, int]] = {
-    itype: (count, model, vram)
-    for itype, count, model, vram in GPU_INSTANCE_TYPES
+    itype: (count, model, vram) for itype, count, model, vram in GPU_INSTANCE_TYPES
 }
 
 # AWS regions with significant GPU spot availability
@@ -71,6 +71,172 @@ AWS_REGIONS = [
     "ap-northeast-1",
     "ap-southeast-1",
 ]
+
+
+async def fetch_spot_history(
+    start_time: datetime,
+    end_time: datetime | None = None,
+    *,
+    regions: Sequence[str] = AWS_REGIONS,
+    instance_types: Sequence[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Fetch all paginated Spot Price History records across AWS regions.
+
+    Region failures are logged and skipped so a partial AWS outage does not
+    discard successful responses from other regions.
+    """
+    requested_types = (
+        list(instance_types)
+        if instance_types is not None
+        else [instance_type for instance_type, _, _, _ in GPU_INSTANCE_TYPES]
+    )
+    tasks = [
+        _fetch_region_spot_history(region, requested_types, start_time, end_time)
+        for region in regions
+    ]
+    region_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    records: list[dict[str, Any]] = []
+    for region, result in zip(regions, region_results, strict=True):
+        if isinstance(result, BaseException):
+            logger.warning("Failed to fetch AWS Spot for region %s: %s", region, result)
+            continue
+        records.extend(result)
+    return records
+
+
+async def _fetch_region_spot_history(
+    region: str,
+    instance_types: list[str],
+    start_time: datetime,
+    end_time: datetime | None,
+) -> list[dict[str, Any]]:
+    """Run the synchronous boto3 history request in a thread executor."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        None,
+        partial(
+            _fetch_region_spot_history_sync,
+            region,
+            instance_types,
+            start_time,
+            end_time,
+        ),
+    )
+
+
+def _fetch_region_spot_history_sync(
+    region: str,
+    instance_types: list[str],
+    start_time: datetime,
+    end_time: datetime | None,
+) -> list[dict[str, Any]]:
+    """Fetch every paginator page for one AWS region."""
+    boto_config = BotoConfig(
+        region_name=region,
+        retries={"max_attempts": 2, "mode": "standard"},
+    )
+    # boto3 picks up credentials from env vars (local) or IAM role (EC2)
+    client = boto3.client("ec2", config=boto_config)
+    paginator = client.get_paginator("describe_spot_price_history")
+    request: dict[str, Any] = {
+        "InstanceTypes": instance_types,
+        "ProductDescriptions": ["Linux/UNIX"],
+        "StartTime": start_time,
+    }
+    if end_time is not None:
+        request["EndTime"] = end_time
+
+    records: list[dict[str, Any]] = []
+    for page in paginator.paginate(**request):
+        records.extend(page.get("SpotPriceHistory", []))
+
+    logger.info("AWS Spot %s: %d price records", region, len(records))
+    return records
+
+
+def latest_spot_records(
+    records: Sequence[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Keep the most recent record per (instance type, availability zone)."""
+    latest: dict[tuple[str, str], dict[str, Any]] = {}
+    for record in records:
+        key = (record["InstanceType"], record["AvailabilityZone"])
+        existing = latest.get(key)
+        if existing is None or record["Timestamp"] > existing["Timestamp"]:
+            latest[key] = record
+    return list(latest.values())
+
+
+def parse_spot_record(
+    record: dict[str, Any],
+    collected_at: datetime,
+    *,
+    provider_metadata_extra: dict[str, Any] | None = None,
+) -> RawObservationCreate | None:
+    """Convert a full AWS spot price record to a raw observation."""
+    instance_type = record.get("InstanceType", "")
+    spot_price_str = record.get("SpotPrice", "0")
+    az = record.get("AvailabilityZone", "")
+
+    gpu_info = _INSTANCE_MAP.get(instance_type)
+    if gpu_info is None:
+        logger.warning("Skipping unmapped AWS Spot instance type %r", instance_type)
+        return None
+
+    gpu_count, gpu_model, vram_gb = gpu_info
+
+    try:
+        instance_price = float(spot_price_str)
+    except (ValueError, TypeError):
+        logger.warning(
+            "Skipping AWS Spot record with invalid price %r for %s",
+            spot_price_str,
+            instance_type,
+        )
+        return None
+
+    if instance_price <= 0:
+        logger.warning(
+            "Skipping AWS Spot record with non-positive price %r for %s",
+            spot_price_str,
+            instance_type,
+        )
+        return None
+
+    price_per_gpu = instance_price / gpu_count
+
+    # Preserve every provider field, changing only datetime serialization so
+    # the full response can be stored as JSONB.
+    serializable_record = {
+        **record,
+        "Timestamp": (
+            record["Timestamp"].isoformat()
+            if hasattr(record.get("Timestamp", ""), "isoformat")
+            else str(record.get("Timestamp", ""))
+        ),
+    }
+    provider_metadata = {
+        "instance_type": instance_type,
+        "instance_price_hourly": instance_price,
+        "gpu_count": gpu_count,
+        "vram_gb": vram_gb,
+        "availability_zone": az,
+        "region": az[:-1],  # us-east-1a -> us-east-1
+    }
+    if provider_metadata_extra:
+        provider_metadata.update(provider_metadata_extra)
+
+    return RawObservationCreate(
+        source="aws_spot",
+        collected_at=collected_at,
+        raw_payload=serializable_record,
+        gpu_model_reported=gpu_model,
+        price_hourly=price_per_gpu,
+        region_reported=az,
+        commitment_type_reported="spot",
+        provider_metadata=provider_metadata,
+    )
 
 
 class AWSSpotCollector(BaseCollector):
@@ -86,136 +252,24 @@ class AWSSpotCollector(BaseCollector):
     async def collect(self) -> list[RawObservationCreate]:
         """Fetch spot prices across all regions and GPU instance types."""
         if boto3.Session().get_credentials() is None:
-            logger.warning("AWS credentials not findable (env, IAM role, or profile) — skipping AWS Spot")
+            logger.warning(
+                "AWS credentials not findable (env, IAM role, or profile) — skipping AWS Spot"
+            )
             return []
 
         now = self.now_utc()
         start_time = now - timedelta(hours=24)
-        instance_types = [it for it, _, _, _ in GPU_INSTANCE_TYPES]
-
-        # Fetch all regions concurrently
-        tasks = [
-            self._fetch_region(region, instance_types, start_time, now)
-            for region in AWS_REGIONS
-        ]
-        region_results = await asyncio.gather(*tasks, return_exceptions=True)
-
+        records = await fetch_spot_history(start_time)
         observations: list[RawObservationCreate] = []
-        for region, result in zip(AWS_REGIONS, region_results):
-            if isinstance(result, Exception):
-                logger.warning("Failed to fetch AWS Spot for region %s: %s", region, result)
-                continue
-            observations.extend(result)
-
-        return observations
-
-    async def _fetch_region(
-        self,
-        region: str,
-        instance_types: list[str],
-        start_time,
-        collected_at,
-    ) -> list[RawObservationCreate]:
-        """Fetch spot price history for one region.
-
-        boto3 is synchronous, so we run it in a thread executor.
-        """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            partial(
-                self._fetch_region_sync, region, instance_types, start_time, collected_at
-            ),
-        )
-
-    def _fetch_region_sync(
-        self,
-        region: str,
-        instance_types: list[str],
-        start_time,
-        collected_at,
-    ) -> list[RawObservationCreate]:
-        """Synchronous boto3 call for one region."""
-        boto_config = BotoConfig(
-            region_name=region,
-            retries={"max_attempts": 2, "mode": "standard"},
-        )
-        # boto3 picks up credentials from env vars (local) or IAM role (EC2)
-        client = boto3.client("ec2", config=boto_config)
-
-        # Paginate through results
-        all_records: list[dict] = []
-        paginator = client.get_paginator("describe_spot_price_history")
-        pages = paginator.paginate(
-            InstanceTypes=instance_types,
-            ProductDescriptions=["Linux/UNIX"],
-            StartTime=start_time,
-        )
-
-        for page in pages:
-            all_records.extend(page.get("SpotPriceHistory", []))
-
-        logger.info("AWS Spot %s: %d price records", region, len(all_records))
-
-        # Keep only the most recent price per (instance_type, AZ)
-        latest: dict[tuple[str, str], dict] = {}
-        for record in all_records:
-            key = (record["InstanceType"], record["AvailabilityZone"])
-            existing = latest.get(key)
-            if existing is None or record["Timestamp"] > existing["Timestamp"]:
-                latest[key] = record
-
-        observations: list[RawObservationCreate] = []
-        for record in latest.values():
-            obs = self._parse_record(record, collected_at)
-            if obs is not None:
-                observations.append(obs)
-
+        for record in latest_spot_records(records):
+            observation = parse_spot_record(record, now)
+            if observation is not None:
+                observations.append(observation)
         return observations
 
     @staticmethod
-    def _parse_record(record: dict, collected_at) -> RawObservationCreate | None:
-        """Convert an AWS spot price record to a RawObservationCreate."""
-        instance_type = record.get("InstanceType", "")
-        spot_price_str = record.get("SpotPrice", "0")
-        az = record.get("AvailabilityZone", "")
-
-        gpu_info = _INSTANCE_MAP.get(instance_type)
-        if gpu_info is None:
-            return None
-
-        gpu_count, gpu_model, vram_gb = gpu_info
-
-        try:
-            instance_price = float(spot_price_str)
-        except (ValueError, TypeError):
-            return None
-
-        if instance_price <= 0:
-            return None
-
-        price_per_gpu = instance_price / gpu_count
-
-        # Make the record JSON-serializable (Timestamp is a datetime object)
-        serializable_record = {
-            **record,
-            "Timestamp": record["Timestamp"].isoformat() if hasattr(record.get("Timestamp", ""), "isoformat") else str(record.get("Timestamp", "")),
-        }
-
-        return RawObservationCreate(
-            source="aws_spot",
-            collected_at=collected_at,
-            raw_payload=serializable_record,
-            gpu_model_reported=gpu_model,
-            price_hourly=price_per_gpu,
-            region_reported=az,
-            commitment_type_reported="spot",
-            provider_metadata={
-                "instance_type": instance_type,
-                "instance_price_hourly": instance_price,
-                "gpu_count": gpu_count,
-                "vram_gb": vram_gb,
-                "availability_zone": az,
-                "region": az[:-1],  # us-east-1a -> us-east-1
-            },
-        )
+    def _parse_record(
+        record: dict[str, Any], collected_at: datetime
+    ) -> RawObservationCreate | None:
+        """Compatibility wrapper around the shared AWS record parser."""
+        return parse_spot_record(record, collected_at)
