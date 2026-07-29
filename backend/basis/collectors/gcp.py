@@ -23,6 +23,12 @@ from basis.schemas.raw import RawObservationCreate
 
 logger = logging.getLogger(__name__)
 
+# The Cloud Billing API key travels as a URL query parameter, and httpx logs
+# full request URLs at INFO — which would write the key into journald on every
+# collection run. Cap the httpx logger at WARNING; this module is the only
+# collector that puts a credential in a URL.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 # Verified via GET https://cloudbilling.googleapis.com/v1/services?key=...
 # displayName "Compute Engine", serviceId 6F81-5844-456A.
 GCP_COMPUTE_ENGINE_SERVICE_ID = "6F81-5844-456A"
