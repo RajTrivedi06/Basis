@@ -40,6 +40,7 @@ ARTIFACT_FIELDS_BY_PATH: dict[SchemaPath, dict[str, ExpectedType]] = {
     ("metadata",): {
         "trained_at": str,
         "sku": str,
+        "trained_providers": list,
         "corpus_through": str,
         "corpus_rows": int,
         "n_rows_after_dedup": int,
@@ -51,6 +52,7 @@ ARTIFACT_FIELDS_BY_PATH: dict[SchemaPath, dict[str, ExpectedType]] = {
     ("metrics",): {
         "folds": list,
         "holdout": dict,
+        "r2_holdout_by_provider": dict,
         "anova_explained_same_days": NUMBER,
         "gap": NUMBER,
         "permuted_target_r2": NUMBER,
@@ -109,8 +111,15 @@ ARTIFACT_FIELDS_BY_PATH: dict[SchemaPath, dict[str, ExpectedType]] = {
 
 STRING_LIST_PATHS: frozenset[SchemaPath] = frozenset(
     {
+        ("metadata", "trained_providers"),
         ("metadata", "era_coverage"),
         ("caveats",),
+    }
+)
+
+NUMBER_MAP_PATHS: frozenset[SchemaPath] = frozenset(
+    {
+        ("metrics", "r2_holdout_by_provider"),
     }
 )
 
@@ -166,6 +175,19 @@ def _validate_object(value: object, path: SchemaPath) -> None:
             if not all(isinstance(item, str) for item in field_value):
                 raise ArtifactValidationError(
                     f"{_display_path(field_path)} must contain only strings"
+                )
+
+        if field_path in NUMBER_MAP_PATHS:
+            if not isinstance(field_value, dict):
+                raise ArtifactValidationError(f"{_display_path(field_path)} must be an object")
+            if not all(
+                isinstance(provider, str)
+                and isinstance(r2, NUMBER)
+                and not isinstance(r2, bool)
+                for provider, r2 in field_value.items()
+            ):
+                raise ArtifactValidationError(
+                    f"{_display_path(field_path)} must map provider names to numbers"
                 )
 
 

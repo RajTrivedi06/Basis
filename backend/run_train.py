@@ -9,7 +9,7 @@ Usage:
 import argparse
 from collections.abc import Sequence
 
-from basis.ml.features import extract_features
+from basis.ml.features import ERA_LABELS, extract_features
 from basis.ml.train import train
 
 DEFAULT_SKU = "h100_sxm_80gb"
@@ -33,7 +33,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--eras",
         nargs="+",
-        choices=("A", "B", "C", "D"),
+        choices=ERA_LABELS,
         help="optional era filter, for example: --eras C D",
     )
     return parser

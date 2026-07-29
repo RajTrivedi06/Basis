@@ -17,6 +17,7 @@ def minimal_artifact() -> dict[str, object]:
         "metadata": {
             "trained_at": "2026-07-31T18:00:00Z",
             "sku": "h100_sxm_80gb",
+            "trained_providers": ["vast", "runpod", "aws_spot", "tensordock"],
             "corpus_through": "2026-07-30",
             "corpus_rows": 0,
             "n_rows_after_dedup": 0,
@@ -33,6 +34,12 @@ def minimal_artifact() -> dict[str, object]:
                 "r2_oos": 0.0,
                 "r2_oos_pooled": 0.0,
                 "rmse_log": 0.0,
+            },
+            "r2_holdout_by_provider": {
+                "vast": 0.0,
+                "runpod": 0.0,
+                "aws_spot": 0.0,
+                "tensordock": 0.0,
             },
             "anova_explained_same_days": 0.0,
             "gap": 0.0,
@@ -63,6 +70,40 @@ def test_validate_artifact_rejects_missing_metrics() -> None:
     del artifact["metrics"]
 
     with pytest.raises(ArtifactValidationError, match="metrics"):
+        validate_artifact(artifact)
+
+
+@pytest.mark.parametrize(
+    ("section", "field"),
+    [
+        ("metadata", "trained_providers"),
+        ("metrics", "r2_holdout_by_provider"),
+    ],
+)
+def test_validate_artifact_rejects_missing_director_fields(section: str, field: str) -> None:
+    artifact = minimal_artifact()
+    section_data = artifact[section]
+    assert isinstance(section_data, dict)
+    del section_data[field]
+
+    with pytest.raises(ArtifactValidationError, match=field):
+        validate_artifact(artifact)
+
+
+def test_validate_artifact_rejects_invalid_director_field_values() -> None:
+    artifact = minimal_artifact()
+    metadata = artifact["metadata"]
+    metrics = artifact["metrics"]
+    assert isinstance(metadata, dict)
+    assert isinstance(metrics, dict)
+    metadata["trained_providers"] = ["vast", 123]
+    metrics["r2_holdout_by_provider"] = {"vast": "not-a-number"}
+
+    with pytest.raises(ArtifactValidationError, match="trained_providers"):
+        validate_artifact(artifact)
+
+    metadata["trained_providers"] = ["vast"]
+    with pytest.raises(ArtifactValidationError, match="r2_holdout_by_provider"):
         validate_artifact(artifact)
 
 
