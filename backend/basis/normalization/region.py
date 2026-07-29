@@ -55,6 +55,7 @@ AZURE_REGION_MAP: dict[str, tuple[str, str | None]] = {
     "germanywestcentral": ("DE", "Frankfurt"),
     "swedencentral": ("SE", "Gävle"),
     "polandcentral": ("PL", "Warsaw"),
+    "indonesiacentral": ("ID", "Jakarta"),
     "japaneast": ("JP", "Tokyo"),
     "southeastasia": ("SG", "Singapore"),
     "australiaeast": ("AU", "New South Wales"),
