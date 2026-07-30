@@ -5,7 +5,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from basis.db.models import CanonicalOffer
 from basis.ml.features import ERA_LABELS
 from basis.ml.train import (
     HOLDOUT_DAY_COUNT,
@@ -92,7 +96,21 @@ def test_run_train_help_exits_zero() -> None:
     assert "--eras" in result.stdout
 
 
-def test_run_train_exits_not_implemented() -> None:
+@pytest.mark.asyncio
+async def test_run_train_fixture_smoke_exits_without_traceback(
+    db_session: AsyncSession,
+) -> None:
+    distinct_days = (
+        await db_session.execute(
+            select(func.count(func.distinct(func.date(CanonicalOffer.collected_at)))).where(
+                CanonicalOffer.gpu_sku_canonical == "h100_sxm_80gb",
+                CanonicalOffer.provider.in_(("vast", "runpod", "aws_spot", "tensordock")),
+            )
+        )
+    ).scalar_one()
+    if distinct_days >= 20:
+        pytest.skip("Smoke subprocess is fixture-only; local corpus training remains gated")
+
     result = subprocess.run(
         [sys.executable, str(BACKEND_ROOT / "run_train.py")],
         cwd=BACKEND_ROOT,
@@ -101,5 +119,7 @@ def test_run_train_exits_not_implemented() -> None:
         check=False,
     )
 
-    assert result.returncode == 1
-    assert result.stdout.strip() == "not implemented"
+    combined = result.stdout + result.stderr
+    assert result.returncode == 0
+    assert "insufficient days" in combined
+    assert "Traceback" not in combined
