@@ -9,8 +9,7 @@ Usage:
 import argparse
 from collections.abc import Sequence
 
-from basis.ml.features import ERA_LABELS, extract_features
-from basis.ml.train import train
+from basis.ml.features import ERA_LABELS
 
 DEFAULT_SKU = "h100_sxm_80gb"
 
@@ -40,15 +39,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Parse arguments and hand off to the future extraction/training stages."""
-    args = build_parser().parse_args(argv)
-    try:
-        features: object = extract_features(sku=args.sku, eras=args.eras)
-        train(features)
-    except NotImplementedError:
-        print("not implemented")
-        return 1
-    return 0
+    """Validate arguments; Stage 3.3 will wire extraction into training."""
+    build_parser().parse_args(argv)
+    print("not implemented")
+    return 1
 
 
 if __name__ == "__main__":
