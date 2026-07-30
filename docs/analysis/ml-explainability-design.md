@@ -201,6 +201,8 @@ One versioned JSON + one model file (`.ubj`), uploaded to `s3://basis-backups-ra
 
 Top-N for `shap_summary.top_features` = 20. `caveats` strings are rendered verbatim by the frontend (3.5) — copy is owned by this doc, not by frontend code. Unknown extra fields are allowed (additive evolution); breaking changes bump `schema_version` major.
 
+*Amendment (3.3 review, 2026-07-30):* `metrics.sanity` is a REQUIRED block — `{duplicate_rows_across_split: int, importance_warning: bool, top_gain_importances: [{feature, gain_share}], holdout_pred_vs_actual: {corr, residual_p10, residual_p50, residual_p90}}`. Publishing the sanity battery inside the artifact makes the leakage checks auditable by anyone reading the served JSON, not just PR reviewers.
+
 ## 8. Run protocol & reporting thresholds
 
 - `run_train.py`: extract → CV → fit → sanity battery → SHAP → host analysis → artifact (+ `--upload`). Full log pasted into the PR; sanity battery (permuted-target collapse, duplicate check, importance eyeball, holdout pred-vs-actual summary) is a merge requirement.

@@ -41,7 +41,21 @@
     "anova_explained_same_days": 0.42,
     "gap": 0.16,
     "permuted_target_r2": 0.02,
-    "robustness_c_d": {"holdout_r2_oos": 0.54, "n_days": 18}
+    "robustness_c_d": {"holdout_r2_oos": 0.54, "n_days": 18},
+    "sanity": {
+      "duplicate_rows_across_split": 0,
+      "importance_warning": false,
+      "top_gain_importances": [
+        {"feature": "provider", "gain_share": 0.31},
+        {"feature": "commitment_type", "gain_share": 0.14}
+      ],
+      "holdout_pred_vs_actual": {
+        "corr": 0.76,
+        "residual_p10": -0.21,
+        "residual_p50": 0.01,
+        "residual_p90": 0.2
+      }
+    }
   },
   "shap_summary": {
     "n_sample": 500,

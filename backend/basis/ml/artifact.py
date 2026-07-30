@@ -1,10 +1,12 @@
-"""Validation and S3 transfer helpers for ML explainability artifacts.
+"""Construction, validation, and S3 transfer helpers for ML artifacts.
 
 The contract comes from ``docs/analysis/ml-explainability-design.md`` §7.
 Unknown fields are allowed so minor schema revisions can be additive. Required
 fields and their types live in one table to keep follow-up contract edits local.
 """
 
+import hashlib
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, TypeAlias
 
@@ -57,6 +59,7 @@ ARTIFACT_FIELDS_BY_PATH: dict[SchemaPath, dict[str, ExpectedType]] = {
         "gap": NUMBER,
         "permuted_target_r2": NUMBER,
         "robustness_c_d": dict,
+        "sanity": dict,
     },
     ("metrics", "folds", "[]"): {
         "fold": int,
@@ -78,6 +81,22 @@ ARTIFACT_FIELDS_BY_PATH: dict[SchemaPath, dict[str, ExpectedType]] = {
     ("metrics", "robustness_c_d"): {
         "holdout_r2_oos": NUMBER,
         "n_days": int,
+    },
+    ("metrics", "sanity"): {
+        "duplicate_rows_across_split": int,
+        "importance_warning": bool,
+        "top_gain_importances": list,
+        "holdout_pred_vs_actual": dict,
+    },
+    ("metrics", "sanity", "top_gain_importances", "[]"): {
+        "feature": str,
+        "gain_share": NUMBER,
+    },
+    ("metrics", "sanity", "holdout_pred_vs_actual"): {
+        "corr": NUMBER,
+        "residual_p10": NUMBER,
+        "residual_p50": NUMBER,
+        "residual_p90": NUMBER,
     },
     ("shap_summary",): {
         "n_sample": int,
@@ -121,6 +140,15 @@ NUMBER_MAP_PATHS: frozenset[SchemaPath] = frozenset(
     {
         ("metrics", "r2_holdout_by_provider"),
     }
+)
+
+CAVEAT_OBSERVABLE_BOUND = "observable-features bound; says nothing about unobserved attributes"
+CAVEAT_VAST_FEATURE_RICH = (
+    "Vast-feature-rich: non-Vast providers described by canonical columns only"
+)
+CAVEAT_TRAINED_PROVIDERS = (
+    "trained on vast/runpod/aws_spot/tensordock only; "
+    "Azure and GCP join at first retrain with real history"
 )
 
 
@@ -181,9 +209,7 @@ def _validate_object(value: object, path: SchemaPath) -> None:
             if not isinstance(field_value, dict):
                 raise ArtifactValidationError(f"{_display_path(field_path)} must be an object")
             if not all(
-                isinstance(provider, str)
-                and isinstance(r2, NUMBER)
-                and not isinstance(r2, bool)
+                isinstance(provider, str) and isinstance(r2, NUMBER) and not isinstance(r2, bool)
                 for provider, r2 in field_value.items()
             ):
                 raise ArtifactValidationError(
@@ -198,6 +224,40 @@ def validate_artifact(d: dict[str, object]) -> None:
         raise ArtifactValidationError(
             f"schema_version must be {SCHEMA_VERSION!r}, got {d['schema_version']!r}"
         )
+
+
+def build_artifact(
+    *,
+    metadata: Mapping[str, object],
+    metrics: Mapping[str, object],
+    shap_summary: Mapping[str, object],
+    host_analysis: Mapping[str, object],
+    corpus_through: str,
+    model_file: str,
+) -> dict[str, object]:
+    """Build and validate one additive schema-v1 artifact object."""
+    artifact: dict[str, object] = {
+        "schema_version": SCHEMA_VERSION,
+        "metadata": dict(metadata),
+        "metrics": dict(metrics),
+        "shap_summary": dict(shap_summary),
+        "host_analysis": dict(host_analysis),
+        "caveats": [
+            CAVEAT_OBSERVABLE_BOUND,
+            CAVEAT_VAST_FEATURE_RICH,
+            (f"corpus window 2026-04-26 → {corpus_through}; era B has 21 zero-Vast days"),
+            CAVEAT_TRAINED_PROVIDERS,
+        ],
+        "model_file": model_file,
+    }
+    validate_artifact(artifact)
+    return artifact
+
+
+def feature_schema_hash(feature_columns: Sequence[str]) -> str:
+    """Hash sorted active feature names for artifact reproducibility."""
+    serialized = "\n".join(sorted(feature_columns)).encode("utf-8")
+    return hashlib.sha256(serialized).hexdigest()
 
 
 def _s3_client() -> Any:
