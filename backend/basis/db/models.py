@@ -1,16 +1,18 @@
 """SQLAlchemy ORM models for the Basis database.
 
-Four tables matching the schema in Basis_Project_Proposal.md section 5.3:
+Core pricing tables matching Basis_Project_Proposal.md section 5.3, plus:
 - RawObservation: immutable raw API responses (write-once, never modify)
 - CanonicalOffer: normalized projection with standardized fields
 - DailyAggregate: materialized daily metrics for fast dashboard queries
 - BasisDecomposition: stored variance attribution results
+- DocChunk: embedded documentation chunks for the Ask Basis RAG layer
 """
 
 import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String
-from sqlalchemy.dialects.postgresql import JSONB
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import Computed, DateTime, Float, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
 from basis.db.base import Base
@@ -26,9 +28,7 @@ class RawObservation(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source: Mapped[str] = mapped_column(String(50), nullable=False)
-    collected_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    collected_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     raw_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     gpu_model_reported: Mapped[str] = mapped_column(String(200), nullable=False)
     price_hourly: Mapped[float] = mapped_column(Float, nullable=False)
@@ -54,9 +54,7 @@ class CanonicalOffer(Base):
     raw_observation_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("raw_observations.id"), nullable=False
     )
-    collected_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    collected_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     gpu_sku_canonical: Mapped[str] = mapped_column(String(100), nullable=False)
     gpu_variant: Mapped[str | None] = mapped_column(String(50), nullable=True)
     vram_gb: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -74,7 +72,9 @@ class CanonicalOffer(Base):
     normalized_price_usd_per_hour: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     __table_args__ = (
-        Index("ix_canonical_collected_gpu_provider", "collected_at", "gpu_sku_canonical", "provider"),
+        Index(
+            "ix_canonical_collected_gpu_provider", "collected_at", "gpu_sku_canonical", "provider"
+        ),
         # Backs the normalization anti-join (find raw rows without a canonical
         # offer). A FK does not auto-create an index in Postgres; without this
         # the NOT EXISTS / NOT IN check full-scans canonical_offers.
@@ -101,9 +101,7 @@ class DailyAggregate(Base):
     p75_price: Mapped[float] = mapped_column(Float, nullable=False)
     normalized_median_price: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    __table_args__ = (
-        Index("ix_daily_agg_date_gpu", "date", "gpu_sku"),
-    )
+    __table_args__ = (Index("ix_daily_agg_date_gpu", "date", "gpu_sku"),)
 
 
 class BasisDecomposition(Base):
@@ -125,6 +123,36 @@ class BasisDecomposition(Base):
     variance_from_provider: Mapped[float] = mapped_column(Float, nullable=False)
     residual_variance: Mapped[float] = mapped_column(Float, nullable=False)
 
+    __table_args__ = (Index("ix_basis_decomp_date_gpu", "date", "gpu_sku"),)
+
+
+class DocChunk(Base):
+    """Embedded documentation chunk used by the Ask Basis RAG layer."""
+
+    __tablename__ = "doc_chunks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    source_path: Mapped[str] = mapped_column(String, nullable=False)
+    heading: Mapped[str | None] = mapped_column(String, nullable=True)
+    chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(Vector(1536), nullable=False)
+    token_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    chunk_tsv: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed("to_tsvector('english', chunk_text)", persisted=True),
+        nullable=False,
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
     __table_args__ = (
-        Index("ix_basis_decomp_date_gpu", "date", "gpu_sku"),
+        Index("ix_doc_chunks_source_path", "source_path"),
+        Index(
+            "ix_doc_chunks_embedding_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+        Index("ix_doc_chunks_chunk_tsv", "chunk_tsv", postgresql_using="gin"),
     )

@@ -1,0 +1,43 @@
+{
+  "cited": {
+    "question": "What share of H100-SXM price variance is residual after the four-factor decomposition?",
+    "answer": "On the latest snapshot, roughly 58% of cross-sectional variance remains as residual after provider, commitment, region, and bundle factors [C1]. Live dispersion for H100-SXM shows a coefficient of variation near 0.34 across active providers [T1].",
+    "citations": [
+      {
+        "id": 1,
+        "kind": "chunk",
+        "source_path": "methodology/residual-reveal",
+        "heading": "Residual variance share"
+      },
+      {
+        "id": 1,
+        "kind": "tool",
+        "tool": "get_dispersion_summary",
+        "as_of": "2026-07-28T12:00:00Z"
+      }
+    ],
+    "tool_calls": [
+      {
+        "id": 1,
+        "tool": "get_dispersion_summary",
+        "as_of": "2026-07-28T12:00:00Z"
+      }
+    ],
+    "usage": {
+      "input_tokens": 1842,
+      "output_tokens": 96
+    },
+    "trace_id": "fixture-cited-trace"
+  },
+  "refusal": {
+    "question": "Should I buy H100 spot capacity on Vast.ai right now?",
+    "answer": "I can't give trading or procurement advice. Basis documents quoted public prices and decomposition methodology — it does not recommend buys, sells, or capacity timing. For methodology on what the residual measures, see the project docs.",
+    "citations": [],
+    "tool_calls": [],
+    "usage": {
+      "input_tokens": 412,
+      "output_tokens": 58
+    },
+    "trace_id": "fixture-refusal-trace"
+  }
+}
