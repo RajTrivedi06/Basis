@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     vast_api_key: str = ""
     runpod_api_key: str = ""
     gcp_api_key: str = ""
+    openai_api_key: str = ""
 
     # AWS credentials (for EC2 Spot price history)
     aws_access_key_id: str = ""
