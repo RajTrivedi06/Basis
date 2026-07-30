@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "metadata": {
+    "trained_at": "2026-06-15T12:00:00Z",
+    "sku": "h100_sxm_80gb",
+    "trained_providers": ["vast", "runpod", "aws_spot", "tensordock"],
+    "corpus_through": "2026-06-14",
+    "corpus_rows": 9842,
+    "n_rows_after_dedup": 4210,
+    "era_coverage": ["A", "B", "C"],
+    "code_version": "fixture-dev-only",
+    "xgboost_version": "2.1.3",
+    "fixture_hash": "fixture-dev-only-not-a-real-hash"
+  },
+  "metrics": {
+    "folds": [
+      {
+        "fold": 1,
+        "train_days": 25,
+        "test_days": 15,
+        "n_train": 820,
+        "n_test": 510,
+        "r2_oos": 0.51,
+        "rmse_log": 0.18,
+        "provider_mix_test": { "vast": 0.42, "aws_spot": 0.38, "runpod": 0.2 }
+      },
+      {
+        "fold": 2,
+        "train_days": 40,
+        "test_days": 15,
+        "n_train": 1310,
+        "n_test": 495,
+        "r2_oos": 0.54,
+        "rmse_log": 0.17,
+        "provider_mix_test": { "vast": 0.4, "aws_spot": 0.35, "runpod": 0.25 }
+      }
+    ],
+    "holdout": {
+      "n_days": 10,
+      "n_test": 340,
+      "r2_oos": 0.58,
+      "r2_oos_pooled": 0.56,
+      "rmse_log": 0.16
+    },
+    "r2_holdout_by_provider": {
+      "vast": 0.62,
+      "runpod": 0.51,
+      "aws_spot": 0.55,
+      "tensordock": 0.48
+    },
+    "anova_explained_same_days": 0.42,
+    "gap": 0.16,
+    "permuted_target_r2": 0.02,
+    "robustness_c_d": {
+      "holdout_r2_oos": 0.53,
+      "n_days": 18
+    }
+  },
+  "shap_summary": {
+    "n_sample": 500,
+    "top_features": [
+      { "rank": 1, "feature": "provider", "mean_abs_shap": 0.142 },
+      { "rank": 2, "feature": "commitment_type", "mean_abs_shap": 0.098 },
+      { "rank": 3, "feature": "region_country", "mean_abs_shap": 0.087 },
+      { "rank": 4, "feature": "vcpus_bundled", "mean_abs_shap": 0.064 },
+      { "rank": 5, "feature": "ram_gb_bundled", "mean_abs_shap": 0.058 },
+      { "rank": 6, "feature": "reliability", "mean_abs_shap": 0.045 },
+      { "rank": 7, "feature": "era", "mean_abs_shap": 0.041 },
+      { "rank": 8, "feature": "inet_up", "mean_abs_shap": 0.036 },
+      { "rank": 9, "feature": "num_gpus", "mean_abs_shap": 0.031 },
+      { "rank": 10, "feature": "dlperf", "mean_abs_shap": 0.028 }
+    ]
+  },
+  "host_analysis": {
+    "icc": 0.34,
+    "fe_r2_increment": 0.12,
+    "n_hosts": 61,
+    "n_host_days": 412,
+    "min_days_threshold": 10,
+    "sensitivity": [
+      { "threshold": 5, "icc": 0.29, "n_hosts": 90 },
+      { "threshold": 20, "icc": 0.41, "n_hosts": 31 }
+    ],
+    "tenure_days": { "min": 3, "median": 14, "max": 48 }
+  },
+  "caveats": [
+    "observable-features bound; says nothing about unobserved attributes",
+    "Vast-feature-rich: non-Vast providers described by canonical columns only",
+    "corpus window 2026-04-26 → 2026-06-14; era B has 21 zero-Vast days",
+    "trained on vast/runpod/aws_spot/tensordock only; Azure and GCP join at first retrain with real history"
+  ],
+  "model_file": "models/explainability_v1.0.0_20260615.ubj"
+}
