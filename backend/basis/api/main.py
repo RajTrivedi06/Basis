@@ -13,7 +13,6 @@ from basis.api.routes import (
     fungibility,
     gpu_skus,
     health,
-    ml,
     offers,
     providers,
     provenance,
@@ -51,7 +50,6 @@ app.include_router(providers.router)
 app.include_router(gpu_skus.router)
 app.include_router(fungibility.router)
 app.include_router(provenance.router)
-app.include_router(ml.router)
 
 
 @app.get("/")

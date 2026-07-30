@@ -17,7 +17,8 @@ const NAV_ITEMS: { num: string; href: string; label: string }[] = [
   { num: "02", href: "/dispersion", label: "Dispersion" },
   { num: "03", href: "/basis", label: "Basis" },
   { num: "04", href: "/providers", label: "Providers" },
-  { num: "05", href: "/methodology", label: "Methodology" },
+  { num: "05", href: "/explainability", label: "Explainability" },
+  { num: "06", href: "/methodology", label: "Methodology" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
