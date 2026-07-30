@@ -43,6 +43,7 @@ SHAP_SAMPLE_CAP: Final = 2_000
 SHAP_TOP_FEATURE_COUNT: Final = 20
 GAIN_TOP_FEATURE_COUNT: Final = 15
 PERMUTED_R2_MAX: Final = 0.05
+PROVIDER_HOLDOUT_SST_MIN: Final = 1e-9
 
 
 class InsufficientDaysError(ValueError):
@@ -427,7 +428,18 @@ def _provider_holdout_r2(
                 provider,
             )
             continue
-        scores[provider] = _pooled_r2(actual[mask], predictions[mask])
+        provider_actual = actual[mask]
+        provider_sst = float(np.square(provider_actual - provider_actual.mean()).sum())
+        if provider_sst < PROVIDER_HOLDOUT_SST_MIN:
+            logger.warning(
+                "Trained provider %s has degenerate holdout variance "
+                "(SST=%.3g < %.1e); omitting its R²",
+                provider,
+                provider_sst,
+                PROVIDER_HOLDOUT_SST_MIN,
+            )
+            continue
+        scores[provider] = _pooled_r2(provider_actual, predictions[mask])
     return scores
 
 

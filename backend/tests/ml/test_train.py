@@ -170,6 +170,28 @@ def test_provider_holdout_r2_omits_provider_without_rows(
     assert "omitting its R²" in caplog.text
 
 
+def test_provider_holdout_r2_omits_provider_with_degenerate_variance(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    holdout = pd.DataFrame(
+        {
+            "provider": ["vast", "vast", "runpod", "runpod"],
+            TARGET_COLUMN: [0.5, 0.75, 1.0, 1.0],
+        }
+    )
+
+    scores = _provider_holdout_r2(
+        holdout,
+        np.asarray([0.55, 0.7, 0.9, 1.1]),
+        trained_providers=("vast", "runpod"),
+    )
+
+    assert set(scores) == {"vast"}
+    assert "runpod" in caplog.text
+    assert "degenerate holdout variance" in caplog.text
+    assert "omitting its R²" in caplog.text
+
+
 def test_auxiliary_era_is_restored_without_becoming_a_model_feature() -> None:
     frame = pd.DataFrame({"collected_day": [date(2026, 7, 20)]})
     frame.attrs["feature_columns"] = ("signal",)
