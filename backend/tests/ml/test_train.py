@@ -14,6 +14,9 @@ from basis.db.models import CanonicalOffer
 from basis.ml.features import ERA_LABELS
 from basis.ml.train import (
     HOLDOUT_DAY_COUNT,
+    TARGET_COLUMN,
+    _duplicate_rows_across_split,
+    _provider_holdout_r2,
     build_day_splits,
     evaluate_real_and_permuted_holdout,
     fit_training_pipeline,
@@ -83,7 +86,9 @@ def test_permuted_target_collapses_on_known_signal() -> None:
     assert permuted_r2 <= 0.05
 
 
-def test_training_pipeline_reports_folds_holdout_sanity_and_shap() -> None:
+def test_training_pipeline_reports_folds_holdout_sanity_and_shap(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     rng = np.random.default_rng(73)
     first_day = date(2026, 4, 1)
     records: list[dict[str, object]] = []
@@ -101,17 +106,68 @@ def test_training_pipeline_reports_folds_holdout_sanity_and_shap() -> None:
             )
     frame = pd.DataFrame.from_records(records)
     frame.attrs["feature_columns"] = ("provider", "era", "signal")
+    duplicate_columns = ["provider", "era", "signal", TARGET_COLUMN]
+    frame.loc[20 * 12, duplicate_columns] = frame.loc[0, duplicate_columns]
 
     result = fit_training_pipeline(frame, n_estimators=40)
 
     assert len(result.metrics["folds"]) == 4
     assert all(fold["n_train"] > 0 for fold in result.metrics["folds"])
     assert result.metrics["holdout"]["n_days"] == 10
-    assert result.metrics["sanity"]["duplicate_rows_across_split"] == 0
+    assert result.metrics["sanity"]["duplicate_rows_across_split"] == 1
+    assert result.metrics["sanity"]["duplicate_rows_across_split_by_provider"] == {"aws_spot": 1}
+    assert "persistent catalog prices" in caplog.text
     assert result.metrics["permuted_target_r2"] <= 0.05
     assert result.metrics["robustness_c_d"]["n_days"] == 30
     assert result.shap_summary["n_sample"] == 120
     assert result.shap_summary["top_features"]
+
+
+def test_duplicate_rows_are_reported_by_provider() -> None:
+    train_frame = pd.DataFrame(
+        {
+            "provider": ["vast", "runpod"],
+            "signal": [1.0, 2.0],
+            TARGET_COLUMN: [0.5, 0.75],
+        }
+    )
+    holdout = pd.DataFrame(
+        {
+            "provider": ["vast", "runpod", "aws_spot"],
+            "signal": [1.0, 2.0, 3.0],
+            TARGET_COLUMN: [0.5, 0.75, 1.0],
+        }
+    )
+
+    duplicate_count, by_provider = _duplicate_rows_across_split(
+        train_frame,
+        holdout,
+        ("provider", "signal"),
+    )
+
+    assert duplicate_count == 2
+    assert by_provider == {"runpod": 1, "vast": 1}
+
+
+def test_provider_holdout_r2_omits_provider_without_rows(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    holdout = pd.DataFrame(
+        {
+            "provider": ["vast", "vast"],
+            TARGET_COLUMN: [0.5, 0.75],
+        }
+    )
+
+    scores = _provider_holdout_r2(
+        holdout,
+        np.asarray([0.55, 0.7]),
+        trained_providers=("vast", "tensordock"),
+    )
+
+    assert set(scores) == {"vast"}
+    assert "tensordock" in caplog.text
+    assert "omitting its R²" in caplog.text
 
 
 def test_auxiliary_era_is_restored_without_becoming_a_model_feature() -> None:

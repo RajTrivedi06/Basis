@@ -122,6 +122,7 @@ def _analyze_threshold(
     day_host_ss = float(np.square(residuals.to_numpy(dtype=float)).sum())
     fe_r2_increment = 0.0 if total_ss <= 0 else max(0.0, (day_only_ss - day_host_ss) / total_ss)
 
+    # Variance components are host-day-weighted, so long-tenure hosts carry more weight.
     host_variance = _sample_variance(host_effects.to_numpy(dtype=float))
     residual_variance = _sample_variance(residuals.to_numpy(dtype=float))
     variance_total = host_variance + residual_variance
