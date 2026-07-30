@@ -137,7 +137,7 @@ def get_explainability_artifact() -> dict[str, Any]:
 
 
 @router.get("/explainability")
-async def get_explainability() -> dict[str, Any]:
+def get_explainability() -> dict[str, Any]:
     """Serve the frozen ML explainability artifact.
 
     NO live inference in v3 — precomputed results only. Production runs on a
