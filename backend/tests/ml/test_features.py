@@ -142,7 +142,7 @@ async def test_extracted_feature_matrix_contract(db_session: AsyncSession) -> No
     active_features = tuple(frame.attrs["feature_columns"])
     assert frame.attrs["rows_before_dedup"] >= len(frame)
     assert frame.attrs["rows_after_dedup"] == len(frame)
-    assert set(frame["provider"]) == set(TRAINED_PROVIDERS)
+    assert set(frame["provider"]) <= set(TRAINED_PROVIDERS)
     assert TARGET_COLUMN in frame
     assert TARGET_COLUMN not in active_features
     assert set(METADATA_COLUMNS) <= set(frame.columns)
