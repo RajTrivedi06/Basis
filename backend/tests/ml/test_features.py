@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import re
 from datetime import date, datetime, time, timedelta
@@ -27,6 +28,7 @@ from basis.ml.features import (
     VAST_EXPECTED_FULL_PAYLOAD_KEYS,
     VAST_INCLUDED_PAYLOAD_KEYS,
     _deduplicate_last_daily,
+    _drop_constant_features,
     derive_era,
     extract_features,
 )
@@ -117,6 +119,25 @@ def test_daily_dedup_keeps_last_collection_run() -> None:
     assert deduplicated["canonical_offer_id"].tolist() == [2, 3]
 
 
+def test_drop_constant_features_removes_all_null_columns(caplog: pytest.LogCaptureFixture) -> None:
+    frame = pd.DataFrame(
+        {
+            "external": [None, None],
+            "sla_sigma_x": [pd.NA, pd.NA],
+            "cpu_name": ["same", "same"],
+            "disk_name": ["disk-a", "disk-b"],
+        }
+    )
+
+    with caplog.at_level(logging.INFO, logger=features.__name__):
+        filtered, dropped = _drop_constant_features(frame)
+
+    assert dropped == ("cpu_name", "external", "sla_sigma_x")
+    assert list(filtered.columns) == ["disk_name"]
+    for column in dropped:
+        assert f"Dropping constant ML feature column: {column}" in caplog.messages
+
+
 def test_ml_package_source_is_read_only() -> None:
     """ADR-0006 guard: no transaction or mutation token enters basis/ml."""
     package_dir = Path(features.__file__).resolve().parent
@@ -152,7 +173,7 @@ async def test_extracted_feature_matrix_contract(db_session: AsyncSession) -> No
     assert frame["provider_metadata_backfill"].map(type).eq(bool).all()
 
     for column in active_features:
-        assert frame[column].nunique(dropna=True) != 1
+        assert frame[column].nunique(dropna=True) > 1
 
     for column in HIGH_CARDINALITY_PAYLOAD_KEYS:
         if column in frame:

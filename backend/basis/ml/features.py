@@ -178,11 +178,11 @@ TOP_CATEGORY_COUNT: Final = 20
 VAST_DOCUMENTED_SPARSE_PAYLOAD_KEYS: Final = frozenset(
     {"target_reliability", "sla_r_claim", "sla_sigma_x"}
 )
-# Stage 3.2's full-corpus audit found an approved-doc/data discrepancy: these
-# keys are present in every payload object, but external/nw_disk_* are 0%
-# non-null and mobo_name is 68.2% pre-dedup. They remain approved features;
-# this set only prevents the ≥95% non-null drift guard from making a false
-# claim. The discrepancy is called out for Manager disposition in the PR.
+# Stage 3.2's full-corpus audit found an approved-doc/data discrepancy:
+# presence ≠ non-null. These keys are present in every payload object, but
+# external/nw_disk_* are present-but-null corpus-wide and mobo_name is 68.2%
+# non-null pre-dedup. They remain approved features; this set only prevents the
+# ≥95% non-null drift guard from making a false claim.
 VAST_CORPUS_NULLABLE_PAYLOAD_KEYS: Final = frozenset(
     {
         "external",
@@ -500,7 +500,7 @@ def _deduplicate_last_daily(frame: pd.DataFrame) -> pd.DataFrame:
 def _drop_constant_features(frame: pd.DataFrame) -> tuple[pd.DataFrame, tuple[str, ...]]:
     dropped: list[str] = []
     for column in FEATURE_COLUMNS:
-        if column in frame and frame[column].nunique(dropna=True) == 1:
+        if column in frame and frame[column].nunique(dropna=True) <= 1:
             logger.info("Dropping constant ML feature column: %s", column)
             dropped.append(column)
     if dropped:
