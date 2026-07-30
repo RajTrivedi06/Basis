@@ -55,7 +55,9 @@ Establish a defensible upper bound on how much of GPU price variance is explaina
 
 ### 3.2 Vast `raw_payload` keys — full triage (100 keys, verified against corpus 2026-07-29)
 
-Every key observed on H100-SXM Vast rows (fill rate 100% unless noted). Verdicts: **EXCLUDE-P** = price-derived (hard ban), **EXCLUDE-I** = identity/artifact/duplicate, **INCL** = feature.
+Every key observed on H100-SXM Vast rows (key present in 100% of payloads unless noted). Verdicts: **EXCLUDE-P** = price-derived (hard ban), **EXCLUDE-I** = identity/artifact/duplicate, **INCL** = feature.
+
+*Presence ≠ non-null (Stage 3.2 corpus audit):* several always-present keys carry null values — `external` and `nw_disk_{min,avg,max}_bw` are present-but-null corpus-wide, `sla_sigma_x` is null wherever present, and `mobo_name` is ~68% non-null. They stay INCL on paper; the extraction's drop-constant rule (§3.4.2, extended to zero-information columns) removes any that carry no signal at train time, and the ≥95% null-map guard applies only to keys with genuinely full values.
 
 **EXCLUDE-P — price-derived (22 keys).** Any key containing or computed from a price/cost/bid/discount embeds the target:
 
