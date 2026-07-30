@@ -92,8 +92,12 @@ class FeatureEncoder:
         for column in self.columns:
             if column in self.categories:
                 values = frame[column].astype("string")
+                known_values = values.where(
+                    values.isin(self.categories[column]),
+                    pd.NA,
+                )
                 transformed[column] = pd.Categorical(
-                    values,
+                    known_values,
                     categories=self.categories[column],
                 )
             else:

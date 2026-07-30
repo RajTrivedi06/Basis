@@ -15,6 +15,7 @@ from basis.ml.train import (
     HOLDOUT_DAY_COUNT,
     build_day_splits,
     evaluate_real_and_permuted_holdout,
+    fit_training_pipeline,
     train,
 )
 
@@ -79,6 +80,37 @@ def test_permuted_target_collapses_on_known_signal() -> None:
 
     assert real_r2 > 0.8
     assert permuted_r2 <= 0.05
+
+
+def test_training_pipeline_reports_folds_holdout_sanity_and_shap() -> None:
+    rng = np.random.default_rng(73)
+    first_day = date(2026, 4, 1)
+    records: list[dict[str, object]] = []
+    for day_offset in range(30):
+        for row_index in range(12):
+            signal = float(rng.uniform(-2.0, 2.0))
+            records.append(
+                {
+                    "collected_day": first_day + timedelta(days=day_offset),
+                    "provider": "vast" if row_index % 2 else "aws_spot",
+                    "era": "C" if day_offset < 20 else "D",
+                    "signal": signal,
+                    "y_log_price": signal + float(rng.normal(0.0, 0.1)),
+                }
+            )
+    frame = pd.DataFrame.from_records(records)
+    frame.attrs["feature_columns"] = ("provider", "era", "signal")
+
+    result = fit_training_pipeline(frame, n_estimators=40)
+
+    assert len(result.metrics["folds"]) == 4
+    assert all(fold["n_train"] > 0 for fold in result.metrics["folds"])
+    assert result.metrics["holdout"]["n_days"] == 10
+    assert result.metrics["sanity"]["duplicate_rows_across_split"] == 0
+    assert result.metrics["permuted_target_r2"] <= 0.05
+    assert result.metrics["robustness_c_d"]["n_days"] == 30
+    assert result.shap_summary["n_sample"] == 120
+    assert result.shap_summary["top_features"]
 
 
 def test_run_train_help_exits_zero() -> None:
