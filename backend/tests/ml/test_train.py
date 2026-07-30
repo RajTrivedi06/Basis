@@ -3,10 +3,16 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from basis.ml.features import ERA_LABELS
-from basis.ml.train import HOLDOUT_DAY_COUNT, build_day_splits, train
+from basis.ml.train import (
+    HOLDOUT_DAY_COUNT,
+    build_day_splits,
+    evaluate_real_and_permuted_holdout,
+    train,
+)
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
@@ -43,6 +49,32 @@ def test_day_splits_keep_holdout_untouched_and_folds_ordered() -> None:
         assert not set(fold.train_days) & set(fold.test_days)
         assert not set(fold.train_days) & holdout
         assert not set(fold.test_days) & holdout
+
+
+def test_permuted_target_collapses_on_known_signal() -> None:
+    rng = np.random.default_rng(20260730)
+    first_day = date(2026, 4, 1)
+    records: list[dict[str, object]] = []
+    for day_offset in range(35):
+        for _row in range(30):
+            signal = float(rng.uniform(-2.0, 2.0))
+            records.append(
+                {
+                    "collected_day": first_day + timedelta(days=day_offset),
+                    "signal": signal,
+                    "y_log_price": 1.5 * signal + float(rng.normal(0.0, 0.08)),
+                }
+            )
+    frame = pd.DataFrame.from_records(records)
+    frame.attrs["feature_columns"] = ("signal",)
+
+    real_r2, permuted_r2 = evaluate_real_and_permuted_holdout(
+        frame,
+        n_estimators=100,
+    )
+
+    assert real_r2 > 0.8
+    assert permuted_r2 <= 0.05
 
 
 def test_run_train_help_exits_zero() -> None:
