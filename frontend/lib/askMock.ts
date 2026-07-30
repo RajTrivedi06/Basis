@@ -61,6 +61,11 @@ function tokenize(text: string): string[] {
   return tokens.length > 0 ? tokens : [text];
 }
 
+export function fixtureResponse(fixture: AskResponse & { question: string }): AskResponse {
+  const { answer, citations, tool_calls, usage, trace_id } = fixture;
+  return { answer, citations, tool_calls, usage, trace_id };
+}
+
 export async function* mockAskStream(
   question: string,
   history: AskHistoryEntry[] = [],
@@ -74,20 +79,14 @@ export async function* mockAskStream(
     yield { type: "token", token };
   }
 
-  const { question: _q, ...response } = fixture;
   yield {
     type: "done",
-    response: {
-      ...response,
-      answer: fixture.answer,
-    },
+    response: fixtureResponse(fixture),
   };
 }
 
 export function mockAskResponse(question: string, history: AskHistoryEntry[] = []): AskResponse {
-  const fixture = pickFixture(question, history);
-  const { question: _q, ...response } = fixture;
-  return { ...response, answer: fixture.answer };
+  return fixtureResponse(pickFixture(question, history));
 }
 
 export const ASK_FIXTURE_CITED = FIXTURE.cited;

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AskPageClient } from "@/app/ask/AskPageClient";
 import { AskAnswerBody } from "@/components/ask/AskAnswerBody";
 import { AskSources } from "@/components/ask/AskSources";
-import { ASK_FIXTURE_CITED, ASK_FIXTURE_REFUSAL } from "@/lib/askMock";
+import { ASK_FIXTURE_CITED, ASK_FIXTURE_REFUSAL, fixtureResponse } from "@/lib/askMock";
 import type { AskStreamEvent } from "@/lib/askBasisTypes";
 import { AskError } from "@/lib/askBasisTypes";
 import { CLIENT_HISTORY_CAP } from "@/lib/askBasis";
@@ -24,14 +24,12 @@ async function* citedStream(): AsyncGenerator<AskStreamEvent> {
   for (const token of tokens) {
     yield { type: "token", token };
   }
-  const { question: _q, ...response } = ASK_FIXTURE_CITED;
-  yield { type: "done", response: { ...response, answer: ASK_FIXTURE_CITED.answer } };
+  yield { type: "done", response: fixtureResponse(ASK_FIXTURE_CITED) };
 }
 
 async function* refusalStream(): AsyncGenerator<AskStreamEvent> {
   yield { type: "token", token: ASK_FIXTURE_REFUSAL.answer };
-  const { question: _q, ...response } = ASK_FIXTURE_REFUSAL;
-  yield { type: "done", response: { ...response, answer: ASK_FIXTURE_REFUSAL.answer } };
+  yield { type: "done", response: fixtureResponse(ASK_FIXTURE_REFUSAL) };
 }
 
 describe("AskAnswerBody and AskSources", () => {
@@ -189,7 +187,7 @@ describe("AskPageClient", () => {
 
   it("aborts in-flight stream when a new question is submitted", async () => {
     let aborted = false;
-    async function* slowStream(_q: string, _h: unknown, signal?: AbortSignal) {
+    async function* slowStream(_: string, __: unknown, signal?: AbortSignal) {
       signal?.addEventListener("abort", () => {
         aborted = true;
       });

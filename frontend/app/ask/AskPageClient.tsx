@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import type { AskCitation, AskError, TranscriptTurn } from "@/lib/askBasisTypes";
+import type { AskCitation, TranscriptTurn } from "@/lib/askBasisTypes";
 import { AskError } from "@/lib/askBasisTypes";
 import { capHistory, streamAsk } from "@/lib/askBasis";
 import { AskTranscript } from "@/components/ask/AskTranscript";
