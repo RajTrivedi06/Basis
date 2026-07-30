@@ -31,6 +31,7 @@ from basis.ml.features import (
     DEFAULT_SKU,
     ERA_LABELS,
     TRAINED_PROVIDERS,
+    derive_era,
     extract_features,
 )
 from basis.ml.host_effects import analyze_host_effects
@@ -81,6 +82,7 @@ async def run_pipeline(args: argparse.Namespace) -> int:
                 providers=TRAINED_PROVIDERS,
                 eras=args.eras,
             )
+            _ensure_auxiliary_era(features)
             _print_extraction_summary(features)
             training = await train(
                 features,
@@ -165,6 +167,14 @@ def _print_extraction_summary(features: Any) -> None:
     print(f"active_features={len(features.attrs.get('feature_columns', ()))}")
     print(f"providers={features['provider'].value_counts().sort_index().to_dict()}")
     print(f"eras={features['era'].value_counts().sort_index().to_dict()}")
+
+
+def _ensure_auxiliary_era(features: Any) -> None:
+    if "era" not in features:
+        # A single-era fixture/filter correctly drops era as a constant model
+        # feature. Keep a derived auxiliary copy for robustness selection,
+        # metadata, and diagnostics; attrs['feature_columns'] stays unchanged.
+        features["era"] = features["collected_day"].map(derive_era)
 
 
 def _print_training_log(

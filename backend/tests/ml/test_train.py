@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from run_train import _ensure_auxiliary_era
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -111,6 +112,16 @@ def test_training_pipeline_reports_folds_holdout_sanity_and_shap() -> None:
     assert result.metrics["robustness_c_d"]["n_days"] == 30
     assert result.shap_summary["n_sample"] == 120
     assert result.shap_summary["top_features"]
+
+
+def test_auxiliary_era_is_restored_without_becoming_a_model_feature() -> None:
+    frame = pd.DataFrame({"collected_day": [date(2026, 7, 20)]})
+    frame.attrs["feature_columns"] = ("signal",)
+
+    _ensure_auxiliary_era(frame)
+
+    assert frame["era"].tolist() == ["C"]
+    assert frame.attrs["feature_columns"] == ("signal",)
 
 
 def test_run_train_help_exits_zero() -> None:
