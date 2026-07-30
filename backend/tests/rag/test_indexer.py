@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import gzip
+import json
 import os
 import subprocess
 import sys
@@ -18,10 +20,14 @@ from basis.db.models import DocChunk
 from basis.rag.indexer import (
     EMBEDDING_DIMENSIONS,
     EMBEDDING_MODEL,
+    EmbeddedChunk,
     EmbeddingBatch,
+    IndexedDocument,
+    IndexRun,
     OpenAIEmbedder,
     corpus_paths,
     index_document,
+    write_fixture,
 )
 
 TEST_SOURCE = "tests/rag/idempotency.md"
@@ -121,6 +127,48 @@ async def test_openai_embedder_uses_frozen_model_and_preserves_input_order() -> 
     }
     assert embedded.vectors == [[1.0, 0.0], [0.0, 1.0]]
     assert embedded.input_tokens == 7
+
+
+@pytest.mark.asyncio
+async def test_openai_embedder_rejects_more_than_100_inputs() -> None:
+    client = FakeOpenAIClient()
+    with pytest.raises(ValueError, match="exceeds 100 inputs"):
+        await OpenAIEmbedder(client=client).embed(["text"] * 101)
+    assert client.embeddings.request is None
+
+
+def test_fixture_writer_is_deterministic_gzip_json(tmp_path: Path) -> None:
+    embedded_chunk = EmbeddedChunk(
+        source_path="docs/example.md",
+        heading="example.md \u203a Example",
+        chunk_text="Fixture text",
+        token_count=2,
+        embedding=tuple([1.0, *([0.0] * (EMBEDDING_DIMENSIONS - 1))]),
+    )
+    run = IndexRun(
+        strategy="heading",
+        documents=(
+            IndexedDocument(
+                source_path=embedded_chunk.source_path,
+                chunk_count=1,
+                input_tokens=2,
+                estimated_cost_usd=0.0,
+                chunks=(embedded_chunk,),
+            ),
+        ),
+    )
+    first_path = tmp_path / "first.json.gz"
+    second_path = tmp_path / "second.json.gz"
+
+    write_fixture(run, first_path)
+    write_fixture(run, second_path)
+    payload = json.loads(gzip.decompress(first_path.read_bytes()))
+
+    assert first_path.read_bytes() == second_path.read_bytes()
+    assert payload["embedding_model"] == EMBEDDING_MODEL
+    assert payload["embedding_dimensions"] == EMBEDDING_DIMENSIONS
+    assert payload["chunks"][0]["source_path"] == "docs/example.md"
+    assert len(payload["chunks"][0]["embedding"]) == EMBEDDING_DIMENSIONS
 
 
 def test_run_index_without_openai_key_exits_cleanly() -> None:
