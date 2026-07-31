@@ -1,9 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AskPageClient } from "@/app/ask/AskPageClient";
 import { AskAnswerBody } from "@/components/ask/AskAnswerBody";
 import { AskSources } from "@/components/ask/AskSources";
+import { AskWidget } from "@/components/ask/AskWidget";
+import { AskWidgetProvider } from "@/components/ask/AskWidgetContext";
 import { ASK_FIXTURE_CITED, ASK_FIXTURE_REFUSAL, fixtureResponse } from "@/lib/askMock";
 import type { AskStreamEvent } from "@/lib/askBasisTypes";
 import { AskError } from "@/lib/askBasisTypes";
@@ -30,6 +32,20 @@ async function* citedStream(): AsyncGenerator<AskStreamEvent> {
 async function* refusalStream(): AsyncGenerator<AskStreamEvent> {
   yield { type: "token", token: ASK_FIXTURE_REFUSAL.answer };
   yield { type: "done", response: fixtureResponse(ASK_FIXTURE_REFUSAL) };
+}
+
+function renderAskWidget() {
+  return render(
+    <AskWidgetProvider>
+      <div data-testid="page-shell">Findings page</div>
+      <AskWidget />
+    </AskWidgetProvider>
+  );
+}
+
+async function openDrawer(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "ASK BASIS" }));
+  expect(screen.getByRole("dialog", { name: "Ask Basis" })).toBeInTheDocument();
 }
 
 describe("AskAnswerBody and AskSources", () => {
@@ -70,19 +86,67 @@ describe("AskAnswerBody and AskSources", () => {
   });
 });
 
-describe("AskPageClient", () => {
+describe("AskWidget", () => {
   beforeEach(() => {
     streamAskMock.mockReset();
+    vi.spyOn(window, "matchMedia").mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("opens and closes via launcher, Esc, and backdrop", async () => {
+    const user = userEvent.setup();
+    renderAskWidget();
+
+    const launcher = screen.getByRole("button", { name: "ASK BASIS" });
+    await user.click(launcher);
+    expect(screen.getByRole("dialog", { name: "Ask Basis" })).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "Ask Basis" })).not.toBeInTheDocument();
+
+    await user.click(launcher);
+    await user.click(screen.getByRole("button", { name: "Close Ask Basis" }));
+    expect(screen.queryByRole("dialog", { name: "Ask Basis" })).not.toBeInTheDocument();
+  });
+
+  it("opens with Cmd+K / Ctrl+K", async () => {
+    const user = userEvent.setup();
+    renderAskWidget();
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(screen.getByRole("dialog", { name: "Ask Basis" })).toBeInTheDocument();
+  });
+
+  it("returns focus to the launcher after close", async () => {
+    const user = userEvent.setup();
+    renderAskWidget();
+    const launcher = screen.getByRole("button", { name: "ASK BASIS" });
+
+    await user.click(launcher);
+    await user.keyboard("{Escape}");
+
+    expect(launcher).toHaveFocus();
   });
 
   it("shows validation for empty question", async () => {
-    const { container } = render(<AskPageClient />);
+    const user = userEvent.setup();
+    renderAskWidget();
+    await openDrawer(user);
 
-    fireEvent.submit(container.querySelector(".ask-form")!);
+    fireEvent.submit(document.querySelector(".ask-form")!);
 
     expect(
       await screen.findByText(/Enter a question about Basis data or methodology/)
@@ -93,7 +157,8 @@ describe("AskPageClient", () => {
   it("streams tokens then renders final cited answer", async () => {
     streamAskMock.mockImplementation(() => citedStream());
     const user = userEvent.setup();
-    render(<AskPageClient />);
+    renderAskWidget();
+    await openDrawer(user);
 
     await user.type(
       screen.getByPlaceholderText(/What share of H100-SXM/),
@@ -112,7 +177,8 @@ describe("AskPageClient", () => {
   it("renders refusal answers as normal content", async () => {
     streamAskMock.mockImplementation(() => refusalStream());
     const user = userEvent.setup();
-    render(<AskPageClient />);
+    renderAskWidget();
+    await openDrawer(user);
 
     await user.type(
       screen.getByPlaceholderText(/What share of H100-SXM/),
@@ -129,7 +195,8 @@ describe("AskPageClient", () => {
   it("sends capped history on follow-up", async () => {
     streamAskMock.mockImplementation(() => citedStream());
     const user = userEvent.setup();
-    render(<AskPageClient />);
+    renderAskWidget();
+    await openDrawer(user);
 
     const input = screen.getByPlaceholderText(/What share of H100-SXM/);
 
@@ -158,7 +225,8 @@ describe("AskPageClient", () => {
     }
     streamAskMock.mockImplementation(() => rateLimited());
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<AskPageClient />);
+    renderAskWidget();
+    await openDrawer(user);
 
     await user.type(screen.getByPlaceholderText(/What share/), "test");
     await user.click(screen.getByRole("button", { name: "Ask" }));
@@ -176,7 +244,8 @@ describe("AskPageClient", () => {
     }
     streamAskMock.mockImplementation(() => offline());
     const user = userEvent.setup();
-    render(<AskPageClient />);
+    renderAskWidget();
+    await openDrawer(user);
 
     await user.type(screen.getByPlaceholderText(/What share/), "test");
     await user.click(screen.getByRole("button", { name: "Ask" }));
@@ -217,7 +286,8 @@ describe("AskPageClient", () => {
 
     streamAskMock.mockImplementation(slowStream);
     const user = userEvent.setup();
-    render(<AskPageClient />);
+    renderAskWidget();
+    await openDrawer(user);
 
     const input = screen.getByPlaceholderText(/What share/);
     await user.type(input, "first");
@@ -242,12 +312,71 @@ describe("AskPageClient", () => {
     }
     streamAskMock.mockImplementation(() => drop());
     const user = userEvent.setup();
-    render(<AskPageClient />);
+    renderAskWidget();
+    await openDrawer(user);
 
     await user.type(screen.getByPlaceholderText(/What share/), "network test");
     await user.click(screen.getByRole("button", { name: "Ask" }));
 
     expect(screen.getByText(/Partial answer text/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+  });
+
+  it("keeps transcript across simulated route changes", async () => {
+    streamAskMock.mockImplementation(() => citedStream());
+    const user = userEvent.setup();
+
+    function RouteHarness() {
+      const [route, setRoute] = useState("findings");
+      return (
+        <AskWidgetProvider>
+          <div data-testid="route">{route}</div>
+          <button type="button" onClick={() => setRoute("basis")}>
+            Navigate
+          </button>
+          <AskWidget />
+        </AskWidgetProvider>
+      );
+    }
+
+    render(<RouteHarness />);
+    await openDrawer(user);
+
+    await user.type(
+      screen.getByPlaceholderText(/What share of H100-SXM/),
+      "What is residual variance?"
+    );
+    await user.click(screen.getByRole("button", { name: "Ask" }));
+    await waitFor(() => {
+      expect(screen.getByText(/variance remains as residual/i)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await user.click(screen.getByRole("button", { name: "Navigate" }));
+    expect(screen.getByTestId("route")).toHaveTextContent("basis");
+
+    await openDrawer(user);
+    expect(screen.getByText(/variance remains as residual/i)).toBeInTheDocument();
+  });
+
+  it("uses fullscreen drawer class on mobile widths", async () => {
+    vi.spyOn(window, "matchMedia").mockImplementation((query: string) => ({
+      matches: query.includes("640px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const user = userEvent.setup();
+    renderAskWidget();
+    await openDrawer(user);
+
+    expect(screen.getByRole("dialog", { name: "Ask Basis" })).toHaveClass(
+      "ask-drawer--fullscreen"
+    );
   });
 });
