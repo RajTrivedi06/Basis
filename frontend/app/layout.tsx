@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers";
+import { AskWidgetRoot } from "@/components/ask/AskWidgetRoot";
 import { BasisLogo } from "@/components/layout/BasisLogo";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
@@ -51,6 +52,7 @@ export default function RootLayout({
         <SiteHeader />
         <AppProviders>
           <main id="main">{children}</main>
+          <AskWidgetRoot />
         </AppProviders>
         <Footer />
       </body>
