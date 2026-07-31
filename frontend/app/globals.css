@@ -2596,7 +2596,7 @@ button {
   bottom: 20px;
   z-index: 45;
   padding: 10px 14px;
-  border: 1px solid var(--line-hi);
+  border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: rgba(15, 23, 39, 0.92);
   backdrop-filter: blur(10px);
@@ -2612,14 +2612,19 @@ button {
 }
 
 .ask-launcher:hover {
-  border-color: var(--ink-dim);
+  border-color: var(--line-hi);
   color: var(--ink-hi);
   background: rgba(21, 30, 48, 0.96);
 }
 
+.ask-launcher:focus {
+  outline: none;
+}
+
 .ask-launcher:focus-visible {
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--ink-dim);
   outline-offset: 2px;
+  border-color: var(--line-hi);
 }
 
 .ask-widget {
