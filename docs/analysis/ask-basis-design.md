@@ -105,6 +105,12 @@ never raw JSON. Numbers pre-rounded (prices 4dp, shares 1dp). Every result carri
 `as_of` date and a tool-call id (`T1`…). Cap: **3 tool calls per question**; the loop
 hard-stops after 3 and answers with what it has, saying so.
 
+**Latest-day coverage ruling (2026-07-31):** a per-SKU “latest” tool uses the most recent
+`daily_aggregates` date with at least 30 offers **and at least 2 distinct contributing
+providers** for that SKU, and logs newer partial days that it skips. Stage 4.4
+verification SQL for latest-value questions must use both `observation_count >= 30` and
+`COUNT(DISTINCT provider) >= 2` so the tool and grader select the same date.
+
 ## 5. Context assembly contract (testable spec)
 
 Fixed section order, fixed per-section budgets, `tiktoken`-counted. Total input ceiling

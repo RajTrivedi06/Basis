@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+import datetime
 import json
+import logging
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from basis.db.models import BasisDecomposition, DailyAggregate
 from basis.rag.context import assemble
-from basis.rag.tools import TOOL_NAMES, ToolExecutor, UnknownToolError
+from basis.rag.tools import (
+    LATEST_DAY_MIN_OBSERVATIONS,
+    LATEST_DAY_MIN_PROVIDERS,
+    TOOL_NAMES,
+    ToolExecutor,
+    UnknownToolError,
+)
 
 ARTIFACT_FIXTURE = Path(__file__).parents[1] / "fixtures" / "explainability_artifact.json"
 
@@ -34,3 +44,130 @@ async def test_whitelisted_tools_return_bounded_dated_tables(
 
     with pytest.raises(UnknownToolError):
         await executor.execute("fetch_url", result_id=5, session=db_session)
+
+
+@pytest.mark.asyncio
+async def test_latest_basis_skips_and_logs_partial_days(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    qualified_day = datetime.date(2098, 1, 1)
+    partial_day = datetime.date(2098, 1, 2)
+    for day, count, residual in (
+        (qualified_day, LATEST_DAY_MIN_OBSERVATIONS, 0.6),
+        (partial_day, LATEST_DAY_MIN_OBSERVATIONS - 1, 0.1),
+    ):
+        db_session.add(
+            DailyAggregate(
+                date=day,
+                gpu_sku="h100_sxm_80gb",
+                provider=None,
+                region=None,
+                observation_count=count,
+                median_price=2.0,
+                p25_price=1.5,
+                p75_price=2.5,
+                normalized_median_price=None,
+            )
+        )
+        provider_names = (
+            ("aws_spot", "vast")
+            if day == qualified_day
+            else ("aws_spot",)
+        )
+        for provider in provider_names:
+            db_session.add(
+                DailyAggregate(
+                    date=day,
+                    gpu_sku="h100_sxm_80gb",
+                    provider=provider,
+                    region=None,
+                    observation_count=count // len(provider_names),
+                    median_price=2.0,
+                    p25_price=1.5,
+                    p75_price=2.5,
+                    normalized_median_price=None,
+                )
+            )
+        db_session.add(
+            BasisDecomposition(
+                date=day,
+                gpu_sku="h100_sxm_80gb",
+                total_variance=1.0,
+                variance_from_region=0.1,
+                variance_from_commitment=0.1,
+                variance_from_bundle=0.1,
+                variance_from_provider=0.1,
+                residual_variance=residual,
+            )
+        )
+    await db_session.flush()
+    try:
+        with caplog.at_level(logging.WARNING, logger="basis.rag.tools"):
+            result = await ToolExecutor().execute(
+                "get_latest_basis",
+                result_id=1,
+                session=db_session,
+            )
+
+        assert result.as_of == qualified_day.isoformat()
+        assert result.rows[0] == ("residual", "60.0%")
+        assert partial_day.isoformat() in caplog.text
+        assert "29 observations" in caplog.text
+        assert "1 contributing providers" in caplog.text
+    finally:
+        await db_session.rollback()
+
+
+@pytest.mark.asyncio
+async def test_latest_basis_real_corpus_rejects_aws_only_final_day(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    executor = ToolExecutor()
+
+    with caplog.at_level(logging.WARNING, logger="basis.rag.tools"):
+        result = await executor.execute(
+            "get_latest_basis",
+            result_id=1,
+            session=db_session,
+        )
+
+    assert LATEST_DAY_MIN_OBSERVATIONS == 30
+    assert LATEST_DAY_MIN_PROVIDERS == 2
+    assert result.as_of == "2026-07-28"
+    assert "2026-07-29" in caplog.text
+    assert "55 observations" in caplog.text
+    assert "1 contributing providers" in caplog.text
+
+    rows = (
+        await db_session.execute(
+            select(
+                DailyAggregate.date,
+                DailyAggregate.provider,
+                DailyAggregate.observation_count,
+            ).where(
+                DailyAggregate.gpu_sku == "h100_sxm_80gb",
+                DailyAggregate.date.in_(
+                    (datetime.date(2026, 7, 28), datetime.date(2026, 7, 29))
+                ),
+            )
+        )
+    ).all()
+    rollups = {
+        row.date: int(row.observation_count)
+        for row in rows
+        if row.provider is None
+    }
+    providers = {
+        day: {
+            row.provider
+            for row in rows
+            if row.date == day and row.provider is not None
+        }
+        for day in rollups
+    }
+    assert rollups[datetime.date(2026, 7, 29)] == 55
+    assert providers[datetime.date(2026, 7, 29)] == {"aws_spot"}
+    assert rollups[datetime.date(2026, 7, 28)] == 233
+    assert len(providers[datetime.date(2026, 7, 28)]) == 4

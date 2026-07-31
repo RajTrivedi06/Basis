@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
+import logging
 from collections.abc import Callable
 from typing import Any, Final
 
@@ -11,10 +13,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from basis.api.routes.ml import get_explainability_artifact
 from basis.api.routes.providers import list_providers
-from basis.db.models import BasisDecomposition, CanonicalOffer
+from basis.db.models import BasisDecomposition, CanonicalOffer, DailyAggregate
 from basis.rag.context import ToolContextResult, count_tokens
 
 TOOL_RESULT_TOKEN_CEILING: Final = 400
+# Rule-based coverage floors per ADR-0002. Together they exclude the known
+# partial-day artifact where 55 AWS-only offers otherwise looked "latest"
+# despite omitting the rest of the market.
+LATEST_DAY_MIN_OBSERVATIONS: Final = 30
+LATEST_DAY_MIN_PROVIDERS: Final = 2
 TOOL_NAMES: Final = (
     "get_latest_basis",
     "get_dispersion_summary",
@@ -37,6 +44,8 @@ TOOL_DEFINITIONS: Final = tuple(
         ("get_ml_explainability", "Get the latest frozen ML explainability summary."),
     )
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UnknownToolError(ValueError):
@@ -83,11 +92,19 @@ async def _get_latest_basis(
     session: AsyncSession,
     result_id: int,
 ) -> ToolContextResult:
+    latest_day = await _latest_qualified_date(
+        session,
+        gpu_sku="h100_sxm_80gb",
+    )
+    if latest_day is None:
+        return _empty_result(result_id, "get_latest_basis")
     row = (
         await session.execute(
             select(BasisDecomposition)
-            .where(BasisDecomposition.gpu_sku == "h100_sxm_80gb")
-            .order_by(BasisDecomposition.date.desc())
+            .where(
+                BasisDecomposition.gpu_sku == "h100_sxm_80gb",
+                BasisDecomposition.date == latest_day,
+            )
             .limit(1)
         )
     ).scalar_one_or_none()
@@ -117,11 +134,54 @@ async def _get_dispersion_summary(
     session: AsyncSession,
     result_id: int,
 ) -> ToolContextResult:
+    provider_counts = (
+        select(
+            DailyAggregate.date.label("date"),
+            DailyAggregate.gpu_sku.label("gpu_sku"),
+            func.count(func.distinct(DailyAggregate.provider)).label("provider_count"),
+        )
+        .where(
+            DailyAggregate.provider.is_not(None),
+            DailyAggregate.observation_count > 0,
+        )
+        .group_by(DailyAggregate.date, DailyAggregate.gpu_sku)
+        .subquery()
+    )
     latest_day = (
-        await session.execute(select(func.max(cast(CanonicalOffer.collected_at, Date))))
+        await session.execute(
+            select(func.max(DailyAggregate.date))
+            .join(
+                provider_counts,
+                (provider_counts.c.date == DailyAggregate.date)
+                & (provider_counts.c.gpu_sku == DailyAggregate.gpu_sku),
+            )
+            .where(
+                DailyAggregate.provider.is_(None),
+                DailyAggregate.region.is_(None),
+                DailyAggregate.observation_count >= LATEST_DAY_MIN_OBSERVATIONS,
+                provider_counts.c.provider_count >= LATEST_DAY_MIN_PROVIDERS,
+            )
+        )
     ).scalar_one_or_none()
     if latest_day is None:
         return _empty_result(result_id, "get_dispersion_summary")
+    qualifying_skus = (
+        await session.execute(
+            select(DailyAggregate.gpu_sku)
+            .join(
+                provider_counts,
+                (provider_counts.c.date == DailyAggregate.date)
+                & (provider_counts.c.gpu_sku == DailyAggregate.gpu_sku),
+            )
+            .where(
+                DailyAggregate.date == latest_day,
+                DailyAggregate.provider.is_(None),
+                DailyAggregate.region.is_(None),
+                DailyAggregate.observation_count >= LATEST_DAY_MIN_OBSERVATIONS,
+                provider_counts.c.provider_count >= LATEST_DAY_MIN_PROVIDERS,
+            )
+        )
+    ).scalars().all()
     median = func.percentile_cont(0.5).within_group(CanonicalOffer.price_usd_per_hour)
     rows = (
         await session.execute(
@@ -132,7 +192,10 @@ async def _get_dispersion_summary(
                 func.max(CanonicalOffer.price_usd_per_hour).label("maximum"),
                 func.count(CanonicalOffer.id).label("n"),
             )
-            .where(cast(CanonicalOffer.collected_at, Date) == latest_day)
+            .where(
+                cast(CanonicalOffer.collected_at, Date) == latest_day,
+                CanonicalOffer.gpu_sku_canonical.in_(qualifying_skus),
+            )
             .group_by(CanonicalOffer.gpu_sku_canonical)
             .order_by(func.count(CanonicalOffer.id).desc(), CanonicalOffer.gpu_sku_canonical)
             .limit(8)
@@ -224,7 +287,68 @@ def _empty_result(result_id: int, tool: str) -> ToolContextResult:
     )
 
 
+async def _latest_qualified_date(
+    session: AsyncSession,
+    *,
+    gpu_sku: str,
+) -> datetime.date | None:
+    provider_counts = {
+        row.date: int(row.provider_count)
+        for row in (
+            await session.execute(
+                select(
+                    DailyAggregate.date,
+                    func.count(func.distinct(DailyAggregate.provider)).label(
+                        "provider_count"
+                    ),
+                )
+                .where(
+                    DailyAggregate.gpu_sku == gpu_sku,
+                    DailyAggregate.provider.is_not(None),
+                    DailyAggregate.observation_count > 0,
+                )
+                .group_by(DailyAggregate.date)
+            )
+        ).all()
+    }
+    daily_rows = (
+        await session.execute(
+            select(DailyAggregate.date, DailyAggregate.observation_count)
+            .where(
+                DailyAggregate.gpu_sku == gpu_sku,
+                DailyAggregate.provider.is_(None),
+                DailyAggregate.region.is_(None),
+            )
+            .order_by(DailyAggregate.date.desc())
+        )
+    ).all()
+    for row in daily_rows:
+        observation_count = int(row.observation_count)
+        provider_count = provider_counts.get(row.date, 0)
+        if (
+            observation_count >= LATEST_DAY_MIN_OBSERVATIONS
+            and provider_count >= LATEST_DAY_MIN_PROVIDERS
+        ):
+            selected_date: datetime.date = row.date
+            return selected_date
+        logger.warning(
+            (
+                "skipping partial latest day %s for %s: %s observations, "
+                "%s contributing providers (requires >= %s and >= %s)"
+            ),
+            row.date,
+            gpu_sku,
+            observation_count,
+            provider_count,
+            LATEST_DAY_MIN_OBSERVATIONS,
+            LATEST_DAY_MIN_PROVIDERS,
+        )
+    return None
+
+
 def _result_token_count(result: ToolContextResult) -> int:
     header = "| " + " | ".join(result.columns) + " |"
     rows = "\n".join("| " + " | ".join(row) + " |" for row in result.rows)
-    return count_tokens(f"[T{result.id}] {result.tool} as_of={result.as_of}\n{header}\n{rows}")
+    return int(
+        count_tokens(f"[T{result.id}] {result.tool} as_of={result.as_of}\n{header}\n{rows}")
+    )
