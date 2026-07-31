@@ -156,3 +156,12 @@ class DocChunk(Base):
         ),
         Index("ix_doc_chunks_chunk_tsv", "chunk_tsv", postgresql_using="gin"),
     )
+
+
+class AskDailyUsage(Base):
+    """Global Ask Basis question count keyed by UTC date."""
+
+    __tablename__ = "ask_daily_usage"
+
+    day: Mapped[datetime.date] = mapped_column(primary_key=True)
+    question_count: Mapped[int] = mapped_column(Integer, nullable=False)
