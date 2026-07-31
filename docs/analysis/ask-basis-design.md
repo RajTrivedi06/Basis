@@ -119,6 +119,10 @@ Fixed section order, fixed per-section budgets, `tiktoken`-counted. Total input 
 | 5 | history (last 2 exchanges, answers stripped to first sentence + citations) | 800 | drop oldest exchange whole |
 | 6 | user question | 200 | reject over-limit questions with 400, pre-model |
 
+**Data-card inventory ruling (2026-07-31):** the injected card is an orientation summary:
+top 12 SKUs by offer count plus the remaining-SKU count. The generated JSON retains the
+complete SKU list as metadata, but that exhaustive inventory is not injected.
+
 **History mechanism (Amendment A): stateless server, client-carried.** No sessions on the
 t3.small. Request schema: `POST /api/ask {question, history?: [{q, a}]}` — the frontend
 keeps the transcript in component state and sends it back. The server enforces this
