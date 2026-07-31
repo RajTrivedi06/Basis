@@ -9,6 +9,7 @@ from pathlib import Path
 
 from basis.config import settings
 from basis.db.engine import async_session_factory, engine
+from basis.rag.data_card import DATA_CARD_PATH, generate_data_card, write_data_card
 from basis.rag.indexer import OpenAIEmbedder, index_corpus, write_fixture
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -46,6 +47,8 @@ async def run_pipeline(args: argparse.Namespace) -> int:
             embedder=embedder,
             strategy=args.chunker,
         )
+        data_card = await generate_data_card(session)
+    write_data_card(data_card)
 
     for document in run.documents:
         print(
@@ -57,6 +60,7 @@ async def run_pipeline(args: argparse.Namespace) -> int:
         f"TOTAL: documents={len(run.documents)} chunks={run.total_chunks} "
         f"tokens={run.total_input_tokens} cost=${run.estimated_cost_usd:.6f}"
     )
+    print(f"Wrote data card: {DATA_CARD_PATH}")
 
     if args.emit_fixture:
         write_fixture(run, FIXTURE_PATH)

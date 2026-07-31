@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from basis.api.routes import (
+    ask,
     basis,
     dispersion,
     fungibility,
@@ -39,7 +40,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -52,6 +53,7 @@ app.include_router(gpu_skus.router)
 app.include_router(fungibility.router)
 app.include_router(provenance.router)
 app.include_router(ml.router)
+app.include_router(ask.router)
 
 
 @app.get("/")

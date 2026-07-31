@@ -42,6 +42,14 @@ class Settings(BaseSettings):
     runpod_api_key: str = ""
     gcp_api_key: str = ""
     openai_api_key: str = ""
+    openrouter_api_key: str = ""
+    openrouter_model: str = "deepseek/deepseek-chat"
+
+    # Ask Basis serving controls and optional tracing
+    ask_basis_disabled: bool = False
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_base_url: str = "https://cloud.langfuse.com"
 
     # AWS credentials (for EC2 Spot price history)
     aws_access_key_id: str = ""

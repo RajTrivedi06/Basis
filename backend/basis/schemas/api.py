@@ -5,8 +5,9 @@ Next.js frontend.
 """
 
 from datetime import date, datetime
+from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class HealthResponse(BaseModel):
@@ -232,3 +233,44 @@ class RawObservationExplainResponse(BaseModel):
     commitment: CommitmentCanonicalizationExplanationSchema
     region: RegionNormalizationExplanationSchema
     bundle: BundleExtractionExplanationSchema
+
+
+# --- Ask Basis ---
+
+
+class AskHistoryEntry(BaseModel):
+    q: str
+    a: str
+
+
+class AskRequest(BaseModel):
+    question: str
+    history: list[AskHistoryEntry] = Field(default_factory=list)
+
+
+class AskCitation(BaseModel):
+    id: int
+    kind: Literal["chunk", "tool"]
+    source_path: str | None = None
+    heading: str | None = None
+    tool: str | None = None
+    as_of: str | None = None
+
+
+class AskToolCall(BaseModel):
+    id: int
+    tool: str
+    as_of: str
+
+
+class AskUsage(BaseModel):
+    input_tokens: int
+    output_tokens: int
+
+
+class AskResponse(BaseModel):
+    answer: str
+    citations: list[AskCitation]
+    tool_calls: list[AskToolCall]
+    usage: AskUsage
+    trace_id: str

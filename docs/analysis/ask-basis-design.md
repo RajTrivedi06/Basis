@@ -105,6 +105,12 @@ never raw JSON. Numbers pre-rounded (prices 4dp, shares 1dp). Every result carri
 `as_of` date and a tool-call id (`T1`…). Cap: **3 tool calls per question**; the loop
 hard-stops after 3 and answers with what it has, saying so.
 
+**Latest-day coverage ruling (2026-07-31):** a per-SKU “latest” tool uses the most recent
+`daily_aggregates` date with at least 30 offers **and at least 2 distinct contributing
+providers** for that SKU, and logs newer partial days that it skips. Stage 4.4
+verification SQL for latest-value questions must use both `observation_count >= 30` and
+`COUNT(DISTINCT provider) >= 2` so the tool and grader select the same date.
+
 ## 5. Context assembly contract (testable spec)
 
 Fixed section order, fixed per-section budgets, `tiktoken`-counted. Total input ceiling
@@ -118,6 +124,10 @@ Fixed section order, fixed per-section budgets, `tiktoken`-counted. Total input 
 | 4 | compacted tool results `[T1]`…`[T3]` | 1,200 | truncate table rows tail-first, keep header + `as_of` |
 | 5 | history (last 2 exchanges, answers stripped to first sentence + citations) | 800 | drop oldest exchange whole |
 | 6 | user question | 200 | reject over-limit questions with 400, pre-model |
+
+**Data-card inventory ruling (2026-07-31):** the injected card is an orientation summary:
+top 12 SKUs by offer count plus the remaining-SKU count. The generated JSON retains the
+complete SKU list as metadata, but that exhaustive inventory is not injected.
 
 **History mechanism (Amendment A): stateless server, client-carried.** No sessions on the
 t3.small. Request schema: `POST /api/ask {question, history?: [{q, a}]}` — the frontend
