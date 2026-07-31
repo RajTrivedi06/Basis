@@ -9,10 +9,10 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from scripts.check_collection_volume import fetch_volume_rows
 from sqlalchemy import delete
 
 from basis.db.models import RawObservation
-from scripts.check_collection_volume import fetch_volume_rows
 
 _TEST_SOURCE = "volcheck_backfill_exclusion"
 
