@@ -38,7 +38,7 @@
     "holdout": {
       "n_days": 10,
       "n_test": 340,
-      "r2_oos": 0.58,
+      "r2_oos": 0.454,
       "r2_oos_pooled": 0.56,
       "rmse_log": 0.16
     },
@@ -48,8 +48,8 @@
       "aws_spot": 0.55,
       "tensordock": 0.48
     },
-    "anova_explained_same_days": 0.42,
-    "gap": 0.16,
+    "anova_explained_same_days": 0.563,
+    "gap": -0.109,
     "permuted_target_r2": 0.02,
     "robustness_c_d": {
       "holdout_r2_oos": 0.53,
