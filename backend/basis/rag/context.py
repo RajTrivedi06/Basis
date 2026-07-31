@@ -35,10 +35,17 @@ class QuestionTooLongError(ValueError):
 
 
 class RetrievedChunkLike(Protocol):
-    id: int
-    source_path: str
-    heading: str | None
-    chunk_text: str
+    @property
+    def id(self) -> int: ...
+
+    @property
+    def source_path(self) -> str: ...
+
+    @property
+    def heading(self) -> str | None: ...
+
+    @property
+    def chunk_text(self) -> str: ...
 
 
 @dataclass(frozen=True)
