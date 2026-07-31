@@ -2,7 +2,8 @@
  * Residual-first bound bar: 4-factor ANOVA explained share vs GBM holdout R².
  *
  * Amber is reserved for unexplained variance after the observable-features bound.
- * The GBM incremental segment shrinks the amber region — not a generic two-number bar.
+ * When gap < 0, the GBM bound sits below the ANOVA share — shown as a marker
+ * inside the ANOVA segment, not a green gain segment.
  */
 
 interface BoundBarProps {
@@ -14,10 +15,22 @@ interface BoundBarProps {
 
 const ANOVA_COLOR = "var(--factor-provider)";
 const GAP_COLOR = "var(--verdict-ok)";
+const MARKER_COLOR = "var(--ink-dim)";
 
 function clampShare(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(1, value));
+}
+
+function formatPct(value: number): string {
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+function formatGapPp(gap: number): string {
+  const pp = gap * 100;
+  if (!Number.isFinite(pp)) return "0.0 pp";
+  const sign = pp < 0 ? "−" : "";
+  return `${sign}${Math.abs(pp).toFixed(1)} pp`;
 }
 
 export function BoundBar({
@@ -26,129 +39,189 @@ export function BoundBar({
   gap,
   height = 88,
 }: BoundBarProps) {
-  const anova = clampShare(anovaExplained);
-  const gbm = clampShare(gbmR2);
-  const gapShare = clampShare(gap);
-  const unexplained = clampShare(1 - gbm);
+  const isNegativeGap = gap < 0;
+  const anovaShare = clampShare(anovaExplained);
+  const gbmShare = clampShare(gbmR2);
+  const gapShare = gap >= 0 ? clampShare(gap) : 0;
+  const unexplainedShare = isNegativeGap
+    ? clampShare(1 - anovaExplained)
+    : clampShare(1 - gbmR2);
 
-  const segments = [
-    {
-      key: "anova",
-      label: "4-factor ANOVA",
-      share: anova,
-      color: ANOVA_COLOR,
-      pct: anova * 100,
-    },
-    {
-      key: "gap",
-      label: "Richer features (gap)",
-      share: gapShare,
-      color: GAP_COLOR,
-      pct: gapShare * 100,
-    },
-    {
-      key: "unexplained",
-      label: "Unexplained after bound",
-      share: unexplained,
-      color: "var(--residual)",
-      pct: unexplained * 100,
-      isResidual: true,
-    },
-  ].filter((s) => s.share > 0);
+  const ariaLabel = isNegativeGap
+    ? `Bound bar: GBM holdout R² ${formatPct(gbmR2)}, ANOVA explained ${formatPct(
+        anovaExplained
+      )}, gap ${formatGapPp(gap)}, unexplained ${formatPct(unexplainedShare)}`
+    : `Bound bar: GBM holdout R² ${formatPct(gbmR2)}, ANOVA explained ${formatPct(
+        anovaExplained
+      )}, gap ${formatGapPp(gap)}, unexplained ${formatPct(unexplainedShare)}`;
 
   return (
     <div>
       <div className="mb-2.5 flex items-center justify-between gap-3">
         <span className="eyebrow">Observable-features bound</span>
         <span className="eyebrow" style={{ color: "var(--residual)" }}>
-          Residual · {(unexplained * 100).toFixed(1)}%
+          Residual · {(unexplainedShare * 100).toFixed(1)}%
         </span>
       </div>
 
       <div
-        className="flex overflow-hidden"
+        className="relative flex overflow-hidden"
         style={{
           height,
           borderRadius: 2,
           border: "1px solid var(--line)",
         }}
         role="img"
-        aria-label={`Bound bar: GBM holdout R² ${(gbm * 100).toFixed(
-          1
-        )}%, ANOVA explained ${(anova * 100).toFixed(1)}%, gap ${(
-          gapShare * 100
-        ).toFixed(1)}%, unexplained ${(unexplained * 100).toFixed(1)}%`}
+        aria-label={ariaLabel}
       >
-        {segments.map((segment) => (
-          <div
-            key={segment.key}
-            style={{
-              width: `${segment.share * 100}%`,
-              background: segment.color,
-              borderRight:
-                segment.key !== "unexplained"
-                  ? "1px solid rgba(0,0,0,0.25)"
-                  : undefined,
-              position: "relative",
-              overflow: "hidden",
-            }}
-            title={`${segment.label}: ${segment.pct.toFixed(1)}%`}
-          >
-            {segment.share > 0.12 && (
-              <div
-                className="absolute inset-0 flex flex-col justify-between"
-                style={{ padding: segment.isResidual ? "10px 14px" : "8px 10px" }}
-              >
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: segment.isResidual ? 11 : 10,
-                    color: segment.isResidual
-                      ? "var(--bg-deep)"
-                      : "rgba(255,255,255,0.95)",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    fontWeight: segment.isResidual ? 700 : 400,
-                  }}
-                >
-                  {segment.label}
-                </span>
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: segment.isResidual ? 22 : 13,
-                    color: segment.isResidual
-                      ? "var(--bg-deep)"
-                      : "rgba(255,255,255,0.95)",
-                    fontWeight: segment.isResidual ? 700 : 400,
-                  }}
-                >
-                  {segment.pct.toFixed(1)}%
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
+        {isNegativeGap ? (
+          <>
+            <BarSegment
+              label="4-factor ANOVA"
+              share={anovaShare}
+              color={ANOVA_COLOR}
+              isResidual={false}
+            />
+            <BarSegment
+              label="Unexplained after bound"
+              share={unexplainedShare}
+              color="var(--residual)"
+              isResidual
+            />
+            <div
+              data-testid="gbm-bound-marker"
+              className="pointer-events-none absolute bottom-0 top-0 z-10"
+              style={{
+                left: `${gbmShare * 100}%`,
+                width: 2,
+                transform: "translateX(-50%)",
+                background: MARKER_COLOR,
+                boxShadow: "0 0 0 1px rgba(0,0,0,0.35)",
+              }}
+              title={`Out-of-sample bound: ${formatPct(gbmR2)}`}
+              aria-hidden
+            />
+          </>
+        ) : (
+          [
+            {
+              key: "anova",
+              label: "4-factor ANOVA",
+              share: anovaShare,
+              color: ANOVA_COLOR,
+              isResidual: false,
+            },
+            {
+              key: "gap",
+              label: "Richer features (gap)",
+              share: gapShare,
+              color: GAP_COLOR,
+              isResidual: false,
+            },
+            {
+              key: "unexplained",
+              label: "Unexplained after bound",
+              share: unexplainedShare,
+              color: "var(--residual)",
+              isResidual: true,
+            },
+          ]
+            .filter((segment) => segment.share > 0)
+            .map((segment) => (
+              <BarSegment
+                key={segment.key}
+                label={segment.label}
+                share={segment.share}
+                color={segment.color}
+                isResidual={segment.isResidual}
+              />
+            ))
+        )}
       </div>
+
+      {isNegativeGap ? (
+        <p className="caption mt-3 text-[var(--ink-mid)]">
+          Out-of-sample bound ({formatPct(gbmR2)}) sits below the in-sample 4-factor
+          share ({formatPct(anovaExplained)})
+        </p>
+      ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <BoundStat
           label="GBM holdout R²"
-          value={`${(gbm * 100).toFixed(1)}%`}
+          value={formatPct(gbmR2)}
           detail="out-of-sample on held-out days"
         />
         <BoundStat
           label="ANOVA explained (same days)"
-          value={`${(anova * 100).toFixed(1)}%`}
+          value={formatPct(anovaExplained)}
           detail="sequential 4-factor share"
         />
         <BoundStat
           label="Gap"
-          value={`${(gapShare * 100).toFixed(1)} pp`}
+          value={formatGapPp(gap)}
           detail="richer features beyond ANOVA"
-          accent
+          accent={gap > 0}
         />
       </div>
+    </div>
+  );
+}
+
+function BarSegment({
+  label,
+  share,
+  color,
+  isResidual,
+}: {
+  label: string;
+  share: number;
+  color: string;
+  isResidual: boolean;
+}) {
+  const pct = share * 100;
+
+  return (
+    <div
+      data-testid="bound-bar-segment"
+      style={{
+        width: `${share * 100}%`,
+        background: color,
+        borderRight: !isResidual ? "1px solid rgba(0,0,0,0.25)" : undefined,
+        position: "relative",
+        overflow: "hidden",
+      }}
+      title={`${label}: ${pct.toFixed(1)}%`}
+    >
+      {share > 0.12 && (
+        <div
+          className="absolute inset-0 flex flex-col justify-between"
+          style={{ padding: isResidual ? "10px 14px" : "8px 10px" }}
+        >
+          <span
+            className="mono"
+            style={{
+              fontSize: isResidual ? 11 : 10,
+              color: isResidual ? "var(--bg-deep)" : "rgba(255,255,255,0.95)",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              fontWeight: isResidual ? 700 : 400,
+            }}
+          >
+            {label}
+          </span>
+          <span
+            className="mono"
+            style={{
+              fontSize: isResidual ? 22 : 13,
+              color: isResidual ? "var(--bg-deep)" : "rgba(255,255,255,0.95)",
+              fontWeight: isResidual ? 700 : 400,
+            }}
+          >
+            {pct.toFixed(1)}%
+          </span>
+        </div>
+      )}
     </div>
   );
 }
