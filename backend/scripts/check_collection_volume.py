@@ -57,12 +57,24 @@ LATEST_WINDOW_HOURS = 36    # a "recent" run must fall within this window
 # Per (source, run) counts over the window, plus the latest run per source and a
 # baseline median over the *earlier* runs (excludes the latest so a bad latest
 # run can't move its own baseline).
+#
+# Backfill rows (provider_metadata.backfill truthy) carry historical collected_at
+# stamps and must not count as collection runs — otherwise a one-shot AWS history
+# backfill looks like hundreds of tiny runs and drags the baseline median down.
+_BACKFILL_EXCLUSION = """
+    AND NOT (
+        COALESCE(lower(provider_metadata->>'backfill'), '') IN ('true', 't', '1', 'yes')
+        OR COALESCE(provider_metadata->'backfill', 'false'::jsonb) = 'true'::jsonb
+    )
+"""
+
 _QUERY = text(
-    """
+    f"""
     WITH runs AS (
         SELECT source, collected_at, count(*) AS cnt
         FROM raw_observations
         WHERE collected_at > now() - make_interval(days => :days)
+        {_BACKFILL_EXCLUSION}
         GROUP BY source, collected_at
     ),
     latest AS (
@@ -112,12 +124,17 @@ def classify(
     return "ok", False
 
 
+async def fetch_volume_rows(session) -> list[dict]:
+    """Run the volume baseline query. Exposed for integration tests."""
+    result = await session.execute(
+        _QUERY, {"days": LOOKBACK_DAYS, "recent_hours": LATEST_WINDOW_HOURS}
+    )
+    return [dict(m) for m in result.mappings().all()]
+
+
 async def _fetch_rows() -> list[dict]:
     async with async_session_factory() as session:
-        result = await session.execute(
-            _QUERY, {"days": LOOKBACK_DAYS, "recent_hours": LATEST_WINDOW_HOURS}
-        )
-        return [dict(m) for m in result.mappings().all()]
+        return await fetch_volume_rows(session)
 
 
 def main() -> int:
