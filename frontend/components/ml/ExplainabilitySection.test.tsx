@@ -14,7 +14,6 @@ import {
   ExplainabilityContent,
   ExplainabilityEmptyState,
 } from "@/components/ml/ExplainabilityContent";
-import { BoundBar } from "@/components/ml/BoundBar";
 import { ShapFeaturesChart } from "@/components/ml/ShapFeaturesChart";
 import { ML_EXPLAINABILITY_FIXTURE } from "@/lib/mlExplainability";
 import { ExplainabilityPageClient } from "@/app/explainability/ExplainabilityPageClient";
@@ -28,10 +27,10 @@ describe("ExplainabilityContent", () => {
 
     expect(
       screen.getByRole("img", {
-        name: /Bound bar: GBM holdout R² 58\.0%, ANOVA explained 42\.0%, gap 16\.0%/,
+        name: /Bound bar: GBM holdout R² 45\.4%, ANOVA explained 56\.3%, gap −10\.9 pp/,
       })
     ).toBeInTheDocument();
-    expect(screen.getByText("16.0 pp")).toBeInTheDocument();
+    expect(screen.getByText("−10.9 pp")).toBeInTheDocument();
   });
 
   it("renders caveats verbatim", () => {
@@ -55,22 +54,6 @@ describe("ExplainabilityContent", () => {
 
     expect(screen.getByText("62.0%")).toBeInTheDocument();
     expect(screen.getByText("51.0%")).toBeInTheDocument();
-  });
-});
-
-describe("BoundBar", () => {
-  it("places amber residual segment last and labels unexplained share", () => {
-    const { container } = render(
-      <BoundBar anovaExplained={0.42} gbmR2={0.58} gap={0.16} />
-    );
-
-    const bar = container.querySelector('[role="img"]');
-    const segments = bar!.querySelectorAll<HTMLElement>(":scope > div");
-    expect(segments.length).toBeGreaterThanOrEqual(2);
-
-    const last = segments[segments.length - 1];
-    expect(last.style.background).toBe("var(--residual)");
-    expect(screen.getByText(/Residual · 42\.0%/)).toBeInTheDocument();
   });
 });
 
@@ -132,7 +115,7 @@ describe("ExplainabilityPageClient", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("img", {
-        name: /Bound bar: GBM holdout R² 58\.0%/,
+        name: /Bound bar: GBM holdout R² 45\.4%/,
       })
     ).toBeInTheDocument();
   });
