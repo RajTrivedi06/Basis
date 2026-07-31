@@ -59,7 +59,13 @@ def test_generated_data_card_summary_stays_within_300_tokens() -> None:
 
     assert count_tokens(summary) <= DATA_CARD_TOKEN_BUDGET
     assert "…and 84 more SKUs — ask about any specific one." in summary
-    assert len(load_data_card().sku_list) == 96
+    card = load_data_card()
+    assert len(card.sku_list) == 96
+    assert len(card.top_skus) == 12
+    assert [count for _sku, count in card.top_skus] == sorted(
+        (count for _sku, count in card.top_skus),
+        reverse=True,
+    )
 
 
 def test_history_is_recapped_to_two_stripped_untrusted_exchanges() -> None:

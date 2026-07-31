@@ -11,6 +11,7 @@ from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from basis.rag.context import (
+    REFUSAL_TEMPLATE,
     AssembledContext,
     HistoryExchange,
     ToolContextResult,
@@ -211,8 +212,8 @@ class AnswerService:
                         output={"content": reply.content, "tool_calls": [x.name for x in reply.tool_calls]},
                         metadata={"latency_ms": latency_ms},
                         usage_details={
-                            "input": reply.usage.input_tokens,
-                            "output": reply.usage.output_tokens,
+                            "input_tokens": reply.usage.input_tokens,
+                            "output_tokens": reply.usage.output_tokens,
                         },
                     )
                 usage += reply.usage
@@ -251,7 +252,7 @@ class AnswerService:
                     force_final = True
 
             if not answer:
-                answer = "That's not covered in my sources."
+                answer = REFUSAL_TEMPLATE
             if tool_limit_reached and TOOL_LIMIT_NOTE not in answer:
                 answer = f"{answer} {TOOL_LIMIT_NOTE}"
             final_context = assemble(question, retrieval.chunks, tool_results, history)

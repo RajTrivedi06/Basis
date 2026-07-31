@@ -37,7 +37,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["ask"])
 _rate_limiter = InProcessRateLimiter()
 _MARKER_RE = re.compile(r"\[(C|T)(\d+)\]")
-_STREAM_TOKEN_RE = re.compile(r"\S+\s*")
+# Exclude newlines from token events so each event remains valid SSE framing.
+_STREAM_TOKEN_RE = re.compile(r"\S+[^\S\r\n]*")
 
 
 @router.post("/ask", response_model=AskResponse)  # type: ignore[untyped-decorator]

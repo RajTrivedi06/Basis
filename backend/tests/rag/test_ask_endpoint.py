@@ -257,6 +257,7 @@ async def test_sse_stream_emits_token_events_and_final_envelope(
     api_client: AsyncClient,
     configured_ask: StubAnswerService,
 ) -> None:
+    configured_ask.answer_text = "First paragraph.\n\nSecond paragraph."
     response = await api_client.post(
         "/api/ask",
         headers={"Accept": "text/event-stream", "X-Forwarded-For": "203.0.113.14"},
@@ -268,6 +269,10 @@ async def test_sse_stream_emits_token_events_and_final_envelope(
     assert response.text.startswith("data:")
     assert "\nevent: done\n" in response.text
     assert '"trace_id":"0123456789abcdef0123456789abcdef"' in response.text
+    assert all(
+        line.startswith(("data:", "event:")) or not line
+        for line in response.text.splitlines()
+    )
 
 
 @pytest.mark.asyncio
