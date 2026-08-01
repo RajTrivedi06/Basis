@@ -512,7 +512,7 @@ def _load_regression_reasons(
         dict[str, Any],
         json.loads(baseline_path.read_text(encoding="utf-8")),
     )
-    return cast(list[str], regression_reasons(scorecard, baseline))
+    return regression_reasons(scorecard, baseline)
 
 
 async def _fetch_model_pricing(model: str) -> ModelPricing | None:

@@ -85,7 +85,11 @@ async def ask_basis(
         if settings.ask_eval_mode
         else None
     )
-    service = _get_answer_service(model=model_override)
+    service = (
+        _get_answer_service(model=model_override)
+        if model_override is not None
+        else _get_answer_service()
+    )
     try:
         result = await service.answer(
             question=question,

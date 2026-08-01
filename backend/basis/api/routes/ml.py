@@ -156,7 +156,7 @@ def _load_eval_artifact(path: Path) -> dict[str, Any]:
         ) from exc
 
 
-@router.get("/explainability")  # type: ignore[untyped-decorator]
+@router.get("/explainability")
 def get_explainability() -> dict[str, Any]:
     """Serve the frozen ML explainability artifact.
 
