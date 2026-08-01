@@ -7,13 +7,26 @@ import asyncio
 from collections.abc import Sequence
 from pathlib import Path
 
+import yaml
+
 from basis.config import settings
 from basis.db.engine import async_session_factory, engine
 from basis.rag.data_card import DATA_CARD_PATH, generate_data_card, write_data_card
-from basis.rag.indexer import OpenAIEmbedder, index_corpus, write_fixture
+from basis.rag.indexer import (
+    OpenAIEmbedder,
+    index_corpus,
+    write_fixture,
+    write_query_fixture,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-FIXTURE_PATH = REPO_ROOT / "backend" / "tests" / "fixtures" / "rag_chunks_fixture.json.gz"
+FIXTURE_DIR = REPO_ROOT / "backend" / "tests" / "fixtures"
+CHUNK_FIXTURE_PATHS = {
+    "heading": FIXTURE_DIR / "rag_chunks_fixture.json.gz",
+    "fixed": FIXTURE_DIR / "rag_chunks_fixture_alternative.json.gz",
+}
+QUERY_FIXTURE_PATH = FIXTURE_DIR / "rag_eval_query_embeddings.json.gz"
+QUESTIONS_PATH = REPO_ROOT / "backend" / "evals" / "questions.yaml"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,9 +76,27 @@ async def run_pipeline(args: argparse.Namespace) -> int:
     print(f"Wrote data card: {DATA_CARD_PATH}")
 
     if args.emit_fixture:
-        write_fixture(run, FIXTURE_PATH)
-        print(f"Wrote fixture: {FIXTURE_PATH}")
+        chunk_fixture_path = CHUNK_FIXTURE_PATHS[args.chunker]
+        write_fixture(run, chunk_fixture_path)
+        print(f"Wrote fixture: {chunk_fixture_path}")
+        questions = _load_eval_questions()
+        query_batch = await embedder.embed(questions)
+        if len(query_batch.vectors) != len(questions):
+            raise ValueError("embedding provider returned the wrong eval query vector count")
+        write_query_fixture(
+            dict(zip(questions, query_batch.vectors, strict=True)),
+            QUERY_FIXTURE_PATH,
+        )
+        print(
+            f"Wrote eval query fixture: {QUERY_FIXTURE_PATH} "
+            f"questions={len(questions)} tokens={query_batch.input_tokens}"
+        )
     return 0
+
+
+def _load_eval_questions() -> list[str]:
+    payload = yaml.safe_load(QUESTIONS_PATH.read_text(encoding="utf-8"))
+    return [str(question["question"]) for question in payload["questions"]]
 
 
 def main(argv: Sequence[str] | None = None) -> int:
