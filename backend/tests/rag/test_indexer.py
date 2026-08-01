@@ -22,12 +22,14 @@ from basis.rag.indexer import (
     EMBEDDING_MODEL,
     EmbeddedChunk,
     EmbeddingBatch,
+    FixtureEmbedder,
     IndexedDocument,
     IndexRun,
     OpenAIEmbedder,
     corpus_paths,
     index_document,
     write_fixture,
+    write_query_fixture,
 )
 
 TEST_SOURCE = "tests/rag/idempotency.md"
@@ -169,6 +171,20 @@ def test_fixture_writer_is_deterministic_gzip_json(tmp_path: Path) -> None:
     assert payload["embedding_dimensions"] == EMBEDDING_DIMENSIONS
     assert payload["chunks"][0]["source_path"] == "docs/example.md"
     assert len(payload["chunks"][0]["embedding"]) == EMBEDDING_DIMENSIONS
+
+
+@pytest.mark.asyncio
+async def test_query_fixture_embedder_is_exact_keyed_and_keyless(tmp_path: Path) -> None:
+    fixture_path = tmp_path / "queries.json.gz"
+    vector = [1.0, *([0.0] * (EMBEDDING_DIMENSIONS - 1))]
+    write_query_fixture({"What is Basis?": vector}, fixture_path)
+
+    embedder = FixtureEmbedder(fixture_path)
+    result = await embedder.embed(["What is Basis?"])
+
+    assert result == EmbeddingBatch(vectors=[vector], input_tokens=0)
+    with pytest.raises(ValueError, match="no entry"):
+        await embedder.embed(["Different whitespace? "])
 
 
 def test_run_index_without_openai_key_exits_cleanly() -> None:

@@ -1,86 +1,317 @@
 {
-  "schema_version": "1.0.0",
-  "metadata": {
-    "trained_at": "2026-07-31T18:00:00Z",
-    "sku": "h100_sxm_80gb",
-    "trained_providers": ["vast", "runpod", "aws_spot", "tensordock"],
-    "corpus_through": "2026-07-30",
-    "corpus_rows": 12200,
-    "n_rows_after_dedup": 9850,
-    "era_coverage": ["A", "B", "C", "D"],
-    "code_version": "abc123def456",
-    "xgboost_version": "2.1.4",
-    "fixture_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  },
-  "metrics": {
-    "folds": [
-      {
-        "fold": 1,
-        "train_days": 25,
-        "test_days": 15,
-        "n_train": 2100,
-        "n_test": 1200,
-        "r2_oos": 0.62,
-        "rmse_log": 0.18,
-        "provider_mix_test": {"vast": 0.45, "aws_spot": 0.4, "runpod": 0.15}
-      }
-    ],
-    "holdout": {
-      "n_days": 10,
-      "n_test": 850,
-      "r2_oos": 0.58,
-      "r2_oos_pooled": 0.56,
-      "rmse_log": 0.19
-    },
-    "r2_holdout_by_provider": {
-      "vast": 0.61,
-      "runpod": 0.52,
-      "aws_spot": 0.55,
-      "tensordock": 0.48
-    },
-    "anova_explained_same_days": 0.42,
-    "gap": 0.16,
-    "permuted_target_r2": 0.02,
-    "robustness_c_d": {"holdout_r2_oos": 0.54, "n_days": 18},
-    "sanity": {
-      "duplicate_rows_across_split": 0,
-      "importance_warning": false,
-      "top_gain_importances": [
-        {"feature": "provider", "gain_share": 0.31},
-        {"feature": "commitment_type", "gain_share": 0.14}
-      ],
-      "holdout_pred_vs_actual": {
-        "corr": 0.76,
-        "residual_p10": -0.21,
-        "residual_p50": 0.01,
-        "residual_p90": 0.2
-      }
-    }
-  },
-  "shap_summary": {
-    "n_sample": 500,
-    "top_features": [
-      {"rank": 1, "feature": "provider", "mean_abs_shap": 0.31},
-      {"rank": 2, "feature": "commitment_type", "mean_abs_shap": 0.14}
-    ]
-  },
-  "host_analysis": {
-    "icc": 0.22,
-    "fe_r2_increment": 0.08,
-    "n_hosts": 61,
-    "n_host_days": 1833,
-    "min_days_threshold": 10,
-    "sensitivity": [
-      {"threshold": 5, "icc": 0.25, "n_hosts": 90},
-      {"threshold": 20, "icc": 0.18, "n_hosts": 31}
-    ],
-    "tenure_days": {"min": 1, "median": 12, "max": 51}
-  },
   "caveats": [
     "observable-features bound; says nothing about unobserved attributes",
     "Vast-feature-rich: non-Vast providers described by canonical columns only",
-    "corpus window 2026-04-26 → 2026-07-30; era B has 21 zero-Vast days",
+    "corpus window 2026-04-26 \u2192 2026-07-29; era B has 21 zero-Vast days",
     "trained on vast/runpod/aws_spot/tensordock only; Azure and GCP join at first retrain with real history"
   ],
-  "model_file": "models/explainability_v1.0.0_20260731.ubj"
+  "host_analysis": {
+    "fe_r2_increment": 0.44864744753392,
+    "icc": 0.553634869562949,
+    "min_days_threshold": 10,
+    "n_host_days": 1369,
+    "n_hosts": 61,
+    "sensitivity": [
+      {
+        "icc": 0.5505368748383879,
+        "n_hosts": 90,
+        "threshold": 5
+      },
+      {
+        "icc": 0.5305269511416668,
+        "n_hosts": 31,
+        "threshold": 20
+      }
+    ],
+    "tenure_days": {
+      "max": 51,
+      "median": 2.0,
+      "min": 1
+    }
+  },
+  "metadata": {
+    "code_version": "be7514c",
+    "corpus_rows": 12109,
+    "corpus_through": "2026-07-29",
+    "era_coverage": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "fixture_hash": "cd45e27adf9925c4aa9f9c16016089680fc93e2f2faf1d5fd91e4072c5079bac",
+    "n_rows_after_dedup": 4992,
+    "sku": "h100_sxm_80gb",
+    "trained_at": "2026-07-30T23:15:12.926709Z",
+    "trained_providers": [
+      "vast",
+      "runpod",
+      "aws_spot",
+      "tensordock"
+    ],
+    "xgboost_version": "3.2.0"
+  },
+  "metrics": {
+    "anova_explained_same_days": 0.5629086139386911,
+    "folds": [
+      {
+        "fold": 1,
+        "n_test": 924,
+        "n_train": 1051,
+        "provider_mix_test": {
+          "aws_spot": 0.2435064935064935,
+          "runpod": 0.06493506493506493,
+          "tensordock": 0.008658008658008658,
+          "vast": 0.6829004329004329
+        },
+        "r2_oos": -0.14855096253173072,
+        "rmse_log": 0.5308161271572056,
+        "test_days": 15,
+        "train_days": 25
+      },
+      {
+        "fold": 2,
+        "n_test": 1167,
+        "n_train": 1975,
+        "provider_mix_test": {
+          "aws_spot": 0.1928020565552699,
+          "runpod": 0.05141388174807198,
+          "vast": 0.7557840616966581
+        },
+        "r2_oos": 0.01879584558540126,
+        "rmse_log": 0.5633602479759642,
+        "test_days": 15,
+        "train_days": 40
+      },
+      {
+        "fold": 3,
+        "n_test": 529,
+        "n_train": 3142,
+        "provider_mix_test": {
+          "aws_spot": 0.42533081285444235,
+          "runpod": 0.11342155009451796,
+          "vast": 0.4612476370510397
+        },
+        "r2_oos": 0.24232342237420512,
+        "rmse_log": 0.4596219303667517,
+        "test_days": 15,
+        "train_days": 55
+      },
+      {
+        "fold": 4,
+        "n_test": 722,
+        "n_train": 3671,
+        "provider_mix_test": {
+          "aws_spot": 0.31163434903047094,
+          "runpod": 0.08310249307479224,
+          "vast": 0.6052631578947368
+        },
+        "r2_oos": 0.45861968871478387,
+        "rmse_log": 0.4136615162951869,
+        "test_days": 15,
+        "train_days": 70
+      }
+    ],
+    "gap": -0.10861381578432183,
+    "holdout": {
+      "n_days": 10,
+      "n_test": 599,
+      "r2_oos": 0.45429479815436924,
+      "r2_oos_pooled": 0.4652674737435062,
+      "rmse_log": 0.3430199816335572
+    },
+    "permuted_target_r2": -0.18642831104741364,
+    "r2_holdout_by_provider": {
+      "aws_spot": -0.7266762644935321,
+      "vast": 0.4637217325975743
+    },
+    "robustness_c_d": {
+      "holdout_r2_oos": 0.27089280433913665,
+      "n_days": 18
+    },
+    "sanity": {
+      "duplicate_rows_across_split": 48,
+      "duplicate_rows_across_split_by_provider": {
+        "aws_spot": 24,
+        "runpod": 24
+      },
+      "holdout_pred_vs_actual": {
+        "corr": 0.7267633207702503,
+        "residual_p10": -0.22467648464395637,
+        "residual_p50": 0.1545355960462561,
+        "residual_p90": 0.5113949595615449
+      },
+      "importance_warning": false,
+      "permuted_target_r2": -0.18642831104741364,
+      "top_gain_importances": [
+        {
+          "feature": "mobo_name",
+          "gain_share": 0.31855539224519036
+        },
+        {
+          "feature": "direct_port_count",
+          "gain_share": 0.0750112347598862
+        },
+        {
+          "feature": "disk_name",
+          "gain_share": 0.06182397906978727
+        },
+        {
+          "feature": "region_country",
+          "gain_share": 0.05548492478797963
+        },
+        {
+          "feature": "cpu_name",
+          "gain_share": 0.04397642795477904
+        },
+        {
+          "feature": "provider",
+          "gain_share": 0.036243385869361634
+        },
+        {
+          "feature": "verification_tier",
+          "gain_share": 0.028788549653018906
+        },
+        {
+          "feature": "gpu_frac",
+          "gain_share": 0.028589576245924026
+        },
+        {
+          "feature": "era",
+          "gain_share": 0.02223943069240133
+        },
+        {
+          "feature": "cpu_ram",
+          "gain_share": 0.018889983322646412
+        },
+        {
+          "feature": "duration",
+          "gain_share": 0.017892242693076234
+        },
+        {
+          "feature": "reliability",
+          "gain_share": 0.016809711000313917
+        },
+        {
+          "feature": "inet_up",
+          "gain_share": 0.016331660688034124
+        },
+        {
+          "feature": "os_version",
+          "gain_share": 0.015529391641088531
+        },
+        {
+          "feature": "disk_bw",
+          "gain_share": 0.015028518768317907
+        }
+      ]
+    }
+  },
+  "model_file": "models/explainability_v1.0.0_20260730.ubj",
+  "schema_version": "1.0.0",
+  "shap_summary": {
+    "n_sample": 599,
+    "top_features": [
+      {
+        "feature": "mobo_name",
+        "mean_abs_shap": 0.12211329351025377,
+        "rank": 1
+      },
+      {
+        "feature": "direct_port_count",
+        "mean_abs_shap": 0.06954942099286615,
+        "rank": 2
+      },
+      {
+        "feature": "region_country",
+        "mean_abs_shap": 0.04819978920434631,
+        "rank": 3
+      },
+      {
+        "feature": "disk_name",
+        "mean_abs_shap": 0.04523861743612775,
+        "rank": 4
+      },
+      {
+        "feature": "duration",
+        "mean_abs_shap": 0.03413703865093725,
+        "rank": 5
+      },
+      {
+        "feature": "era",
+        "mean_abs_shap": 0.02807712603363524,
+        "rank": 6
+      },
+      {
+        "feature": "verification_tier",
+        "mean_abs_shap": 0.01517943191057188,
+        "rank": 7
+      },
+      {
+        "feature": "dlperf",
+        "mean_abs_shap": 0.014707508158674915,
+        "rank": 8
+      },
+      {
+        "feature": "storage_gb_bundled",
+        "mean_abs_shap": 0.014141042301099836,
+        "rank": 9
+      },
+      {
+        "feature": "cpu_name",
+        "mean_abs_shap": 0.01389075098318024,
+        "rank": 10
+      },
+      {
+        "feature": "reliability",
+        "mean_abs_shap": 0.01363332444520703,
+        "rank": 11
+      },
+      {
+        "feature": "inet_up",
+        "mean_abs_shap": 0.012021078504649677,
+        "rank": 12
+      },
+      {
+        "feature": "vcpus_bundled",
+        "mean_abs_shap": 0.011802693957057676,
+        "rank": 13
+      },
+      {
+        "feature": "inet_down",
+        "mean_abs_shap": 0.010647941699484461,
+        "rank": 14
+      },
+      {
+        "feature": "disk_bw",
+        "mean_abs_shap": 0.009472325166869645,
+        "rank": 15
+      },
+      {
+        "feature": "gpu_max_temp",
+        "mean_abs_shap": 0.006531671607458846,
+        "rank": 16
+      },
+      {
+        "feature": "gpu_frac",
+        "mean_abs_shap": 0.005743850430931184,
+        "rank": 17
+      },
+      {
+        "feature": "gpu_mem_bw",
+        "mean_abs_shap": 0.005592386791553408,
+        "rank": 18
+      },
+      {
+        "feature": "pcie_bw",
+        "mean_abs_shap": 0.005132145900802812,
+        "rank": 19
+      },
+      {
+        "feature": "cpu_ram",
+        "mean_abs_shap": 0.0042949719551775,
+        "rank": 20
+      }
+    ]
+  }
 }

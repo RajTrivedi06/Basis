@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Any
+from pathlib import Path
+from typing import Any, cast
 
 import boto3
 from botocore.exceptions import (
@@ -16,6 +17,7 @@ from botocore.exceptions import (
 )
 from fastapi import APIRouter, HTTPException
 
+from basis.config import settings
 from basis.ml.artifact import ArtifactValidationError, validate_artifact
 
 logger = logging.getLogger(__name__)
@@ -125,15 +127,33 @@ def _fetch_explainability_uncached() -> dict[str, Any]:
 
 def get_explainability_artifact() -> dict[str, Any]:
     """Return the cached explainability artifact, fetching from S3 when stale."""
+    if settings.ask_eval_mode and settings.ask_eval_artifact_path:
+        return _load_eval_artifact(Path(settings.ask_eval_artifact_path))
     now = time.monotonic()
     cached = _cache["artifact"]
     if cached is not None and now < _cache["expires_at"]:
-        return cached
+        return cast(dict[str, Any], cached)
 
     artifact = _fetch_explainability_uncached()
     _cache["artifact"] = artifact
     _cache["expires_at"] = now + CACHE_TTL_SECONDS
     return artifact
+
+
+def _load_eval_artifact(path: Path) -> dict[str, Any]:
+    """Load the committed artifact only inside the explicitly enabled eval process."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("root must be an object")
+        validate_artifact(payload)
+        return payload
+    except (OSError, json.JSONDecodeError, ValueError, ArtifactValidationError) as exc:
+        logger.warning("eval explainability artifact unavailable: %s", exc)
+        raise HTTPException(
+            status_code=503,
+            detail="eval explainability artifact is unavailable",
+        ) from exc
 
 
 @router.get("/explainability")

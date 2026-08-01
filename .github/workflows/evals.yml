@@ -1,0 +1,82 @@
+name: Ask Basis evals
+
+# Owner deviation (Raj, Director informed): paid evals run weekly, manually, or
+# when a PR receives run-evals. This replaces the design's nightly cadence.
+on:
+  workflow_dispatch:
+  schedule:
+    # Wednesday 03:40 UTC is well outside the 08:00/20:00 collection windows.
+    - cron: "40 3 * * 3"
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ask-basis-evals-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  evals:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'run-evals'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      DATABASE_URL: postgresql+asyncpg://basis:basis@localhost:5432/basis
+      ENVIRONMENT: test
+      ASK_EVAL_MODE: "1"
+      ASK_EVAL_QUERY_EMBEDDINGS_PATH: tests/fixtures/rag_eval_query_embeddings.json.gz
+      ASK_EVAL_ARTIFACT_PATH: tests/fixtures/explainability_artifact.json
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: basis
+          POSTGRES_PASSWORD: basis
+          POSTGRES_DB: basis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U basis -d basis"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Seed the shared deterministic database
+        working-directory: backend
+        run: uv run --project .. python -m tests.fixtures.seed_db
+      - name: Start the fixture-backed local API
+        working-directory: backend
+        run: |
+          uv run --project .. uvicorn basis.api.main:app --host 127.0.0.1 --port 8000 > /tmp/basis-eval-api.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/basis-eval-api.log
+          exit 1
+      - name: Run scorecard and regression gate
+        working-directory: backend
+        run: >-
+          uv run --project .. python -m evals.run_evals
+          --tier all
+          --chunker primary
+          --out evals/results/ci-scorecard.json
+      - name: Print scorecard and API log on failure
+        if: failure()
+        working-directory: backend
+        run: |
+          test ! -f evals/results/ci-scorecard.json || cat evals/results/ci-scorecard.json
+          cat /tmp/basis-eval-api.log

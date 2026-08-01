@@ -43,10 +43,14 @@ class Settings(BaseSettings):
     gcp_api_key: str = ""
     openai_api_key: str = ""
     openrouter_api_key: str = ""
-    openrouter_model: str = "deepseek/deepseek-chat"
+    openrouter_model: str = "moonshotai/kimi-k2.5"
 
     # Ask Basis serving controls and optional tracing
     ask_basis_disabled: bool = False
+    # Test-only eval harness controls. Production leaves ASK_EVAL_MODE disabled.
+    ask_eval_mode: bool = False
+    ask_eval_query_embeddings_path: str = ""
+    ask_eval_artifact_path: str = ""
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
     langfuse_base_url: str = "https://cloud.langfuse.com"

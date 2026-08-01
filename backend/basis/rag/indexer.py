@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Protocol
@@ -87,6 +88,36 @@ class OpenAIEmbedder:
         return EmbeddingBatch(
             vectors=[list(item.embedding) for item in ordered],
             input_tokens=int(response.usage.total_tokens),
+        )
+
+
+class FixtureEmbedder:
+    """Exact-text query embeddings for keyless eval environments only."""
+
+    def __init__(self, fixture_path: Path) -> None:
+        payload = json.loads(gzip.decompress(fixture_path.read_bytes()))
+        if payload.get("embedding_model") != EMBEDDING_MODEL:
+            raise ValueError("query fixture embedding model does not match the frozen model")
+        if payload.get("embedding_dimensions") != EMBEDDING_DIMENSIONS:
+            raise ValueError("query fixture embedding dimensions do not match the schema")
+        raw_embeddings = payload.get("embeddings")
+        if not isinstance(raw_embeddings, dict):
+            raise ValueError("query fixture embeddings must be an object keyed by exact text")
+        self._embeddings = {
+            str(text): [float(value) for value in vector]
+            for text, vector in raw_embeddings.items()
+        }
+        if any(len(vector) != EMBEDDING_DIMENSIONS for vector in self._embeddings.values()):
+            raise ValueError("query fixture contains a vector with the wrong dimensions")
+
+    async def embed(self, texts: list[str]) -> EmbeddingBatch:
+        """Return only pre-approved exact-text embeddings; never call a provider."""
+        missing = [text for text in texts if text not in self._embeddings]
+        if missing:
+            raise ValueError(f"query embedding fixture has no entry for: {missing[0]!r}")
+        return EmbeddingBatch(
+            vectors=[self._embeddings[text] for text in texts],
+            input_tokens=0,
         )
 
 
@@ -249,6 +280,29 @@ def write_fixture(run: IndexRun, fixture_path: Path) -> None:
             for document in run.documents
             for chunk in document.chunks
         ],
+    }
+    serialized = json.dumps(
+        payload,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    fixture_path.parent.mkdir(parents=True, exist_ok=True)
+    fixture_path.write_bytes(gzip.compress(serialized, compresslevel=9, mtime=0))
+
+
+def write_query_fixture(
+    embeddings: Mapping[str, list[float]],
+    fixture_path: Path,
+) -> None:
+    """Write deterministic exact-question embeddings for keyless eval API runs."""
+    if any(len(vector) != EMBEDDING_DIMENSIONS for vector in embeddings.values()):
+        raise ValueError("query embedding fixture contains a vector with the wrong dimensions")
+    payload = {
+        "schema_version": 1,
+        "embedding_model": EMBEDDING_MODEL,
+        "embedding_dimensions": EMBEDDING_DIMENSIONS,
+        "embeddings": dict(embeddings),
     }
     serialized = json.dumps(
         payload,
