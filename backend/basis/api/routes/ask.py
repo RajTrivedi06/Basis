@@ -5,14 +5,17 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from openai import OpenAIError
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from basis.api.deps import get_db
 from basis.config import settings
+from basis.db.models import RawObservation
 from basis.rag.answer import AnswerResult, AnswerService, OpenRouterChatModel
 from basis.rag.context import QuestionTooLongError, validate_question
 from basis.rag.controls import (
@@ -21,7 +24,7 @@ from basis.rag.controls import (
     RateLimitExceededError,
     consume_daily_capacity,
 )
-from basis.rag.indexer import OpenAIEmbedder
+from basis.rag.indexer import Embedder, FixtureEmbedder, OpenAIEmbedder
 from basis.rag.tools import ToolExecutor
 from basis.rag.tracing import AskTracer
 from basis.schemas.api import (
@@ -52,7 +55,10 @@ async def ask_basis(
         raise HTTPException(status_code=503, detail="Ask Basis is disabled")
     if not settings.openrouter_api_key:
         raise HTTPException(status_code=503, detail="Ask Basis is not configured")
-    if not settings.openai_api_key:
+    fixture_embeddings_enabled = bool(
+        settings.ask_eval_mode and settings.ask_eval_query_embeddings_path
+    )
+    if not settings.openai_api_key and not fixture_embeddings_enabled:
         raise HTTPException(status_code=503, detail="Ask Basis embeddings are not configured")
 
     try:
@@ -74,7 +80,16 @@ async def ask_basis(
     except DailyCapacityReachedError as exc:
         raise HTTPException(status_code=429, detail="daily capacity reached") from exc
 
-    service = _get_answer_service()
+    model_override = (
+        request.headers.get("x-ask-basis-eval-model")
+        if settings.ask_eval_mode
+        else None
+    )
+    service = (
+        _get_answer_service(model=model_override)
+        if model_override is not None
+        else _get_answer_service()
+    )
     try:
         result = await service.answer(
             question=question,
@@ -97,22 +112,39 @@ async def ask_basis(
     )
 
 
-def _get_answer_service() -> AnswerService:
+@router.get("/ask/eval-sentinel")  # type: ignore[untyped-decorator]
+async def eval_database_sentinel(db: AsyncSession = Depends(get_db)) -> dict[str, str | None]:
+    """Expose one freshness value only when the local/CI eval harness is enabled."""
+    if not settings.ask_eval_mode:
+        raise HTTPException(status_code=404, detail="not found")
+    maximum = await db.scalar(select(func.max(RawObservation.collected_at)))
+    return {"max_collected_at": maximum.isoformat() if maximum is not None else None}
+
+
+def _get_answer_service(*, model: str | None = None) -> AnswerService:
+    selected_model = model or settings.openrouter_model
     tracer = AskTracer(
         public_key=settings.langfuse_public_key,
         secret_key=settings.langfuse_secret_key,
         base_url=settings.langfuse_base_url,
         environment=settings.environment,
     )
+    if settings.ask_eval_mode and settings.ask_eval_query_embeddings_path:
+        # Amendment B: CI query vectors are committed fixtures, so no OpenAI key is needed.
+        embedder: Embedder = FixtureEmbedder(
+            Path(settings.ask_eval_query_embeddings_path)
+        )
+    else:
+        embedder = OpenAIEmbedder(api_key=settings.openai_api_key)
     return AnswerService(
         model=OpenRouterChatModel(
             api_key=settings.openrouter_api_key,
-            model=settings.openrouter_model,
+            model=selected_model,
         ),
-        embedder=OpenAIEmbedder(api_key=settings.openai_api_key),
+        embedder=embedder,
         tool_executor=ToolExecutor(),
         tracer=tracer,
-        model_name=settings.openrouter_model,
+        model_name=selected_model,
     )
 
 
