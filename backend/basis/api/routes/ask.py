@@ -166,6 +166,8 @@ def _build_response(result: AnswerResult) -> AskResponse:
 
 
 async def _stream_response(response: AskResponse) -> AsyncIterator[str]:
+    # The upstream answer is already complete; this replays it as SSE token events
+    # for transport compatibility rather than streaming the model generation live.
     for match in _STREAM_TOKEN_RE.finditer(response.answer):
         yield f"data: {match.group(0)}\n\n"
     yield f"event: done\ndata: {response.model_dump_json()}\n\n"
