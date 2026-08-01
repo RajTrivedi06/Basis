@@ -67,6 +67,21 @@ These are read directly by the shell scripts (`collect_cron.sh`, the backup/fres
 | `HC_DATA_FRESH_PING_URL` | Ping URL for the data-freshness check. |
 | `HC_VOLUME_PING_URL` | Ping URL for the per-provider collection-volume check (`check_collection_volume.py`). Success ping on healthy volumes; `/fail` suffix on collapse. |
 
+### AI layer (Ask Basis — Stage 4)
+
+All optional: each degrades gracefully when unset (endpoint 503 "not configured" for the
+serving/embedding keys; tracing silently off for Langfuse). Spend caps are set
+provider-side BEFORE first use (design `ask-basis-design.md` §8).
+
+| Var | Notes |
+|-----|-------|
+| `OPENROUTER_API_KEY` | Serves `/api/ask` answers, the model benchmark, and the tier-b eval judge (`anthropic/claude-haiku-4.5` via OpenRouter). Provider-side spend cap $15/mo. |
+| `OPENROUTER_MODEL` | Serving model. Default: benchmark winner (`moonshotai/kimi-k2.5`, see `docs/analysis/ask-basis-model-benchmark.md`). |
+| `OPENAI_API_KEY` | Embeddings only (`text-embedding-3-small`, 1536-dim) — index time (`run_index.py`) and query time. Account spend limit $5. |
+| `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` | Tracing (retrieval, assembly, model, tools). Both required together; free tier. |
+| `LANGFUSE_BASE_URL` | `https://us.cloud.langfuse.com` for US-region accounts; default is the EU host. |
+| `ASK_BASIS_DISABLED` | Kill switch: `1` → `/api/ask` returns 503 before any retrieval or model work. |
+
 ### Frontend
 
 Frontend has its own `.env.local` inside `frontend/`:
