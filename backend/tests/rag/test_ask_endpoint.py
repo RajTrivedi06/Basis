@@ -12,9 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from basis.api.routes import ask as ask_route
 from basis.config import settings
 from basis.db.models import AskDailyUsage
-from basis.rag.answer import AnswerResult, ModelUsage
+from basis.rag import answer as answer_module
+from basis.rag.answer import AnswerResult, AnswerService, ModelReply, ModelUsage
 from basis.rag.context import ToolContextResult, assemble
+from basis.rag.indexer import EmbeddingBatch
 from basis.rag.retrieve import RetrievalResult, RetrievedChunk
+from basis.rag.tools import ToolExecutor
+from basis.rag.tracing import AskTracer
 
 
 class StubAnswerService:
@@ -68,6 +72,26 @@ class StubAnswerService:
             trace_url=None,
             tool_limit_reached=False,
         )
+
+
+class FinalAnswerModel:
+    async def complete(self, **_kwargs: object) -> ModelReply:
+        return ModelReply(
+            content="The answer still succeeds.",
+            tool_calls=(),
+            usage=ModelUsage(input_tokens=10, output_tokens=5),
+        )
+
+
+class FakeEmbedder:
+    async def embed(self, texts: list[str]) -> EmbeddingBatch:
+        assert texts == ["Does tracing affect answers?"]
+        return EmbeddingBatch(vectors=[[0.01] * 1536], input_tokens=4)
+
+
+class RaisingLangfuseClient:
+    def start_as_current_observation(self, **_kwargs: object) -> object:
+        raise RuntimeError("401 Unauthorized")
 
 
 @pytest.fixture(autouse=True)
@@ -250,6 +274,50 @@ async def test_json_response_resolves_chunk_and_tool_citations(
         },
     ]
     assert body["usage"] == {"input_tokens": 321, "output_tokens": 45}
+
+
+@pytest.mark.asyncio
+async def test_tracer_failure_warns_and_request_still_returns_answer(
+    api_client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    async def empty_retrieval(*_args: object, **_kwargs: object) -> RetrievalResult:
+        return RetrievalResult(
+            chunks=(),
+            below_floor=True,
+            best_vector_similarity=None,
+            vector_candidate_count=0,
+            fts_candidate_count=0,
+        )
+
+    tracer = AskTracer()
+    monkeypatch.setattr(tracer, "_client", RaisingLangfuseClient())
+    service = AnswerService(
+        model=FinalAnswerModel(),
+        embedder=FakeEmbedder(),
+        tool_executor=ToolExecutor(),
+        tracer=tracer,
+    )
+    monkeypatch.setattr(settings, "ask_basis_disabled", False)
+    monkeypatch.setattr(settings, "openrouter_api_key", "test-openrouter")
+    monkeypatch.setattr(settings, "openai_api_key", "test-openai")
+    monkeypatch.setattr(answer_module, "retrieve", empty_retrieval)
+    monkeypatch.setattr(ask_route, "_get_answer_service", lambda: service)
+
+    with caplog.at_level("WARNING", logger="basis.rag.tracing"):
+        response = await api_client.post(
+            "/api/ask",
+            headers={
+                "Accept": "application/json",
+                "X-Forwarded-For": "203.0.113.16",
+            },
+            json={"question": "Does tracing affect answers?"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["answer"] == "The answer still succeeds."
+    assert "401 Unauthorized" in caplog.text
 
 
 @pytest.mark.asyncio
