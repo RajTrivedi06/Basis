@@ -224,3 +224,29 @@ Also observed in passing: JP/Tokyo AWS spot holds two offers pinned at exactly $
 ---
 
 **Update 2026-07-25:** the Vast bid/spot loose end flagged in §5 has been root-caused and fixed — see [2026-07-24-vast-bid-bug.md](2026-07-24-vast-bid-bug.md). Commitment for Vast derives from query type going forward; historical rows are not retro-labeled.
+
+---
+
+## Addendum (2026-08-01): the corpus rebalance changed what the pooled headline means
+
+The same failure class documented above recurred at corpus scale during the Stage 5
+truth patch — and was caught the same way, before publication.
+
+When Azure (Jul 28) and GCP (Jul 30) joined collection, the pooled H100-SXM residual
+share collapsed from ~51% (Jul 12–27 mean, four-provider window) to single digits:
+administered catalog prices — one list price per (SKU, region, commitment), thousands of
+identical rows — are explainable *by construction*, and pooling them drowns the
+market-priced segment. Simultaneously, an apparent decline *within* the marketplace
+segment (59% → 20% over five days) decomposed into: (a) a **collection artifact** — the
+AWS backfill's coverage boundary, where ~27 extra historical rows/day end and the
+population thins (fresh cron collection was verified flat, per-region, all week); and
+(b) a **real market observation** — era-D Vast spot deepening (spot listings ~doubled,
+spot median halved to ~$1.07 while on-demand held).
+
+Resolution: ADR-0007 excludes backfill rows from the live series (same-mechanism cron
+sample); the public headline was re-anchored on structural claims frozen to the ML
+artifact (observable-features bound; host ICC) with residual share presented as a live,
+windowed, segment- and week-conditional range; and the share-vs-absolute distinction is
+now in the methodology (absolute residual variance stayed ~stable while the share moved
+with its denominator). The 2026-06 lesson generalized: **the pooled headline is a claim
+about a population, and the population is a choice.**
