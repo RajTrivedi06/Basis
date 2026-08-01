@@ -17,6 +17,7 @@ import sys
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final, Literal, cast
 from urllib.parse import urlparse
@@ -418,8 +419,8 @@ def _question_record(
         "question": question["question"],
         "verdict": result.verdict,
         "score": result.score,
-        "expected": result.expected,
-        "got": result.got,
+        "expected": _json_safe(result.expected),
+        "got": _json_safe(result.got),
         "reason": result.reason,
         "answer": answer,
         "citations_ok": citation_check.ok,
@@ -430,6 +431,19 @@ def _question_record(
         "latency_ms": round(latency_ms, 3),
         "estimated_cost_usd": round(cost_usd, 8) if cost_usd is not None else None,
     }
+
+
+def _json_safe(value: Any) -> Any:
+    """Normalize database scalar types before persisting a scorecard."""
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, (datetime.date, datetime.datetime)):
+        return value.isoformat()
+    if isinstance(value, Mapping):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_json_safe(item) for item in value]
+    return value
 
 
 def _build_scorecard(

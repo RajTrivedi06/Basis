@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import datetime
+import json
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
@@ -11,6 +13,7 @@ from evals.run_evals import (
     QUESTIONS_PATH,
     EvalAbortError,
     _assert_projected_timing,
+    _json_safe,
     _jsonpath,
     _load_question_set,
     _overlaps_collection_window,
@@ -73,3 +76,18 @@ def test_jsonpath_is_deliberately_bounded_to_object_components() -> None:
     assert _jsonpath(payload, "$.metrics.holdout.r2_oos") == 0.58
     with pytest.raises(EvalAbortError, match="missing component"):
         _jsonpath(payload, "$.metrics.missing")
+
+
+def test_database_scalars_are_json_safe_in_scorecards() -> None:
+    payload = {
+        "decimal": Decimal("0.5629086139386911"),
+        "date": datetime.date(2026, 6, 12),
+    }
+
+    normalized = _json_safe(payload)
+
+    assert normalized == {
+        "decimal": 0.5629086139386911,
+        "date": "2026-06-12",
+    }
+    json.dumps(normalized)
