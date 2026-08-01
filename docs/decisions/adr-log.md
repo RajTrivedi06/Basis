@@ -85,6 +85,19 @@ The canonical structure every ADR follows: Status / Context / Decision / Options
 
 ---
 
+## ADR-007: Backfill rows are excluded from the live market series
+
+**Status:** Accepted (2026-08-01, Director-ruled)
+**Location:** [../01-architecture/adr/0007-backfill-rows-excluded-from-live-series.md](../01-architecture/adr/0007-backfill-rows-excluded-from-live-series.md)
+
+**Decision:** `daily_aggregates`, `basis_decomposition`, and the API's on-demand recompute are computed from cron-collected rows only; rows flagged `provider_metadata.backfill` are excluded. The ML training corpus deliberately keeps them (asymmetry documented in the ML design doc).
+
+**Rationale:** At the backfill's coverage boundary its extra row density ends, creating a population discontinuity that masquerades as a market change (AWS H100 "decline" of 07-30 → 08-01 was flat cron collection + a backfill edge). The live series is defined as a same-mechanism sample; same root cause as the #38 volume-baseline fix.
+
+**Consequence:** Analytics rerun required at adoption (before/after in the Stage 5 report); future backfills inherit the rule via the flag.
+
+---
+
 ## Resolved without a formal ADR
 
 Decisions that were listed as pending in earlier revisions of this log but were settled informally and documented elsewhere. Preserved here as a reasoning trail.

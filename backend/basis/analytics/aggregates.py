@@ -14,12 +14,12 @@ import datetime
 import logging
 
 import pandas as pd
-from sqlalchemy import and_, delete, select
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from basis.analytics.basis import compute_decompositions
 from basis.analytics.dispersion import compute_dispersion
-from basis.db.models import BasisDecomposition, CanonicalOffer, DailyAggregate
+from basis.db.models import BasisDecomposition, CanonicalOffer, DailyAggregate, RawObservation
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,15 @@ async def _load_canonical_offers(
         CanonicalOffer.storage_gb_bundled,
         CanonicalOffer.price_usd_per_hour,
         CanonicalOffer.normalized_price_usd_per_hour,
+    ).join(
+        RawObservation, CanonicalOffer.raw_observation_id == RawObservation.id
+    ).where(
+        # ADR-0007: the live market series is a same-mechanism cron sample.
+        # Backfill rows exist for ML training history; at the backfill's
+        # coverage boundary their extra density creates a population
+        # discontinuity that masquerades as a market change.
+        func.coalesce(RawObservation.provider_metadata["backfill"].astext, "")
+        .notin_(["true", "t", "1"])
     )
 
     if only_gpu_sku:

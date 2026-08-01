@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from basis.analytics.basis import DecompositionRow, compute_decompositions
 from basis.api.deps import get_db
-from basis.db.models import BasisDecomposition, CanonicalOffer
+from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
 from basis.schemas.api import BasisDecompositionResponse, BasisTimeseriesResponse
 
 router = APIRouter(prefix="/api/basis", tags=["basis"])
@@ -82,12 +82,19 @@ async def _compute_filtered_timeseries(
         CanonicalOffer.ram_gb_bundled,
         CanonicalOffer.storage_gb_bundled,
         CanonicalOffer.price_usd_per_hour,
+    ).join(
+        RawObservation, CanonicalOffer.raw_observation_id == RawObservation.id
     ).where(
         and_(
             CanonicalOffer.gpu_sku_canonical == gpu_sku,
             func.date(CanonicalOffer.collected_at) >= since,
             func.date(CanonicalOffer.collected_at) <= until,
             CanonicalOffer.provider.notin_(excluded),
+            # ADR-0007: recompute must sample the same cron-only population
+            # as the batch analytics path, or the two diverge at the
+            # backfill boundary.
+            func.coalesce(RawObservation.provider_metadata["backfill"].astext, "")
+            .notin_(["true", "t", "1"]),
         )
     )
     rows = (await db.execute(stmt)).mappings().all()
