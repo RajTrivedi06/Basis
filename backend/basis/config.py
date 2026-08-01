@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     gcp_api_key: str = ""
     openai_api_key: str = ""
     openrouter_api_key: str = ""
-    openrouter_model: str = "deepseek/deepseek-chat"
+    openrouter_model: str = "moonshotai/kimi-k2.5"
 
     # Ask Basis serving controls and optional tracing
     ask_basis_disabled: bool = False
