@@ -53,8 +53,10 @@ questions:
     stale_vs_live: true   # older docs mention 3–4 sources; live answer is the discriminator.
     expect_tool_citation: true
     verify_sql: |
+      -- anchored to corpus max, not wall clock: the settled local corpus must
+      -- grade identically no matter when the eval runs (Amendment B stability).
       SELECT COUNT(DISTINCT source) FROM raw_observations
-      WHERE collected_at >= NOW() - INTERVAL '7 days'
+      WHERE collected_at >= (SELECT MAX(collected_at) FROM raw_observations) - INTERVAL '7 days'
   - id: a03
     tier: a
     question: "On what date did Basis start collecting data?"
@@ -139,9 +141,12 @@ questions:
     verify_sql: "SELECT MIN(collected_at)::date FROM raw_observations WHERE source='azure'"
   - id: a17
     tier: a
-    question: "When did GCP data first appear in the corpus?"
+    # Replaced 2026-08-01: the GCP-first-date question predated the settled local
+    # corpus (GCP joined production 07-30; local snapshot ends 07-29). GCP
+    # questions enter at the first corpus refresh.
+    question: "When was TensorDock data last collected?"
     answer_type: date
-    verify_sql: "SELECT MIN(collected_at)::date FROM raw_observations WHERE source='gcp'"
+    verify_sql: "SELECT MAX(collected_at)::date FROM raw_observations WHERE source='tensordock'"
   - id: a18
     tier: a
     question: "What is the median H100-SXM price per GPU-hour on the latest fully-covered day?"
