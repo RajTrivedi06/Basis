@@ -69,6 +69,32 @@ def test_date_and_set_answers_are_extracted_by_declared_type() -> None:
     assert set_result.verdict == "pass"
 
 
+def test_date_accepts_non_breaking_hyphens() -> None:
+    result = score_tier_a(
+        {"answer_type": "date"},
+        answer="Azure first appeared on 2026\N{NON-BREAKING HYPHEN}07\N{NON-BREAKING HYPHEN}28 [C1].",
+        citations=[{"id": 1, "kind": "chunk"}],
+        expected="2026-07-28",
+        default_tolerance_pct=1.0,
+    )
+
+    assert result.verdict == "pass"
+    assert result.got == "2026-07-28"
+
+
+def test_percent_accepts_unitless_decimal_ratio() -> None:
+    result = score_tier_a(
+        {"answer_type": "percent"},
+        answer="The holdout R-squared was 0.454 [T1].",
+        citations=[{"id": 1, "kind": "tool"}],
+        expected=0.45429479815436924,
+        default_tolerance_pct=1.0,
+    )
+
+    assert result.verdict == "pass"
+    assert result.got == 45.4
+
+
 def test_citation_scoring_rejects_uncited_numbers_and_unresolved_markers() -> None:
     uncited = score_citations(
         "The residual is 12.0%. This is current [T1].",

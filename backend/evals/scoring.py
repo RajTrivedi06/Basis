@@ -34,7 +34,9 @@ _USD_RE = re.compile(
     r"(?P<suffix>[+\-\N{MINUS SIGN}]?\d[\d,]*(?:\.\d+)?)\s*(?:USD|dollars?))",
     re.IGNORECASE,
 )
-_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+_DATE_DASH_CHARS: Final = "-\N{HYPHEN}\N{NON-BREAKING HYPHEN}\N{FIGURE DASH}\N{EN DASH}\N{MINUS SIGN}"
+_DATE_DASH_TRANSLATION: Final = str.maketrans({character: "-" for character in _DATE_DASH_CHARS})
+_ISO_DATE_RE = re.compile(rf"\b\d{{4}}[{re.escape(_DATE_DASH_CHARS)}]\d{{2}}[{re.escape(_DATE_DASH_CHARS)}]\d{{2}}\b")
 _MONTH_DATE_RE = re.compile(
     r"\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
     r"Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|"
@@ -333,7 +335,8 @@ def extract_date(answer: str) -> str | None:
     if match is None:
         return None
     try:
-        return date_parser.parse(match.group(0), fuzzy=True).date().isoformat()
+        normalized = match.group(0).translate(_DATE_DASH_TRANSLATION)
+        return date_parser.parse(normalized, fuzzy=True).date().isoformat()
     except (OverflowError, ValueError):
         return None
 
@@ -342,10 +345,27 @@ def extract_number(answer: str, answer_type: str) -> _ExtractedNumber | None:
     """Extract a typed numeric answer while ignoring citation ids and SKU digits."""
     if answer_type in {"percent", "signed_percent"}:
         match = _PERCENT_RE.search(answer)
-        if match is None:
-            return None
-        text = match.group("value")
-        return _ExtractedNumber(_parse_float(text), text, match.start(), match.end())
+        if match is not None:
+            text = match.group("value")
+            return _ExtractedNumber(_parse_float(text), text, match.start(), match.end())
+        # R², shares, and correlations are often stated as unitless ratios even when
+        # the golden expectation is normalized to percentage points. Accept either
+        # 0.454 or 45.4% without weakening the explicit signed-percent requirement.
+        for generic_match in _GENERIC_NUMBER_RE.finditer(answer):
+            if _inside_citation(answer, generic_match.start(), generic_match.end()):
+                continue
+            if _inside_date(answer, generic_match.start(), generic_match.end()):
+                continue
+            text = generic_match.group(0)
+            value = _parse_float(text)
+            normalized_value = value * 100.0 if abs(value) <= 1.0 else value
+            return _ExtractedNumber(
+                normalized_value,
+                text,
+                generic_match.start(),
+                generic_match.end(),
+            )
+        return None
     if answer_type == "usd":
         match = _USD_RE.search(answer)
         if match is None:
