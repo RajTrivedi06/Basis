@@ -118,3 +118,30 @@ Not every provider gives every field. What's missing is as important as what's t
 - **Aggregates are for speed** — the dashboard doesn't recompute medians on every page load.
 
 Cross-layer shortcuts (e.g., collector writing directly to canonical) are forbidden. See [system-overview.md](system-overview.md) for the invariants.
+
+## The RAG read path (Ask Basis, Stage 4)
+
+Ask Basis is a READ-ONLY consumer of everything above — it never writes canonical data
+(ADR-0002 boundary: the LLM layer serves prose, not measurements).
+
+```
+question ──► retrieve ──────────► pgvector cosine (top 20) ─┐
+             (rag/retrieve.py)    Postgres FTS   (top 20) ──┤ RRF merge ─► top 6 chunks
+                                                            │
+             doc_chunks ◄── run_index.py ◄── docs/ corpus   │  (below relevance floor →
+                            (manual re-embed on doc change) │   "not in my sources")
+                                                            ▼
+             assemble (rag/context.py) — 6 fixed sections, hard token budgets,
+             eviction: history → chunks → tool rows; system/data-card/question never cut
+                                                            ▼
+             OpenRouter chat model ──► tool loop (≤3, whitelisted internal functions:
+             latest basis · dispersion · providers · ml explainability — each compacted,
+             stamped with as_of, and citable as [T#])
+                                                            ▼
+             answer + citations[] ([C#] → chunk, [T#] → tool) + trace (Langfuse)
+```
+
+"Latest" tools apply the coverage rule (≥30 offers AND ≥2 providers on the day) so a
+partial collection day is never served as the current market. The eval harness
+(`backend/evals/`) grades this whole path against `questions.yaml`; its verification SQL
+reads the SAME database as the tools (design Amendment B).
