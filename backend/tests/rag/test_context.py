@@ -11,6 +11,7 @@ from basis.rag.context import (
     DATA_CARD_TOKEN_BUDGET,
     HISTORY_TOKEN_BUDGET,
     QUESTION_TOKEN_BUDGET,
+    SYSTEM_PROMPT,
     SYSTEM_PROMPT_TOKEN_BUDGET,
     TOOL_RESULTS_TOKEN_BUDGET,
     HistoryExchange,
@@ -20,6 +21,11 @@ from basis.rag.context import (
     count_tokens,
 )
 from basis.rag.data_card import load_data_card, render_data_card_summary
+
+
+def test_system_prompt_requires_exact_out_of_scope_refusal() -> None:
+    assert "respond with exactly that refusal sentence and nothing else" in SYSTEM_PROMPT
+    assert count_tokens(SYSTEM_PROMPT) <= SYSTEM_PROMPT_TOKEN_BUDGET
 
 
 @dataclass(frozen=True)

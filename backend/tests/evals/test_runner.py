@@ -16,6 +16,7 @@ from evals.run_evals import (
     _json_safe,
     _jsonpath,
     _load_question_set,
+    _load_regression_reasons,
     _overlaps_collection_window,
     assert_same_database,
 )
@@ -91,3 +92,14 @@ def test_database_scalars_are_json_safe_in_scorecards() -> None:
         "date": "2026-06-12",
     }
     json.dumps(normalized)
+
+
+def test_tier_c_failure_gates_without_a_baseline(tmp_path: Path) -> None:
+    scorecard = {"tier_aggregates": {"c": {"failed": 1}}}
+
+    assert _load_regression_reasons(scorecard, tmp_path / "missing.json", "c") == [
+        "tier c has 1 failure(s)"
+    ]
+    assert _load_regression_reasons(scorecard, tmp_path / "missing.json", "all") == [
+        "tier c has 1 failure(s)"
+    ]

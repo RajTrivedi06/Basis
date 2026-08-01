@@ -520,8 +520,20 @@ def _load_regression_reasons(
     baseline_path: Path,
     tier: str,
 ) -> list[str]:
-    if tier != "all" or not baseline_path.exists():
-        return []
+    tier_c = scorecard.get("tier_aggregates", {}).get("c", {})
+    tier_c_failures = int(tier_c.get("failed", 0))
+    if tier != "all":
+        return (
+            [f"tier c has {tier_c_failures} failure(s)"]
+            if tier == "c" and tier_c_failures
+            else []
+        )
+    if not baseline_path.exists():
+        return (
+            [f"tier c has {tier_c_failures} failure(s)"]
+            if tier_c_failures
+            else []
+        )
     baseline = cast(
         dict[str, Any],
         json.loads(baseline_path.read_text(encoding="utf-8")),
