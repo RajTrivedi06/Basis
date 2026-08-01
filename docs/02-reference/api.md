@@ -160,6 +160,12 @@ Variance decomposition for a (SKU, date). Defaults to the latest decomposition a
 | Param | Type | Description |
 |-------|------|-------------|
 | `date` | date | Specific date; defaults to latest |
+| `exclude_providers` | string | Comma-separated provider names to exclude. When set, recomputes the requested day from `canonical_offers` using the same path as the filtered timeseries endpoint. |
+
+**Behavior:**
+
+- Without `exclude_providers`, reads the precomputed `basis_decomposition` row.
+- With `exclude_providers`, recomputes on demand after removing those providers. If `date` is omitted, uses the latest canonical-offer date remaining after exclusion.
 
 **Response** (`BasisDecompositionResponse`):
 
@@ -178,7 +184,8 @@ Variance decomposition for a (SKU, date). Defaults to the latest decomposition a
 }
 ```
 
-**404** when no decomposition exists for that SKU (or SKU + date).
+**404** when no decomposition exists for that SKU (or SKU + date), including
+when the filtered day falls below the analytics minimum-observation threshold.
 
 ---
 
