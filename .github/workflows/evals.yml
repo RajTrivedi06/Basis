@@ -70,7 +70,7 @@ jobs:
       - name: Run scorecard and regression gate
         working-directory: backend
         run: >-
-          uv run --project .. python evals/run_evals.py
+          uv run --project .. python -m evals.run_evals
           --tier all
           --chunker primary
           --out evals/results/ci-scorecard.json

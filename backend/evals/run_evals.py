@@ -13,6 +13,7 @@ import json
 import math
 import statistics
 import subprocess
+import sys
 import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -26,10 +27,14 @@ from openai import AsyncOpenAI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from basis.config import settings
-from basis.rag.answer import OPENROUTER_BASE_URL
-from evals.fixtures import EvalChunker, replace_doc_chunks_from_fixture
-from evals.scoring import (
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+from basis.config import settings  # noqa: E402
+from basis.rag.answer import OPENROUTER_BASE_URL  # noqa: E402
+from evals.fixtures import EvalChunker, replace_doc_chunks_from_fixture  # noqa: E402
+from evals.scoring import (  # noqa: E402
     CitationCheck,
     ScoreResult,
     judge_result,
@@ -50,7 +55,6 @@ COLLECTION_WINDOWS_UTC: Final = (
     (datetime.time(19, 55), datetime.time(20, 15)),
 )
 
-BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BACKEND_DIR.parent
 QUESTIONS_PATH = Path(__file__).resolve().parent / "questions.yaml"
 BASELINE_PATH = Path(__file__).resolve().parent / "baseline.json"
