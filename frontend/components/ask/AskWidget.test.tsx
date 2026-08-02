@@ -122,6 +122,19 @@ describe("AskWidget", () => {
     expect(screen.queryByRole("dialog", { name: "Ask Basis" })).not.toBeInTheDocument();
   });
 
+  it("labels the drawer as experimental and discloses evaluation status", async () => {
+    const user = userEvent.setup();
+    renderAskWidget();
+    await openDrawer(user);
+
+    expect(screen.getByText("Experimental")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Answers cite their sources; the system is under active evaluation."
+      )
+    ).toBeInTheDocument();
+  });
+
   it("opens with Cmd+K / Ctrl+K", async () => {
     const user = userEvent.setup();
     renderAskWidget();

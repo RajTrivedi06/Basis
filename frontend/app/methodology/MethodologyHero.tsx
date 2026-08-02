@@ -3,10 +3,14 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const HERO_STATS: { label: string; value: string; residual?: boolean }[] = [
-  { label: "Providers tracked", value: "4" },
+  { label: "Providers tracked", value: "5" },
   { label: "Collections per day", value: "2×" },
   { label: "Variance model", value: "Sequential ANOVA" },
-  { label: "Headline residual", value: "~59% / ~89%", residual: true },
+  {
+    label: "Residual · market-priced",
+    value: "~20–61%",
+    residual: true,
+  },
 ];
 
 /**

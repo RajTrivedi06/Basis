@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-const TARGET_PCT = 59;
+const TARGET_PCT = 51;
 const ANIMATION_MS = 1400;
 
 /**
@@ -11,9 +11,10 @@ const ANIMATION_MS = 1400;
  * bar are driven by the same `isVisible` flag so they stay in lockstep,
  * matching the prose to the right.
  *
- * The meter targets the headline Vast-included residual (~59%); the
- * Vast-excluded counterpart (~89%) is surfaced in the adjacent prose to
- * keep the dual-headline framing consistent across the site.
+ * The meter targets the market-priced segments (marketplaces + spot), whose
+ * Jul 12–27 four-provider window averaged 51.0% unexplained. Pooled figures
+ * that include the Azure/GCP list catalogs are not comparable and are
+ * discussed in the adjacent prose instead.
  */
 export function ResidualReveal() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -84,8 +85,8 @@ export function ResidualReveal() {
         <div className="residual-meter__fill">
           <div className="residual-meter__inner">
             <div className="residual-meter__cap">
-              <span>Residual · Vast included</span>
-              <span>Indicative · 18-day window (2026-04-26 → 2026-05-13)</span>
+              <span>Residual · market-priced segments</span>
+              <span>Indicative · Jul 12–27 2026 average</span>
             </div>
             <div className="residual-meter__num">~{display}%</div>
           </div>
@@ -111,12 +112,17 @@ export function ResidualReveal() {
           specific buyer actually pays.
         </p>
         <p className="mt-4 max-w-[58ch] font-serif text-[16px] leading-[1.7] text-[var(--ink-mid)]">
-          Across the 18-day window 2026-04-26 → 2026-05-13, the H100 SXM 80GB
-          residual ran near <span className="tok">~59%</span> with all four
-          providers included and{" "}
-          <span className="tok">~89%</span> with Vast.ai excluded. Both
-          numbers are basis risk benchmark designs have to live with — the
-          headline depends on which segment of the market you measure.
+          In market-priced segments (marketplaces + spot), observable factors
+          fail to explain roughly{" "}
+          <span className="tok">20–61%</span> of H100 price variance week to
+          week; in administered catalogs the same factors explain nearly
+          everything — segment-conditionality is the finding.
+        </p>
+        <p className="mt-4 max-w-[58ch] font-serif text-[16px] leading-[1.7] text-[var(--ink-mid)]">
+          Pool in Azure/GCP&rsquo;s fixed list catalogs (joined Jul 28) and the
+          pooled residual collapses to single digits — administered prices are
+          explainable by construction, which is precisely why a compute
+          benchmark must be segment-aware.
         </p>
       </div>
     </div>
