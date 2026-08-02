@@ -30,6 +30,25 @@ publication by the same verification culture (see the dated addendum in
 The related monitoring fix (#38 — backfill timestamps polluting the collection-volume
 baseline) shares this root cause: backfill rows violating a cron-sample assumption.
 
+## Operational incident recorded at adoption (2026-08-02)
+
+The production analytics rerun that adopted this ADR surfaced latent index corruption
+from the Stage 5 pgvector image swap: moving `postgres:16-alpine` → `pgvector/pgvector:pg16`
+crosses **musl → glibc, which changes text collation order and silently invalidates
+B-tree indexes on text columns**. The corruption was latent (reads worked; the reboot test
+passed) until heavy delete/insert churn touched a poisoned page. Containment: the
+pipeline's single-end-commit design rolled the transaction back fully; `REINDEX DATABASE`
+was run on production AND the local DB (same image transition); a post-fix `amcheck` pass
+verified all 13 B-tree indexes clean.
+
+**Standing procedure: any Postgres image change that can alter the libc/collation version
+MUST be followed by `REINDEX DATABASE` before the next write-heavy job.** The step exists
+because of collation versioning, not superstition — do not "optimize" it away.
+
+**Backups unaffected:** the daily S3 dumps are logical `pg_dump` output (SQL, no index
+pages), hence collation-agnostic; additionally the last pre-swap dump (2026-08-01 03:02 UTC)
+predates the incident entirely and remains a clean restore point.
+
 ## Consequences
 
 - Analytics rerun required after adoption; the discontinuity flattens (before/after series
