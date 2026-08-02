@@ -42,6 +42,24 @@ def test_golden_set_counts_and_latest_full_day_rule_are_loaded() -> None:
     assert "exclude_providers=azure,gcp" in a01["verify_api"]["path"]
 
 
+def test_golden_set_residual_references_name_the_population() -> None:
+    population_labels = ("market-priced", "pooled", "vast", "non-vast")
+
+    for question in _load_question_set(QUESTIONS_PATH, "all"):
+        history = question.get("history", [])
+        text = " ".join(
+            (
+                str(question.get("question", "")),
+                str(question.get("rubric", "")),
+                *(str(exchange.get("q", "")) for exchange in history),
+                *(str(exchange.get("a", "")) for exchange in history),
+            )
+        ).lower()
+        if "residual" not in text and "unexplained" not in text:
+            continue
+        assert any(label in text for label in population_labels), question["id"]
+
+
 @pytest.mark.asyncio
 async def test_api_verifier_expands_latest_full_day_anchor() -> None:
     class FakeResult:
