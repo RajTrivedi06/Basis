@@ -1,4 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { API_URL } from "../playwright.config";
+import {
+  PROVIDER_STALE_AFTER_DAYS,
+  numberWord,
+  partitionProviders,
+} from "../lib/providerStatus";
+import type { ProviderSummary } from "../lib/types";
 import {
   TRUTH_PATCH_ROUTES,
   bodyText,
@@ -80,20 +87,74 @@ test.describe("check 3 · truth-patch negative", () => {
     });
   }
 
-  test("providers page does not list TensorDock as active", async ({ page }) => {
+  test("providers page does not present retired providers as active", async ({
+    page,
+    request,
+  }) => {
+    // Retired providers keep their rows (their offers are real corpus
+    // history); what must not happen is showing them as still collecting.
+    // Expectations come from the API via the same staleness rule the page
+    // uses, so no provider is named here either.
+    const apiResponse = await request.get(`${API_URL}/api/providers`);
+    expect(apiResponse.status(), "GET /api/providers").toBe(200);
+    const { items } = (await apiResponse.json()) as { items: ProviderSummary[] };
+    const { active, retired } = partitionProviders(items);
+
+    console.log(
+      `API · active: ${active.map((p) => p.provider).join(", ") || "none"} | ` +
+        `retired (no collection in ${PROVIDER_STALE_AFTER_DAYS}d): ` +
+        `${retired.map((p) => p.provider).join(", ") || "none"}`
+    );
+
     await gotoRendered(page, "/providers");
+    const table = page.locator("table").first();
+    await expect(table).toBeVisible();
+    console.log(`PROVIDERS TABLE:\n${normalize(await table.innerText())}`);
 
-    // Historical prose may name TensorDock; the live provider table must not.
-    const table = page.locator("table");
-    await expect(table.first()).toBeVisible();
-    const tableText = normalize(await table.first().innerText());
-    console.log(`PROVIDERS TABLE:\n${tableText}`);
+    const rows = await table.locator("tbody tr").all();
+    const rendered = await Promise.all(
+      rows.map(async (row) => {
+        const cells = row.locator("td");
+        return {
+          provider: normalize(await cells.first().innerText()).replace(/\s*Retired$/i, ""),
+          tagged: (await row.locator(".tag-quiet").count()) > 0,
+        };
+      })
+    );
 
+    for (const provider of retired) {
+      const row = rendered.find((entry) => entry.provider === provider.provider);
+      expect(row, `no row rendered for ${provider.provider}`).toBeDefined();
+      expect(
+        row!.tagged,
+        `${provider.provider} is stale per the API but renders no Retired tag`
+      ).toBe(true);
+    }
+
+    for (const provider of active) {
+      const row = rendered.find((entry) => entry.provider === provider.provider);
+      expect(row, `no row rendered for ${provider.provider}`).toBeDefined();
+      expect(
+        row!.tagged,
+        `${provider.provider} collected recently but renders a Retired tag`
+      ).toBe(false);
+    }
+
+    // Retired rows sort below active rows.
+    const firstRetiredIndex = rendered.findIndex((entry) => entry.tagged);
+    const lastActiveIndex = rendered.map((entry) => entry.tagged).lastIndexOf(false);
+    if (firstRetiredIndex !== -1) {
+      expect(firstRetiredIndex, "retired rows must sort below active rows").toBeGreaterThan(
+        lastActiveIndex
+      );
+    }
+
+    // Headline count is derived from the active subset, not the row count.
+    const headline = normalize(await page.locator("h1").first().innerText());
+    console.log(`PROVIDERS HEADLINE: ${headline}`);
     expect(
-      tableText,
-      "TensorDock (retired 2026-06-12) appears as a row in the live providers " +
-        "table with no retired marker, while the page headline reads " +
-        '"Five providers, five postures"'
-    ).not.toMatch(/tensordock/i);
+      headline.toLowerCase(),
+      `headline should count the ${active.length} active provider(s), not all ${rendered.length} rows`
+    ).toContain(numberWord(active.length).toLowerCase());
   });
 });

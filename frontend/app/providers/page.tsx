@@ -2,6 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getProviders } from "@/lib/api";
+import {
+  PROVIDER_STALE_AFTER_DAYS,
+  isProviderRetired,
+  numberWord,
+  partitionProviders,
+} from "@/lib/providerStatus";
 import type { ProviderSummary } from "@/lib/types";
 
 function deviationClass(pct: number | null): string {
@@ -51,16 +57,20 @@ export default function ProvidersPage() {
     );
   }
 
-  const sorted = [...data.items].sort((a, b) => b.offer_count - a.offer_count);
+  const { active, ordered } = partitionProviders(data.items);
+  const activeCount = active.length;
+  const activeWord = numberWord(activeCount);
+  const noun = activeCount === 1 ? "provider" : "providers";
+  const posture = activeCount === 1 ? "posture" : "postures";
 
   return (
     <div className="page-wide fade-up">
       <section className="pb-6 pt-9">
         <div className="eyebrow mb-2.5">07 · Providers</div>
         <h1 className="display m-0 max-w-[720px] text-[clamp(2rem,5vw,2.5rem)] font-normal leading-[1.1] tracking-[-0.02em] text-[var(--ink-hi)]">
-          Five providers,{" "}
+          {activeWord} {noun},{" "}
           <em className="font-serif not-italic text-[var(--ink-mid)]">
-            five postures.
+            {activeWord.toLowerCase()} {posture}.
           </em>
         </h1>
       </section>
@@ -83,9 +93,16 @@ export default function ProvidersPage() {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((p: ProviderSummary) => (
+            {ordered.map((p: ProviderSummary) => (
               <tr key={p.provider}>
-                <td className="text-[var(--ink-hi)]">{p.provider}</td>
+                <td className="text-[var(--ink-hi)]">
+                  <span className="inline-flex items-center gap-2">
+                    {p.provider}
+                    {isProviderRetired(p) ? (
+                      <span className="tag-quiet mono">Retired</span>
+                    ) : null}
+                  </span>
+                </td>
                 <td className="num text-right">
                   {p.offer_count.toLocaleString()}
                 </td>
@@ -118,6 +135,13 @@ export default function ProvidersPage() {
           Marketplace providers aggregate many independent listings; the
           deviation reflects the marketplace aggregate, not a single price
           policy. Figures are quoted public prices only.
+        </p>
+        <p>
+          A provider with no collection in the last {PROVIDER_STALE_AFTER_DAYS}{" "}
+          days is tagged <span className="text-[var(--ink)]">Retired</span> and
+          sorted below the active rows. Its historical offers stay in the
+          corpus and in the totals above — the tag marks that it is no longer
+          being collected, not that its data was removed.
         </p>
       </div>
     </div>
