@@ -28,19 +28,31 @@ export type ResidualTimeSeriesChartProps = {
   gpuSku?: string;
   since?: string;
   until?: string;
+  excludeProviders?: string[];
 };
 
 export function ResidualTimeSeriesChart({
   gpuSku = DEFAULT_GPU_SKU,
   since,
   until,
+  excludeProviders,
 }: ResidualTimeSeriesChartProps) {
-  // 5th key element reserves space for an `excludeProviders` variant
-  // so the FindingsHero's matching no-filter query dedupes against this
-  // one (single network call, two consumers).
+  // 5th key element carries the `excludeProviders` variant so the
+  // FindingsHero's matching query dedupes against this one (single
+  // network call, two consumers).
+  const exclusionKey =
+    excludeProviders && excludeProviders.length > 0
+      ? `exclude:${excludeProviders.join(",")}`
+      : null;
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["basis-timeseries", gpuSku, since ?? null, until ?? null, null],
-    queryFn: () => getBasisTimeseries(gpuSku, { since, until }),
+    queryKey: [
+      "basis-timeseries",
+      gpuSku,
+      since ?? null,
+      until ?? null,
+      exclusionKey,
+    ],
+    queryFn: () => getBasisTimeseries(gpuSku, { since, until, excludeProviders }),
   });
 
   if (isLoading) return <ChartFrame state="loading" />;
