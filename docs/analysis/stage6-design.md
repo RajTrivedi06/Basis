@@ -112,6 +112,14 @@ the DC files' numbers (4 providers, "four clouds", 60.3%, ~60/~82, $0.45/$6.88,
 | 6 | **05 · The finding — REBUILT (the missing act)** | The two-anchor + live-range finding, replacing the old ~60/~82 split. Narrative beat: *"So we threw a 45-feature model at it. Out-of-sample, it still couldn't close the gap — it explains less than the four simple factors claimed in-sample (−10.9pp, as of Jul 31). And of what remains, over half tracks WHO the host is (ICC 0.554, as of Jul 31) — identity, not specs."* Third element in range language: *"The unexplained share in market-priced segments has ranged ~20–61% in recent weeks — segment- and week-conditional."* Anchors bind to `/api/ml/explainability` (gap, ICC, trained date); range language sourced from truth-patch copy. Visual = the negative-gap bound component (§6). |
 | 7 | **06 · Why it matters + CTA** | "You can't build financial plumbing on a price you can't explain." Three honesty cards (study-not-product / every-number-has-a-receipt / honest-about-limits) carry over. CTA: "Open the dashboard" → `/` dashboard area (Findings), "Read the methodology →". |
 
+**Standing narrative ruling (Director, 2026-08-01, binds all Scene 6 + interior
+copy):** the negative gap and the host ICC are ONE picture, not two independent
+confirmations — the GBM's holdout R² comes substantially from re-identifying hosts
+via hardware-fingerprint proxies. Copy must narrate them as a single sequence
+("couldn't close the gap → and what remains tracks host identity"), never as
+"two separate lines of evidence." C9 below is written to this rule; the voice pass
+must not reintroduce independence framing.
+
 Motion inventory (all from the DC reference, all behind `prefers-reduced-motion`
 which the reference already handles — keep it): IO reveals at 0.25 threshold,
 translateY(28px) → 0 at 0.8s ease; sticky scroll-progress → segment widths with
