@@ -16,7 +16,6 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from basis.api.routes.basis import _compute_filtered_timeseries
 from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
 from basis.schemas.api import (
     BasisDecompositionResponse,
@@ -97,6 +96,21 @@ async def test_basis_decomposition(
 
 
 @pytest.mark.asyncio
+async def test_basis_decomposition_rejects_unknown_query_params(
+    api_client: AsyncClient,
+) -> None:
+    response = await api_client.get(
+        "/api/basis/h100_sxm_80gb",
+        params={"exclude_provider": "vast"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "Unknown query parameter(s): exclude_provider"
+    )
+
+
+@pytest.mark.asyncio
 async def test_basis_timeseries(
     api_client: AsyncClient, db_session: AsyncSession
 ) -> None:
@@ -122,9 +136,10 @@ async def test_basis_timeseries_exclude_vast_and_single_day_agree(
 
     The previous direction assertion inverted as the provider mix changed;
     see ``docs/analysis/2026-07-24-exclude-vast-collapse.md``. This regression
-    therefore checks response structure, verifies that an unfiltered on-demand
-    recomputation agrees with the precomputed full sample, and requires the
-    filtered single-day and one-day-timeseries responses to match.
+    therefore checks response structure and requires the filtered single-day
+    and one-day-timeseries responses to match. It intentionally does not compare
+    the stored pooled table with an on-demand recomputation: after ADR-0007, a
+    local database may not have regenerated its precomputed rows yet.
     """
     sku = "h100_sxm_80gb"
     if not await _has_decomposition(db_session, sku):
@@ -144,27 +159,7 @@ async def test_basis_timeseries_exclude_vast_and_single_day_agree(
     assert filt_body.gpu_sku == sku
     assert filt_body.points
 
-    recomputed = await _compute_filtered_timeseries(
-        db_session,
-        sku,
-        base_body.points[0].date,
-        base_body.points[-1].date,
-        [],
-    )
     base_by_date = {point.date: point for point in base_body.points}
-    recomputed_by_date = {point.date: point for point in recomputed}
-    overlapping_dates = base_by_date.keys() & recomputed_by_date.keys()
-    assert overlapping_dates == base_by_date.keys() == recomputed_by_date.keys()
-
-    for date in overlapping_dates:
-        row = recomputed_by_date[date]
-        recomputed_pct_residual = (
-            row.residual_variance / row.total_variance * 100.0
-            if row.total_variance > 0
-            else 0.0
-        )
-        assert abs(base_by_date[date].pct_residual - recomputed_pct_residual) <= 0.05
-
     # Regression: the single-day route must not silently ignore the same
     # exclusion accepted by the timeseries route.
     filtered_by_date = {point.date: point for point in filt_body.points}

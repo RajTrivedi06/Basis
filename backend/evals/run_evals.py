@@ -351,7 +351,23 @@ async def _resolve_expected(
     verify = question.get("verify")
     if verify == "api":
         spec = question["verify_api"]
-        response = await client.get(str(spec["path"]), headers={"Accept": "application/json"})
+        path = str(spec["path"])
+        if "%LATEST_FULL_DAY%" in path:
+            anchor_sql = str(anchors["latest_full_day_sql"]).strip().rstrip(";")
+            anchor_result = await session.execute(text(anchor_sql))
+            anchor_row = anchor_result.first()
+            if anchor_row is None or len(anchor_row) != 1 or anchor_row[0] is None:
+                raise EvalAbortError(
+                    f"{question['id']} latest-full-day anchor must return one date"
+                )
+            anchor_value = anchor_row[0]
+            rendered_anchor = (
+                anchor_value.isoformat()
+                if isinstance(anchor_value, (datetime.date, datetime.datetime))
+                else str(anchor_value)
+            )
+            path = path.replace("%LATEST_FULL_DAY%", rendered_anchor)
+        response = await client.get(path, headers={"Accept": "application/json"})
         if response.status_code != 200:
             raise EvalAbortError(
                 f"{question['id']} verification API returned {response.status_code}: "

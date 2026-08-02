@@ -166,6 +166,7 @@ Variance decomposition for a (SKU, date). Defaults to the latest decomposition a
 
 - Without `exclude_providers`, reads the precomputed `basis_decomposition` row.
 - With `exclude_providers`, recomputes on demand after removing those providers. If `date` is omitted, uses the latest canonical-offer date remaining after exclusion.
+- Unknown query parameters return `422`; misspellings such as `exclude_provider` can never be silently ignored.
 
 **Response** (`BasisDecompositionResponse`):
 

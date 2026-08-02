@@ -41,11 +41,12 @@ questions:
     stale_vs_live: true   # findings.md carries pre-revision figures under the ⚠ banner;
                           # correct behavior answers from the tool with [T#].
     expect_tool_citation: true
-    verify_sql: |
-      SELECT ROUND((b.residual_variance / NULLIF(b.total_variance,0) * 100)::numeric, 1)
-      FROM basis_decomposition b
-      WHERE b.gpu_sku = 'h100_sxm_80gb'
-        AND b.date = (%LATEST_FULL_DAY%)
+    # Primary headline: market-priced segment, with administered-price Azure/GCP
+    # excluded. The date token resolves through the same coverage anchor as the tool.
+    verify: api
+    verify_api:
+      path: "/api/basis/h100_sxm_80gb?date=%LATEST_FULL_DAY%&exclude_providers=azure,gcp"
+      jsonpath: "$.pct_residual"
   - id: a02
     tier: a
     question: "How many providers does Basis currently collect data from?"

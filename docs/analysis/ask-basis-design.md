@@ -95,7 +95,7 @@ CURRENT state answer via whitelisted **internal function calls** (never HTTP-to-
 
 | tool | wraps | compacted result (≤400 tok each) |
 |---|---|---|
-| `get_latest_basis` | basis timeseries (latest day, h100_sxm_80gb) | residual % + 4 factor shares + date, one table |
+| `get_latest_basis` | pooled basis row + filtered basis recomputation (latest covered day, h100_sxm_80gb) | primary market-priced-segment residual (excludes Azure/GCP), pooled five-provider residual, pooled 4-factor shares, and an as-of date for each figure |
 | `get_dispersion_summary` | dispersion latest | per-SKU price min/median/max/n, top-8 SKUs by n |
 | `get_provider_summary` | providers route | per-provider n, median deviation %, latest date |
 | `get_ml_explainability` | S3-artifact endpoint logic | holdout R², ANOVA share, gap, top-5 SHAP, host ICC |
@@ -110,6 +110,12 @@ hard-stops after 3 and answers with what it has, saying so.
 providers** for that SKU, and logs newer partial days that it skips. Stage 4.4
 verification SQL for latest-value questions must use both `observation_count >= 30` and
 `COUNT(DISTINCT provider) >= 2` so the tool and grader select the same date.
+
+**Current-residual population ruling (2026-08-01):** `get_latest_basis` presents the
+market-priced segment (the latest covered day recomputed after excluding the
+administered-price Azure and GCP catalogs) as the primary figure. It also emits the
+pooled five-provider residual, explicitly labeled, so population sensitivity remains
+visible. Eval a01 verifies the primary figure through that same filtered API path.
 
 ## 5. Context assembly contract (testable spec)
 

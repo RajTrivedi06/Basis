@@ -10,7 +10,7 @@ from __future__ import annotations
 import datetime
 
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,8 @@ from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
 from basis.schemas.api import BasisDecompositionResponse, BasisTimeseriesResponse
 
 router = APIRouter(prefix="/api/basis", tags=["basis"])
+
+_BASIS_DETAIL_QUERY_PARAMS = frozenset({"date", "exclude_providers"})
 
 
 def _to_response(
@@ -111,6 +113,7 @@ async def _compute_filtered_timeseries(
 @router.get("/{gpu_sku}", response_model=BasisDecompositionResponse)
 async def get_basis_decomposition(
     gpu_sku: str,
+    request: Request,
     date: datetime.date | None = Query(
         None, description="Specific date; defaults to latest available"
     ),
@@ -129,6 +132,15 @@ async def get_basis_decomposition(
     Provider exclusions reuse the timeseries route's on-demand computation so
     identical date/filter inputs cannot diverge between the two endpoints.
     """
+    unknown_params = sorted(
+        set(request.query_params.keys()) - _BASIS_DETAIL_QUERY_PARAMS
+    )
+    if unknown_params:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown query parameter(s): {', '.join(unknown_params)}",
+        )
+
     excluded = _parse_excluded_providers(exclude_providers)
     if excluded:
         date_eff = date

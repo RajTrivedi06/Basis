@@ -11,11 +11,13 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from basis.analytics.basis import DecompositionRow
 from basis.db.models import BasisDecomposition, DailyAggregate
 from basis.rag.context import assemble
 from basis.rag.tools import (
     LATEST_DAY_MIN_OBSERVATIONS,
     LATEST_DAY_MIN_PROVIDERS,
+    MARKET_PRICED_EXCLUDED_PROVIDERS,
     TOOL_NAMES,
     ToolExecutor,
     UnknownToolError,
@@ -50,6 +52,7 @@ async def test_whitelisted_tools_return_bounded_dated_tables(
 async def test_latest_basis_skips_and_logs_partial_days(
     db_session: AsyncSession,
     caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     qualified_day = datetime.date(2098, 1, 1)
     partial_day = datetime.date(2098, 1, 2)
@@ -102,6 +105,33 @@ async def test_latest_basis_skips_and_logs_partial_days(
             )
         )
     await db_session.flush()
+    filtered_calls: list[tuple[datetime.date, datetime.date, list[str]]] = []
+
+    async def fake_filtered_timeseries(
+        _session: AsyncSession,
+        _sku: str,
+        since: datetime.date,
+        until: datetime.date,
+        excluded: list[str],
+    ) -> list[DecompositionRow]:
+        filtered_calls.append((since, until, excluded))
+        return [
+            DecompositionRow(
+                date=qualified_day,
+                gpu_sku="h100_sxm_80gb",
+                total_variance=1.0,
+                variance_from_region=0.05,
+                variance_from_commitment=0.05,
+                variance_from_bundle=0.05,
+                variance_from_provider=0.05,
+                residual_variance=0.8,
+            )
+        ]
+
+    monkeypatch.setattr(
+        "basis.rag.tools._compute_filtered_timeseries",
+        fake_filtered_timeseries,
+    )
     try:
         with caplog.at_level(logging.WARNING, logger="basis.rag.tools"):
             result = await ToolExecutor().execute(
@@ -111,7 +141,26 @@ async def test_latest_basis_skips_and_logs_partial_days(
             )
 
         assert result.as_of == qualified_day.isoformat()
-        assert result.rows[0] == ("residual", "60.0%")
+        assert result.columns == ("metric", "share", "as_of")
+        assert result.rows[:2] == (
+            (
+                "market-priced segment residual (primary; excludes azure,gcp)",
+                "80.0%",
+                qualified_day.isoformat(),
+            ),
+            (
+                "pooled five-provider residual",
+                "60.0%",
+                qualified_day.isoformat(),
+            ),
+        )
+        assert filtered_calls == [
+            (
+                qualified_day,
+                qualified_day,
+                list(MARKET_PRICED_EXCLUDED_PROVIDERS),
+            )
+        ]
         assert partial_day.isoformat() in caplog.text
         assert "29 observations" in caplog.text
         assert "1 contributing providers" in caplog.text
@@ -177,6 +226,12 @@ async def test_latest_basis_real_corpus_rejects_aws_only_final_day(
     assert rollups[qualified_day] == 233
     assert len(providers[qualified_day]) == 4
     assert result.as_of == qualified_day.isoformat()
+    assert result.rows[0][0] == (
+        "market-priced segment residual (primary; excludes azure,gcp)"
+    )
+    assert result.rows[0][2] == qualified_day.isoformat()
+    assert result.rows[1][0] == "pooled five-provider residual"
+    assert result.rows[1][2] == qualified_day.isoformat()
     assert partial_day.isoformat() in caplog.text
     assert "55 observations" in caplog.text
     assert "1 contributing providers" in caplog.text
