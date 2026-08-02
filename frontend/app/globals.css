@@ -2682,6 +2682,18 @@ button {
   border-bottom: 1px solid var(--line-lo);
 }
 
+/* Quiet status tag — same restraint as the Ask drawer's "Experimental". */
+.tag-quiet {
+  padding: 2px 7px;
+  border: 1px solid var(--line-lo);
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+
 .ask-drawer__head-left {
   display: flex;
   align-items: center;
