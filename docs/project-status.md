@@ -11,7 +11,7 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 
 ## Current phase
 
-**Basis v1 complete.** Phases 0–6 shipped. Phase 7 public surfaces are live: **https://gpu-basis.xyz** (Vercel) and **https://api.gpu-basis.xyz** (EC2, Caddy). Roadmap **Phase 7.4** (`basis-api.service`) did **not** ship — FastAPI is still run manually under `nohup` for polish sessions and must be restarted after every `git pull` on EC2 (see [guides/dev-setup.md](guides/dev-setup.md#restart-uvicorn-after-every-git-pull-on-ec2-critical)). EC2 infrastructure and Phases 0–6 of [basis-deployment-roadmap.md](basis-deployment-roadmap.md) shipped 2026-04-27.
+**Basis v3 production cutover: 2026-08-02.** Public surfaces are live as of this date: **https://gpu-basis.xyz** (Vercel) and **https://api.gpu-basis.xyz** (EC2, Caddy, pgvector Postgres). **Record correction:** earlier revisions of this page claimed the domains were live from May 2026 — in fact the DNS had reverted to registrar parking and the Caddy config was never persisted; 2026-08-02 is the verified cutover date. **Phase 7.4 debt is closed:** FastAPI runs as `basis-api.service` (systemd, `Restart=always`, reboot-test verified); the post-pull rule is now `sudo systemctl restart basis-api` (see [guides/dev-setup.md](guides/dev-setup.md)). Stages 4–5 (v3) added the Ask Basis RAG layer with an eval harness (benchmark-chosen Kimi K2.5 serving model), the ML explainability artifact, ADR-0007 (backfill excluded from the live series), and the truth patch retiring all pre-revision headline figures.
 
 **Basis v2 in progress.** Phase A shipped on 2026-04-21. Proposal: [temp-doc/basis-v2-proposal-r2.md](../temp-doc/basis-v2-proposal-r2.md).
 
@@ -19,7 +19,7 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 
 ## Production state
 
-EC2 deployment shipped 2026-04-27. Phases 0–6 of [basis-deployment-roadmap.md](basis-deployment-roadmap.md) are complete. **Phase 7** — DNS, Caddy, and Vercel are live (`gpu-basis.xyz`, `api.gpu-basis.xyz`). **Phase 7.4** (FastAPI as `basis-api.service`) was planned in the roadmap but **not implemented**; the API process is started with **`nohup`** during polish work (see [Known operational debt](#known-operational-debt)). Phase 8 covers the post-deploy reboot test, weekly checks, and a mid-May findings refresh; Phase 9 is the eventual shutdown procedure.
+EC2 deployment shipped 2026-04-27; the verified public cutover (DNS, Caddy TLS, Vercel domain) is **2026-08-02**. **Phase 7.4 shipped 2026-08-02**: `basis-api.service` under systemd with the reboot test passed (postgres → api ordering, timers re-armed). The `nohup` workflow is retired in practice and in docs.
 
 - **Compute.** AWS EC2 t3.small, Ubuntu 24.04, Elastic IP `52.70.173.217`, region `us-east-1`. 2 GiB swap file at `/swapfile`, persisted via `/etc/fstab`.
 - **IAM.** Role `basis-ec2-role` with two inline policies: `basis-spot-read` (`ec2:DescribeSpotPriceHistory`) and `basis-s3-backup` (`s3:PutObject` / `GetObject` / `DeleteObject` on `arn:aws:s3:::basis-backups-rajt-2026/*`, plus `s3:ListBucket` on the bucket). Collectors and backup script use the default credential chain — no AWS keys in the EC2 `.env`.
@@ -32,7 +32,7 @@ EC2 deployment shipped 2026-04-27. Phases 0–6 of [basis-deployment-roadmap.md]
 
 ### Known operational debt
 
-- **Phase 7.4 — `basis-api.service` not shipped.** FastAPI runs under **`nohup`** instead of systemd. A `git pull` on EC2 does not reload Python code in the running process — contributors must **restart uvicorn after every pull** or the live API drifts from disk (a recurring outage mode). When 7.4 ships, prefer `sudo systemctl restart basis-api` (see [basis-deployment-roadmap.md](basis-deployment-roadmap.md) Phase 7.4).
+- **~~Phase 7.4~~ — closed 2026-08-02.** `basis-api.service` shipped (systemd, `Restart=always`, reboot-test verified). The post-pull rule remains, in its new form: `sudo systemctl restart basis-api` after every `git pull`. Related standing rule from the cutover: any Postgres image change crossing a libc/collation boundary requires `REINDEX DATABASE` (ADR-0007's incident record).
 
 For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roadmap.md). Day-to-day developer workflow (polish loop, tunnels, restarts): [guides/dev-setup.md](guides/dev-setup.md). Day-to-day operations live in [guides/operations-runbook.md](guides/operations-runbook.md).
 
@@ -46,16 +46,16 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 | D | Rolling stability view | 🔲 Data threshold reached as of ~2026-05-17; ready to start (pending execution) |
 | UI port | Residual-first redesign (ADR 0005) | 🟢 Effectively landed on `main` (Tremor removed, v2 fonts/tokens/hand-rolled SVG charts live); the standalone `ui-port-v2` branch remains unmerged |
 
-## Data at a glance (2026-07-11, 77-day window)
+## Data at a glance (2026-08-02, production cutover snapshot)
 
-> Refreshed 2026-07-11 against live EC2 data (window 2026-04-26 → 2026-07-11). The dashboard updates continuously, so live medians may differ by a few tenths of a pp.
+> Snapshot at the v3 cutover. The dashboard updates continuously; live values drift.
 
-- **3 active collectors:** Vast.ai, RunPod, AWS Spot. (Lambda Labs dropped — ADR 0003; **TensorDock parked 2026-07-13, deregistered from `run_collect.py` 2026-07-24** — public feed drained, inventory moved behind an API key; see [data-sources.md](02-reference/data-sources.md#tensordock).)
-- **Raw observations on EC2:** 318,372 across the 4 providers since the 2026-04-26 cutover (77 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
-- **Canonical offers:** 315,743 (1:1 normalization, minimal skips). Provider mix: Vast.ai 237,746 (75.3%) · AWS Spot 45,448 (14.4%) · RunPod 30,065 (9.5%) · TensorDock 2,484 (0.8%).
+- **5 active collectors:** Vast.ai, RunPod, AWS Spot, **Azure (joined 2026-07-28)**, **GCP (joined 2026-07-30)**. Lambda Labs dropped (ADR 0003); TensorDock retired 2026-06-12 (historical rows retained).
+- **Raw observations:** 562,887+ since 2026-04-26, including the 90-day AWS spot-history backfill (56,196 rows, excluded from the live series per **ADR-0007**).
+- **Canonical offers:** 567,273. Provider mix: Vast.ai 68.4% · AWS Spot 20.3% · RunPod 6.9% · Azure 2.7% · GCP 1.2% · TensorDock 0.4%. Vast's share of *new daily* observations is ~58% and falling as the catalogs accumulate.
 - **Canonical SKUs:** 96.
-- **Schedule:** systemd timers on EC2 — collect at `08:00 + 20:00` UTC, backup at `03:00` UTC, hourly freshness probe. The Mac cron (`backend/collect_cron.sh`) is stopped.
-- **H100 SXM 80GB residual variance:** **~60% (Vast included) / ~82% (Vast excluded)** of log-price variance is unexplained over the 77-day window (medians 60.3% / 81.9%, a +21.6 pp segment-conditional shift — essentially unchanged from the 60-day refresh). See [findings.md](findings.md) and the [2026-07-11 refresh report](analysis/2026-07-11-findings-refresh.md).
+- **Schedule:** systemd — collect `08:00 + 20:00` UTC, backup `03:00` UTC, hourly freshness probe; API under `basis-api.service`.
+- **H100 SXM 80GB headline (post-truth-patch framing):** the anchored structural results — a 45-feature ML model cannot close the unexplained gap out-of-sample (gap −10.9 pp, as of 2026-07-31), and persistent host identity accounts for over half of the within-day residual (ICC 0.554). Unexplained share in **market-priced segments** has ranged **~20–61%** across recent weeks; pooled with the Azure/GCP list catalogs it compresses to single digits by construction. See [findings.md](findings.md), [methodology.md](methodology.md), and ADR-0007.
 - **Data-quality — Vast collection collapse (historical, affects 77-day window):** Vast returned **zero H100-SXM offers for 21 days** within the window (isolated misses 2026-06-16/06-17, then sustained 2026-06-23 → 07-11). All ten of the window's top residual days sit inside it — ~90% single-day readings there are collection artifacts, not market signals. **Root-caused 2026-07-11:** Vast hard-caps unauthenticated requests at 64 cheapest-first offers (`limit` ignored), collapsing total Vast collection ~97% (~6,400 → ~220 offers/day) on 06-23. **Fix shipped 2026-07-12:** collector sends `Authorization: Bearer` when `VAST_API_KEY` is set (`fix/vast-api-key-auth`, #10). A per-provider volume alert also shipped 2026-07-12 (`check_collection_volume.py`, #13). Post-fix collection resumes for new days; the 77-day analytical window still contains the outage tail. Diagnosis: [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md). (TensorDock **parked 2026-07-13** — public feed empty, ~0.8% of historical offers; see [data-sources.md](02-reference/data-sources.md#tensordock).)
 
 ## Phase status table

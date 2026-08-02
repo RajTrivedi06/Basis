@@ -53,17 +53,21 @@ Host basis-prod
 
 `ServerAliveInterval 60` sends a keepalive every 60 seconds; `ServerAliveCountMax 3` tolerates three misses before giving up. Without this, SSH tunnels often **idle out** after a few minutes (see [Gotcha: tunnel idles out by default](#gotcha-tunnel-idles-out-by-default)).
 
-### Terminal 1 (once per session) — start FastAPI on EC2 under `nohup`
+### Terminal 1 — the API is a systemd service (since 2026-08-02; the nohup era is over)
+
+FastAPI runs as `basis-api.service` (enabled, `Restart=always`, ordered after
+`basis-postgres.service`; survives reboot — verified by reboot test 2026-08-02). Nothing
+to start manually:
 
 ```bash
 ssh basis-prod
-pkill -f uvicorn || true                    # kill any stale process
-cd ~/Basis/backend
-nohup uv run uvicorn basis.api.main:app --host 127.0.0.1 --port 8000 > /tmp/uvicorn.log 2>&1 &
-sleep 3
-curl -s http://localhost:8000/health        # verify before exiting
-exit                                        # uvicorn keeps running (nohup)
+systemctl status basis-api --no-pager       # should be active (running)
+curl -s http://localhost:8000/health        # {"status":"ok",...}
+exit
 ```
+
+If it is ever down: `sudo systemctl restart basis-api`. Do NOT start uvicorn by hand —
+a stray nohup process fights the service for port 8000.
 
 ### Terminal 2 — SSH tunnel (no output when healthy)
 
@@ -99,14 +103,12 @@ Expect JSON. If this fails while `curl` on the EC2 box succeeds, the tunnel is w
 
 The running uvicorn process loads Python modules into memory at startup. A `git pull` updates files on disk but **does not** update the live process. uvicorn keeps serving the routes (and code paths) it had at startup, regardless of the current tree. That remains true even when the pull diff shows **zero** backend files changed — process state can drift from disk in ways a file diff does not show.
 
-**Rule: any time you `git pull` on EC2, restart uvicorn** (no exceptions):
+**Rule: any time you `git pull` on EC2, restart the service** (no exceptions):
 
 ```bash
 ssh basis-prod
-pkill -f uvicorn
-cd ~/Basis/backend
-nohup uv run uvicorn basis.api.main:app --host 127.0.0.1 --port 8000 > /tmp/uvicorn.log 2>&1 &
-sleep 3
+sudo systemctl restart basis-api
+sleep 5
 curl -s http://localhost:8000/health   # verify
 ```
 
