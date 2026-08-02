@@ -11,6 +11,7 @@ from typing import Any, Final
 from sqlalchemy import Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from basis.api.routes.basis import _compute_filtered_timeseries
 from basis.api.routes.ml import get_explainability_artifact
 from basis.api.routes.providers import list_providers
 from basis.db.models import BasisDecomposition, CanonicalOffer, DailyAggregate
@@ -22,6 +23,10 @@ TOOL_RESULT_TOKEN_CEILING: Final = 400
 # despite omitting the rest of the market.
 LATEST_DAY_MIN_OBSERVATIONS: Final = 30
 LATEST_DAY_MIN_PROVIDERS: Final = 2
+# Azure and GCP are administered-price catalogs, not continuously clearing
+# market segments. The primary current residual excludes them while the pooled
+# five-provider figure remains visible as the population-sensitivity check.
+MARKET_PRICED_EXCLUDED_PROVIDERS: Final = ("azure", "gcp")
 TOOL_NAMES: Final = (
     "get_latest_basis",
     "get_dispersion_summary",
@@ -38,7 +43,10 @@ TOOL_DEFINITIONS: Final = tuple(
         },
     }
     for name, description in (
-        ("get_latest_basis", "Get the latest H100-SXM variance decomposition."),
+        (
+            "get_latest_basis",
+            "Get the latest H100-SXM market-priced and pooled variance decomposition.",
+        ),
         ("get_dispersion_summary", "Get latest price dispersion for the eight busiest SKUs."),
         ("get_provider_summary", "Get current provider coverage and median price deviation."),
         ("get_ml_explainability", "Get the latest frozen ML explainability summary."),
@@ -110,22 +118,61 @@ async def _get_latest_basis(
     ).scalar_one_or_none()
     if row is None:
         return _empty_result(result_id, "get_latest_basis")
-    total = row.total_variance
 
-    def share(value: float) -> str:
+    market_rows = await _compute_filtered_timeseries(
+        session,
+        "h100_sxm_80gb",
+        latest_day,
+        latest_day,
+        list(MARKET_PRICED_EXCLUDED_PROVIDERS),
+    )
+    if not market_rows:
+        logger.warning(
+            "market-priced latest-basis decomposition unavailable for %s",
+            latest_day,
+        )
+        return _empty_result(result_id, "get_latest_basis")
+    market_row = market_rows[-1]
+
+    def share(value: float, total: float) -> str:
         return f"{(value / total * 100.0) if total > 0 else 0.0:.1f}%"
 
     return ToolContextResult(
         id=result_id,
         tool="get_latest_basis",
         as_of=row.date.isoformat(),
-        columns=("metric", "share"),
+        columns=("metric", "share", "as_of"),
         rows=(
-            ("residual", share(row.residual_variance)),
-            ("provider", share(row.variance_from_provider)),
-            ("commitment", share(row.variance_from_commitment)),
-            ("region", share(row.variance_from_region)),
-            ("bundle", share(row.variance_from_bundle)),
+            (
+                "market-priced segment residual (primary; excludes azure,gcp)",
+                share(market_row.residual_variance, market_row.total_variance),
+                market_row.date.isoformat(),
+            ),
+            (
+                "pooled five-provider residual",
+                share(row.residual_variance, row.total_variance),
+                row.date.isoformat(),
+            ),
+            (
+                "pooled provider",
+                share(row.variance_from_provider, row.total_variance),
+                row.date.isoformat(),
+            ),
+            (
+                "pooled commitment",
+                share(row.variance_from_commitment, row.total_variance),
+                row.date.isoformat(),
+            ),
+            (
+                "pooled region",
+                share(row.variance_from_region, row.total_variance),
+                row.date.isoformat(),
+            ),
+            (
+                "pooled bundle",
+                share(row.variance_from_bundle, row.total_variance),
+                row.date.isoformat(),
+            ),
         ),
     )
 

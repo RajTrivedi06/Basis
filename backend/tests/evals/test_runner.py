@@ -18,6 +18,7 @@ from evals.run_evals import (
     _load_question_set,
     _load_regression_reasons,
     _overlaps_collection_window,
+    _resolve_expected,
     assert_same_database,
 )
 
@@ -36,6 +37,83 @@ def test_golden_set_counts_and_latest_full_day_rule_are_loaded() -> None:
     assert "d.observation_count >= 30" in text
     assert "COUNT(DISTINCT p.provider)" in text
     assert "MAX(collected_at) FROM raw_observations) - INTERVAL '7 days'" in text
+    a01 = _load_question_set(QUESTIONS_PATH, "a")[0]
+    assert a01["verify"] == "api"
+    assert "exclude_providers=azure,gcp" in a01["verify_api"]["path"]
+
+
+def test_golden_set_residual_references_name_the_population() -> None:
+    population_labels = ("market-priced", "pooled", "vast", "non-vast")
+
+    for question in _load_question_set(QUESTIONS_PATH, "all"):
+        history = question.get("history", [])
+        text = " ".join(
+            (
+                str(question.get("question", "")),
+                str(question.get("rubric", "")),
+                *(str(exchange.get("q", "")) for exchange in history),
+                *(str(exchange.get("a", "")) for exchange in history),
+            )
+        ).lower()
+        if "residual" not in text and "unexplained" not in text:
+            continue
+        assert any(label in text for label in population_labels), question["id"]
+
+
+@pytest.mark.asyncio
+async def test_api_verifier_expands_latest_full_day_anchor() -> None:
+    class FakeResult:
+        def first(self) -> tuple[datetime.date]:
+            return (datetime.date(2026, 7, 28),)
+
+    class FakeSession:
+        async def execute(self, _statement: object) -> FakeResult:
+            return FakeResult()
+
+    class FakeResponse:
+        status_code = 200
+        text = ""
+
+        def json(self) -> dict[str, float]:
+            return {"pct_residual": 81.2}
+
+    class FakeClient:
+        def __init__(self) -> None:
+            self.path: str | None = None
+
+        async def get(
+            self,
+            path: str,
+            *,
+            headers: dict[str, str],
+        ) -> FakeResponse:
+            assert headers == {"Accept": "application/json"}
+            self.path = path
+            return FakeResponse()
+
+    client = FakeClient()
+    expected = await _resolve_expected(
+        {
+            "id": "a01",
+            "verify": "api",
+            "verify_api": {
+                "path": (
+                    "/api/basis/h100_sxm_80gb?date=%LATEST_FULL_DAY%"
+                    "&exclude_providers=azure,gcp"
+                ),
+                "jsonpath": "$.pct_residual",
+            },
+        },
+        cast(Any, FakeSession()),
+        cast(Any, client),
+        {"latest_full_day_sql": "SELECT MAX(date) FROM daily_aggregates"},
+    )
+
+    assert expected == 81.2
+    assert client.path == (
+        "/api/basis/h100_sxm_80gb?date=2026-07-28"
+        "&exclude_providers=azure,gcp"
+    )
 
 
 def test_timing_guard_rejects_projected_or_actual_collection_overlap() -> None:

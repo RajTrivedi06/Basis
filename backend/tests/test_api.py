@@ -16,7 +16,6 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from basis.api.routes.basis import _compute_filtered_timeseries
 from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
 from basis.schemas.api import (
     BasisDecompositionResponse,
@@ -97,6 +96,21 @@ async def test_basis_decomposition(
 
 
 @pytest.mark.asyncio
+async def test_basis_decomposition_rejects_unknown_query_params(
+    api_client: AsyncClient,
+) -> None:
+    response = await api_client.get(
+        "/api/basis/h100_sxm_80gb",
+        params={"exclude_provider": "vast"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "Unknown query parameter(s): exclude_provider"
+    )
+
+
+@pytest.mark.asyncio
 async def test_basis_timeseries(
     api_client: AsyncClient, db_session: AsyncSession
 ) -> None:
@@ -115,15 +129,17 @@ async def test_basis_timeseries(
 
 @pytest.mark.slow
 @pytest.mark.asyncio
-async def test_basis_timeseries_exclude_vast(
+async def test_basis_timeseries_exclude_vast_and_single_day_agree(
     api_client: AsyncClient, db_session: AsyncSession
 ) -> None:
-    """Validate both timeseries paths without encoding a market claim.
+    """Validate filtered timeseries and single-day paths without a market claim.
 
     The previous direction assertion inverted as the provider mix changed;
     see ``docs/analysis/2026-07-24-exclude-vast-collapse.md``. This regression
-    therefore checks response structure and verifies that an unfiltered
-    on-demand recomputation agrees with the precomputed full sample.
+    therefore checks response structure and requires the filtered single-day
+    and one-day-timeseries responses to match. It intentionally does not compare
+    the stored pooled table with an on-demand recomputation: after ADR-0007, a
+    local database may not have regenerated its precomputed rows yet.
     """
     sku = "h100_sxm_80gb"
     if not await _has_decomposition(db_session, sku):
@@ -143,26 +159,62 @@ async def test_basis_timeseries_exclude_vast(
     assert filt_body.gpu_sku == sku
     assert filt_body.points
 
-    recomputed = await _compute_filtered_timeseries(
-        db_session,
-        sku,
-        base_body.points[0].date,
-        base_body.points[-1].date,
-        [],
-    )
     base_by_date = {point.date: point for point in base_body.points}
-    recomputed_by_date = {point.date: point for point in recomputed}
-    overlapping_dates = base_by_date.keys() & recomputed_by_date.keys()
-    assert overlapping_dates == base_by_date.keys() == recomputed_by_date.keys()
-
-    for date in overlapping_dates:
-        row = recomputed_by_date[date]
-        recomputed_pct_residual = (
-            row.residual_variance / row.total_variance * 100.0
-            if row.total_variance > 0
-            else 0.0
+    # Regression: the single-day route must not silently ignore the same
+    # exclusion accepted by the timeseries route.
+    filtered_by_date = {point.date: point for point in filt_body.points}
+    changed_dates = sorted(
+        date
+        for date in base_by_date.keys() & filtered_by_date.keys()
+        if abs(
+            base_by_date[date].pct_residual
+            - filtered_by_date[date].pct_residual
         )
-        assert abs(base_by_date[date].pct_residual - recomputed_pct_residual) <= 0.05
+        > 1e-6
+    )
+    assert changed_dates, "fixture must contain a day where the exclusion has an effect"
+    comparison_date = changed_dates[-1]
+    comparison_params = {
+        "since": comparison_date.isoformat(),
+        "until": comparison_date.isoformat(),
+        "exclude_providers": "vast",
+    }
+    one_day_series = await api_client.get(
+        f"/api/basis/{sku}/timeseries",
+        params=comparison_params,
+    )
+    assert one_day_series.status_code == 200, one_day_series.text
+    series_body = BasisTimeseriesResponse.model_validate(one_day_series.json())
+    assert len(series_body.points) == 1
+
+    single_day = await api_client.get(
+        f"/api/basis/{sku}",
+        params={
+            "date": comparison_date.isoformat(),
+            "exclude_providers": "vast",
+        },
+    )
+    assert single_day.status_code == 200, single_day.text
+    single_body = BasisDecompositionResponse.model_validate(single_day.json())
+    series_point = series_body.points[0]
+
+    assert single_body.date == series_point.date == comparison_date
+    assert single_body.gpu_sku == series_point.gpu_sku == sku
+    for field in (
+        "total_variance",
+        "variance_from_region",
+        "variance_from_commitment",
+        "variance_from_bundle",
+        "variance_from_provider",
+        "residual_variance",
+        "pct_explained",
+        "pct_residual",
+    ):
+        assert getattr(single_body, field) == pytest.approx(
+            getattr(series_point, field),
+            rel=1e-9,
+            abs=1e-12,
+        )
 
 
 @pytest.mark.asyncio

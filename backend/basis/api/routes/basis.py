@@ -10,7 +10,7 @@ from __future__ import annotations
 import datetime
 
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,8 @@ from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
 from basis.schemas.api import BasisDecompositionResponse, BasisTimeseriesResponse
 
 router = APIRouter(prefix="/api/basis", tags=["basis"])
+
+_BASIS_DETAIL_QUERY_PARAMS = frozenset({"date", "exclude_providers"})
 
 
 def _to_response(
@@ -111,12 +113,70 @@ async def _compute_filtered_timeseries(
 @router.get("/{gpu_sku}", response_model=BasisDecompositionResponse)
 async def get_basis_decomposition(
     gpu_sku: str,
+    request: Request,
     date: datetime.date | None = Query(
         None, description="Specific date; defaults to latest available"
     ),
+    exclude_providers: str | None = Query(
+        None,
+        description=(
+            "Comma-separated provider names to exclude. When set, recomputes "
+            "the requested day from canonical_offers instead of reading the "
+            "precomputed basis_decomposition table."
+        ),
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> BasisDecompositionResponse:
-    """Return the basis decomposition for a GPU SKU on a given date."""
+    """Return the basis decomposition for a GPU SKU on a given date.
+
+    Provider exclusions reuse the timeseries route's on-demand computation so
+    identical date/filter inputs cannot diverge between the two endpoints.
+    """
+    unknown_params = sorted(
+        set(request.query_params.keys()) - _BASIS_DETAIL_QUERY_PARAMS
+    )
+    if unknown_params:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown query parameter(s): {', '.join(unknown_params)}",
+        )
+
+    excluded = _parse_excluded_providers(exclude_providers)
+    if excluded:
+        date_eff = date
+        if date_eff is None:
+            latest_stmt = select(
+                func.max(func.date(CanonicalOffer.collected_at))
+            ).where(
+                and_(
+                    CanonicalOffer.gpu_sku_canonical == gpu_sku,
+                    CanonicalOffer.provider.notin_(excluded),
+                )
+            )
+            date_eff = (await db.execute(latest_stmt)).scalar_one_or_none()
+
+        decomposed = (
+            await _compute_filtered_timeseries(
+                db,
+                gpu_sku,
+                date_eff,
+                date_eff,
+                excluded,
+            )
+            if date_eff is not None
+            else []
+        )
+        if not decomposed:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"No basis decomposition for gpu_sku={gpu_sku!r}"
+                    + (f" on {date_eff.isoformat()}" if date_eff else "")
+                    + f" after excluding providers={excluded}"
+                ),
+            )
+        return _to_response(decomposed[-1])
+
     filters = [BasisDecomposition.gpu_sku == gpu_sku]
     if date is not None:
         filters.append(BasisDecomposition.date == date)

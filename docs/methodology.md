@@ -35,7 +35,7 @@ Total log-price variance is partitioned sequentially. Each factor's attribution 
 
 **Order-dependence is a known property.** A different order (e.g., provider first) would redistribute attributions but leaves the residual unchanged. Reporting a second (Type III, marginal) order is a nice-to-have tracked in [TASKS/README.md](TASKS/README.md).
 
-**On-demand recomputation for provider-filtered views.** Standard outputs are read from the precomputed `basis_decomposition` table, refreshed **twice daily** after each collection run (`collect_cron.sh`: collect → normalize → analytics at 08:00 and 20:00 UTC). For provider-filtered analyses — currently exposed as the `exclude_providers` query parameter on `GET /api/basis/{gpu_sku}/timeseries` — the same `compute_decompositions` function is called live against `canonical_offers` minus the excluded providers. The two paths share code; the only difference is what rows enter the DataFrame.
+**On-demand recomputation for provider-filtered views.** Standard outputs are read from the precomputed `basis_decomposition` table, refreshed **twice daily** after each collection run (`collect_cron.sh`: collect → normalize → analytics at 08:00 and 20:00 UTC). For provider-filtered analyses — exposed as the `exclude_providers` query parameter on both `GET /api/basis/{gpu_sku}` and `GET /api/basis/{gpu_sku}/timeseries` — the same `compute_decompositions` function is called live against `canonical_offers` minus the excluded providers. The two endpoints share the on-demand helper; the only difference is whether its date window contains one day or several.
 
 ### Handling missing data
 
