@@ -46,16 +46,16 @@ For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roa
 | D | Rolling stability view | 🔲 Data threshold reached as of ~2026-05-17; ready to start (pending execution) |
 | UI port | Residual-first redesign (ADR 0005) | 🟢 Effectively landed on `main` (Tremor removed, v2 fonts/tokens/hand-rolled SVG charts live); the standalone `ui-port-v2` branch remains unmerged |
 
-## Data at a glance (2026-07-11, 77-day window)
+## Data at a glance (2026-08-02, production cutover snapshot)
 
-> Refreshed 2026-07-11 against live EC2 data (window 2026-04-26 → 2026-07-11). The dashboard updates continuously, so live medians may differ by a few tenths of a pp.
+> Snapshot at the v3 cutover. The dashboard updates continuously; live values drift.
 
-- **3 active collectors:** Vast.ai, RunPod, AWS Spot. (Lambda Labs dropped — ADR 0003; **TensorDock parked 2026-07-13, deregistered from `run_collect.py` 2026-07-24** — public feed drained, inventory moved behind an API key; see [data-sources.md](02-reference/data-sources.md#tensordock).)
-- **Raw observations on EC2:** 318,372 across the 4 providers since the 2026-04-26 cutover (77 days). A separate 33,525-row Mac snapshot was frozen at cutover as pre-EC2 history; new collection only writes to EC2.
-- **Canonical offers:** 315,743 (1:1 normalization, minimal skips). Provider mix: Vast.ai 237,746 (75.3%) · AWS Spot 45,448 (14.4%) · RunPod 30,065 (9.5%) · TensorDock 2,484 (0.8%).
+- **5 active collectors:** Vast.ai, RunPod, AWS Spot, **Azure (joined 2026-07-28)**, **GCP (joined 2026-07-30)**. Lambda Labs dropped (ADR 0003); TensorDock retired 2026-06-12 (historical rows retained).
+- **Raw observations:** 562,887+ since 2026-04-26, including the 90-day AWS spot-history backfill (56,196 rows, excluded from the live series per **ADR-0007**).
+- **Canonical offers:** 567,273. Provider mix: Vast.ai 68.4% · AWS Spot 20.3% · RunPod 6.9% · Azure 2.7% · GCP 1.2% · TensorDock 0.4%. Vast's share of *new daily* observations is ~58% and falling as the catalogs accumulate.
 - **Canonical SKUs:** 96.
-- **Schedule:** systemd timers on EC2 — collect at `08:00 + 20:00` UTC, backup at `03:00` UTC, hourly freshness probe. The Mac cron (`backend/collect_cron.sh`) is stopped.
-- **H100 SXM 80GB residual variance:** **~60% (Vast included) / ~82% (Vast excluded)** of log-price variance is unexplained over the 77-day window (medians 60.3% / 81.9%, a +21.6 pp segment-conditional shift — essentially unchanged from the 60-day refresh). See [findings.md](findings.md) and the [2026-07-11 refresh report](analysis/2026-07-11-findings-refresh.md).
+- **Schedule:** systemd — collect `08:00 + 20:00` UTC, backup `03:00` UTC, hourly freshness probe; API under `basis-api.service`.
+- **H100 SXM 80GB headline (post-truth-patch framing):** the anchored structural results — a 45-feature ML model cannot close the unexplained gap out-of-sample (gap −10.9 pp, as of 2026-07-31), and persistent host identity accounts for over half of the within-day residual (ICC 0.554). Unexplained share in **market-priced segments** has ranged **~20–61%** across recent weeks; pooled with the Azure/GCP list catalogs it compresses to single digits by construction. See [findings.md](findings.md), [methodology.md](methodology.md), and ADR-0007.
 - **Data-quality — Vast collection collapse (historical, affects 77-day window):** Vast returned **zero H100-SXM offers for 21 days** within the window (isolated misses 2026-06-16/06-17, then sustained 2026-06-23 → 07-11). All ten of the window's top residual days sit inside it — ~90% single-day readings there are collection artifacts, not market signals. **Root-caused 2026-07-11:** Vast hard-caps unauthenticated requests at 64 cheapest-first offers (`limit` ignored), collapsing total Vast collection ~97% (~6,400 → ~220 offers/day) on 06-23. **Fix shipped 2026-07-12:** collector sends `Authorization: Bearer` when `VAST_API_KEY` is set (`fix/vast-api-key-auth`, #10). A per-provider volume alert also shipped 2026-07-12 (`check_collection_volume.py`, #13). Post-fix collection resumes for new days; the 77-day analytical window still contains the outage tail. Diagnosis: [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md). (TensorDock **parked 2026-07-13** — public feed empty, ~0.8% of historical offers; see [data-sources.md](02-reference/data-sources.md#tensordock).)
 
 ## Phase status table
