@@ -13,7 +13,7 @@ const STAGES: Stage[] = [
   {
     num: "01",
     title: "Collect",
-    body: "Async pulls from Vast.ai, RunPod, AWS EC2 Spot, and TensorDock — twice daily on a fixed cadence.",
+    body: "Async pulls from Vast.ai, RunPod, AWS EC2 Spot, and the Azure and GCP list catalogs — twice daily on a fixed cadence.",
     tag: "providers · 4",
   },
   {

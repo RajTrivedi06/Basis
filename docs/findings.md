@@ -2,26 +2,26 @@
 title: Findings — How fungible is GPU compute?
 tags: [area:overview, audience:all, status:active]
 owner: Raj
-last_updated: 2026-07-24
+last_updated: 2026-08-02
 ---
 
 # How fungible is GPU compute? Measuring basis risk in quoted H100 prices
 
-> **⚠ Headline under revision (2026-07-25).** The exclude-Vast conditional below (~82%) predates a structural break: on 2026-07-03 the non-Vast baseline collapsed (four AWS Virginia spot offers repriced) and the exclude-Vast gap has since inverted to ≈ −4pp. See [analysis/2026-07-24-exclude-vast-collapse.md](analysis/2026-07-24-exclude-vast-collapse.md). Numbers below remain the 77-day-window record until the scheduled narrative rewrite.
+> **A full narrative refresh is in progress; this page carries interim corrections dated 2026-08-02.** The headline below is current. Sections further down that report the 2026-04-26 → 2026-07-11 analytical window are labelled as the frozen record of that window and have not yet been rewritten against the present five-provider corpus.
 
-On 2026-07-11, an NVIDIA H100 SXM 80GB rented for $1.99/hr on AWS Spot in US-East and $8.60/hr on AWS Spot in Japan — **4.3×** spread, same day, same provider, same spot-pricing mechanism, differing only by region. Widen the lens to all four providers and the gap is larger still. Conventional wisdom says most of that variance comes from the obvious stuff — region, commitment type, who's selling it. I built **Basis**, a public-data study that collects quoted GPU prices twice daily from four providers and decomposes the cross-sectional variance into observable factors and a residual. The finding, across 77 days of EC2-era collection:
+On 2026-07-11, an NVIDIA H100 SXM 80GB rented for $1.99/hr on AWS Spot in US-East and $8.60/hr on AWS Spot in Japan — **4.3×** spread, same day, same provider, same spot-pricing mechanism, differing only by region. Widen the lens across providers and the gap is larger still. Conventional wisdom says most of that variance comes from the obvious stuff — region, commitment type, who's selling it. I built **Basis**, a public-data study that collects quoted GPU prices twice daily from five providers and decomposes the cross-sectional variance into observable factors and a residual. The finding:
 
-> **For H100 SXM 80GB, ~60% of log-price variance is unexplained when all four providers are included — and ~82% when Vast.ai is excluded.** The headline depends on which segment of the market you measure, and that conditionality is itself the finding.
+> **In market-priced segments (marketplaces + spot), observable factors fail to explain roughly 20–61% of H100 price variance week to week; in administered catalogs the same factors explain nearly everything — segment-conditionality is the finding.**
 
-Both numbers are basis risk benchmark designs have to live with. Single-residual headlines flatten a market that does not behave like a single market.
+Pool in Azure/GCP's fixed list catalogs (joined Jul 28) and the pooled residual collapses to single digits — administered prices are explainable by construction, which is precisely why a compute benchmark must be segment-aware. Single-residual headlines flatten a market that does not behave like a single market.
 
 ## What Basis is
 
-Basis is a research study, not a SaaS. For the 77-day analytical window (2026-04-26 → 2026-07-11) it drew on quoted prices from four providers in the corpus — Vast.ai (marketplace), RunPod (neocloud), AWS EC2 Spot (hyperscaler), and TensorDock (neocloud marketplace) — collected twice daily via systemd timers on EC2. Over that window it accumulated 315,743 canonical offers across 96 canonical GPU SKUs, drawn from 318,372 raw observations. **As of 2026-07-24, collection runs on 3 active providers** (Vast, RunPod, AWS Spot); TensorDock is parked (public feed empty since 2026-07-13) and Lambda Labs was never activated (its free API key requires a payment method, violating the study's zero-data-cost constraint).
+Basis is a research study, not a SaaS. Collection runs on **five providers** — Vast.ai (marketplace), RunPod (neocloud), AWS EC2 Spot (hyperscaler), and the Azure and GCP list catalogs, which joined 2026-07-28 — twice daily via systemd timers on EC2. The corpus holds 560k+ raw observations through Aug 2026 across 96 canonical GPU SKUs. TensorDock was retired 2026-06-12, and Lambda Labs was never activated (its free API key requires a payment method, violating the study's zero-data-cost constraint).
 
 The positioning is important. **These are quoted prices, not executed transactions.** Transaction-based benchmarks like Ornn's OCPI are gated behind enterprise subscriptions, and the fact that they *are* is itself part of the problem Basis exists to quantify. A public study of quoted prices is an honest lower bound on what benchmark builders have to contend with — real transactions likely compress this dispersion but we cannot directly observe by how much.
 
-**Temporal note.** Numbers in this writeup reflect the 77-day window 2026-04-26 → 2026-07-11, refreshed for analysis on 2026-07-11. The dashboard updates continuously, so live medians may differ by a few tenths of a percentage point as new days land.
+**Temporal note.** Except where stated otherwise, the tables below are the frozen record of the 2026-04-26 → 2026-07-11 analytical window, refreshed for analysis on 2026-07-11. They predate both the Vast spot-visibility fix (2026-07-26) and the Azure/GCP catalog entry (2026-07-28), so they are not comparable to the current headline; the dashboard is the live number.
 
 ## Method
 
@@ -37,9 +37,9 @@ Log-prices because *ratios*, not absolute differences, are the meaningful fungib
 
 For this refresh the decomposition is run twice: once on the full dataset and once with Vast.ai excluded entirely. The contrast is what surfaces the segment-dependence story.
 
-## The numbers
+## The numbers (frozen 2026-04-26 → 2026-07-11 window)
 
-H100 SXM 80GB over the 77-day window, residual share of log-price variance:
+H100 SXM 80GB over that window, residual share of log-price variance:
 
 | Sample | n_days | Median | IQR | Mean | Min | Max |
 |---|---:|---:|---:|---:|---:|---:|
@@ -48,36 +48,38 @@ H100 SXM 80GB over the 77-day window, residual share of log-price variance:
 
 The median residual share moves +21.6 pp when Vast.ai is excluded — essentially unchanged from the +21.4 pp at 60 days, and both medians are within a fraction of a point of the prior refresh. The finding is stable. The one notable shift is in the *spread*: a three-week Vast H100-SXM outage (2026-06-23 → 07-11) pushes the Vast-inclusive high end to ~92% (2026-07-01) and, because the market on those days is the curated-only basket, widens the no-Vast series into a bimodal shape (min 50.6%). Both are discussed in §[The outlier days](#the-outlier-days); the low full-series day (31% on 2026-05-28) is unchanged.
 
-The texture is sharper across SKUs. Same 77-day window, same method:
+The texture is sharper across SKUs. Same window, same method:
 
 | SKU | n_days | Median residual | IQR | Notes |
 |---|---:|---:|---:|---|
-| **A100 SXM 80GB** | 77 | **30%** | 23 – 35 | Mature datacenter SKU. All four providers active; most variance attributable to observables. |
-| **H100 SXM 80GB** | 77 | **60%** | 54 – 68 | Vast-inclusive headline. See §[Vast caveat](#provider-mix-and-the-vastai-caveat) for the no-Vast number. |
+| **A100 SXM 80GB** | 77 | **30%** | 23 – 35 | Mature datacenter SKU. All providers then active; most variance attributable to observables. |
+| **H100 SXM 80GB** | 77 | **60%** | 54 – 68 | The window's pooled headline. See §[Vast-exclusion robustness note](#vast-exclusion-robustness-note) for the no-Vast number. |
 | **RTX 4090 24GB** | 77 | **79%** | 60 – 85 | Consumer card, marketplace-dominated. Three providers (no AWS Spot offering). Median high, but a wide left tail (mean 68%, occasional sub-20% days). |
 
-The texture argument holds at 77 days: **newer or less-standardized SKUs show a larger residual share.** A100 (mature) → 30%, H100 (current) → 60%, RTX 4090 (consumer marketplace) → 79%.
+The texture argument holds across that window: **newer or less-standardized SKUs show a larger residual share.** A100 (mature) → 30%, H100 (current) → 60%, RTX 4090 (consumer marketplace) → 79%.
 
-## Provider mix and the Vast.ai caveat
+## Vast-exclusion robustness note
 
-Vast supplies ~75% of all canonical offers (237,746 of 315,743) — down from 79% at the last refresh, because Vast stopped contributing H100-SXM offers on 2026-06-23 while the other providers kept growing. Recomputing the H100 SXM 80GB decomposition over the same 77 days with Vast offers excluded entirely — using the production `compute_decompositions` function on a filtered DataFrame — moves the median residual share from **60.3% to 81.9%**, a +21.6 pp shift. On the 56 days where Vast offers were present, removing them pushes residual share up by +5 to +48 pp (median +23). The 21 days where Vast carried *no* H100-SXM offers coincide by construction (Vast-included = Vast-excluded): two isolated early misses (2026-06-16, 06-17) and then a sustained 19-day outage (2026-06-23 → 07-11). One further day, 2026-05-08, coincides with Vast *present* — its prices happened to overlap the rest of the market (see below).
+This section is a robustness check on the frozen window, not a live headline. Its conclusion has since moved: the exclude-Vast gap inverted after a 2026-07-03 structural break in the non-Vast baseline, and the corpus rebalanced again when the Azure/GCP catalogs joined. The full treatment, including the 2026-08-01 addendum on what the pooled headline now means, is in [analysis/2026-07-24-exclude-vast-collapse.md](analysis/2026-07-24-exclude-vast-collapse.md).
+
+Within the window, Vast supplied ~75% of all canonical offers — down from 79% at the prior refresh, because Vast stopped contributing H100-SXM offers on 2026-06-23 while the other providers kept growing. Recomputing the H100 SXM 80GB decomposition over the same window with Vast offers excluded entirely — using the production `compute_decompositions` function on a filtered DataFrame — moves the median residual share from **60.3% to 81.9%**, a +21.6 pp shift. On the 56 days where Vast offers were present, removing them pushes residual share up by +5 to +48 pp (median +23). The 21 days where Vast carried *no* H100-SXM offers coincide by construction (Vast-included = Vast-excluded): two isolated early misses (2026-06-16, 06-17) and then a sustained 19-day outage (2026-06-23 → 07-11). One further day, 2026-05-08, coincides with Vast *present* — its prices happened to overlap the rest of the market (see below).
 
 Two interpretations, both worth saying out loud:
 
 - **Methodologically.** Vast is a variance-providing population that observable factors *can* attribute against (different verified-tier hosts, geographic spread, bundled-resource diversity). Excluding Vast strips out the offers the model can explain, leaving the AWS Spot / RunPod / TensorDock prices that cluster within their narrow per-provider bands. The ~18% of variance that observable factors can touch in the no-Vast series is essentially commitment-type effects, with region contributing trace amounts.
-- **Substantively.** The headline is sample-mix-dependent. Anyone reading "~60% of variance is unexplained" should know that statistic is conditional on a Vast-heavy population. With a more enterprise-weighted basket the residual share rises sharply — and the floor on unexplained variance stays high regardless of which provider mix you pick, which is the basis-risk thesis stated more precisely.
+- **Substantively.** The headline is sample-mix-dependent. Anyone reading the window's pooled residual should know that statistic is conditional on a Vast-heavy population. With a more enterprise-weighted basket the residual share rises sharply — and the floor on unexplained variance stays high regardless of which provider mix you pick, which is the basis-risk thesis stated more precisely.
 
 This is the single most important caveat to surface, and it is itself the finding. A research benchmark that quietly normalised this away would be solving the project's whole question by definition.
 
 ## The outlier days
 
-Over 77 days the residual share has two kinds of high day, worth separating because they mean different things.
+Over that window the residual share has two kinds of high day, worth separating because they mean different things.
 
-**Missing-data spikes — a sustained outage within the window.** All ten of the highest-residual days in the window (2026-06-23 → 07-02, ranging 86–92%) fall inside a three-week stretch where Vast carried *no* H100-SXM offers at all. With Vast absent, the population collapses to the narrow-band AWS/RunPod/TensorDock prices and the Vast-included and Vast-excluded series coincide. These are collection artifacts, not market structure (the same mechanism as v1's 2026-04-18 Vast cron miss). A live API probe traced it to Vast's new **64-offer cap on unauthenticated requests** (cheapest-first; `limit` ignored), which collapsed total Vast collection ~97% on 2026-06-23. **The collector fix shipped 2026-07-12** (`Authorization: Bearer` when `VAST_API_KEY` is set); a per-provider volume alert also shipped. The 77-day window medians are robust to the outage; single-day readings near 90% inside the tail should be read as "Vast is missing," not "basis widened." Details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md).
+**Missing-data spikes — a sustained outage within the window.** All ten of the highest-residual days in the window (2026-06-23 → 07-02, ranging 86–92%) fall inside a three-week stretch where Vast carried *no* H100-SXM offers at all. With Vast absent, the population collapses to the narrow-band AWS/RunPod/TensorDock prices and the Vast-included and Vast-excluded series coincide. These are collection artifacts, not market structure (the same mechanism as v1's 2026-04-18 Vast cron miss). A live API probe traced it to Vast's new **64-offer cap on unauthenticated requests** (cheapest-first; `limit` ignored), which collapsed total Vast collection ~97% on 2026-06-23. **The collector fix shipped 2026-07-12** (`Authorization: Bearer` when `VAST_API_KEY` is set); a per-provider volume alert also shipped. The window medians are robust to the outage; single-day readings near 90% inside the tail should be read as "Vast is missing," not "basis widened." Details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md).
 
 Inside that outage sits a genuinely *substantive* second finding. The curated-only residual is not constant while Vast is gone: it ran ~86–92% through 2026-07-02, then **halved to ~50–55% from 2026-07-03 onward** — same three providers, same 42 offers per day. The lever is cross-region price dispersion: AWS Spot prices spread across regions (US ~$2/hr vs Japan $8.60/hr), so *region* suddenly became a strong explainer and pulled ~40 pp of variance out of the residual. Even a marketplace-free basket carries large, time-varying basis, and the single thing moving it is one provider's regional spread — the cleanest argument yet for a dedicated cross-region view.
 
-**Factor compression — the substantive Vast-present day.** Setting the outage aside, the cleanest high day with Vast *present* is still **2026-05-08** (81.3% against a 77-day median of 60.3%). This is *not* a missing-data event — all four providers were active and observation count was normal (76 offers, 32 from Vast). The mechanism is factor compression: total variance on 5/8 was actually slightly *below* the window average (0.261 vs a median of 0.271), but region-attributable variance collapsed to roughly a third of typical (0.023 vs a median of ~0.061) and bundle and provider attributions ran near zero, so the same total variance landed mostly in the residual. 5/8 is the only Vast-*present* day where the Vast-included and Vast-excluded residual shares match (81.3% vs 81.3%). On the other 55 Vast-present days, Vast inclusion pulls residual share down by 5–48 pp. So 5/8 is genuinely "what residual share looks like when Vast prices happen to overlap the rest of the market" — the cleanest single-day evidence for the segment-dependence story, even though the outage days now exceed it numerically.
+**Factor compression — the substantive Vast-present day.** Setting the outage aside, the cleanest high day with Vast *present* is still **2026-05-08** (81.3% against a window median of 60.3%). This is *not* a missing-data event — all providers then in the corpus were active and observation count was normal (76 offers, 32 from Vast). The mechanism is factor compression: total variance on 5/8 was actually slightly *below* the window average (0.261 vs a median of 0.271), but region-attributable variance collapsed to roughly a third of typical (0.023 vs a median of ~0.061) and bundle and provider attributions ran near zero, so the same total variance landed mostly in the residual. 5/8 is the only Vast-*present* day where the Vast-included and Vast-excluded residual shares match (81.3% vs 81.3%). On the other 55 Vast-present days, Vast inclusion pulls residual share down by 5–48 pp. So 5/8 is genuinely "what residual share looks like when Vast prices happen to overlap the rest of the market" — the cleanest single-day evidence for the segment-dependence story, even though the outage days now exceed it numerically.
 
 ## Why the residual is so large
 
@@ -106,13 +108,13 @@ The deeper response is stratification (report H100-SXM-on-demand-US-East separat
 ## Limitations
 
 - **Quoted vs transacted.** Enterprise transaction prices likely compress dispersion, but by how much is the exact question that remains inaccessible without paid benchmarks. Basis is an honest lower bound, not a transaction benchmark.
-- **Four providers in corpus, three active today, Vast-heavy.** The 77-day numbers include TensorDock (~0.8% of offers); TensorDock is parked as of 2026-07-13. OCI, GCP, Azure, CoreWeave, Crusoe, Lambda Labs (and others) are missing. With Vast at ~75% of canonical offers in the window, the population is structurally tilted toward marketplace pricing; the Vast-exclusion section above bounds how much that tilt does the work.
+- **Five providers, marketplace-heavy.** Collection runs on Vast, RunPod, AWS Spot, Azure, and GCP; TensorDock was retired 2026-06-12 and its offers (~0.8%) sit only in the frozen-window numbers. OCI, CoreWeave, Crusoe, and Lambda Labs (among others) are missing. Vast still dominates the market-priced rows, so that segment is structurally tilted toward marketplace pricing; the robustness note above bounds how much that tilt does the work.
 - **Conservative normalization is a choice.** Reliability, interconnect type, and datacenter tier are deliberately left in the residual because normalizing them would be pretending to measure what we can't.
-- **Vast H100-SXM outage (within window).** Vast returned no H100-SXM offers for 21 days in the 77-day window — root-caused to Vast's 64-offer keyless cap (2026-06-23). Collector auth fix shipped 2026-07-12; the outage tail remains in the frozen analytical window. Details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md).
-- **The SKU table is 77 days, not 18 months.** Long-run stability and seasonality are the obvious follow-ons, neither of which 77 days can fully settle.
+- **Vast H100-SXM outage (within window).** Vast returned no H100-SXM offers for 21 days of the frozen window — root-caused to Vast's 64-offer keyless cap (2026-06-23). Collector auth fix shipped 2026-07-12; the outage tail remains in the frozen analytical window. Details in the [2026-07-11 refresh](analysis/2026-07-11-findings-refresh.md).
+- **The SKU table covers eleven weeks, not 18 months.** Long-run stability and seasonality are the obvious follow-ons, neither of which a single quarter can fully settle.
 
 ## What's next
 
-The most informative single change is adding more curated providers — Lambda Labs (revisited under different terms), CoreWeave, Crusoe — which would reduce Vast's share below 80% and sharpen the segment-dependence picture without changing the methodology. Cross-region basis (US-East vs US-West vs EU on the same SKU and commitment) is the obvious follow-on once provider coverage is broader. The cron continues to run; numbers will refresh as the window grows.
+The most informative single change is adding more curated providers — Lambda Labs (revisited under different terms), CoreWeave, Crusoe — which would dilute Vast's share of the market-priced rows (~58% of new daily observations as of 2026-08-02) and sharpen the segment-dependence picture without changing the methodology. Cross-region basis (US-East vs US-West vs EU on the same SKU and commitment) is the obvious follow-on once provider coverage is broader. The cron continues to run; numbers will refresh as the window grows.
 
 The underlying code, data, and every intermediate step are in the repo — this piece is the part that points at what the pipeline found. Explore the live data on the [Dispersion](/dispersion), [Basis](/basis), and [Providers](/providers) pages. For the full methodology, see [Methodology](/methodology).

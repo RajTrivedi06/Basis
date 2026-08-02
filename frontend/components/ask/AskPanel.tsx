@@ -32,6 +32,9 @@ export function AskPanel() {
           <p className="ask-panel__lede">
             Questions grounded in public data and live aggregates. Not procurement advice.
           </p>
+          <p className="ask-panel__lede">
+            Answers cite their sources; the system is under active evaluation.
+          </p>
         </div>
       </header>
 

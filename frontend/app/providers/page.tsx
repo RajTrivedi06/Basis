@@ -58,9 +58,9 @@ export default function ProvidersPage() {
       <section className="pb-6 pt-9">
         <div className="eyebrow mb-2.5">07 · Providers</div>
         <h1 className="display m-0 max-w-[720px] text-[clamp(2rem,5vw,2.5rem)] font-normal leading-[1.1] tracking-[-0.02em] text-[var(--ink-hi)]">
-          Four providers,{" "}
+          Five providers,{" "}
           <em className="font-serif not-italic text-[var(--ink-mid)]">
-            four postures.
+            five postures.
           </em>
         </h1>
       </section>

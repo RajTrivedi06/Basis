@@ -104,7 +104,10 @@ export function AskWidget() {
           aria-label="Ask Basis"
         >
           <div className="ask-drawer__head">
-            <span className="ask-drawer__hint mono">⌘K / Ctrl+K</span>
+            <div className="ask-drawer__head-left">
+              <span className="ask-drawer__tag mono">Experimental</span>
+              <span className="ask-drawer__hint mono">⌘K / Ctrl+K</span>
+            </div>
             <button type="button" className="ask-drawer__close mono" onClick={closeWidget}>
               Close
             </button>

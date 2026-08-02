@@ -12,27 +12,29 @@ import {
 import { ResidualTimeSeriesChart } from "@/components/ResidualTimeSeriesChart";
 import { useCountUp } from "@/lib/useCountUp";
 
-const EXCLUDED_PROVIDERS = ["vast"];
+// Azure and GCP publish fixed list catalogs; excluding them leaves the
+// market-priced segments (marketplaces + spot) the hero speaks about.
+const CATALOG_PROVIDERS = ["azure", "gcp"];
+const CATALOG_EXCLUSION_KEY = `exclude:${CATALOG_PROVIDERS.join(",")}`;
+
+// Anchored structural claims, held out-of-sample as of 2026-07-31.
+// These are dated findings, not live aggregates: the GBM/ANOVA gap and
+// the host fixed-effects ICC both come from the ML bound run.
+const ML_GAP_PP = -10.9;
+const HOST_ICC = 0.554;
 
 function FindingsHeroInner() {
   const { sku } = useSku();
 
-  // Two timeseries queries with distinct React Query keys so they
-  // dedupe independently. The "full" query also dedupes with the chart
-  // on the right (matching key shape — the trailing `null` reserves
-  // space for the no-Vast variant). The "no-Vast" query asks the
-  // backend to recompute the decomposition with Vast filtered out.
-  const tsFull = useQuery({
-    queryKey: ["basis-timeseries", sku, null, null, null],
-    queryFn: () => getBasisTimeseries(sku),
-  });
-  const tsNoVast = useQuery({
-    queryKey: ["basis-timeseries", sku, null, null, "exclude:vast"],
+  // Shares its key with the chart on the right, so the market-priced
+  // series is fetched once and read by both.
+  const tsMarket = useQuery({
+    queryKey: ["basis-timeseries", sku, null, null, CATALOG_EXCLUSION_KEY],
     queryFn: () =>
-      getBasisTimeseries(sku, { excludeProviders: EXCLUDED_PROVIDERS }),
+      getBasisTimeseries(sku, { excludeProviders: CATALOG_PROVIDERS }),
     // The backend recomputes on demand; if it 404s while the surface
-    // is mid-deploy, surface the error gracefully via the "—" sentinel
-    // rather than retrying aggressively.
+    // is mid-deploy, fall back to the static window label rather than
+    // retrying aggressively.
     retry: 1,
   });
 
@@ -45,18 +47,20 @@ function FindingsHeroInner() {
     queryFn: () => getProviders(),
   });
 
-  const fullPoints = tsFull.data?.points ?? [];
-  const noVastPoints = tsNoVast.data?.points ?? [];
-
-  const fullMedian = computeMedianPct(fullPoints, tsFull.isSuccess);
-  const noVastMedian = computeMedianPct(noVastPoints, tsNoVast.isSuccess);
+  const marketPoints = tsMarket.data?.points ?? [];
 
   // Count-up tweens. First number leads slightly, second trails by
   // ~200ms so the eye reads them sequentially rather than competing.
-  // Default formatter ("~NN%") is used for both — the segment-conditional
-  // hero is the original consumer of the hook.
-  const fullDisplay = useCountUp(fullMedian, { durationMs: 1100, delayMs: 300 });
-  const noVastDisplay = useCountUp(noVastMedian, { durationMs: 1100, delayMs: 500 });
+  const gapDisplay = useCountUp(ML_GAP_PP, {
+    durationMs: 1100,
+    delayMs: 300,
+    format: (n) => `−${Math.abs(n).toFixed(1)}pp`,
+  });
+  const iccDisplay = useCountUp(HOST_ICC, {
+    durationMs: 1100,
+    delayMs: 500,
+    format: (n) => n.toFixed(2),
+  });
 
   const totalOffers =
     providers.data?.items.reduce((s, p) => s + p.offer_count, 0) ?? null;
@@ -64,17 +68,9 @@ function FindingsHeroInner() {
   const providerCount = providers.data?.items.length ?? null;
 
   const windowLabel =
-    fullPoints.length > 0
-      ? `last ${fullPoints.length} days`
+    marketPoints.length > 0
+      ? `last ${marketPoints.length} days`
       : "last 30 days";
-
-  // Dynamic delta for the body paragraph. Hidden when either query is
-  // not yet resolved so we never render a misleading "0 percentage
-  // points" placeholder.
-  const delta =
-    fullMedian !== null && noVastMedian !== null
-      ? Math.round(Math.abs(noVastMedian - fullMedian))
-      : null;
 
   return (
     <section
@@ -95,7 +91,7 @@ function FindingsHeroInner() {
             } as React.CSSProperties
           }
         >
-          Finding · {sku} · {windowLabel} · Segment-conditional
+          Finding · {sku} · {windowLabel} · Market-priced segments
         </div>
 
         <dl
@@ -107,18 +103,18 @@ function FindingsHeroInner() {
           }}
         >
           <HeroNumber
-            valueLabel={fullDisplay}
-            target={fullMedian}
-            primary="marketplace pricing"
-            secondary="(Vast-dominated)"
+            valueLabel={gapDisplay}
+            ariaValue="negative 10.9 percentage points"
+            primary="out-of-sample ML gap"
+            secondary="(45-feature model vs. four factors)"
             numberDelay="200ms"
             labelDelay="1000ms"
           />
           <HeroNumber
-            valueLabel={noVastDisplay}
-            target={noVastMedian}
-            primary="curated providers"
-            secondary="(Vast excluded)"
+            valueLabel={iccDisplay}
+            ariaValue="0.55"
+            primary="host-identity ICC"
+            secondary="(share of what remains)"
             numberDelay="200ms"
             labelDelay="1000ms"
           />
@@ -139,8 +135,9 @@ function FindingsHeroInner() {
             } as React.CSSProperties
           }
         >
-          of log-price variance is unexplained — and the answer depends on
-          which segment of the market you measure.
+          Even a 45-feature ML model can&rsquo;t close the unexplained gap
+          out-of-sample (as of Jul 31); over half of what remains is
+          persistent host identity (ICC 0.55).
         </p>
 
         <p
@@ -156,19 +153,9 @@ function FindingsHeroInner() {
             } as React.CSSProperties
           }
         >
-          {delta !== null ? (
-            <>
-              Vast.ai accounts for 80% of canonical offers; including it
-              pulls the residual down by {delta} percentage points. Both
-              are basis risk benchmark designs have to live with.
-            </>
-          ) : (
-            <>
-              Vast.ai accounts for 80% of canonical offers; including it
-              pulls the residual down materially. Both are basis risk
-              benchmark designs have to live with.
-            </>
-          )}
+          Unexplained share in market-priced segments has ranged ~20–61%
+          across recent weeks — basis risk is segment- and
+          time-conditional.
         </p>
 
         <div
@@ -196,9 +183,20 @@ function FindingsHeroInner() {
         style={{ padding: 22, marginTop: "clamp(40px, 6vh, 96px)" }}
       >
         <div className="eyebrow" style={{ marginBottom: 14 }}>
-          Residual share · {windowLabel}
+          Residual share · market-priced segments · {windowLabel}
         </div>
-        <ResidualTimeSeriesChart gpuSku={sku} />
+        <ResidualTimeSeriesChart
+          gpuSku={sku}
+          excludeProviders={CATALOG_PROVIDERS}
+        />
+        <p
+          className="caption"
+          style={{ marginTop: 12, marginBottom: 0, lineHeight: 1.55 }}
+        >
+          Jul 26 — Era D: Vast spot pricing becomes visible (collector fix).
+          Jul 28 — Azure/GCP list catalogs join the corpus (excluded from
+          this series).
+        </p>
         <div
           style={{
             marginTop: 20,
@@ -256,14 +254,14 @@ export function FindingsHero() {
 
 function HeroNumber({
   valueLabel,
-  target,
+  ariaValue,
   primary,
   secondary,
   numberDelay,
   labelDelay,
 }: {
   valueLabel: string;
-  target: number | null;
+  ariaValue: string;
   primary: string;
   secondary: string;
   numberDelay: string;
@@ -272,12 +270,8 @@ function HeroNumber({
   // Numbers are wrapped in a <dl><dt><dd> pair so screen readers read
   // each pair as a label/value unit. aria-live="off" keeps the count-up
   // tween from spamming announcements every frame; the aria-label is
-  // derived from the target (final) value, not the in-flight display
-  // value, so screen readers always read the resolved number.
-  const ariaValue =
-    target === null
-      ? "data unavailable"
-      : `approximately ${Math.round(target)} percent`;
+  // derived from the final value, not the in-flight display value, so
+  // screen readers always read the resolved number.
   return (
     <div
       className="basis-fade"
@@ -335,21 +329,6 @@ function HeroNumber({
       </dd>
     </div>
   );
-}
-
-function computeMedianPct(
-  points: { pct_residual: number }[],
-  isReady: boolean
-): number | null {
-  if (!isReady || points.length === 0) return null;
-  const vals = points.map((p) => p.pct_residual);
-  return median(vals);
-}
-
-function median(arr: number[]): number {
-  const s = [...arr].sort((a, b) => a - b);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
 function Stat({

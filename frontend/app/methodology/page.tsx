@@ -92,13 +92,14 @@ export default function MethodologyPage() {
             <Reveal className="meth-section__head" delay={40}>
               <span className="meth-section__index">02 · Data collection</span>
               <h2 className="meth-section__title">
-                Four providers, <em>twice daily</em>, JSONB forever.
+                Five providers, <em>twice daily</em>, JSONB forever.
               </h2>
               <p className="meth-section__lede">
-                Vast.ai (REST), RunPod (GraphQL), AWS EC2 Spot (boto3), and
-                TensorDock (REST) are collected on a fixed 2× / day cadence.
-                Lambda Labs was considered but dropped — its free API key now
-                requires a payment method on file, which violates the study's
+                Vast.ai (REST), RunPod (GraphQL), AWS EC2 Spot (boto3), and the
+                Azure and GCP list catalogs are collected on a fixed 2× / day
+                cadence. TensorDock was retired 2026-06-12. Lambda Labs was
+                considered but dropped — its free API key now requires a
+                payment method on file, which violates the study&apos;s
                 zero-data-cost constraint.
               </p>
             </Reveal>
