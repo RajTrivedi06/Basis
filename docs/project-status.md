@@ -11,7 +11,7 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 
 ## Current phase
 
-**Basis v1 complete.** Phases 0–6 shipped. Phase 7 public surfaces are live: **https://gpu-basis.xyz** (Vercel) and **https://api.gpu-basis.xyz** (EC2, Caddy). Roadmap **Phase 7.4** (`basis-api.service`) did **not** ship — FastAPI is still run manually under `nohup` for polish sessions and must be restarted after every `git pull` on EC2 (see [guides/dev-setup.md](guides/dev-setup.md#restart-uvicorn-after-every-git-pull-on-ec2-critical)). EC2 infrastructure and Phases 0–6 of [basis-deployment-roadmap.md](basis-deployment-roadmap.md) shipped 2026-04-27.
+**Basis v3 production cutover: 2026-08-02.** Public surfaces are live as of this date: **https://gpu-basis.xyz** (Vercel) and **https://api.gpu-basis.xyz** (EC2, Caddy, pgvector Postgres). **Record correction:** earlier revisions of this page claimed the domains were live from May 2026 — in fact the DNS had reverted to registrar parking and the Caddy config was never persisted; 2026-08-02 is the verified cutover date. **Phase 7.4 debt is closed:** FastAPI runs as `basis-api.service` (systemd, `Restart=always`, reboot-test verified); the post-pull rule is now `sudo systemctl restart basis-api` (see [guides/dev-setup.md](guides/dev-setup.md)). Stages 4–5 (v3) added the Ask Basis RAG layer with an eval harness (benchmark-chosen Kimi K2.5 serving model), the ML explainability artifact, ADR-0007 (backfill excluded from the live series), and the truth patch retiring all pre-revision headline figures.
 
 **Basis v2 in progress.** Phase A shipped on 2026-04-21. Proposal: [temp-doc/basis-v2-proposal-r2.md](../temp-doc/basis-v2-proposal-r2.md).
 
@@ -19,7 +19,7 @@ Quick snapshot. For detailed status, see [TASKS/README.md](TASKS/README.md). For
 
 ## Production state
 
-EC2 deployment shipped 2026-04-27. Phases 0–6 of [basis-deployment-roadmap.md](basis-deployment-roadmap.md) are complete. **Phase 7** — DNS, Caddy, and Vercel are live (`gpu-basis.xyz`, `api.gpu-basis.xyz`). **Phase 7.4** (FastAPI as `basis-api.service`) was planned in the roadmap but **not implemented**; the API process is started with **`nohup`** during polish work (see [Known operational debt](#known-operational-debt)). Phase 8 covers the post-deploy reboot test, weekly checks, and a mid-May findings refresh; Phase 9 is the eventual shutdown procedure.
+EC2 deployment shipped 2026-04-27; the verified public cutover (DNS, Caddy TLS, Vercel domain) is **2026-08-02**. **Phase 7.4 shipped 2026-08-02**: `basis-api.service` under systemd with the reboot test passed (postgres → api ordering, timers re-armed). The `nohup` workflow is retired in practice and in docs.
 
 - **Compute.** AWS EC2 t3.small, Ubuntu 24.04, Elastic IP `52.70.173.217`, region `us-east-1`. 2 GiB swap file at `/swapfile`, persisted via `/etc/fstab`.
 - **IAM.** Role `basis-ec2-role` with two inline policies: `basis-spot-read` (`ec2:DescribeSpotPriceHistory`) and `basis-s3-backup` (`s3:PutObject` / `GetObject` / `DeleteObject` on `arn:aws:s3:::basis-backups-rajt-2026/*`, plus `s3:ListBucket` on the bucket). Collectors and backup script use the default credential chain — no AWS keys in the EC2 `.env`.
@@ -32,7 +32,7 @@ EC2 deployment shipped 2026-04-27. Phases 0–6 of [basis-deployment-roadmap.md]
 
 ### Known operational debt
 
-- **Phase 7.4 — `basis-api.service` not shipped.** FastAPI runs under **`nohup`** instead of systemd. A `git pull` on EC2 does not reload Python code in the running process — contributors must **restart uvicorn after every pull** or the live API drifts from disk (a recurring outage mode). When 7.4 ships, prefer `sudo systemctl restart basis-api` (see [basis-deployment-roadmap.md](basis-deployment-roadmap.md) Phase 7.4).
+- **~~Phase 7.4~~ — closed 2026-08-02.** `basis-api.service` shipped (systemd, `Restart=always`, reboot-test verified). The post-pull rule remains, in its new form: `sudo systemctl restart basis-api` after every `git pull`. Related standing rule from the cutover: any Postgres image change crossing a libc/collation boundary requires `REINDEX DATABASE` (ADR-0007's incident record).
 
 For deploy-day procedure, see [basis-deployment-roadmap.md](basis-deployment-roadmap.md). Day-to-day developer workflow (polish loop, tunnels, restarts): [guides/dev-setup.md](guides/dev-setup.md). Day-to-day operations live in [guides/operations-runbook.md](guides/operations-runbook.md).
 
