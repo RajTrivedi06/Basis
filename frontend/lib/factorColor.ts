@@ -1,9 +1,9 @@
 /**
  * CSS variable string for each factor in the variance decomposition.
  *
- * Residual is amber — sacred, used nowhere else in the UI. Factors are
- * muted slate descending from provider (lightest, most explanatory) to
- * bundle (darkest, least). Matches the tokens in globals.css.
+ * The residual keeps its own token — sacred, used nowhere else in the UI.
+ * Factors are muted warm neutrals that stay subordinate to it. Matches the
+ * tokens in globals.css.
  */
 export type Factor =
   | "provider"

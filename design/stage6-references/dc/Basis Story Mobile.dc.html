@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap" rel="stylesheet">
+<style>
+html{scroll-behavior:smooth}
+body{margin:0;background:#FAF9F5;-webkit-font-smoothing:antialiased}
+a{color:#1F1D1A;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:#C9C2B4}
+a:hover{color:#C15F3C;text-decoration-color:#C15F3C}
+::selection{background:#F0DFD4}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</helmet>
+<div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;color:#1F1D1A;background:#FAF9F5;font-size:16px;line-height:1.55;max-width:480px;margin:0 auto;position:relative">
+
+<header style="position:sticky;top:0;z-index:50;background:rgba(250,249,245,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid #E8E4DB">
+  <div style="padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-family:'Newsreader',Georgia,serif;font-size:20px;font-weight:600;letter-spacing:-0.015em">Basis</span>
+      <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:8.5px;color:#6B675E;border:1px solid #E0DBD0;border-radius:999px;padding:3px 8px;letter-spacing:.09em;text-transform:uppercase">Public data</span>
+    </div>
+    <button onClick="{{ toggleMenu }}" aria-label="Menu" style="width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;padding:0">
+      <span style="display:block;width:20px;height:1.5px;background:#1F1D1A;transition:transform .25s;transform:{{ bar1t }}"></span>
+      <span style="display:block;width:20px;height:1.5px;background:#1F1D1A;transition:opacity .2s;opacity:{{ bar2o }}"></span>
+      <span style="display:block;width:20px;height:1.5px;background:#1F1D1A;transition:transform .25s;transform:{{ bar3t }}"></span>
+    </button>
+  </div>
+</header>
+
+<div style="position:fixed;inset:0;z-index:49;background:#FAF9F5;transition:opacity .25s ease,visibility .25s;opacity:{{ menuO }};visibility:{{ menuV }};display:flex;flex-direction:column;justify-content:center;padding:0 32px">
+  <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#A09B90;margin-bottom:20px">Explore the data</div>
+  <nav style="display:flex;flex-direction:column">
+    <sc-for list="{{ navLinks }}" as="n" hint-placeholder-count="6">
+      <a href="{{ n.href }}" onClick="{{ closeMenu }}" style="text-decoration:none;display:flex;align-items:baseline;gap:14px;padding:13px 0;border-bottom:1px solid #EFEBE1;font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.015em">
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:#C15F3C">{{ n.num }}</span>{{ n.label }}
+      </a>
+    </sc-for>
+  </nav>
+  <div style="margin-top:28px;font-size:13px;color:#6B675E">A public-data research study · 2026</div>
+</div>
+
+<!-- SCENE 1 · HOOK -->
+<section style="min-height:88vh;display:flex;flex-direction:column;justify-content:center;padding:64px 24px 90px;position:relative;box-sizing:border-box">
+  <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#6B675E;margin-bottom:22px">A public-data research study</div>
+  <h1 style="font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:36px;line-height:1.12;letter-spacing:-0.02em;margin:0">Right now, the exact same GPU rents for <span style="color:#C15F3C;font-variant-numeric:tabular-nums">${{ heroLow }}</span> an hour on one cloud — and <span style="color:#C15F3C;font-variant-numeric:tabular-nums">${{ heroHigh }}</span> on another.</h1>
+  <p style="font-size:16px;color:#6B675E;line-height:1.6;margin:22px 0 0">Same chip. Same memory. A <span style="color:#1F1D1A;font-weight:500;font-variant-numeric:tabular-nums">{{ heroMult }}× difference</span> in price. Basis is an attempt to answer one question: <em style="font-family:'Newsreader',Georgia,serif;color:#1F1D1A">why?</em></p>
+  <div style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:#A09B90">
+    <span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase">Scroll</span>
+    <span style="font-size:15px;animation:bob 1.8s ease-in-out infinite">↓</span>
+  </div>
+</section>
+
+<!-- SCENE 2 · SAME CHIP, TWO PRICES -->
+<section ref="{{ rv1 }}" style="padding:72px 24px;border-top:1px solid #E8E4DB">
+  <div style="transition:opacity .8s ease,transform .8s ease;opacity:{{ v1o }};transform:{{ v1t }}">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#C15F3C;margin-bottom:14px">01 · The puzzle</div>
+    <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;letter-spacing:-0.02em;line-height:1.18;margin:0 0 14px">A GPU-hour should be a commodity.</h2>
+    <p style="font-size:15px;color:#6B675E;line-height:1.65;margin:0 0 12px">A GPU-hour is one hour of computing time on a graphics card — the machines that train and run AI. Companies rent them by the hour, the way you'd rent a car.</p>
+    <p style="font-size:15px;color:#6B675E;line-height:1.65;margin:0">Wheat is wheat. Oil is oil. An H100 is an H100. So identical things should cost roughly the same. <span style="color:#1F1D1A">They don't. Not even close.</span></p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:32px;transition:opacity .8s ease .15s,transform .8s ease .15s;opacity:{{ v1o }};transform:{{ v1t }}">
+    <div style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:14px;padding:18px 20px">
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px">NVIDIA H100 SXM · 80 GB</div>
+      <div style="font-size:11.5px;color:#A09B90;margin-top:2px">rented on a marketplace</div>
+      <div style="font-family:'Newsreader',Georgia,serif;font-size:34px;font-weight:500;letter-spacing:-0.02em;margin-top:10px">$0.45<span style="font-size:13px;color:#A09B90">/hr</span></div>
+    </div>
+    <div style="text-align:center;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#A09B90;letter-spacing:.1em">SAME HARDWARE · SAME DAY</div>
+    <div style="background:#FFFFFF;border:1px solid #E8D5C9;border-radius:14px;padding:18px 20px;box-shadow:0 8px 30px rgba(193,95,60,.08)">
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px">NVIDIA H100 SXM · 80 GB</div>
+      <div style="font-size:11.5px;color:#A09B90;margin-top:2px">rented on a hyperscaler</div>
+      <div style="font-family:'Newsreader',Georgia,serif;font-size:34px;font-weight:500;letter-spacing:-0.02em;color:#C15F3C;margin-top:10px">$6.88<span style="font-size:13px;color:#D9A38A">/hr</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SCENE 3 · COLLECTION -->
+<section ref="{{ rv2 }}" style="padding:72px 24px;border-top:1px solid #E8E4DB;background:#FFFFFF">
+  <div style="transition:opacity .8s ease,transform .8s ease;opacity:{{ v2o }};transform:{{ v2t }}">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#C15F3C;margin-bottom:14px">02 · The method</div>
+    <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;letter-spacing:-0.02em;line-height:1.18;margin:0 0 14px">Twice a day, we ask four clouds the same question.</h2>
+    <p style="font-size:15px;color:#6B675E;line-height:1.65;margin:0">"What does an hour of GPU cost right now?" Every publicly quoted price is recorded exactly as received and kept forever. No accounts, no scraping tricks, no private data.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:28px;transition:opacity .8s ease .15s;opacity:{{ v2o }}">
+    <sc-for list="{{ providers }}" as="p" hint-placeholder-count="4">
+      <div style="border:1px solid #E8E4DB;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:500;background:#FAF9F5;display:flex;align-items:baseline;gap:8px">{{ p.name }}<span style="font-size:9.5px;color:#A09B90;font-family:ui-monospace,Menlo,monospace">{{ p.api }}</span></div>
+    </sc-for>
+  </div>
+  <div style="border:1px solid #E8E4DB;border-radius:16px;padding:24px;text-align:center;background:#FAF9F5;margin-top:16px;transition:opacity .8s ease .25s;opacity:{{ v2o }}">
+    <div style="font-family:'Newsreader',Georgia,serif;font-size:40px;font-weight:500;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ offerCount }}</div>
+    <div style="font-size:12.5px;color:#6B675E;margin-top:3px">price quotes collected and counting</div>
+  </div>
+</section>
+
+<!-- SCENE 4 · NORMALIZATION -->
+<section ref="{{ rv3 }}" style="padding:72px 24px;border-top:1px solid #E8E4DB">
+  <div style="transition:opacity .8s ease,transform .8s ease;opacity:{{ v3o }};transform:{{ v3t }}">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#C15F3C;margin-bottom:14px">03 · Cleaning up</div>
+    <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;letter-spacing:-0.02em;line-height:1.18;margin:0 0 14px">Every cloud describes the same chip differently.</h2>
+    <p style="font-size:15px;color:#6B675E;line-height:1.65;margin:0">Before prices can be compared, the messy names have to be translated into one shared vocabulary — with strict rules, never guesses. Missing information is labeled <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13.5px;color:#1F1D1A">UNKNOWN</span> and kept visible.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:28px">
+    <sc-for list="{{ normRows }}" as="n" hint-placeholder-count="3">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#FFFFFF;border:1px solid #E8E4DB;border-radius:12px;padding:12px 16px;transition:opacity .7s ease,transform .7s ease;transition-delay:{{ n.delay }};opacity:{{ v3o }};transform:{{ v3t }}">
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;color:#6B675E">{{ n.raw }}</span>
+        <span style="font-size:10.5px;color:#A09B90;white-space:nowrap">{{ n.src }}</span>
+      </div>
+    </sc-for>
+    <div style="text-align:center;color:#C15F3C;font-size:14px;transition:opacity .7s ease .5s;opacity:{{ v3o }}">↓</div>
+    <div style="background:#1F1D1A;color:#FAF9F5;border-radius:12px;padding:15px 16px;text-align:center;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;letter-spacing:.02em;transition:opacity .7s ease .6s,transform .7s ease .6s;opacity:{{ v3o }};transform:{{ v3t }}">h100_sxm_80gb<div style="color:#D9A38A;font-size:10px;margin-top:3px">one canonical name</div></div>
+  </div>
+</section>
+
+<!-- SCENE 5 · STICKY DECOMPOSITION -->
+<section ref="{{ rSticky }}" style="height:420vh;position:relative;border-top:1px solid #E8E4DB;background:#FFFFFF">
+  <div style="position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:0 24px;box-sizing:border-box">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#C15F3C;margin-bottom:18px">04 · The accounting</div>
+    <div style="min-height:130px;position:relative">
+      <sc-for list="{{ captions }}" as="c" hint-placeholder-count="6">
+        <p style="font-family:'Newsreader',Georgia,serif;font-size:22px;font-weight:500;letter-spacing:-0.015em;line-height:1.3;margin:0;position:absolute;top:0;left:0;right:0;transition:opacity .45s ease,transform .45s ease;opacity:{{ c.o }};transform:{{ c.t }}">{{ c.text }}</p>
+      </sc-for>
+    </div>
+    <div style="margin-top:24px">
+      <div style="display:flex;height:52px;border-radius:12px;overflow:hidden;background:#F4F1EA">
+        <sc-for list="{{ segs }}" as="g" hint-placeholder-count="5">
+          <div style="background:{{ g.bg }};transition:width .35s ease-out;width:{{ g.w }}"></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-top:16px">
+        <sc-for list="{{ legend }}" as="l" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;transition:opacity .4s ease;opacity:{{ l.o }}">
+            <span style="width:10px;height:10px;border-radius:3px;background:{{ l.bg }};flex-shrink:0"></span>
+            <span style="color:#3D3A34;flex:1">{{ l.name }}</span>
+            <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:{{ l.numColor }};font-variant-numeric:tabular-nums;font-weight:{{ l.numWeight }}">{{ l.pct }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:#6B675E;display:flex;justify-content:space-between">
+        <span>h100_sxm_80gb</span>
+        <span style="font-variant-numeric:tabular-nums">explained: <span style="color:#1F1D1A;font-weight:600">{{ tally }}</span></span>
+      </div>
+    </div>
+    <div style="margin-top:26px;text-align:center;transition:opacity .5s ease;opacity:{{ residualRevealO }}">
+      <span style="font-family:'Newsreader',Georgia,serif;font-size:56px;font-weight:500;letter-spacing:-0.03em;color:#C15F3C;font-variant-numeric:tabular-nums">{{ residualBig }}</span>
+      <div style="font-size:13px;color:#6B675E;margin-top:2px">of the variation has <span style="color:#1F1D1A;font-weight:500">no observable explanation.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SCENE 6 · THE FINDING -->
+<section ref="{{ rv4 }}" style="padding:80px 24px;border-top:1px solid #E8E4DB;text-align:center">
+  <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#C15F3C;margin-bottom:16px;transition:opacity .8s ease;opacity:{{ v4o }}">05 · The finding</div>
+  <h2 style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.02em;line-height:1.22;margin:0 0 44px;transition:opacity .8s ease,transform .8s ease;opacity:{{ v4o }};transform:{{ v4t }}">And the answer changes depending on <em>which</em> market you look at.</h2>
+  <div style="display:flex;flex-direction:column;gap:36px;transition:opacity .8s ease .15s,transform .8s ease .15s;opacity:{{ v4o }};transform:{{ v4t }}">
+    <div>
+      <div style="font-family:'Newsreader',Georgia,serif;font-size:76px;font-weight:500;line-height:.95;letter-spacing:-0.035em;color:#C15F3C;font-variant-numeric:tabular-nums">{{ find1 }}</div>
+      <div style="font-size:13px;color:#6B675E;margin-top:12px;line-height:1.55;max-width:300px;margin-left:auto;margin-right:auto">unexplained on the <span style="color:#1F1D1A">open marketplace</span>, where thousands of independent sellers set their own prices</div>
+    </div>
+    <div style="width:56px;height:1px;background:#E8E4DB;margin:0 auto"></div>
+    <div>
+      <div style="font-family:'Newsreader',Georgia,serif;font-size:76px;font-weight:500;line-height:.95;letter-spacing:-0.035em;font-variant-numeric:tabular-nums">{{ find2 }}</div>
+      <div style="font-size:13px;color:#6B675E;margin-top:12px;line-height:1.55;max-width:300px;margin-left:auto;margin-right:auto">unexplained among <span style="color:#1F1D1A">curated clouds</span> — the polished storefronts with published price lists</div>
+    </div>
+  </div>
+</section>
+
+<!-- SCENE 7 · WHY IT MATTERS + CTA -->
+<section ref="{{ rv5 }}" style="padding:72px 24px 64px;border-top:1px solid #E8E4DB;background:#FFFFFF">
+  <div style="transition:opacity .8s ease,transform .8s ease;opacity:{{ v5o }};transform:{{ v5t }}">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#C15F3C;margin-bottom:14px">06 · Why it matters</div>
+    <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;letter-spacing:-0.02em;line-height:1.18;margin:0 0 14px">You can't build financial plumbing on a price you can't explain.</h2>
+    <p style="font-size:15px;color:#6B675E;line-height:1.65;margin:0 0 12px">There's growing interest in treating AI compute like a commodity — with price indexes, futures, and contracts built on top of it. All of that assumes a GPU-hour has a knowable market price.</p>
+    <p style="font-size:15px;color:#6B675E;line-height:1.65;margin:0">Basis suggests that assumption deserves scrutiny: most of the price is not accounted for by anything observable. That remainder is the risk any benchmark would silently absorb.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:28px;transition:opacity .8s ease .15s,transform .8s ease .15s;opacity:{{ v5o }};transform:{{ v5t }}">
+    <sc-for list="{{ pillars }}" as="p" hint-placeholder-count="3">
+      <div style="border:1px solid #E8E4DB;border-radius:14px;padding:18px 20px;background:#FAF9F5">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">{{ p.title }}</div>
+        <div style="font-size:13px;color:#6B675E;line-height:1.55">{{ p.body }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="text-align:center;margin-top:56px;transition:opacity .8s ease .3s;opacity:{{ v5o }}">
+    <div style="font-family:'Newsreader',Georgia,serif;font-size:22px;font-weight:500;letter-spacing:-0.015em;margin-bottom:20px">Now explore the data yourself.</div>
+    <a href="Basis Dashboard Mobile.dc.html#findings" style="text-decoration:none;background:#1F1D1A;color:#FAF9F5;border-radius:999px;padding:16px 0;font-size:15px;font-weight:500;display:block;text-align:center;transition:background .15s" style-hover="background:#C15F3C;color:#FAF9F5">Open the dashboard</a>
+    <a href="Basis Dashboard Mobile.dc.html#methodology" style="font-size:14px;display:inline-block;margin-top:18px;padding:8px">Read the methodology →</a>
+  </div>
+</section>
+
+<footer style="border-top:1px solid #E8E4DB;padding:26px 24px 40px;display:flex;flex-direction:column;gap:8px">
+  <span style="font-size:12px;color:#6B675E"><span style="font-family:'Newsreader',Georgia,serif;font-weight:600;color:#1F1D1A;margin-right:8px">Basis</span>research artifact · public data · 2026</span>
+  <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#A09B90">Not a price aggregator · Not a derivatives engine</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+  state = { heroLow: 0, heroHigh: 0, heroMult: 0, offers: 0, seen: {}, sp: 0, find1: 0, find2: 0, menu: false };
+
+  componentDidMount() {
+    this.reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.count('heroLow', 0.45, 1400, 2); this.count('heroHigh', 6.88, 1400, 2); this.count('heroMult', 15, 1400, 0);
+    this.io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const k = e.target.getAttribute('data-reveal');
+        if (k && !this.state.seen[k]) {
+          this.setState(st => ({ seen: { ...st.seen, [k]: true } }));
+          if (k === 'v2') this.count('offers', 315204, 2000, 0);
+          if (k === 'v4') { this.count('find1', 60, 1600, 0); this.count('find2', 82, 1600, 0); }
+        }
+      });
+    }, { threshold: 0.2 });
+    this.onScroll = () => {
+      if (this.raf) return;
+      this.raf = requestAnimationFrame(() => {
+        this.raf = null;
+        const el = this.stickyEl;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const total = r.height - window.innerHeight;
+        const p = Math.max(0, Math.min(1, -r.top / Math.max(1, total)));
+        if (Math.abs(p - this.state.sp) > 0.004) this.setState({ sp: p });
+      });
+    };
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+    this.onScroll();
+  }
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.onScroll);
+    if (this.io) this.io.disconnect();
+    if (this.raf) cancelAnimationFrame(this.raf);
+  }
+
+  count(key, target, dur, dec) {
+    if (this.reduced) { this.setState({ [key]: target }); return; }
+    const t0 = performance.now();
+    const step = t => {
+      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      this.setState({ [key]: +(target * e).toFixed(dec) });
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  rev(k) { return el => { if (el) { el.setAttribute('data-reveal', k); if (this.io) this.io.observe(el); } }; }
+
+  renderVals() {
+    const s = this.state;
+    const seen = k => this.reduced || !!s.seen[k];
+    const o = k => seen(k) ? '1' : '0';
+    const t = k => seen(k) ? 'translateY(0)' : 'translateY(24px)';
+
+    const FIN = [7.8, 5.4, 14.6, 11.9, 60.3];
+    const names = ['Region', 'Commitment', 'Provider', 'Bundle', 'Unexplained'];
+    const colors = ['#8A93A1', '#98A084', '#AC9282', '#C5B8A3', '#C15F3C'];
+    const steps = [[0.10, 0.24], [0.26, 0.40], [0.42, 0.56], [0.58, 0.72], [0.76, 0.92]];
+    const p = this.reduced ? 1 : s.sp;
+    const prog = i => Math.max(0, Math.min(1, (p - steps[i][0]) / (steps[i][1] - steps[i][0])));
+    const widths = FIN.map((v, i) => v * prog(i));
+    const segs = names.map((n, i) => ({ bg: widths[i] > 0.1 ? colors[i] : 'transparent', w: widths[i].toFixed(2) + '%' }));
+    const legend = names.map((n, i) => ({
+      name: n, bg: colors[i], o: prog(i) > 0.15 ? '1' : '0.18',
+      pct: FIN[i].toFixed(1) + '%',
+      numColor: i === 4 ? '#C15F3C' : '#6B675E', numWeight: i === 4 ? '600' : '400',
+    }));
+    const tallyV = widths.slice(0, 4).reduce((a, b) => a + b, 0);
+    const capIdx = p < 0.10 ? 0 : p < 0.26 ? 1 : p < 0.42 ? 2 : p < 0.58 ? 3 : p < 0.76 ? 4 : 5;
+    const capTexts = [
+      'So we do the accounting. Take every price we can\u2019t explain — and subtract everything we can observe.',
+      'Where the machine is — the region — explains a little of the spread.',
+      'How it\u2019s rented — on-demand, spot, or reserved — a little more.',
+      'Who\u2019s selling it — the provider\u2019s identity — more still.',
+      'And what\u2019s bundled with it — CPUs, memory, disk. All four together: about 40%.',
+      'Everything observable, accounted for. And still — most of the price has no explanation.',
+    ];
+    const captions = capTexts.map((text, i) => ({
+      text, o: i === capIdx ? '1' : '0',
+      t: i === capIdx ? 'translateY(0)' : (i < capIdx ? 'translateY(-12px)' : 'translateY(12px)'),
+    }));
+
+    return {
+      heroLow: s.heroLow.toFixed(2), heroHigh: s.heroHigh.toFixed(2), heroMult: Math.round(s.heroMult),
+      toggleMenu: () => this.setState(st => ({ menu: !st.menu })),
+      closeMenu: () => this.setState({ menu: false }),
+      menuO: s.menu ? '1' : '0', menuV: s.menu ? 'visible' : 'hidden',
+      bar1t: s.menu ? 'translateY(6.5px) rotate(45deg)' : 'none',
+      bar2o: s.menu ? '0' : '1',
+      bar3t: s.menu ? 'translateY(-6.5px) rotate(-45deg)' : 'none',
+      navLinks: [['findings', 'Findings'], ['dispersion', 'Dispersion'], ['basis', 'Basis'], ['providers', 'Providers'], ['explainability', 'Explainability'], ['methodology', 'Methodology']].map((q, i) => ({ num: '0' + (i + 1), label: q[1], href: 'Basis Dashboard Mobile.dc.html#' + q[0] })),
+      rv1: this.rev('v1'), rv2: this.rev('v2'), rv3: this.rev('v3'), rv4: this.rev('v4'), rv5: this.rev('v5'),
+      v1o: o('v1'), v1t: t('v1'), v2o: o('v2'), v2t: t('v2'), v3o: o('v3'), v3t: t('v3'),
+      v4o: o('v4'), v4t: t('v4'), v5o: o('v5'), v5t: t('v5'),
+      providers: [
+        { name: 'Vast.ai', api: 'REST' }, { name: 'RunPod', api: 'GraphQL' },
+        { name: 'AWS Spot', api: 'API' }, { name: 'TensorDock', api: 'REST' },
+      ],
+      offerCount: Math.round(s.offers).toLocaleString('en-US'),
+      normRows: [
+        { raw: '"NVIDIA H100 80GB HBM3"', src: 'Vast.ai', delay: '0.05s' },
+        { raw: '"H100 SXM5 80 GB"', src: 'RunPod', delay: '0.2s' },
+        { raw: '"p5.48xlarge (H100)"', src: 'AWS', delay: '0.35s' },
+      ],
+      stickyEl: null, rSticky: el => { this.stickyEl = el; },
+      captions, segs, legend, tally: tallyV.toFixed(1) + '%',
+      residualRevealO: p > 0.88 || this.reduced ? '1' : '0',
+      residualBig: FIN[4].toFixed(1) + '%',
+      find1: '~' + Math.round(s.find1) + '%', find2: '~' + Math.round(s.find2) + '%',
+      pillars: [
+        { title: 'It\u2019s a study, not a product', body: 'No accounts, no sign-up, nothing for sale. Just public data and a transparent method.' },
+        { title: 'Every number has a receipt', body: 'From the headline percentage down to the raw response a cloud sent us — every step is inspectable.' },
+        { title: 'Honest about limits', body: 'Quoted prices, not transactions. A months-long window, not years. The caveats are on every page.' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

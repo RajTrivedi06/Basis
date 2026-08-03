@@ -1,6 +1,6 @@
 /**
  * Basis wordmark lockup — mark + divider + "basis" / "residual research".
- * Source: final lockup spec (notched square SVG, JetBrains Mono + Inter).
+ * Source: final lockup spec (notched square SVG, mono wordmark + sans caption).
  */
 
 const MARK_PATH = "M0,0 L64,0 L64,46.08 L46.08,46.08 L46.08,64 L0,64 Z";

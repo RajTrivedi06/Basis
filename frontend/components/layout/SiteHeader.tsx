@@ -12,14 +12,19 @@ import {
   useState,
 } from "react";
 
-const NAV_ITEMS: { num: string; href: string; label: string }[] = [
-  { num: "01", href: "/", label: "Findings" },
-  { num: "02", href: "/dispersion", label: "Dispersion" },
-  { num: "03", href: "/basis", label: "Basis" },
-  { num: "04", href: "/providers", label: "Providers" },
-  { num: "05", href: "/explainability", label: "Explainability" },
-  { num: "06", href: "/methodology", label: "Methodology" },
+const NAV_ITEMS: { href: string; label: string }[] = [
+  { href: "/", label: "Findings" },
+  { href: "/dispersion", label: "Dispersion" },
+  { href: "/basis", label: "Basis" },
+  { href: "/providers", label: "Providers" },
+  { href: "/explainability", label: "Explainability" },
+  { href: "/methodology", label: "Methodology" },
 ];
+
+/** Nav numbers are positional: 01–06 follow the order of NAV_ITEMS. */
+function navNumber(index: number): string {
+  return String(index + 1).padStart(2, "0");
+}
 
 function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -27,12 +32,14 @@ function isActive(pathname: string, href: string): boolean {
 
 function RailLink({
   item,
+  num,
   active,
   href,
   onNavigate,
   variant,
 }: {
   item: (typeof NAV_ITEMS)[number];
+  num: string;
   active: boolean;
   href: string;
   onNavigate?: () => void;
@@ -50,7 +57,7 @@ function RailLink({
       aria-current={active ? "page" : undefined}
       onClick={onNavigate}
     >
-      <span className={`${variant}-link__index`}>{item.num}</span>
+      <span className={`${variant}-link__index`}>{num}</span>
       <span className={`${variant}-link__label`}>{item.label}</span>
       {variant === "rail" ? (
         <span className="rail-link__indicator" aria-hidden />
@@ -158,10 +165,11 @@ function SiteHeaderInner() {
 
           <nav className="site-nav-rail" aria-label="Main navigation">
             <div className="site-nav-rail__track">
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS.map((item, index) => (
                 <RailLink
                   key={item.href}
                   item={item}
+                  num={navNumber(index)}
                   active={isActive(pathname, item.href)}
                   href={`${item.href}${suffix}`}
                   variant="rail"
@@ -221,10 +229,11 @@ function SiteHeaderInner() {
           </div>
 
           <nav className="site-nav-stage__list" aria-label="Main navigation">
-            {NAV_ITEMS.map((item) => (
+            {NAV_ITEMS.map((item, index) => (
               <RailLink
                 key={item.href}
                 item={item}
+                num={navNumber(index)}
                 active={isActive(pathname, item.href)}
                 href={`${item.href}${suffix}`}
                 onNavigate={closeMenu}

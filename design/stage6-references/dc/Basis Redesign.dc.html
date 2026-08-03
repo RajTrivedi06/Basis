@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FAF9F5;-webkit-font-smoothing:antialiased}
+a{color:#1F1D1A;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:#C9C2B4}
+a:hover{color:#C15F3C;text-decoration-color:#C15F3C}
+::selection{background:#F0DFD4}
+button{font-family:inherit}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</helmet>
+<div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;color:#1F1D1A;background:#FAF9F5;min-height:100vh;font-size:15px;line-height:1.5">
+<sc-if value="{{ isMethod }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;top:0;left:0;height:2px;background:#C15F3C;z-index:80;transition:width .1s linear;width:{{ progressW }}"></div>
+</sc-if>
+<header style="position:sticky;top:0;z-index:50;background:rgba(250,249,245,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid #E8E4DB">
+  <div style="max-width:1180px;margin:0 auto;padding:0 40px;height:60px;display:flex;align-items:center;gap:28px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="Basis Story.dc.html" style="font-family:'Newsreader',Georgia,serif;font-size:22px;font-weight:600;letter-spacing:-0.015em;text-decoration:none">Basis</a>
+      <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;color:#6B675E;border:1px solid #E0DBD0;border-radius:999px;padding:3px 9px;letter-spacing:.09em;text-transform:uppercase">Public data</span>
+    </div>
+    <nav style="margin-left:auto;display:flex;gap:2px;align-items:center">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="6">
+        <button onClick="{{ n.go }}" style="border:none;cursor:pointer;border-radius:999px;padding:7px 13px;font-size:13px;display:flex;align-items:baseline;gap:7px;transition:background .15s;background:{{ n.bg }};color:{{ n.color }}" style-hover="background:#EFEBE1">
+          <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9.5px;opacity:.55">{{ n.num }}</span>{{ n.label }}
+        </button>
+      </sc-for>
+    </nav>
+  </div>
+</header>
+<main style="max-width:1180px;margin:0 auto;padding:0 40px">
+
+<sc-if value="{{ isFindings }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Findings">
+  <section style="display:grid;grid-template-columns:1.02fr .98fr;gap:72px;align-items:center;padding:84px 0 76px">
+    <div>
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B675E;margin-bottom:28px">{{ skuLabel }} · {{ windowLabel }} · Segment-conditional</div>
+      <div style="display:flex;align-items:baseline;gap:44px">
+        <div>
+          <div style="font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:108px;line-height:.92;letter-spacing:-0.035em;color:#C15F3C">{{ resInclBig }}</div>
+          <div style="font-size:12.5px;color:#6B675E;margin-top:14px;max-width:180px;line-height:1.45">with marketplace listings included <span style="color:#A09B90">(Vast-dominated)</span></div>
+        </div>
+        <div style="width:1px;align-self:stretch;background:#E8E4DB"></div>
+        <div>
+          <div style="font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:108px;line-height:.92;letter-spacing:-0.035em;color:#1F1D1A">{{ resExclBig }}</div>
+          <div style="font-size:12.5px;color:#6B675E;margin-top:14px;max-width:180px;line-height:1.45">with Vast.ai excluded <span style="color:#A09B90">(curated providers)</span></div>
+        </div>
+      </div>
+      <p style="font-family:'Newsreader',Georgia,serif;font-size:23px;line-height:1.4;font-weight:400;letter-spacing:-0.01em;margin:36px 0 0;max-width:520px">of log-price variance is unexplained — and the answer depends on which segment of the market you measure.</p>
+      <p style="font-size:14.5px;color:#6B675E;line-height:1.65;margin:18px 0 0;max-width:500px">Vast.ai accounts for roughly 75% of all collected offers. Including it pulls the median residual down by <span style="color:#1F1D1A;font-weight:500">{{ deltaPP }} percentage points</span> — the marketplace segment prices more of its variance on observable features than curated clouds do.</p>
+      <div style="display:flex;align-items:center;gap:24px;margin-top:34px">
+        <button onClick="{{ goBasis }}" style="border:none;cursor:pointer;background:#1F1D1A;color:#FAF9F5;border-radius:999px;padding:12px 24px;font-size:14px;font-weight:500;transition:background .15s" style-hover="background:#C15F3C">See the decomposition</button>
+        <a href="#methodology" onClick="{{ goMethod }}" style="font-size:14px">Methodology →</a>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:14px;padding:26px 26px 0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E">Residual share of log-price variance</span>
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#A09B90">{{ sku }}</span>
+      </div>
+      <svg viewBox="0 0 640 230" style="width:100%;display:block" role="img" aria-label="Daily residual share over the sample window with median reference line and outlier annotations">
+        <sc-for list="{{ hero.grid }}" as="g" hint-placeholder-count="5">
+          <g><line x1="36" x2="632" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EFEBE1" stroke-width="1"></line>
+          <text x="30" y="{{ g.ty }}" text-anchor="end" font-size="9.5" fill="#A09B90" font-family="ui-monospace,Menlo,monospace">{{ g.label }}</text></g>
+        </sc-for>
+        <line x1="36" x2="632" y1="{{ hero.medY }}" y2="{{ hero.medY }}" stroke="#C15F3C" stroke-width="1" stroke-dasharray="3 4"></line>
+        <text x="632" y="{{ hero.medLabelY }}" text-anchor="end" font-size="10" fill="#C15F3C" font-family="ui-monospace,Menlo,monospace">median {{ hero.medLabel }}</text>
+        <path d="{{ hero.path }}" fill="none" stroke="#1F1D1A" stroke-width="1.5" stroke-linejoin="round"></path>
+        <sc-for list="{{ hero.outliers }}" as="o" hint-placeholder-count="2">
+          <g><circle cx="{{ o.x }}" cy="{{ o.y }}" r="4" fill="#FAF9F5" stroke="#C15F3C" stroke-width="1.5"></circle>
+          <sc-if value="{{ showOutlierLabels }}" hint-placeholder-val="{{ true }}"><text x="{{ o.x }}" y="{{ o.ly }}" text-anchor="middle" font-size="9.5" fill="#C15F3C" font-family="ui-monospace,Menlo,monospace">{{ o.label }}</text></sc-if></g>
+        </sc-for>
+        <sc-for list="{{ hero.xticks }}" as="t" hint-placeholder-count="5">
+          <text x="{{ t.x }}" y="226" text-anchor="middle" font-size="9.5" fill="#A09B90" font-family="ui-monospace,Menlo,monospace">{{ t.label }}</text>
+        </sc-for>
+      </svg>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #EFEBE1;margin-top:18px">
+        <div style="padding:18px 0"><div style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.02em">315,204</div><div style="font-size:11.5px;color:#6B675E;margin-top:2px">Offers</div></div>
+        <div style="padding:18px 0;border-left:1px solid #EFEBE1;padding-left:22px"><div style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.02em">96</div><div style="font-size:11.5px;color:#6B675E;margin-top:2px">Canonical SKUs</div></div>
+        <div style="padding:18px 0;border-left:1px solid #EFEBE1;padding-left:22px"><div style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.02em">4</div><div style="font-size:11.5px;color:#6B675E;margin-top:2px">Providers</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:56px 0 8px;border-top:1px solid #E8E4DB">
+    <h2 style="font-family:'Newsreader',Georgia,serif;font-size:34px;font-weight:500;letter-spacing:-0.02em;margin:0 0 10px">How interchangeable is each SKU?</h2>
+    <p style="font-size:14px;color:#6B675E;margin:0 0 32px;max-width:640px">Low residual — the market agrees on price given observable features. High residual — it doesn't, and the SKU is a poor benchmark target.</p>
+    <table style="width:100%;border-collapse:collapse" aria-label="Fungibility matrix, one row per canonical GPU SKU">
+      <thead><tr>
+        <sc-for list="{{ tableHeads }}" as="h" hint-placeholder-count="5">
+          <th style="text-align:{{ h.align }};padding:0 0 12px;border-bottom:1px solid #1F1D1A">
+            <button onClick="{{ h.sort }}" aria-sort="{{ h.aria }}" style="border:none;background:none;cursor:pointer;padding:0;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:{{ h.color }}" style-hover="color:#C15F3C">{{ h.label }} {{ h.arrow }}</button>
+          </th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ tableRows }}" as="r" hint-placeholder-count="8">
+          <tr style="border-bottom:1px solid #EFEBE1;transition:background .12s" style-hover="background:#F4F1EA">
+            <td style="padding:14px 0">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px">{{ r.id }}</span>
+                <span style="font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#6B675E;border:1px solid #E0DBD0;border-radius:999px;padding:2px 8px">{{ r.fam }}</span>
+              </div>
+              <div style="font-size:11px;color:#A09B90;margin-top:3px">latest {{ r.date }}</div>
+            </td>
+            <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;color:#6B675E">{{ r.offers }}</td>
+            <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;color:#6B675E">{{ r.prov }}</td>
+            <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px">{{ r.med }}</td>
+            <td style="text-align:right;padding-left:40px">
+              <sc-if value="{{ r.hasRes }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:center;gap:12px;justify-content:flex-end">
+                  <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;font-weight:500">{{ r.res }}</span>
+                  <span style="width:88px;height:4px;background:#EDE9DF;border-radius:99px;display:inline-block;overflow:hidden"><span style="display:block;height:100%;background:#C15F3C;border-radius:99px;width:{{ r.resW }}"></span></span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.noRes }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:13px;color:#A09B90">accumulating</span></sc-if>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <p style="font-size:11.5px;color:#A09B90;margin:16px 0 0;font-family:ui-monospace,'SF Mono',Menlo,monospace">Showing 16 of 96 canonical SKUs · sorted by {{ sortLabel }}</p>
+  </section>
+
+  <section style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;padding:64px 0 80px">
+    <div style="border:1px solid #E8E4DB;border-radius:14px;padding:26px 28px">
+      <h3 style="font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:500;margin:0 0 8px">Conservative normalization</h3>
+      <p style="font-size:13.5px;color:#6B675E;line-height:1.6;margin:0">Rule-based, never guesses. Unknown GPU names are skipped and logged; missing values stay an explicit UNKNOWN group.</p>
+    </div>
+    <div style="border:1px solid #E8E4DB;border-radius:14px;padding:26px 28px">
+      <h3 style="font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:500;margin:0 0 8px">Quoted, not transacted</h3>
+      <p style="font-size:13.5px;color:#6B675E;line-height:1.6;margin:0">These are list prices, not fills. Posted quotes may never clear at the stated price.</p>
+    </div>
+    <div style="border:1px solid #E8E4DB;border-radius:14px;padding:26px 28px">
+      <h3 style="font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:500;margin:0 0 8px">Short sample</h3>
+      <p style="font-size:13.5px;color:#6B675E;line-height:1.6;margin:0">The window is months, not years. Structural breaks in GPU supply could reshape every number here.</p>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDispersion }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Dispersion" style="padding:72px 0 90px">
+  <div style="max-width:680px">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B675E;margin-bottom:16px">02 · Dispersion</div>
+    <h1 style="font-family:'Newsreader',Georgia,serif;font-size:40px;font-weight:500;letter-spacing:-0.02em;margin:0 0 12px">{{ skuLabel }} — p25 · median · p75</h1>
+    <p style="font-size:14.5px;color:#6B675E;line-height:1.65;margin:0 0 28px">Raw price spread over time, before any modeling. A wider band means more same-day price disagreement across providers.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:28px">
+    <span style="position:relative;display:inline-flex;align-items:center">
+      <select value="{{ sku }}" onChange="{{ setSku }}" aria-label="Select GPU SKU" style="appearance:none;-webkit-appearance:none;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12.5px;padding:10px 36px 10px 16px;border:1px solid #E0DBD0;border-radius:999px;background:#FFFFFF;color:#1F1D1A;cursor:pointer">
+        <sc-for list="{{ skuOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+      </select>
+      <span style="position:absolute;right:15px;pointer-events:none;font-size:9px;color:#6B675E">▼</span>
+    </span>
+    <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90">{{ disp.counter }}</span>
+  </div>
+  <sc-if value="{{ hasDisp }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:14px;padding:28px">
+      <svg viewBox="0 0 680 270" style="width:100%;display:block" role="img" aria-label="Daily price band from 25th to 75th percentile with median line, in dollars per GPU-hour">
+        <sc-for list="{{ disp.yticks }}" as="t" hint-placeholder-count="4">
+          <g><line x1="46" x2="674" y1="{{ t.y }}" y2="{{ t.y }}" stroke="#EFEBE1"></line>
+          <text x="40" y="{{ t.ty }}" text-anchor="end" font-size="9.5" fill="#A09B90" font-family="ui-monospace,Menlo,monospace">{{ t.label }}</text></g>
+        </sc-for>
+        <path d="{{ disp.band }}" fill="#C15F3C" opacity="0.12"></path>
+        <path d="{{ disp.median }}" fill="none" stroke="#1F1D1A" stroke-width="1.6" stroke-linejoin="round"></path>
+        <sc-for list="{{ disp.xticks }}" as="t" hint-placeholder-count="5">
+          <text x="{{ t.x }}" y="266" text-anchor="middle" font-size="9.5" fill="#A09B90" font-family="ui-monospace,Menlo,monospace">{{ t.label }}</text>
+        </sc-for>
+      </svg>
+      <div style="display:flex;gap:22px;margin-top:14px;font-size:11.5px;color:#6B675E">
+        <span style="display:flex;align-items:center;gap:7px"><span style="width:16px;height:2px;background:#1F1D1A;display:inline-block"></span>daily median</span>
+        <span style="display:flex;align-items:center;gap:7px"><span style="width:16px;height:9px;background:#C15F3C;opacity:.16;display:inline-block;border-radius:2px"></span>p25 – p75 band</span>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ noDisp }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed #D8D2C5;border-radius:14px;padding:56px 40px;text-align:center;max-width:680px">
+      <div style="font-family:'Newsreader',Georgia,serif;font-size:22px;font-weight:500;margin-bottom:8px">Not enough observations yet</div>
+      <p style="font-size:13.5px;color:#6B675E;max-width:440px;margin:0 auto;line-height:1.6">Dispersion needs at least three offers per (day, SKU) pair. {{ skuLabel }} has only {{ disp.thin }} offers so far — the band will draw automatically as collection continues.</p>
+    </div>
+  </sc-if>
+  <div style="max-width:640px;margin-top:44px">
+    <h3 style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6B675E;margin:0 0 14px">How to read this chart</h3>
+    <p style="font-size:14px;color:#6B675E;line-height:1.7;margin:0 0 12px">The solid line is the daily <span style="color:#1F1D1A">median</span> — the middle quoted price across every provider that day. Half of all offers sit above it, half below.</p>
+    <p style="font-size:14px;color:#6B675E;line-height:1.7;margin:0 0 12px">The shaded band spans the <span style="color:#1F1D1A">interquartile range</span>: the 25th to 75th percentile. It ignores the wildest quotes on both ends and shows where the middle half of the market actually sits.</p>
+    <p style="font-size:14px;color:#6B675E;line-height:1.7;margin:0">Densely traded SKUs like the H100 SXM show tighter bands than thinly quoted ones — with few offers, a single unusual listing can stretch the band dramatically.</p>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBasis }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Basis decomposition" style="padding:72px 0 90px">
+  <div style="max-width:720px">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B675E;margin-bottom:16px">03 · Basis decomposition</div>
+    <h1 style="font-family:'Newsreader',Georgia,serif;font-size:40px;font-weight:500;letter-spacing:-0.02em;margin:0 0 12px">What do observable factors explain?</h1>
+    <p style="font-size:14.5px;color:#6B675E;line-height:1.65;margin:0 0 28px">Sequential ANOVA in fixed model order — Region → Commitment → Provider → Bundle — with the residual as what's left. Shares of log-price variance sum to 100%.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:18px;margin-bottom:32px;flex-wrap:wrap">
+    <span style="position:relative;display:inline-flex;align-items:center">
+      <select value="{{ sku }}" onChange="{{ setSku }}" aria-label="Select GPU SKU" style="appearance:none;-webkit-appearance:none;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12.5px;padding:10px 36px 10px 16px;border:1px solid #E0DBD0;border-radius:999px;background:#FFFFFF;color:#1F1D1A;cursor:pointer">
+        <sc-for list="{{ skuOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+      </select>
+      <span style="position:absolute;right:15px;pointer-events:none;font-size:9px;color:#6B675E">▼</span>
+    </span>
+    <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90">{{ dec.meta }}</span>
+  </div>
+
+  <sc-if value="{{ noDec }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed #D8D2C5;border-radius:14px;padding:56px 40px;text-align:center;max-width:720px">
+      <div style="font-family:'Newsreader',Georgia,serif;font-size:22px;font-weight:500;margin-bottom:8px">No decomposition yet</div>
+      <p style="font-size:13.5px;color:#6B675E;max-width:480px;margin:0 auto;line-height:1.6">Basis needs at least five offers on a single day with variation across the modeled factors. {{ skuLabel }} is still accumulating observations — nothing is shown rather than showing zeros.</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasDec }}" hint-placeholder-val="{{ true }}">
+  <div>
+    <div style="display:flex;height:76px;border-radius:12px;overflow:hidden" role="img" aria-label="{{ dec.alt }}">
+      <sc-for list="{{ dec.segs }}" as="g" hint-placeholder-count="5">
+        <div title="{{ g.tip }}" style="display:flex;flex-direction:column;justify-content:center;padding-left:14px;overflow:hidden;transition:filter .15s;width:{{ g.w }};background:{{ g.bg }};color:{{ g.fg }}" style-hover="filter:brightness(0.95)">
+          <sc-if value="{{ g.wide }}" hint-placeholder-val="{{ true }}">
+            <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;white-space:nowrap">{{ g.name }}</span>
+            <span style="font-family:'Newsreader',Georgia,serif;font-weight:500;white-space:nowrap;font-size:{{ g.numSize }}">{{ g.pct }}</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:22px;margin-top:16px;flex-wrap:wrap">
+      <sc-for list="{{ dec.segs }}" as="g" hint-placeholder-count="5">
+        <span style="display:flex;align-items:center;gap:7px;font-size:12px;color:#6B675E"><span style="width:9px;height:9px;border-radius:3px;display:inline-block;background:{{ g.bg }}"></span>{{ g.name }} <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;color:#1F1D1A">{{ g.pct }}</span></span>
+      </sc-for>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;border-top:1px solid #EFEBE1;padding-top:14px">
+      <span style="font-size:12px;color:#A09B90;font-family:ui-monospace,'SF Mono',Menlo,monospace">{{ dec.caption }}</span>
+      <button onClick="{{ openDrawer }}" style="border:none;background:none;cursor:pointer;font-size:13.5px;color:#1F1D1A;padding:0;text-decoration:underline;text-decoration-color:#C9C2B4;text-underline-offset:3px" style-hover="color:#C15F3C">View contributing observations →</button>
+    </div>
+
+    <h2 style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.015em;margin:60px 0 20px">Factor contributions</h2>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="text-align:left;padding:0 0 10px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Factor</th>
+        <th style="text-align:right;padding:0 0 10px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Share</th>
+        <th style="text-align:left;padding:0 0 10px 40px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Cumulative</th>
+        <th style="text-align:left;padding:0 0 10px 40px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Interpretation</th>
+        <th style="border-bottom:1px solid #1F1D1A"></th>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ dec.rows }}" as="r" hint-placeholder-count="5">
+          <tr style="border-bottom:1px solid #EFEBE1;background:{{ r.rowBg }}">
+            <td style="padding:15px 0;font-size:14px;font-weight:{{ r.weight }}"><span style="display:inline-flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:3px;background:{{ r.bg }}"></span>{{ r.name }}</span></td>
+            <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13.5px;font-weight:{{ r.weight }};color:{{ r.shareColor }}">{{ r.share }}</td>
+            <td style="padding-left:40px;width:170px"><div style="display:flex;align-items:center;gap:10px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#6B675E;width:48px">{{ r.cum }}</span><span style="flex:1;height:3px;background:#EDE9DF;border-radius:99px;overflow:hidden"><span style="display:block;height:100%;background:#1F1D1A;width:{{ r.cumW }}"></span></span></div></td>
+            <td style="padding:15px 0 15px 40px;font-size:13px;color:#6B675E;line-height:1.5;max-width:340px">{{ r.interp }}</td>
+            <td style="text-align:right"><button onClick="{{ openDrawer }}" style="border:none;background:none;cursor:pointer;font-size:12.5px;color:#A09B90;padding:0" style-hover="color:#C15F3C">Inspect →</button></td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+
+    <h2 style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.015em;margin:60px 0 8px">Price by factor</h2>
+    <p style="font-size:13.5px;color:#6B675E;margin:0 0 20px;max-width:620px">One dot per canonical offer, price on a log scale. Tight columns mean the factor explains the spread; broad columns mean it doesn't. Click any dot to open its full audit trail.</p>
+    <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap">
+      <sc-for list="{{ strip.chips }}" as="c" hint-placeholder-count="5">
+        <button onClick="{{ c.pick }}" style="cursor:pointer;border-radius:999px;padding:8px 16px;font-size:12.5px;transition:all .15s;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }}" style-hover="border-color:#1F1D1A">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:14px;padding:26px 26px 14px">
+      <svg viewBox="0 0 760 330" style="width:100%;display:block" role="img" aria-label="Jittered strip plot of offer prices grouped by the selected factor">
+        <sc-for list="{{ strip.yticks }}" as="t" hint-placeholder-count="4">
+          <g><line x1="48" x2="754" y1="{{ t.y }}" y2="{{ t.y }}" stroke="#EFEBE1"></line>
+          <text x="42" y="{{ t.ty }}" text-anchor="end" font-size="9.5" fill="#A09B90" font-family="ui-monospace,Menlo,monospace">{{ t.label }}</text></g>
+        </sc-for>
+        <sc-for list="{{ strip.groups }}" as="g" hint-placeholder-count="4">
+          <g><sc-if value="{{ g.hasBand }}" hint-placeholder-val="{{ true }}">
+            <rect x="{{ g.bx }}" y="{{ g.by }}" width="44" height="{{ g.bh }}" fill="#1F1D1A" opacity="0.05" rx="4"></rect>
+            <line x1="{{ g.bx }}" x2="{{ g.bx2 }}" y1="{{ g.my }}" y2="{{ g.my }}" stroke="#C15F3C" stroke-width="1.6"></line>
+          </sc-if>
+          <text x="{{ g.cx }}" y="312" text-anchor="middle" font-size="10" fill="{{ g.labelColor }}" font-family="ui-monospace,Menlo,monospace">{{ g.label }}</text>
+          <text x="{{ g.cx }}" y="325" text-anchor="middle" font-size="9" fill="#A09B90" font-family="ui-monospace,Menlo,monospace">n={{ g.n }}</text></g>
+        </sc-for>
+        <sc-for list="{{ strip.dots }}" as="d" hint-placeholder-count="30">
+          <circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.2" fill="#1F1D1A" opacity="0.3" style="cursor:pointer;transition:opacity .1s" style-hover="opacity:1" onClick="{{ d.open }}"><title>{{ d.tip }}</title></circle>
+        </sc-for>
+      </svg>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProviders }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Providers" style="padding:72px 0 90px;max-width:860px">
+  <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B675E;margin-bottom:16px">04 · Providers</div>
+  <h1 style="font-family:'Newsreader',Georgia,serif;font-size:40px;font-weight:500;letter-spacing:-0.02em;margin:0 0 12px">Four providers, four postures.</h1>
+  <p style="font-size:14.5px;color:#6B675E;line-height:1.65;margin:0 0 40px;max-width:620px">The columns below are exactly what the public API returns — nothing more. No inferred capacity, no scraped inventory, no guesses.</p>
+  <table style="width:100%;border-collapse:collapse">
+    <thead><tr>
+      <th style="text-align:left;padding:0 0 12px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Provider</th>
+      <th style="text-align:right;padding:0 0 12px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Offers</th>
+      <th style="text-align:right;padding:0 0 12px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Distinct SKUs</th>
+      <th style="text-align:right;padding:0 0 12px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Median Δ vs market</th>
+      <th style="text-align:right;padding:0 0 12px;border-bottom:1px solid #1F1D1A;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;font-weight:500">Latest collection</th>
+    </tr></thead>
+    <tbody>
+      <sc-for list="{{ provRows }}" as="p" hint-placeholder-count="4">
+        <tr style="border-bottom:1px solid #EFEBE1;transition:background .12s" style-hover="background:#F4F1EA">
+          <td style="padding:17px 0;font-size:14.5px;font-weight:500">{{ p.name }}<span style="font-size:11px;color:#A09B90;font-weight:400;margin-left:10px">{{ p.kind }}</span></td>
+          <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;color:#6B675E">{{ p.offers }}</td>
+          <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;color:#6B675E">{{ p.skus }}</td>
+          <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;font-weight:500;color:{{ p.deltaColor }}">{{ p.delta }}</td>
+          <td style="text-align:right;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90">{{ p.ts }}</td>
+        </tr>
+      </sc-for>
+    </tbody>
+  </table>
+  <div style="max-width:640px;margin-top:44px">
+    <p style="font-size:14px;color:#6B675E;line-height:1.7;margin:0 0 12px"><span style="color:#1F1D1A">How the deviation is computed:</span> for every (day, SKU) pair with at least three offers, each provider's median quote is compared to the all-provider median. The figure shown is the median of those daily deviations across the provider's full history — a signed percentage above or below market.</p>
+    <p style="font-size:14px;color:#6B675E;line-height:1.7;margin:0">A caution on marketplaces: Vast.ai aggregates thousands of independent sellers, so its deviation is a marketplace aggregate, not a pricing policy. All figures are quoted public prices, not executed transactions.</p>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isExpl }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="ML Explainability" style="padding:72px 0 90px;max-width:860px">
+  <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B675E;margin-bottom:16px">05 · ML Explainability</div>
+  <h1 style="font-family:'Newsreader',Georgia,serif;font-size:40px;font-weight:500;letter-spacing:-0.02em;margin:0 0 12px">Observable-features bound on H100-SXM</h1>
+  <p style="font-size:14.5px;color:#6B675E;line-height:1.65;margin:0 0 44px;max-width:640px">A gradient-boosted-tree model with SHAP attribution, trained on richer observable features than the four-factor model uses. It establishes an upper bound on how much of the "unexplained" residual is actually explainable from collected-but-unmodeled features. <span style="color:#1F1D1A">A bound, not proof about unobservables.</span></p>
+
+  <div style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:14px;padding:28px">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:#A09B90;margin-bottom:20px">h100_sxm_80gb · 21-day holdout window · trained 2026-07-24</div>
+    <div style="display:flex;height:60px;border-radius:10px;overflow:hidden" role="img" aria-label="Three-segment bound bar: ANOVA explained 39.7%, richer-features gap 22.4%, unexplained after bound 37.9%">
+      <div style="width:39.7%;background:#1F1D1A;color:#FAF9F5;display:flex;flex-direction:column;justify-content:center;padding-left:14px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;opacity:.7">4-factor ANOVA</span><span style="font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:500">39.7%</span></div>
+      <div style="width:22.4%;background:#C15F3C;color:#FAF9F5;display:flex;flex-direction:column;justify-content:center;padding-left:14px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;opacity:.75">Richer features</span><span style="font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:500">+22.4%</span></div>
+      <div style="width:37.9%;background:#F0ECE2;color:#1F1D1A;display:flex;flex-direction:column;justify-content:center;padding-left:14px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:#6B675E">Unexplained after bound</span><span style="font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:500">37.9%</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px">
+      <div style="border:1px solid #EFEBE1;border-radius:10px;padding:18px 20px"><div style="font-family:'Newsreader',Georgia,serif;font-size:30px;font-weight:500;letter-spacing:-0.02em">0.62</div><div style="font-size:11.5px;color:#6B675E;margin-top:3px;line-height:1.4">GBM holdout R² — out-of-sample on held-out days</div></div>
+      <div style="border:1px solid #EFEBE1;border-radius:10px;padding:18px 20px"><div style="font-family:'Newsreader',Georgia,serif;font-size:30px;font-weight:500;letter-spacing:-0.02em">0.40</div><div style="font-size:11.5px;color:#6B675E;margin-top:3px;line-height:1.4">ANOVA explained on the same days</div></div>
+      <div style="border:1px solid #E8D5C9;background:#FBF4EE;border-radius:10px;padding:18px 20px"><div style="font-family:'Newsreader',Georgia,serif;font-size:30px;font-weight:500;letter-spacing:-0.02em;color:#C15F3C">+22.4pp</div><div style="font-size:11.5px;color:#6B675E;margin-top:3px;line-height:1.4">Gap — the interesting number</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+      <sc-for list="{{ explChips }}" as="c" hint-placeholder-count="4">
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;border:1px solid #E8E4DB;border-radius:999px;padding:6px 13px;color:#6B675E">{{ c.name }} <span style="color:#1F1D1A;font-weight:500">R² {{ c.r2 }}</span></span>
+      </sc-for>
+    </div>
+  </div>
+
+  <h2 style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.015em;margin:56px 0 6px">SHAP top features</h2>
+  <p style="font-size:12px;color:#A09B90;font-family:ui-monospace,'SF Mono',Menlo,monospace;margin:0 0 24px">mean |SHAP| · n = 4,800 sample rows</p>
+  <div style="display:flex;flex-direction:column;gap:9px;max-width:680px">
+    <sc-for list="{{ shapRows }}" as="s" hint-placeholder-count="8">
+      <div style="display:grid;grid-template-columns:190px 1fr 52px;align-items:center;gap:14px">
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#6B675E;text-align:right">{{ s.name }}</span>
+        <span style="height:14px;background:#EDE9DF;border-radius:4px;overflow:hidden;display:block"><span style="display:block;height:100%;background:#1F1D1A;border-radius:4px;width:{{ s.w }}"></span></span>
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;color:#1F1D1A">{{ s.val }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <h2 style="font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-0.015em;margin:56px 0 6px">Vast host identity</h2>
+  <p style="font-size:13.5px;color:#6B675E;margin:0 0 24px;max-width:620px">How much does the identity of the individual machine host matter on the Vast marketplace, beyond everything else we observe?</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;max-width:760px">
+    <div style="border:1px solid #E8E4DB;border-radius:10px;padding:18px 20px"><div style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500">0.41</div><div style="font-size:11.5px;color:#6B675E;margin-top:3px">ICC — intraclass correlation</div></div>
+    <div style="border:1px solid #E8E4DB;border-radius:10px;padding:18px 20px"><div style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500">1,247</div><div style="font-size:11.5px;color:#6B675E;margin-top:3px">Hosts above tenure threshold</div></div>
+    <div style="border:1px solid #E8E4DB;border-radius:10px;padding:18px 20px"><div style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500">38,410</div><div style="font-size:11.5px;color:#6B675E;margin-top:3px">Host-days observed</div></div>
+    <div style="border:1px solid #E8E4DB;border-radius:10px;padding:18px 20px"><div style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500">+0.087</div><div style="font-size:11.5px;color:#6B675E;margin-top:3px">Fixed-effects R² increment</div></div>
+  </div>
+  <p style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin:18px 0 0">host tenure: min 3 · median 41 · max 212 days</p>
+  <button onClick="{{ toggleIcc }}" style="border:none;background:none;cursor:pointer;padding:0;margin-top:16px;font-size:13px;color:#1F1D1A;text-decoration:underline;text-decoration-color:#C9C2B4;text-underline-offset:3px" style-hover="color:#C15F3C">{{ iccToggleLabel }}</button>
+  <sc-if value="{{ iccOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:14px;border:1px solid #EFEBE1;border-radius:10px;padding:16px 20px;max-width:420px">
+      <sc-for list="{{ iccRows }}" as="r" hint-placeholder-count="5">
+        <div style="display:flex;justify-content:space-between;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;padding:5px 0;color:#6B675E"><span>≥ {{ r.days }} days</span><span style="color:#1F1D1A">ICC {{ r.icc }}</span><span>n = {{ r.n }}</span></div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <div style="background:#FBF4EE;border:1px solid #E8D5C9;border-radius:14px;padding:26px 30px;margin-top:56px">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#C15F3C;margin-bottom:14px">Caveats — read before interpreting</div>
+    <ul style="margin:0;padding-left:18px;font-size:13.5px;color:#6B675E;line-height:1.8">
+      <li>Holdout R² is computed on held-out days, not held-out hosts — host leakage is possible.</li>
+      <li>SHAP attribution is correlational; it does not identify causal price drivers.</li>
+      <li>The bound applies to this SKU and window only; it does not generalize across SKUs.</li>
+      <li>Feature availability differs by provider — richer features are Vast-skewed.</li>
+      <li>Quoted prices, not transactions; a model of list prices is not a model of fills.</li>
+    </ul>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMethod }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Methodology" style="padding:72px 0 90px">
+  <div style="max-width:720px;margin-bottom:56px">
+    <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B675E;margin-bottom:16px">06 · Methodology</div>
+    <h1 style="font-family:'Newsreader',Georgia,serif;font-size:44px;font-weight:500;letter-spacing:-0.02em;margin:0 0 26px;line-height:1.1">How the residual is measured, and why it is the finding.</h1>
+    <div style="display:flex;gap:0;border-top:1px solid #E8E4DB;border-bottom:1px solid #E8E4DB">
+      <div style="padding:16px 28px 16px 0"><div style="font-family:'Newsreader',Georgia,serif;font-size:20px;font-weight:500">4</div><div style="font-size:11px;color:#6B675E">providers tracked</div></div>
+      <div style="padding:16px 28px;border-left:1px solid #E8E4DB"><div style="font-family:'Newsreader',Georgia,serif;font-size:20px;font-weight:500">2×</div><div style="font-size:11px;color:#6B675E">collections per day</div></div>
+      <div style="padding:16px 28px;border-left:1px solid #E8E4DB"><div style="font-family:'Newsreader',Georgia,serif;font-size:20px;font-weight:500">Sequential ANOVA</div><div style="font-size:11px;color:#6B675E">variance model</div></div>
+      <div style="padding:16px 0 16px 28px;border-left:1px solid #E8E4DB"><div style="font-family:'Newsreader',Georgia,serif;font-size:20px;font-weight:500;color:#C15F3C">60–82%</div><div style="font-size:11px;color:#6B675E">headline residual range</div></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:200px 1fr;gap:64px;align-items:start">
+    <nav style="position:sticky;top:84px" aria-label="Table of contents">
+      <sc-for list="{{ toc }}" as="t" hint-placeholder-count="8">
+        <button onClick="{{ t.go }}" style="display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:7px 0;font-size:12.5px;transition:color .15s;color:{{ t.color }};border-left:2px solid {{ t.border }};padding-left:12px" style-hover="color:#C15F3C">
+          <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;opacity:.6">{{ t.num }}</span>{{ t.label }}
+        </button>
+      </sc-for>
+    </nav>
+    <article style="max-width:660px">
+      <section ref="{{ sec0 }}" style="margin-bottom:64px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">01</span>Premise</h2>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0 0 14px">Basis is a variance-accounting study, not a price index. The pipeline is deliberately simple: collect quoted prices, normalize them into a canonical schema, and decompose the observed variance into observable factors versus a residual. The residual is the finding.</p>
+        <blockquote style="margin:24px 0;padding:0 0 0 24px;border-left:2px solid #C15F3C;font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:19px;line-height:1.5;color:#1F1D1A">If a benchmark designer can't tell you which adjustments produced the headline number, the headline number is doing the wrong job.</blockquote>
+      </section>
+      <section ref="{{ sec1 }}" style="margin-bottom:64px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">02</span>Data collection</h2>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0 0 22px">Prices are collected twice daily from four source APIs — Vast.ai REST, RunPod GraphQL, AWS Spot price history, and TensorDock REST. Raw responses are stored immutably, forever: every derived number can be traced back to an original payload.</p>
+        <div style="display:flex;align-items:stretch;gap:0">
+          <sc-for list="{{ pipeline }}" as="p" hint-placeholder-count="5">
+            <div style="display:flex;align-items:stretch;flex:1;min-width:0">
+              <div style="flex:1;border:1px solid #E8E4DB;border-radius:10px;padding:14px 12px;background:#FFFFFF;min-width:0">
+                <div style="font-size:12.5px;font-weight:600;margin-bottom:5px">{{ p.name }}</div>
+                <div style="font-size:10.5px;color:#6B675E;line-height:1.45;margin-bottom:8px">{{ p.desc }}</div>
+                <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;color:#C15F3C">{{ p.table }}</div>
+              </div>
+              <sc-if value="{{ p.arrow }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;padding:0 5px;color:#A09B90;font-size:12px">→</div></sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+      <section ref="{{ sec2 }}" style="margin-bottom:64px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">03</span>Canonical schema</h2>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0">Normalization is conservative and rule-based. A reported GPU string either matches a known rule and maps to one of 96 canonical SKUs, or it is skipped and logged — never guessed. Missing values remain an explicit <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px">UNKNOWN</span> group rather than being imputed; missing data is a category, not a gap.</p>
+      </section>
+      <section ref="{{ sec3 }}" style="margin-bottom:64px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">04</span>Dispersion metrics</h2>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0">Spread is summarized by median and interquartile range, market-wide and per provider. A (day, SKU) pair enters the analysis only with at least three offers — below that, a single listing can masquerade as a market. Thin samples are excluded rather than smoothed.</p>
+      </section>
+      <section ref="{{ sec4 }}" style="margin-bottom:64px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">05</span>Basis decomposition</h2>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0 0 22px">Sequential ANOVA, in fixed model order. Each factor is credited with the variance it explains after the factors before it.</p>
+        <div style="display:flex;gap:0;align-items:center;margin-bottom:22px;flex-wrap:wrap">
+          <sc-for list="{{ chain }}" as="c" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center">
+              <div style="border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }};border-radius:999px;padding:9px 16px;text-align:center">
+                <div style="font-size:12.5px;font-weight:600;white-space:nowrap">{{ c.name }}</div>
+                <div style="font-size:9.5px;opacity:.7;white-space:nowrap">{{ c.note }}</div>
+              </div>
+              <sc-if value="{{ c.arrow }}" hint-placeholder-val="{{ true }}"><span style="padding:0 7px;color:#A09B90;font-size:12px">→</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0 0 14px"><span style="color:#1F1D1A;font-weight:500">Order dependence.</span> Reordering the factors redistributes credit among them — but never changes the residual. What the four factors jointly explain is fixed; only the story of who gets credit shifts.</p>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0"><span style="color:#1F1D1A;font-weight:500">Why log prices.</span> A $0.10 gap means something different at $0.30/hr than at $6/hr. Ratios, not absolute differences, are the meaningful fungibility metric — so the model works in log space.</p>
+      </section>
+      <section ref="{{ sec5 }}" style="margin-bottom:64px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">06</span>Limitations</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <sc-for list="{{ limits }}" as="l" hint-placeholder-count="4">
+            <div style="border:1px solid #E8E4DB;border-radius:10px;padding:20px 22px">
+              <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#C15F3C;margin-bottom:8px">{{ l.num }}</div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:6px">{{ l.name }}</div>
+              <div style="font-size:12.5px;color:#6B675E;line-height:1.6">{{ l.desc }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+      <section ref="{{ sec6 }}" style="margin-bottom:64px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">07</span>What the residual means</h2>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0 0 26px">The residual is the <em>basis risk</em> a compute benchmark would have to absorb. Roughly 60% of log-price variance is unexplained with marketplace listings included — around 82% with them excluded. Either way, most of the price of a GPU-hour is not accounted for by where it is, how it's committed, who sells it, or what's bundled with it.</p>
+        <div style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:14px;padding:30px;text-align:center">
+          <svg viewBox="0 0 360 200" style="width:340px;max-width:100%;display:inline-block" role="img" aria-label="Gauge filled to the headline residual value">
+            <path d="{{ gauge.bg }}" fill="none" stroke="#EDE9DF" stroke-width="16" stroke-linecap="round"></path>
+            <path d="{{ gauge.fill }}" fill="none" stroke="#C15F3C" stroke-width="16" stroke-linecap="round"></path>
+            <text x="180" y="150" text-anchor="middle" font-family="'Newsreader',Georgia,serif" font-size="52" font-weight="500" fill="#1F1D1A" letter-spacing="-2">{{ gauge.val }}</text>
+            <text x="180" y="176" text-anchor="middle" font-size="11" fill="#6B675E">of log-price variance unexplained · {{ sku }}</text>
+          </svg>
+        </div>
+      </section>
+      <section ref="{{ sec7 }}" style="margin-bottom:20px">
+        <h2 style="font-family:'Newsreader',Georgia,serif;font-size:28px;font-weight:500;margin:0 0 16px"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#A09B90;margin-right:12px">08</span>Same data, two framings</h2>
+        <p style="font-size:15px;color:#3D3A34;line-height:1.75;margin:0 0 26px">The identical decomposition, rendered two ways. The donut buries the residual as just another slice; the bar gives it its true footprint. Chart grammar is an editorial decision.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="border:1px solid #E8E4DB;border-radius:14px;padding:24px;background:#FFFFFF">
+            <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;margin-bottom:18px">The bar — residual-first</div>
+            <div style="display:flex;height:44px;border-radius:8px;overflow:hidden">
+              <sc-for list="{{ dec.segs }}" as="g" hint-placeholder-count="5">
+                <div title="{{ g.tip }}" style="width:{{ g.w }};background:{{ g.bg }}"></div>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#6B675E;margin-top:14px;line-height:1.5">The residual occupies {{ dec.resPct }} of the axis — exactly its share of the variance.</div>
+          </div>
+          <div style="border:1px solid #E8E4DB;border-radius:14px;padding:24px;background:#FFFFFF">
+            <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E;margin-bottom:18px">The donut — residual-buried</div>
+            <div style="display:flex;align-items:center;gap:20px">
+              <svg viewBox="0 0 160 160" style="width:110px" role="img" aria-label="The same decomposition as a donut chart">
+                <sc-for list="{{ donut }}" as="d" hint-placeholder-count="5">
+                  <circle cx="80" cy="80" r="58" fill="none" stroke="{{ d.color }}" stroke-width="26" stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.off }}" transform="rotate(-90 80 80)"></circle>
+                </sc-for>
+              </svg>
+              <div style="font-size:12px;color:#6B675E;line-height:1.5">Just another slice among five — the finding disappears into the palette.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </article>
+  </div>
+</div>
+</sc-if>
+</main>
+
+<sc-if value="{{ drawer }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(31,29,26,.28);z-index:70" onClick="{{ closeDrawer }}"></div>
+  <aside style="position:fixed;top:0;right:0;bottom:0;width:440px;background:#FAF9F5;border-left:1px solid #E8E4DB;z-index:71;display:flex;flex-direction:column;box-shadow:-24px 0 60px rgba(31,29,26,.12)" aria-label="Contributing observations">
+    <div style="padding:22px 26px;border-bottom:1px solid #E8E4DB;display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B675E">Contributing observations</div>
+        <div style="font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:500;margin-top:4px">{{ sku }} · {{ dec.date }}</div>
+        <div style="font-size:12px;color:#A09B90;margin-top:2px">{{ drawerCount }} offers</div>
+      </div>
+      <button onClick="{{ closeDrawer }}" aria-label="Close" style="border:none;background:none;cursor:pointer;font-size:20px;color:#6B675E;padding:4px;line-height:1" style-hover="color:#C15F3C">×</button>
+    </div>
+    <div style="padding:14px 26px;border-bottom:1px solid #EFEBE1">
+      <span style="position:relative;display:inline-flex;align-items:center">
+        <select value="{{ offerSort }}" onChange="{{ setOfferSort }}" aria-label="Sort offers" style="appearance:none;-webkit-appearance:none;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;padding:8px 32px 8px 14px;border:1px solid #E0DBD0;border-radius:999px;background:#FFFFFF;color:#1F1D1A;cursor:pointer">
+          <option value="asc">Price ascending</option><option value="desc">Price descending</option><option value="prov">Provider A→Z</option>
+        </select>
+        <span style="position:absolute;right:13px;pointer-events:none;font-size:8px;color:#6B675E">▼</span>
+      </span>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:18px 26px;display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ drawerOffers }}" as="o" hint-placeholder-count="6">
+        <div style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:12px;padding:16px 18px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="font-size:13.5px;font-weight:600">{{ o.provider }}</span>
+            <span style="font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;border:1px solid #E0DBD0;border-radius:999px;padding:2px 8px;color:#6B675E">{{ o.commit }}</span>
+            <sc-if value="{{ o.hasFlag }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 8px;background:#F6EAE2;color:#C15F3C">{{ o.flag }}</span></sc-if>
+            <span style="margin-left:auto;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:14px;font-weight:500">{{ o.price }}</span>
+          </div>
+          <div style="font-size:12px;color:#6B675E;margin-top:9px">{{ o.region }}</div>
+          <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:#A09B90;margin-top:4px">{{ o.bundle }}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px;border-top:1px solid #F4F1EA;padding-top:10px">
+            <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;color:#A09B90">#{{ o.id }}</span>
+            <button onClick="{{ o.inspect }}" style="border:none;background:none;cursor:pointer;font-size:12px;color:#1F1D1A;padding:0;text-decoration:underline;text-decoration-color:#C9C2B4;text-underline-offset:3px" style-hover="color:#C15F3C">Inspect provenance →</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </aside>
+</sc-if>
+
+<sc-if value="{{ hasInspect }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(31,29,26,.45);z-index:90;display:flex;align-items:center;justify-content:center;padding:32px" onClick="{{ closeInspect }}">
+    <div style="background:#FAF9F5;border-radius:16px;max-width:880px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 40px 100px rgba(31,29,26,.3)" onClick="{{ stop }}" role="dialog" aria-label="Raw observation audit trail">
+      <div style="padding:26px 34px;border-bottom:1px solid #E8E4DB;display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:#FAF9F5;border-radius:16px 16px 0 0;z-index:2">
+        <div>
+          <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#C15F3C">Audit trail</div>
+          <div style="font-family:'Newsreader',Georgia,serif;font-size:24px;font-weight:500;margin-top:5px">Observation #{{ insp.id }}</div>
+          <div style="font-size:12.5px;color:#6B675E;margin-top:3px">{{ insp.provider }} · collected {{ insp.ts }}</div>
+        </div>
+        <button onClick="{{ closeInspect }}" aria-label="Close" style="border:none;background:none;cursor:pointer;font-size:22px;color:#6B675E;padding:4px;line-height:1" style-hover="color:#C15F3C">×</button>
+      </div>
+      <div style="padding:26px 34px">
+        <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:28px;align-items:end;background:#FFFFFF;border:1px solid #E8E4DB;border-radius:12px;padding:20px 24px">
+          <div><div style="font-family:'Newsreader',Georgia,serif;font-size:38px;font-weight:500;letter-spacing:-0.02em">{{ insp.price }}</div><div style="font-size:10.5px;color:#A09B90">USD per GPU-hour</div></div>
+          <div><div style="font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#A09B90;margin-bottom:4px">Source</div><div style="font-size:13px">{{ insp.provider }}<div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:#6B675E">{{ insp.sourceKey }}</div></div></div>
+          <div><div style="font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#A09B90;margin-bottom:4px">Reported → canonical</div><div style="font-size:12px;color:#6B675E">{{ insp.gpuRaw }}</div><div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;color:#1F1D1A">→ {{ sku }}</div></div>
+          <div><div style="font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#A09B90;margin-bottom:4px">Region · commitment</div><div style="font-size:13px">{{ insp.region }}</div><div style="font-size:12px;color:#6B675E">{{ insp.commit }}</div></div>
+        </div>
+
+        <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6B675E;margin:30px 0 14px">Normalization pipeline</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <sc-for list="{{ insp.stages }}" as="st" hint-placeholder-count="4">
+            <div style="border:1px solid #E8E4DB;border-radius:12px;padding:18px 20px;background:#FFFFFF">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:#A09B90">{{ st.n }}</span>
+                <span style="font-size:13.5px;font-weight:600">{{ st.name }}</span>
+                <span style="margin-left:auto;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 9px;background:{{ st.badgeBg }};color:{{ st.badgeFg }}">{{ st.status }}</span>
+              </div>
+              <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;color:#6B675E;line-height:1.5">{{ st.from }} <span style="color:#C15F3C">→</span> <span style="color:#1F1D1A">{{ st.to }}</span></div>
+              <div style="display:flex;gap:6px;margin-top:11px;flex-wrap:wrap">
+                <sc-for list="{{ st.chips }}" as="ch" hint-placeholder-count="2"><span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;border:1px solid #EFEBE1;border-radius:999px;padding:3px 9px;color:#6B675E">{{ ch }}</span></sc-for>
+              </div>
+              <div style="margin-top:12px;border-top:1px solid #F4F1EA;padding-top:10px">
+                <sc-for list="{{ st.steps }}" as="sp" hint-placeholder-count="3">
+                  <div style="display:flex;gap:9px;font-size:11.5px;color:#6B675E;padding:2.5px 0"><span style="color:#C9C2B4;font-family:ui-monospace,Menlo,monospace;font-size:10px">{{ sp.n }}</span>{{ sp.text }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6B675E;margin:30px 0 14px">Bundle field provenance</div>
+        <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border:1px solid #E8E4DB;border-radius:12px;overflow:hidden">
+          <thead><tr>
+            <th style="text-align:left;padding:11px 18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#A09B90;border-bottom:1px solid #EFEBE1;font-weight:500">Canonical field</th>
+            <th style="text-align:left;padding:11px 18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#A09B90;border-bottom:1px solid #EFEBE1;font-weight:500">Source field</th>
+            <th style="text-align:left;padding:11px 18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#A09B90;border-bottom:1px solid #EFEBE1;font-weight:500">Transformation</th>
+            <th style="text-align:right;padding:11px 18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#A09B90;border-bottom:1px solid #EFEBE1;font-weight:500">Result</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ insp.fields }}" as="f" hint-placeholder-count="4">
+              <tr><td style="padding:10px 18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;border-bottom:1px solid #F4F1EA">{{ f.canon }}</td>
+              <td style="padding:10px 18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:#6B675E;border-bottom:1px solid #F4F1EA">{{ f.src }}</td>
+              <td style="padding:10px 18px;font-size:12px;color:#6B675E;border-bottom:1px solid #F4F1EA">{{ f.xform }}</td>
+              <td style="padding:10px 18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;text-align:right;border-bottom:1px solid #F4F1EA">{{ f.result }}</td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:30px 0 34px">
+          <div>
+            <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6B675E;margin-bottom:10px">Raw provider payload — what the collector saw</div>
+            <pre style="margin:0;background:#1F1D1A;color:#D8D2C5;border-radius:12px;padding:18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.6;overflow:auto;max-height:260px">{{ insp.raw }}</pre>
+          </div>
+          <div>
+            <div style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6B675E;margin-bottom:10px">Provider metadata</div>
+            <pre style="margin:0;background:#1F1D1A;color:#D8D2C5;border-radius:12px;padding:18px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.6;overflow:auto;max-height:260px">{{ insp.meta }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<footer style="border-top:1px solid #E8E4DB;margin-top:20px">
+  <div style="max-width:1180px;margin:0 auto;padding:34px 40px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px">
+    <span style="font-size:12.5px;color:#6B675E"><span style="font-family:'Newsreader',Georgia,serif;font-weight:600;color:#1F1D1A;margin-right:10px">Basis</span>research artifact · public data · 2026</span>
+    <span style="font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;color:#A09B90">Not a price aggregator · Not a derivatives engine</span>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;excludeVast&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Analysis&quot;},&quot;showOutlierLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Charts&quot;}}">
+class Component extends DCLogic {
+  state = { page: 'findings', sku: 'h100_sxm_80gb', sortCol: 'residual', sortDir: -1, factor: 'provider', drawer: false, inspect: null, offerSort: 'asc', tocIdx: 0, iccOpen: false, progress: 0 };
+
+  SKUS = [
+    ['h100_sxm_80gb','Hopper',48210,4,2.42,60.3],['rtx_4090_24gb','Consumer',62340,3,0.34,71.2],
+    ['h100_pcie_80gb','Hopper',31770,4,1.98,63.8],['rtx_3090_24gb','Consumer',41230,2,0.19,76.9],
+    ['a100_sxm_80gb','Ampere',28904,4,1.31,58.4],['a6000_48gb','Workstation',22110,3,0.51,72.4],
+    ['a100_pcie_40gb','Ampere',19412,3,0.95,66.1],['rtx_4080_16gb','Consumer',18004,2,0.24,74.0],
+    ['l40s_48gb','Ada',15602,3,0.79,68.7],['t4_16gb','Legacy',12490,2,0.09,82.6],
+    ['v100_sxm_32gb','Volta',9310,2,0.21,79.8],['h200_sxm_141gb','Hopper',8120,3,3.15,54.2],
+    ['a40_48gb','Ampere',7204,2,0.44,67.5],['rtx_5090_32gb','Blackwell',6120,2,0.61,62.9],
+    ['b200_sxm_192gb','Blackwell',221,2,5.60,null],['mi300x_192gb','AMD',180,2,2.85,null],
+  ].map(a => ({ id: a[0], fam: a[1], offers: a[2], prov: a[3], med: a[4], res: a[5] }));
+
+  componentDidMount() {
+    const pageNames = ['findings', 'dispersion', 'basis', 'providers', 'explainability', 'methodology'];
+    const upd = {};
+    (location.hash || '').slice(1).split('/').forEach(tok => {
+      if (pageNames.includes(tok)) upd.page = tok;
+      if (this.SKUS.some(k => k.id === tok)) upd.sku = tok;
+    });
+    if (Object.keys(upd).length) this.setState(upd);
+    this.secEls = this.secEls || [];
+    this.onScroll = () => {
+      if (this.state.page !== 'methodology') return;
+      const y = window.scrollY + 130;
+      let idx = 0;
+      (this.secEls || []).forEach((el, i) => { if (el && el.offsetTop <= y) idx = i; });
+      const doc = document.documentElement;
+      const p = Math.min(1, window.scrollY / Math.max(1, doc.scrollHeight - window.innerHeight));
+      if (idx !== this.state.tocIdx || Math.abs(p - this.state.progress) > 0.01) this.setState({ tocIdx: idx, progress: p });
+    };
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+  }
+  componentWillUnmount() { window.removeEventListener('scroll', this.onScroll); }
+
+  rng(seed) { let s = (seed >>> 0) || 1; return () => (((s = (Math.imul(s, 1103515245) + 12345) >>> 0)) / 4294967296); }
+  med(a) { const b = [...a].sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : 0; }
+  q(a, p) { const b = [...a].sort((x, y) => x - y); if (!b.length) return 0; const i = (b.length - 1) * p, lo = Math.floor(i); return b[lo] + ((b[Math.ceil(i)] || b[lo]) - b[lo]) * (i - lo); }
+  dl(i) { return new Date(2026, 2, 1 + i).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+  fmt(n) { return n.toLocaleString('en-US'); }
+
+  seriesFor(sku, ex) {
+    const base = Math.min(90, (sku.res ?? 60) + (ex ? 21.8 : 0));
+    const r = this.rng(sku.id.length * 7919 + sku.id.charCodeAt(0));
+    const out = [];
+    for (let i = 0; i < 120; i++) {
+      let v = base + (r() - 0.5) * 8 + Math.sin(i / 8.5) * 2.2;
+      if (i === 23 || i === 67 || i === 98) v = base + 13 + r() * 8;
+      out.push(Math.min(97, Math.max(3, v)));
+    }
+    return out;
+  }
+
+  offersFor(sku) {
+    const r = this.rng(sku.id.charCodeAt(2) * 977 + sku.id.length * 31);
+    const provs = [['Vast.ai', .75, -0.35], ['RunPod', .12, -0.08], ['AWS Spot', .07, .62], ['TensorDock', .06, -0.02]];
+    const regions = ['US-East', 'EU-West', 'Asia-Pacific', 'US-West'];
+    const commits = ['on-demand', 'spot', 'reserved'];
+    const n = sku.res == null ? 4 : 96;
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const x = r(); let p = provs[3], acc = 0;
+      for (const pr of provs) { acc += pr[1]; if (x < acc) { p = pr; break; } }
+      const price = sku.med * Math.exp(p[2] + (r() - 0.5) * 1.15);
+      const region = r() < 0.13 ? 'UNKNOWN' : regions[Math.floor(r() * 4)];
+      const commit = p[0] === 'AWS Spot' ? 'spot' : (r() < 0.08 ? 'UNKNOWN' : commits[Math.floor(r() * 3)]);
+      out.push({ id: 100000 + Math.floor(r() * 899999), provider: p[0], price, region, commit, vcpu: Math.round(4 + r() * 60), ram: Math.round(16 + r() * 480), disk: Math.round(50 + r() * 1900), tier: r() < 0.3 ? 'UNKNOWN' : (r() < 0.5 ? 'verified' : 'datacenter') });
+    }
+    return out;
+  }
+
+  decompFor(sku, ex) {
+    if (sku.res == null) return null;
+    const res = Math.min(93, sku.res + (ex ? 21.8 : 0));
+    const w = [7.8, 5.4, 14.6, 11.9], tw = 39.7, rest = 100 - res;
+    const p = w.map(x => x / tw * rest);
+    return { parts: p, res };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const ex = this.props.excludeVast ?? false;
+    const showOutlierLabels = this.props.showOutlierLabels ?? true;
+    const sku = this.SKUS.find(k => k.id === s.sku) || this.SKUS[0];
+    const skuLabel = sku.id.replace(/_/g, ' ').toUpperCase();
+    const thin = sku.res == null;
+    const FC = { Region: '#8A93A1', Commitment: '#98A084', Provider: '#AC9282', Bundle: '#C5B8A3', Residual: '#C15F3C' };
+
+    const pages = [['findings', 'Findings'], ['dispersion', 'Dispersion'], ['basis', 'Basis'], ['providers', 'Providers'], ['explainability', 'Explainability'], ['methodology', 'Methodology']];
+    const go = p => () => { this.setState({ page: p, drawer: false, inspect: null }); window.scrollTo(0, 0); try { history.replaceState(null, '', '#' + p + '/' + this.state.sku); } catch (x) {} };
+    const nav = pages.map((p, i) => ({ num: '0' + (i + 1), label: p[1], go: go(p[0]), bg: s.page === p[0] ? '#EFEBE1' : 'transparent', color: s.page === p[0] ? '#1F1D1A' : '#6B675E' }));
+
+    // hero chart
+    const pts = this.seriesFor(sku, ex);
+    const N = pts.length, W = 640, H = 230, pl = 36, pr = 8, pt = 12, pb = 28;
+    const px = i => pl + i / (N - 1) * (W - pl - pr);
+    const py = v => pt + (1 - v / 100) * (H - pt - pb);
+    const medV = this.med(pts), iqr = this.q(pts, .75) - this.q(pts, .25), thr = medV + 1.5 * iqr;
+    const outliers = pts.map((v, i) => ({ v, i })).filter(d => d.v > thr).map(d => ({ x: px(d.i).toFixed(1), y: py(d.v).toFixed(1), ly: (py(d.v) - 10).toFixed(1), label: this.dl(d.i) + ' · ' + d.v.toFixed(0) + '%' }));
+    const hero = {
+      path: 'M' + pts.map((v, i) => px(i).toFixed(1) + ',' + py(v).toFixed(1)).join(' L'),
+      medY: py(medV).toFixed(1), medLabelY: (py(medV) - 6).toFixed(1), medLabel: medV.toFixed(1) + '%',
+      outliers,
+      grid: [0, 25, 50, 75, 100].map(v => ({ y: py(v).toFixed(1), ty: (py(v) + 3).toFixed(1), label: v + '%' })),
+      xticks: [0, 30, 60, 90, 119].map(i => ({ x: px(i).toFixed(1), label: this.dl(i) })),
+    };
+
+    // fungibility table
+    const heads = [['sku', 'SKU', 'left'], ['offers', 'Offers', 'right'], ['prov', 'Providers', 'right'], ['med', 'Median $/hr', 'right'], ['residual', 'Residual', 'right']];
+    const sortLabelMap = { sku: 'SKU', offers: 'offer count', prov: 'provider count', med: 'median price', residual: 'residual' };
+    const tableHeads = heads.map(h => ({
+      label: h[1], align: h[2],
+      color: s.sortCol === h[0] ? '#1F1D1A' : '#6B675E',
+      arrow: s.sortCol === h[0] ? (s.sortDir === 1 ? '↑' : '↓') : '',
+      aria: s.sortCol === h[0] ? (s.sortDir === 1 ? 'ascending' : 'descending') : 'none',
+      sort: () => this.setState(st => ({ sortCol: h[0], sortDir: st.sortCol === h[0] ? -st.sortDir : (h[0] === 'sku' ? 1 : -1) })),
+    }));
+    const sorted = [...this.SKUS].sort((a, b) => {
+      const c = s.sortCol, d = s.sortDir;
+      if (c === 'sku') return d * a.id.localeCompare(b.id);
+      if (c === 'residual') { const av = a.res ?? -1, bv = b.res ?? -1; return d * (av - bv); }
+      return d * (a[c === 'med' ? 'med' : c] - b[c === 'med' ? 'med' : c]);
+    });
+    const dr = this.rng(7);
+    const tableRows = sorted.map(k => {
+      const r = k.res == null ? null : Math.min(93, k.res + (ex ? 21.8 : 0));
+      return { id: k.id, fam: k.fam, date: 'Jul ' + (28 + Math.floor(dr() * 3)), offers: this.fmt(k.offers), prov: String(k.prov), med: '$' + k.med.toFixed(2), hasRes: r != null, noRes: r == null, res: r == null ? '' : r.toFixed(1) + '%', resW: r == null ? '0%' : r.toFixed(1) + '%' };
+    });
+
+    // dispersion
+    const drr = this.rng(sku.id.charCodeAt(1) * 131);
+    const days = 90, DW = 680, DH = 270, dpl = 46, dpr = 6, dpt = 10, dpb = 26;
+    const dmed = [], dlo = [], dhi = [];
+    for (let i = 0; i < days; i++) {
+      const m = sku.med * (1 + 0.12 * Math.sin(i / 11) + (drr() - .5) * .06);
+      dmed.push(m); dlo.push(m * (0.78 + (drr() - .5) * .1)); dhi.push(m * (1.35 + (drr() - .5) * .2));
+    }
+    const yMax = Math.max(...dhi) * 1.1;
+    const dx = i => dpl + i / (days - 1) * (DW - dpl - dpr);
+    const dy = v => dpt + (1 - v / yMax) * (DH - dpt - dpb);
+    const disp = {
+      counter: thin ? '' : '90 days · ' + this.fmt(sku.offers) + ' offers',
+      thin: String(sku.offers),
+      band: 'M' + dhi.map((v, i) => dx(i).toFixed(1) + ',' + dy(v).toFixed(1)).join(' L') + ' L' + dlo.map((v, i) => dx(days - 1 - i).toFixed(1) + ',' + dy(dlo[days - 1 - i]).toFixed(1)).join(' L') + ' Z',
+      median: 'M' + dmed.map((v, i) => dx(i).toFixed(1) + ',' + dy(v).toFixed(1)).join(' L'),
+      yticks: [1, 2, 3, 4].map(k => { const v = yMax * k / 4; return { y: dy(v).toFixed(1), ty: (dy(v) + 3).toFixed(1), label: '$' + (v >= 2 ? v.toFixed(1) : v.toFixed(2)) }; }),
+      xticks: [0, 22, 44, 66, 89].map(i => ({ x: dx(i).toFixed(1), label: this.dl(i + 30) })),
+    };
+
+    // decomposition
+    const dcp = this.decompFor(sku, ex);
+    const offersAll = this.offersFor(sku);
+    const offers = ex ? offersAll.filter(o => o.provider !== 'Vast.ai') : offersAll;
+    const names = ['Region', 'Commitment', 'Provider', 'Bundle', 'Residual'];
+    const interp = {
+      Region: 'Country and locality groupings preserved from the normalized quote.',
+      Commitment: 'On-demand, spot or reserved terms as reported by the provider.',
+      Provider: 'Identity of the platform quoting the price.',
+      Bundle: 'vCPU, RAM and disk resources bundled with the GPU.',
+      Residual: 'Everything the four observable factors do not explain on that day.',
+    };
+    let dec = { meta: 'accumulating observations', segs: [], rows: [], date: '', caption: '', alt: '', resPct: '' };
+    if (dcp) {
+      const vals = [...dcp.parts, dcp.res];
+      let cum = 0;
+      dec = {
+        meta: 'latest decomposition 2026-07-29 · ' + offers.length + ' contributing offers · ' + sku.id,
+        date: '2026-07-29',
+        caption: 'total log-price variance 0.412 · ' + (100 - dcp.res).toFixed(1) + '% explained',
+        resPct: dcp.res.toFixed(1) + '%',
+        alt: names.map((n, i) => n + ' ' + vals[i].toFixed(1) + '%').join(', '),
+        segs: names.map((n, i) => {
+          const v = vals[i], isRes = n === 'Residual';
+          return { name: isRes ? 'Residual · Unexplained' : n, pct: v.toFixed(1) + '%', w: v + '%', bg: FC[n], fg: '#FAF9F5', wide: v > 7, numSize: isRes ? '26px' : '15px', tip: n + ': ' + v.toFixed(2) + '% of log-price variance' };
+        }),
+        rows: names.map((n, i) => {
+          const v = vals[i]; cum += v; const isRes = n === 'Residual';
+          return { name: n, bg: FC[n], share: v.toFixed(1) + '%', cum: cum.toFixed(1) + '%', cumW: cum.toFixed(1) + '%', interp: interp[n], weight: isRes ? '600' : '400', rowBg: isRes ? '#FBF4EE' : 'transparent', shareColor: isRes ? '#C15F3C' : '#1F1D1A' };
+        }),
+      };
+    }
+
+    // strip plot
+    const f = s.factor;
+    const scores = offersAll.map(o => o.vcpu + o.ram / 8).sort((a, b) => a - b);
+    const qt = p => scores[Math.min(scores.length - 1, Math.floor(scores.length * p))];
+    const q1 = qt(.25), q2 = qt(.5), q3 = qt(.75);
+    const sizeQ = o => { const sc = o.vcpu + o.ram / 8; return sc < q1 ? 'Small' : sc < q2 ? 'Medium' : sc < q3 ? 'Large' : 'X-Large'; };
+    const keyOf = o => f === 'region' ? o.region : f === 'commitment' ? o.commit : f === 'provider' ? o.provider : f === 'bundle' ? sizeQ(o) : o.provider + ' · ' + o.commit;
+    const byKey = {};
+    offers.forEach(o => { const k = keyOf(o); (byKey[k] = byKey[k] || []).push(o); });
+    let keys = Object.keys(byKey).sort((a, b) => byKey[b].length - byKey[a].length);
+    const unk = keys.filter(k => k.includes('UNKNOWN'));
+    keys = keys.filter(k => !k.includes('UNKNOWN')).slice(0, unk.length ? 6 : 7).concat(unk.slice(0, 1));
+    const SW = 760, SH = 330, spt = 14, spb = 44;
+    const shown = keys.flatMap(k => byKey[k]);
+    const loP = Math.min(...shown.map(o => o.price)) * 0.85, hiP = Math.max(...shown.map(o => o.price)) * 1.18;
+    const sy = p => spt + (1 - (Math.log(p) - Math.log(loP)) / (Math.log(hiP) - Math.log(loP))) * (SH - spt - spb);
+    const gw = (SW - 48) / keys.length;
+    const jr = this.rng(999);
+    const groups = keys.map((k, i) => {
+      const cx = 48 + (i + 0.5) * gw, arr = byKey[k].map(o => o.price);
+      const isU = k.includes('UNKNOWN');
+      return {
+        label: k.length > 15 ? k.slice(0, 14) + '…' : k, cx: cx.toFixed(1), n: byKey[k].length,
+        labelColor: isU ? '#C15F3C' : '#6B675E',
+        hasBand: arr.length >= 3,
+        bx: (cx - 22).toFixed(1), bx2: (cx + 22).toFixed(1),
+        by: sy(this.q(arr, .75)).toFixed(1), bh: Math.max(2, sy(this.q(arr, .25)) - sy(this.q(arr, .75))).toFixed(1),
+        my: sy(this.med(arr)).toFixed(1),
+      };
+    });
+    const dots = keys.flatMap((k, i) => {
+      const cx = 48 + (i + 0.5) * gw;
+      return byKey[k].map(o => ({
+        x: (cx + (jr() - 0.5) * Math.min(58, gw * 0.62)).toFixed(1), y: sy(o.price).toFixed(1),
+        open: () => this.setState({ inspect: o }),
+        tip: o.provider + ' · $' + o.price.toFixed(3) + '/hr · ' + o.commit + ' · ' + o.region,
+      }));
+    });
+    const chipDefs = [['region', 'Region'], ['commitment', 'Commitment'], ['provider', 'Provider'], ['bundle', 'Bundle'], ['residual', 'Residual (within cell)']];
+    const strip = {
+      groups, dots,
+      chips: chipDefs.map(c => ({ label: c[1], pick: () => this.setState({ factor: c[0] }), bg: f === c[0] ? '#1F1D1A' : '#FFFFFF', fg: f === c[0] ? '#FAF9F5' : '#6B675E', border: f === c[0] ? '#1F1D1A' : '#E0DBD0' })),
+      yticks: [0, 1, 2, 3].map(k => { const v = Math.exp(Math.log(loP) + (Math.log(hiP) - Math.log(loP)) * (k + 0.5) / 4); return { y: sy(v).toFixed(1), ty: (sy(v) + 3).toFixed(1), label: '$' + (v >= 2 ? v.toFixed(1) : v.toFixed(2)) }; }),
+    };
+
+    // drawer
+    const dOff = [...offers].sort((a, b) => s.offerSort === 'asc' ? a.price - b.price : s.offerSort === 'desc' ? b.price - a.price : a.provider.localeCompare(b.provider));
+    const minP = Math.min(...offers.map(o => o.price)), maxP = Math.max(...offers.map(o => o.price));
+    const drawerOffers = dOff.slice(0, 40).map(o => ({
+      provider: o.provider, commit: o.commit, price: '$' + o.price.toFixed(4),
+      hasFlag: o.price === minP || o.price === maxP, flag: o.price === minP ? 'low' : 'high',
+      region: o.region === 'UNKNOWN' ? 'region UNKNOWN' : o.region,
+      bundle: o.vcpu + ' vCPU · ' + o.ram + ' GB RAM · ' + o.disk + ' GB disk · ' + o.tier,
+      id: String(o.id), inspect: () => this.setState({ inspect: o }),
+    }));
+
+    // inspector
+    const o = s.inspect;
+    let insp = null;
+    if (o) {
+      const raw = 'NVIDIA ' + sku.id.replace(/_/g, ' ').toUpperCase().replace(' GB', 'GB');
+      const vram = (sku.id.match(/(\d+)gb/) || [0, '—'])[1] + ' GB';
+      const badge = st => st === 'Canonicalized' ? ['#EDF0E6', '#5C6B4A'] : st === 'Partial' ? ['#FBF4EE', '#C15F3C'] : ['#F0ECE2', '#6B675E'];
+      const mk = (n, name, status, from, to, chips, steps) => { const b = badge(status); return { n: '0' + n, name, status, from, to, chips, badgeBg: b[0], badgeFg: b[1], steps: steps.map((t, i) => ({ n: String(i + 1), text: t })) }; };
+      insp = {
+        id: String(o.id), provider: o.provider, ts: '2026-07-30 06:00:12 UTC', price: '$' + o.price.toFixed(4),
+        sourceKey: o.provider.toLowerCase().replace(/[^a-z]/g, '_'), gpuRaw: raw,
+        region: o.region, commit: o.commit,
+        stages: [
+          mk(1, 'GPU', 'Canonicalized', raw, sku.id, ['variant ' + (sku.id.includes('sxm') ? 'SXM' : 'PCIe'), 'VRAM ' + vram, 'rule gpu_name_map#' + (o.id % 90)], ['normalize whitespace, lowercase', 'strip vendor prefix "NVIDIA"', 'match variant + VRAM tokens', 'map to canonical SKU ' + sku.id]),
+          mk(2, 'Commitment', o.commit === 'UNKNOWN' ? 'Unknown' : 'Canonicalized', o.commit === 'UNKNOWN' ? '(absent)' : o.commit, o.commit, ['rule commit_enum#4'], o.commit === 'UNKNOWN' ? ['field absent in payload', 'assign explicit UNKNOWN — never imputed'] : ['read rental_type field', 'map to canonical enum ' + o.commit]),
+          mk(3, 'Region', o.region === 'UNKNOWN' ? 'Unknown' : 'Canonicalized', o.region === 'UNKNOWN' ? '(absent)' : o.region, o.region, ['rule geo_group#12'], o.region === 'UNKNOWN' ? ['geolocation null in payload', 'assign explicit UNKNOWN — never imputed'] : ['read geolocation field', 'group country → canonical region ' + o.region]),
+          mk(4, 'Bundle', o.tier === 'UNKNOWN' ? 'Partial' : 'Canonicalized', 'cpu_cores, mem_gb, disk_space', o.vcpu + ' vCPU · ' + o.ram + ' GB · ' + o.disk + ' GB', ['tier ' + o.tier], ['cast cpu_cores → integer vCPU', 'round mem_gb to whole GB', 'convert disk GiB → GB (×1.074)', o.tier === 'UNKNOWN' ? 'verification tier absent → UNKNOWN' : 'map verified flag → ' + o.tier]),
+        ],
+        fields: [
+          { canon: 'vcpu', src: 'cpu_cores', xform: 'integer cast', result: String(o.vcpu) },
+          { canon: 'ram_gb', src: 'mem_gb', xform: 'rounded to GB', result: String(o.ram) },
+          { canon: 'disk_gb', src: 'disk_space', xform: 'GiB → GB × 1.074', result: String(o.disk) },
+          { canon: 'verification_tier', src: 'verified', xform: 'enum map', result: o.tier },
+        ],
+        raw: JSON.stringify({ id: o.id, gpu_name: raw, dph_total: +o.price.toFixed(4), cpu_cores: o.vcpu, mem_gb: o.ram, disk_space: o.disk, geolocation: o.region === 'UNKNOWN' ? null : o.region, rental_type: o.commit === 'UNKNOWN' ? null : o.commit, verified: o.tier === 'UNKNOWN' ? null : o.tier, collected_at: '2026-07-30T06:00:12Z' }, null, 2),
+        meta: JSON.stringify({ source: o.provider, endpoint: '/api/v0/offers', schema_version: 3, collector: 'basis-collector@2.4.1', run_id: 'r_' + (o.id % 9999) }, null, 2),
+      };
+    }
+
+    // methodology
+    this.secEls = this.secEls || [];
+    const tocLabels = ['Premise', 'Data collection', 'Canonical schema', 'Dispersion metrics', 'Basis decomposition', 'Limitations', 'What the residual means', 'Two framings'];
+    const toc = tocLabels.map((l, i) => ({
+      num: '0' + (i + 1), label: l,
+      color: s.tocIdx === i ? '#1F1D1A' : '#A09B90', border: s.tocIdx === i ? '#C15F3C' : 'transparent',
+      go: () => { const el = this.secEls[i]; if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' }); },
+    }));
+    const secRefs = {};
+    for (let i = 0; i < 8; i++) secRefs['sec' + i] = (el) => { this.secEls[i] = el; };
+    const pipeline = [
+      { name: 'Collect', desc: 'Twice-daily pulls from four public APIs.', table: 'collector runs' },
+      { name: 'Store raw', desc: 'Untouched payloads, kept immutably forever.', table: 'raw_observations' },
+      { name: 'Normalize', desc: 'Rule-based mapping into the canonical schema.', table: 'canonical_offers' },
+      { name: 'Aggregate', desc: 'Daily medians, quartiles and counts per SKU.', table: 'daily_aggregates' },
+      { name: 'Decompose', desc: 'Sequential ANOVA on each (SKU, day).', table: 'basis_decomposition' },
+    ].map((p, i, a) => ({ ...p, arrow: i < a.length - 1 }));
+    const chain = [
+      { name: 'Step 1 · Region', note: 'where the machine is' }, { name: 'Step 2 · Commitment', note: 'how it is rented' },
+      { name: 'Step 3 · Provider', note: 'who quotes it' }, { name: 'Step 4 · Bundle', note: 'what comes with it' },
+      { name: 'Residual', note: 'what remains' },
+    ].map((c, i, a) => ({ ...c, arrow: i < a.length - 1, bg: i === 4 ? '#C15F3C' : '#FFFFFF', fg: i === 4 ? '#FAF9F5' : '#1F1D1A', border: i === 4 ? '#C15F3C' : '#E8E4DB' }));
+    const limits = [
+      { num: 'L·01', name: 'Quoted, not transacted', desc: 'List prices only. Posted quotes may never clear at the stated price.' },
+      { num: 'L·02', name: 'Selection bias', desc: 'Four providers are not the market; large private contracts are invisible here.' },
+      { num: 'L·03', name: 'Temporal coverage', desc: 'A months-long window. Supply shocks could reshape every estimate.' },
+      { num: 'L·04', name: 'Continuous factors', desc: 'Bundle resources are binned into quartiles; finer structure is flattened.' },
+    ];
+    const arc = (frac) => {
+      const cx = 180, cy = 138, r = 118, a0 = Math.PI, a1 = Math.PI + Math.PI * frac;
+      const p = a => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+      const [x0, y0] = p(a0), [x1, y1] = p(a1);
+      return 'M' + x0.toFixed(1) + ',' + y0.toFixed(1) + ' A' + r + ',' + r + ' 0 0 1 ' + x1.toFixed(1) + ',' + y1.toFixed(1);
+    };
+    const gRes = dcp ? dcp.res : 60.3;
+    const gauge = { bg: arc(1), fill: arc(gRes / 100), val: gRes.toFixed(0) + '%' };
+    let dCum = 0;
+    const C = 2 * Math.PI * 58;
+    const donut = dcp ? names.map((n, i) => {
+      const v = [...dcp.parts, dcp.res][i];
+      const seg = { color: FC[n], dash: (v / 100 * C).toFixed(1) + ' ' + C.toFixed(1), off: (-dCum / 100 * C).toFixed(1) };
+      dCum += v; return seg;
+    }) : [];
+
+    const shapData = [['host_reliability_score', .142], ['vcpu_per_gpu', .118], ['provider_key', .104], ['ram_gb_per_gpu', .097], ['dlperf_score', .081], ['region_country', .066], ['disk_gb', .052], ['commitment_type', .048], ['host_tenure_days', .041], ['inet_down_mbps', .033], ['verification_tier', .024], ['cuda_version', .011]];
+    const shapMax = shapData[0][1];
+    const resIncl = Math.min(93, (sku.res ?? 60.3));
+    const resExcl = Math.min(93, resIncl + 21.8);
+
+    return {
+      // shell
+      nav, sku: sku.id, skuLabel, windowLabel: '138-day window',
+      isFindings: s.page === 'findings', isDispersion: s.page === 'dispersion', isBasis: s.page === 'basis',
+      isProviders: s.page === 'providers', isExpl: s.page === 'explainability', isMethod: s.page === 'methodology',
+      goBasis: go('basis'), goMethod: go('methodology'),
+      progressW: (s.progress * 100).toFixed(1) + '%',
+      skuOptions: [...this.SKUS].sort((a, b) => b.offers - a.offers).map(k => ({ id: k.id, label: k.id + '  ·  ' + this.fmt(k.offers) + ' offers · ' + k.prov + ' providers' })),
+      setSku: e => { const v = e.target.value; this.setState({ sku: v }); try { history.replaceState(null, '', '#' + s.page + '/' + v); } catch (x) {} },
+      // findings
+      hero, showOutlierLabels,
+      resInclBig: (thin ? 60.3 : resIncl).toFixed(0) + '%', resExclBig: (thin ? 82.1 : resExcl).toFixed(0) + '%', deltaPP: '21.8',
+      tableHeads, tableRows, sortLabel: sortLabelMap[s.sortCol] + (s.sortDir === 1 ? ' ascending' : ' descending'),
+      // dispersion
+      disp, hasDisp: !thin, noDisp: thin,
+      // basis
+      dec, hasDec: !!dcp, noDec: !dcp, strip,
+      openDrawer: () => this.setState({ drawer: true }), closeDrawer: () => this.setState({ drawer: false }),
+      drawer: s.drawer, drawerOffers, drawerCount: offers.length,
+      offerSort: s.offerSort, setOfferSort: e => this.setState({ offerSort: e.target.value }),
+      hasInspect: !!insp, insp: insp || {}, closeInspect: () => this.setState({ inspect: null }), stop: e => e.stopPropagation(),
+      // providers
+      provRows: [
+        { name: 'Vast.ai', kind: 'marketplace', offers: '236,410', skus: '84', delta: '−38.2%', deltaColor: '#5C6B4A', ts: '2026-07-30 06:00 UTC' },
+        { name: 'RunPod', kind: 'cloud', offers: '41,205', skus: '31', delta: '−12.4%', deltaColor: '#5C6B4A', ts: '2026-07-30 06:00 UTC' },
+        { name: 'AWS EC2 Spot', kind: 'hyperscaler', offers: '24,880', skus: '9', delta: '+64.7%', deltaColor: '#C15F3C', ts: '2026-07-30 06:01 UTC' },
+        { name: 'TensorDock', kind: 'cloud', offers: '12,610', skus: '22', delta: '−8.9%', deltaColor: '#5C6B4A', ts: '2026-07-30 05:59 UTC' },
+      ],
+      // explainability
+      explChips: [{ name: 'Vast.ai', r2: '0.66' }, { name: 'RunPod', r2: '0.54' }, { name: 'AWS Spot', r2: '0.71' }, { name: 'TensorDock', r2: '0.49' }],
+      shapRows: shapData.map(d => ({ name: d[0], w: (d[1] / shapMax * 100).toFixed(1) + '%', val: d[1].toFixed(3) })),
+      iccOpen: s.iccOpen, toggleIcc: () => this.setState(st => ({ iccOpen: !st.iccOpen })),
+      iccToggleLabel: s.iccOpen ? 'Hide ICC sensitivity by tenure threshold' : 'Show ICC sensitivity by tenure threshold',
+      iccRows: [{ days: '7', icc: '0.437', n: '1,247' }, { days: '14', icc: '0.421', n: '983' }, { days: '30', icc: '0.408', n: '712' }, { days: '60', icc: '0.389', n: '418' }, { days: '90', icc: '0.371', n: '256' }],
+      // methodology
+      toc, ...secRefs, pipeline, chain, limits, gauge, donut,
+    };
+  }
+}
+</script>
+</body>
+</html>
