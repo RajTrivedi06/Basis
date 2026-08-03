@@ -83,7 +83,7 @@ export function BasisRawObservationInspector({
   const inspector = (
     <>
       <div
-        className="fixed inset-0 z-[60] bg-black/80 transition-opacity duration-200"
+        className="fixed inset-0 z-[60] bg-[rgba(31,29,26,0.45)] transition-opacity duration-200"
         style={{ opacity: mounted ? 1 : 0 }}
         aria-hidden="true"
         onClick={onClose}

@@ -16,9 +16,16 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        serif: ["var(--font-fraunces)", "Georgia", "serif"],
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "monospace"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "SF Pro Text",
+          "Segoe UI",
+          "system-ui",
+          "sans-serif",
+        ],
+        mono: ["ui-monospace", "SF Mono", "SFMono-Regular", "Menlo", "monospace"],
       },
       colors: {
         // The residual. Used nowhere else.
@@ -28,7 +35,14 @@ const config: Config = {
           bg: "var(--residual-bg)",
           line: "var(--residual-line)",
         },
-        // Factor palette — muted slate, subordinate to residual.
+        // Interface accent — terracotta. Never used to render the residual.
+        accent: {
+          DEFAULT: "var(--accent)",
+          dim: "var(--accent-dim)",
+          bg: "var(--accent-bg)",
+          line: "var(--accent-line)",
+        },
+        // Factor palette — muted warm neutrals, subordinate to residual.
         factor: {
           provider: "var(--factor-provider)",
           commitment: "var(--factor-commitment)",

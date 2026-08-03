@@ -1,27 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Newsreader } from "next/font/google";
 import { AppProviders } from "@/components/providers";
 import { AskWidgetRoot } from "@/components/ask/AskWidgetRoot";
-import { BasisLogo } from "@/components/layout/BasisLogo";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
 
-const fraunces = Fraunces({
+// Sans and mono are system stacks (see --f-sans / --f-mono in globals.css);
+// only the serif is loaded. Pending Raj decision #1 — swap the family here.
+const serif = Newsreader({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-serif",
   style: ["normal", "italic"],
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
   display: "swap",
 });
 
@@ -32,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111827",
+  themeColor: "#FAF9F5",
 };
 
 export default function RootLayout({
@@ -41,10 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}
-    >
+    <html lang="en" className={serif.variable}>
       <body className="min-h-screen bg-[var(--bg)] text-[var(--ink)] antialiased">
         <a href="#main" className="skip-link">
           Skip to main content
@@ -62,17 +48,17 @@ export default function RootLayout({
 
 function Footer() {
   return (
-    <footer className="mx-auto mt-20 max-w-[1480px] border-t border-[var(--line-lo)] px-10 py-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-4">
-          <BasisLogo variant="footer" />
-          <span className="caption mono">
-            research artifact · public data · 2026
+    <footer className="mt-20 border-t border-[var(--line)]">
+      <div className="mx-auto flex max-w-[1480px] flex-wrap items-baseline justify-between gap-3 px-10 py-8">
+        <span className="text-[12.5px] text-[var(--ink-mid)]">
+          <span className="serif mr-[10px] font-semibold text-[var(--ink)]">
+            Basis
           </span>
-        </div>
-        <div className="caption mono">
+          — research artifact · public data · 2026
+        </span>
+        <span className="mono text-[11px] text-[var(--ink-dim)]">
           Not a price aggregator · Not a derivatives engine
-        </div>
+        </span>
       </div>
     </footer>
   );

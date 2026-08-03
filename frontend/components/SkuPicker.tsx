@@ -28,7 +28,7 @@ export function SkuPicker({
     return (
       <select
         disabled
-        className={`rounded-md border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-400 ${className}`}
+        className={`rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--ink-mid)] ${className}`}
       >
         <option>Loading SKUs…</option>
       </select>
@@ -39,7 +39,7 @@ export function SkuPicker({
     return (
       <select
         disabled
-        className={`rounded-md border border-red-900/60 bg-gray-900 px-3 py-2 text-sm text-red-300 ${className}`}
+        className={`rounded-md border border-[var(--verdict-bad)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--verdict-bad)] ${className}`}
       >
         <option>Error loading SKUs</option>
       </select>
@@ -54,7 +54,7 @@ export function SkuPicker({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`rounded-md border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-100 hover:border-gray-700 focus:border-gray-600 focus:outline-none ${className}`}
+      className={`rounded-md border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--ink)] hover:border-[var(--line-hi)] focus:border-[var(--ink-dim)] focus:outline-none ${className}`}
     >
       {sorted.map((sku) => (
         <option key={sku.gpu_sku} value={sku.gpu_sku}>

@@ -111,7 +111,7 @@ export function BasisObservationsDrawer({
   const drawer = (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 transition-opacity duration-200"
+        className="fixed inset-0 z-40 bg-[rgba(31,29,26,0.35)] transition-opacity duration-200"
         style={{ opacity: mounted ? 1 : 0 }}
         aria-hidden="true"
         onClick={onClose}
