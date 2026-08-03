@@ -70,3 +70,8 @@ temp-doc/
 
 # Locally generated ML artifacts
 backend/models/
+
+# Agent tooling (skills installed per-machine via `npx skills`; not project source)
+.agents/
+.claude/skills/
+skills-lock.json
