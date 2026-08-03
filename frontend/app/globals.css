@@ -540,86 +540,6 @@ button {
   outline-offset: 2px;
 }
 
-/* Basis wordmark lockup (mark + divider + basis / residual research) */
-.basis-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  line-height: 1;
-}
-
-.basis-logo__mark {
-  display: block;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  color: var(--ink-hi);
-}
-
-.basis-logo__divider {
-  flex-shrink: 0;
-  width: 1px;
-  height: 26px;
-  background: var(--ink-hi);
-  opacity: 0.18;
-}
-
-.basis-logo__stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.basis-logo__word {
-  font-family: var(--f-mono);
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  color: var(--ink-hi);
-}
-
-.basis-logo__cap {
-  font-family: var(--f-sans);
-  font-size: 8px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink-hi);
-  opacity: 0.55;
-  white-space: nowrap;
-}
-
-.basis-logo--footer {
-  gap: 10px;
-}
-
-.basis-logo--footer .basis-logo__mark {
-  width: 22px;
-  height: 22px;
-}
-
-.basis-logo--footer .basis-logo__divider {
-  height: 22px;
-}
-
-.basis-logo--footer .basis-logo__word {
-  font-size: 13px;
-}
-
-.basis-logo--footer .basis-logo__cap {
-  font-size: 7px;
-}
-
-.basis-logo--header .basis-logo__cap {
-  display: none;
-}
-
-.basis-logo--mark .basis-logo__mark {
-  width: 32px;
-  height: 32px;
-}
-
 .site-header-island__divider {
   flex-shrink: 0;
   width: 1px;
@@ -920,10 +840,6 @@ button {
 }
 
 @media (min-width: 1024px) {
-  .basis-logo--header .basis-logo__cap {
-    display: block;
-  }
-
   .site-nav-rail {
     display: block;
   }
@@ -949,11 +865,7 @@ button {
     display: none;
   }
 
-  .basis-logo--header .basis-logo__divider {
-    display: none;
-  }
-
-  .basis-logo--header {
+  .basis-lockup--header {
     gap: 8px;
   }
 }
@@ -3388,4 +3300,124 @@ button {
   font-family: var(--f-mono);
   font-variant-numeric: tabular-nums;
   color: var(--ink-hi);
+}
+
+/* ============================================================
+   STAGE 6.3c — THE BRACKET (append-only block)
+   The dimension bracket, its monogram, the nav lockup, and the
+   name-scene diagram. Exploration variant 1c; design doc §13/§14.
+   Motion is CSS only — no GSAP (design doc §12 is landing-only).
+
+   The resting state of every mark is the FINISHED drawing, so
+   server HTML, a JS-less client, and reduced-motion all render a
+   complete bracket. `.is-bracket-drawing` replays the draw once.
+   ============================================================ */
+
+@keyframes bracketDraw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes bracketStamp {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.is-bracket-drawing .bracket-mark__seg {
+  stroke-dasharray: 1;
+  animation: bracketDraw 320ms ease-out both;
+  animation-delay: var(--bracket-delay, 0ms);
+}
+
+.is-bracket-drawing .bracket-mark__label,
+.is-bracket-drawing .basis-lockup__word,
+.is-bracket-drawing .bracket-diagram__tag,
+.is-bracket-drawing .bracket-diagram__value {
+  animation: bracketStamp 160ms ease-out both;
+  animation-delay: var(--bracket-delay, 330ms);
+}
+
+/* ---- Nav lockup: monogram + wordmark ---- */
+
+.basis-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  line-height: 1;
+}
+
+.basis-lockup__mark {
+  display: block;
+  flex-shrink: 0;
+}
+
+.basis-lockup__word {
+  font-family: var(--f-serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink-hi);
+}
+
+.basis-lockup--footer {
+  gap: 8px;
+}
+
+.basis-lockup--footer .basis-lockup__word {
+  font-size: 15px;
+}
+
+/* ---- Name-scene diagram ---- */
+
+.bracket-diagram {
+  margin: 0;
+}
+
+.bracket-diagram__plate {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.bracket-diagram__tag {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  fill: var(--ink-mid);
+}
+
+.bracket-diagram__value {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--ink-dim);
+}
+
+.bracket-diagram__footnote {
+  margin-top: 10px;
+  font-family: var(--f-serif);
+  font-style: italic;
+  font-size: var(--t-small);
+  color: var(--ink-mid);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-bracket-drawing .bracket-mark__seg,
+  .is-bracket-drawing .bracket-mark__label,
+  .is-bracket-drawing .basis-lockup__word,
+  .is-bracket-drawing .bracket-diagram__tag,
+  .is-bracket-drawing .bracket-diagram__value {
+    animation: none !important;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
 }
