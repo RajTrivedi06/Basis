@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BasisLogo } from "@/components/layout/BasisLogo";
+import { BasisLockup } from "@/components/layout/BasisLockup";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   Suspense,
@@ -158,7 +158,7 @@ function SiteHeaderInner() {
       >
         <header className="site-header-island">
           <Link href="/" className="site-header-island__brand" aria-label="Basis home">
-            <BasisLogo variant="header" />
+            <BasisLockup variant="header" />
           </Link>
 
           <span className="site-header-island__divider" aria-hidden />
@@ -253,7 +253,7 @@ export function SiteHeader() {
       fallback={
         <div className="site-header-rail" aria-hidden>
           <header className="site-header-island">
-            <BasisLogo variant="header" />
+            <BasisLockup variant="header" />
           </header>
         </div>
       }
