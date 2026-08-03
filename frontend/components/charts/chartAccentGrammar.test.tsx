@@ -1,10 +1,8 @@
 import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DispersionFan } from "@/app/dispersion/DispersionFan";
-import {
-  FactorStripPlot,
-  type StripPlotPoint,
-} from "@/app/basis/FactorStripPlot";
+import { DispersionBand } from "@/app/dispersion/DispersionBand";
+import { BeeswarmReceipt } from "@/app/basis/BeeswarmReceipt";
+import type { SwarmPoint } from "@/app/basis/factorPoints";
 import { ResidualSeriesChart } from "@/components/charts/ResidualSeriesChart";
 import { ResidualTimeSeriesChart } from "@/components/ResidualTimeSeriesChart";
 import { getBasisTimeseries } from "@/lib/api";
@@ -49,11 +47,11 @@ const SERIES = [
   timeseriesPoint("2026-07-30", 48),
 ];
 
-function stripPoint(
+function swarmPoint(
   id: number,
   price: number,
   groupKey: string
-): StripPlotPoint {
+): SwarmPoint {
   return {
     canonicalOfferId: id,
     rawObservationId: id,
@@ -67,13 +65,13 @@ function stripPoint(
   };
 }
 
-const STRIP_POINTS = [
-  stripPoint(1, 1.9, "vast_ai · spot"),
-  stripPoint(2, 2.4, "vast_ai · spot"),
-  stripPoint(3, 3.1, "vast_ai · spot"),
-  stripPoint(4, 2.2, "runpod · spot"),
-  stripPoint(5, 2.8, "runpod · spot"),
-  stripPoint(6, 3.4, "runpod · spot"),
+const SWARM_POINTS = [
+  swarmPoint(1, 1.9, "vast_ai · spot"),
+  swarmPoint(2, 2.4, "vast_ai · spot"),
+  swarmPoint(3, 3.1, "vast_ai · spot"),
+  swarmPoint(4, 2.2, "runpod · spot"),
+  swarmPoint(5, 2.8, "runpod · spot"),
+  swarmPoint(6, 3.4, "runpod · spot"),
 ];
 
 describe("chart-mark accent grammar", () => {
@@ -147,9 +145,17 @@ describe("chart-mark accent grammar", () => {
     }
   });
 
-  it("draws the dispersion median in the accent and leaves the band in ink", () => {
+  /**
+   * Amended by the 2026-08-03 Director pick: the dispersion band is approved
+   * *as shown* in `Basis_Explorations_dc.html` (1f), which fills it warm —
+   * "the band is the finding, it should never read as fog." The band and its
+   * p25/p75 hairlines join the median on the accent. What has not moved is the
+   * half of ADR-0005 that matters: nothing in this chart is a residual share,
+   * so void must appear nowhere in it.
+   */
+  it("draws the dispersion band, its edges, and the median in the accent", () => {
     const { container } = render(
-      <DispersionFan
+      <DispersionBand
         title="dispersion"
         data={[
           { date: "2026-07-28", p25: 1.8, median: 2.4, p75: 3.2 },
@@ -159,33 +165,63 @@ describe("chart-mark accent grammar", () => {
       />
     );
 
-    const paths = Array.from(container.querySelectorAll("path"));
-    const median = paths.find((p) => p.getAttribute("fill") === "none")!;
-    const band = paths.find((p) => p.getAttribute("stroke") === "none")!;
+    const band = container.querySelector(".dispersion-band__fill")!;
+    expect(band.getAttribute("fill")).toBe("var(--accent)");
 
+    const edges = Array.from(container.querySelectorAll(".dispersion-band__edge"));
+    expect(edges).toHaveLength(2);
+    for (const edge of edges) {
+      expect(edge.getAttribute("stroke")).toBe("var(--accent)");
+      // Subordinate to the median, or the band reads as three equal series.
+      expect(Number(edge.getAttribute("stroke-opacity"))).toBeLessThan(1);
+    }
+
+    const median = container.querySelector(".dispersion-band__median")!;
     expect(median.getAttribute("stroke")).toBe("var(--accent)");
-    expect(band.getAttribute("fill")).toBe("var(--ink-mid)");
+    expect(median.getAttribute("stroke-width")).toBe("1.8");
   });
 
-  it("accents the residual strip-plot dots but keeps factor views categorical", () => {
+  it("keeps void out of the dispersion band — nothing here is a residual share", () => {
+    const { container } = render(
+      <DispersionBand
+        title="dispersion"
+        data={[
+          { date: "2026-07-28", p25: 1.8, median: 2.4, p75: 3.2 },
+          { date: "2026-07-29", p25: 1.9, median: 2.5, p75: 3.4 },
+        ]}
+      />
+    );
+
+    expect(container.innerHTML).not.toContain("var(--residual");
+  });
+
+  it("accents the residual swarm dots but keeps factor views categorical", () => {
     const residual = render(
-      <FactorStripPlot factor="residual" points={STRIP_POINTS} />
+      <BeeswarmReceipt
+        factor="residual"
+        points={SWARM_POINTS}
+        gpuSku="h100_sxm_80gb"
+        onInspect={() => {}}
+      />
     );
     const residualDots = Array.from(
-      residual.container.querySelectorAll("circle.basis-strip-dot")
+      residual.container.querySelectorAll("circle.swarm__dot")
     );
-    expect(residualDots).toHaveLength(STRIP_POINTS.length);
+    expect(residualDots).toHaveLength(SWARM_POINTS.length);
     for (const dot of residualDots) {
       expect(dot.getAttribute("fill")).toBe("var(--accent)");
     }
     residual.unmount();
 
     const provider = render(
-      <FactorStripPlot factor="provider" points={STRIP_POINTS} />
+      <BeeswarmReceipt
+        factor="provider"
+        points={SWARM_POINTS}
+        gpuSku="h100_sxm_80gb"
+        onInspect={() => {}}
+      />
     );
-    for (const dot of provider.container.querySelectorAll(
-      "circle.basis-strip-dot"
-    )) {
+    for (const dot of provider.container.querySelectorAll("circle.swarm__dot")) {
       expect(dot.getAttribute("fill")).toBe(factorColor("provider"));
     }
   });

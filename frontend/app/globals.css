@@ -425,25 +425,11 @@ button {
    Total dot reveal completes ~600ms after mount; the median lines
    and IQR bands fade in at 700ms so they sit on top of the stable
    point cloud rather than competing with the dot stagger. */
-.basis-strip-dot {
-  opacity: 0;
-  animation: basisFadeIn 300ms ease forwards;
-  animation-delay: var(--basis-delay, 0ms);
-}
-
-.basis-strip-stat {
-  opacity: 0;
-  animation: basisFadeIn 350ms ease forwards;
-  animation-delay: 700ms;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .basis-fade,
   .basis-dot-fade,
   .basis-outlier-pulse,
-  .basis-median-line-anim,
-  .basis-strip-dot,
-  .basis-strip-stat {
+  .basis-median-line-anim {
     opacity: 1 !important;
     animation: none !important;
   }
@@ -3419,5 +3405,444 @@ button {
     stroke-dasharray: none;
     stroke-dashoffset: 0;
     opacity: 1;
+  }
+}
+
+/* ============================================================
+   STAGE 6.3c — THE LEDGER WATERFALL (append-only block)
+   Exploration variant 1e "ledger + depletion". Every factor gets
+   a full-width row so a 4.8% line reads as easily as a 61% one;
+   the depletion bar under each row shows what remains (sand) and
+   the slice being subtracted (factor colour).
+   ============================================================ */
+
+.ledger__glyph {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.ledger__glyph > span {
+  display: block;
+  height: 100%;
+}
+
+.ledger__glyph-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 14px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.ledger__opening {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px 10px;
+  border-bottom: 1px solid var(--line-lo);
+}
+
+.ledger__opening-label {
+  font-size: var(--t-small);
+  color: var(--ink-mid);
+}
+
+.ledger__opening-value {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-hi);
+}
+
+.ledger__row {
+  padding: 8px 2px 12px;
+  border-bottom: 1px solid var(--line-lo);
+}
+
+.ledger__row:has(+ .ledger__void) {
+  border-bottom: none;
+}
+
+.ledger__line {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 62px 86px;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.ledger__op {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--ink-mid);
+}
+
+.ledger__name {
+  font-size: 13.5px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.ledger__tag {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mid);
+}
+
+.ledger__share {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink-hi);
+}
+
+.ledger__left {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink-dim);
+}
+
+.ledger__depletion {
+  display: flex;
+  height: 5px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.ledger__depletion-sand {
+  display: block;
+  height: 100%;
+  background: var(--line-lo);
+}
+
+.ledger__depletion-slice {
+  display: block;
+  height: 100%;
+}
+
+.ledger__void {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 8px;
+  padding: 13px 18px;
+  border-radius: var(--r-md);
+  background: var(--residual);
+  color: var(--bg);
+}
+
+.ledger__void-key {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.ledger__void .ledger__op {
+  color: var(--bg);
+}
+
+.ledger__void-tag {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ledger__void-value {
+  font-family: var(--f-serif);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The measuring bracket, fluid-width form: a rule with a 45° tick at each
+   end — the same grammar as BracketMark, drawn in CSS so it can be a
+   percentage of the container without shearing the ticks. */
+.ledger__measure {
+  position: relative;
+  height: 9px;
+  /* Below this the two end ticks would cross and the mark would stop reading
+     as a bracket at all. The exact figure is in the caption underneath and in
+     the void block above; this floor only keeps the annotation legible when
+     the day's residual is a couple of percent. */
+  min-width: 20px;
+  margin-top: 12px;
+  border-bottom: 1px solid var(--residual);
+}
+
+.ledger__measure::before,
+.ledger__measure::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  width: 9px;
+  height: 1px;
+  background: var(--residual);
+  transform: rotate(-45deg);
+}
+
+.ledger__measure::before {
+  left: -4px;
+}
+
+.ledger__measure::after {
+  right: -4px;
+}
+
+.ledger__measure-caption {
+  margin-top: 6px;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+@media (max-width: 560px) {
+  .ledger__line {
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    row-gap: 3px;
+  }
+
+  .ledger__share {
+    grid-column: 3;
+  }
+
+  .ledger__left {
+    grid-column: 2 / 4;
+    text-align: right;
+  }
+}
+
+/* ============================================================
+   STAGE 6.3c — THE DISPERSION BAND (append-only block)
+   Approved as shown (Director, 2026-08-03): warm band, its own
+   p25/p75 hairlines, crosshair readout, and the bracket
+   measuring today's disagreement.
+   ============================================================ */
+
+.dispersion-band__readout {
+  margin-bottom: 6px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-hi);
+}
+
+.dispersion-band__plate {
+  display: block;
+  max-width: 100%;
+  touch-action: pan-y;
+}
+
+.dispersion-band__plate:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.dispersion-band__axis {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  fill: var(--ink-dim);
+}
+
+.dispersion-band__tag {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  fill: var(--ink-mid);
+}
+
+.dispersion-band__delta {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--accent);
+}
+
+.dispersion-band__legend {
+  margin: 8px 0 0;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* ------------------------------------------------------------
+   Price beeswarm + inline receipt (variant 1h)
+   ------------------------------------------------------------ */
+
+.swarm__figure {
+  margin: 0;
+}
+
+.swarm__plate {
+  display: block;
+  touch-action: manipulation;
+}
+
+.swarm__plate:focus {
+  outline: none;
+}
+
+.swarm__plate:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.swarm__axis,
+.swarm__row-label,
+.swarm__row-count {
+  font-family: var(--f-mono);
+  font-size: 10px;
+}
+
+.swarm__axis {
+  fill: var(--ink-dim);
+}
+
+.swarm__row-label {
+  fill: var(--ink-mid);
+  letter-spacing: 0.04em;
+}
+
+.swarm__row-label.is-unknown {
+  fill: var(--unknown);
+}
+
+.swarm__row-count {
+  fill: var(--ink-faint);
+  font-size: 9px;
+}
+
+.swarm__hit {
+  cursor: pointer;
+}
+
+/* Dots file into their rows in price order; nothing bounces. */
+.swarm__dot {
+  opacity: 0;
+  animation: basisFadeIn 260ms ease forwards;
+  animation-delay: var(--swarm-delay, 0ms);
+}
+
+.swarm__receipt-slot {
+  /* Reserved height: the receipt files in without moving the page. */
+  min-height: 104px;
+  margin-top: 10px;
+  display: flex;
+  align-items: stretch;
+}
+
+.swarm__receipt-hint,
+.swarm__receipt {
+  flex: 1;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+}
+
+.swarm__receipt-hint {
+  display: flex;
+  align-items: center;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+  border-style: dashed;
+}
+
+.swarm__receipt {
+  border-color: var(--accent-line);
+  background: var(--accent-bg);
+  /* A tap stamps the receipt; it does not slide or bounce. */
+  animation: basisFadeIn 80ms ease both;
+}
+
+.swarm__receipt-eyebrow {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 6px;
+}
+
+.swarm__receipt-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.swarm__receipt-who {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-hi);
+}
+
+.swarm__receipt-terms {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-mid);
+}
+
+.swarm__receipt-price {
+  font-family: var(--f-serif);
+  font-size: 22px;
+  color: var(--ink-hi);
+  font-variant-numeric: tabular-nums;
+}
+
+.swarm__receipt-unit {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.swarm__receipt-link {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-line);
+  text-underline-offset: 3px;
+}
+
+.swarm__empty {
+  margin: 0;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--ink-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swarm__dot,
+  .swarm__receipt {
+    opacity: 1 !important;
+    animation: none !important;
   }
 }

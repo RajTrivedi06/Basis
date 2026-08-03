@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DecompBar, type DecompShares } from "@/components/charts/DecompBar";
+import { type DecompShares } from "@/components/charts/DecompBar";
+import { LedgerWaterfall } from "@/components/charts/LedgerWaterfall";
 import { SkuPicker } from "@/components/SkuPicker";
 import { TwoLayer } from "@/components/disclosure/TwoLayer";
 import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
@@ -12,9 +13,10 @@ import { useSku } from "@/lib/useSku";
 import type { BasisDecompositionResponse } from "@/lib/types";
 import { BasisObservationsDrawer } from "./BasisObservationsDrawer";
 import { BasisRawObservationInspector } from "./BasisRawObservationInspector";
-import { FactorStripPlot, pointsFromObservations } from "./FactorStripPlot";
+import { BeeswarmReceipt } from "./BeeswarmReceipt";
+import { pointsFromObservations } from "./factorPoints";
 
-const STRIP_TABS: { factor: Factor; label: string }[] = [
+const SWARM_TABS: { factor: Factor; label: string }[] = [
   { factor: "region", label: "Region" },
   { factor: "commitment", label: "Commitment" },
   { factor: "provider", label: "Provider" },
@@ -63,8 +65,7 @@ export function BasisPageClient() {
   const { sku, setSku } = useSku();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [inspectingId, setInspectingId] = useState<number | null>(null);
-  const [stripFactor, setStripFactor] = useState<Factor>("provider");
-  const [hoveredOfferId, setHoveredOfferId] = useState<number | null>(null);
+  const [swarmFactor, setSwarmFactor] = useState<Factor>("provider");
 
   const basisQuery = useQuery({
     queryKey: ["basis", sku],
@@ -109,12 +110,12 @@ export function BasisPageClient() {
     [shares]
   );
 
-  // Strip-plot points are derived from the same contributing-offers
-  // payload the drawer uses. Recomputed on factor change so the bundle
-  // bin edges reflect the current selection's distribution.
-  const stripPoints = useMemo(
-    () => pointsFromObservations(stripFactor, observationsQuery.data?.items ?? []),
-    [stripFactor, observationsQuery.data]
+  // Swarm points are derived from the same contributing-offers payload the
+  // drawer uses. Recomputed on factor change so the bundle bin edges reflect
+  // the current selection's distribution.
+  const swarmPoints = useMemo(
+    () => pointsFromObservations(swarmFactor, observationsQuery.data?.items ?? []),
+    [swarmFactor, observationsQuery.data]
   );
 
   return (
@@ -148,7 +149,7 @@ export function BasisPageClient() {
               }
             >
               <p>
-                The bar and table below are the latest daily{" "}
+                The ledger and table below are the latest daily{" "}
                 <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
                 for the selected SKU, in the model order{" "}
                 <span className="mono text-[var(--ink)]">
@@ -192,9 +193,9 @@ export function BasisPageClient() {
 
         {basisState === "ready" && shares && decomposition ? (
           <div className="panel p-[18px]">
-            <DecompBar decomp={shares} height={128} />
+            <LedgerWaterfall decomposition={decomposition} glanceLabel={sku} />
             <p className="caption mt-4 max-w-[760px]">
-              The stacked bar is read as shares of total log-price variance{" "}
+              The ledger is read as shares of total log-price variance{" "}
               <span className="mono text-[var(--ink)]">
                 ({decomposition.total_variance.toFixed(4)})
               </span>
@@ -293,26 +294,27 @@ export function BasisPageClient() {
           <h2>Price by factor</h2>
         </div>
         <p className="caption mt-3 mb-4 max-w-[760px]">
-          Per-offer prices laid out by a single factor. Tight columns mean
-          the factor explains the spread; broad columns mean it doesn&apos;t.
-          The <span className="mono text-[var(--ink)]">Residual (within cell)</span>{" "}
+          Per-offer prices laid out by a single factor, one row per group. Tight
+          rows mean the factor explains the spread; broad rows mean it
+          doesn&apos;t. The{" "}
+          <span className="mono text-[var(--ink)]">Residual (within cell)</span>{" "}
           view conditions on{" "}
           <span className="mono text-[var(--ink)]">(provider × commitment)</span>{" "}
-          — within-cell spread is the basis risk observable factors cannot
-          capture. Click any dot to open its raw observation.
+          — within-row spread is the basis risk observable factors cannot
+          capture. Every dot is a real offer; select one to file its receipt.
         </p>
         <div className="panel p-[18px]">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-dim)]">
               Factor
             </span>
-            {STRIP_TABS.map((tab) => (
+            {SWARM_TABS.map((tab) => (
               <button
                 key={tab.factor}
                 type="button"
-                className={`chip${stripFactor === tab.factor ? " on" : ""}`}
-                onClick={() => setStripFactor(tab.factor)}
-                aria-pressed={stripFactor === tab.factor}
+                className={`chip${swarmFactor === tab.factor ? " on" : ""}`}
+                onClick={() => setSwarmFactor(tab.factor)}
+                aria-pressed={swarmFactor === tab.factor}
               >
                 {tab.label}
               </button>
@@ -333,15 +335,12 @@ export function BasisPageClient() {
               }
               tone="error"
             />
-          ) : stripPoints.length > 0 ? (
-            <FactorStripPlot
-              factor={stripFactor}
-              points={stripPoints}
-              hoveredOfferId={hoveredOfferId}
-              onPointHover={(p) =>
-                setHoveredOfferId(p?.canonicalOfferId ?? null)
-              }
-              onPointClick={(p) => setInspectingId(p.rawObservationId)}
+          ) : swarmPoints.length > 0 ? (
+            <BeeswarmReceipt
+              factor={swarmFactor}
+              points={swarmPoints}
+              gpuSku={sku}
+              onInspect={(id) => setInspectingId(id)}
             />
           ) : (
             <StatePanel
