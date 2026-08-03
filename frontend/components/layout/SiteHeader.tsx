@@ -13,7 +13,7 @@ import {
 } from "react";
 
 const NAV_ITEMS: { href: string; label: string }[] = [
-  { href: "/", label: "Findings" },
+  { href: "/findings", label: "Findings" },
   { href: "/dispersion", label: "Dispersion" },
   { href: "/basis", label: "Basis" },
   { href: "/providers", label: "Providers" },
