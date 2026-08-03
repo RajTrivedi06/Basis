@@ -425,25 +425,11 @@ button {
    Total dot reveal completes ~600ms after mount; the median lines
    and IQR bands fade in at 700ms so they sit on top of the stable
    point cloud rather than competing with the dot stagger. */
-.basis-strip-dot {
-  opacity: 0;
-  animation: basisFadeIn 300ms ease forwards;
-  animation-delay: var(--basis-delay, 0ms);
-}
-
-.basis-strip-stat {
-  opacity: 0;
-  animation: basisFadeIn 350ms ease forwards;
-  animation-delay: 700ms;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .basis-fade,
   .basis-dot-fade,
   .basis-outlier-pulse,
-  .basis-median-line-anim,
-  .basis-strip-dot,
-  .basis-strip-stat {
+  .basis-median-line-anim {
     opacity: 1 !important;
     animation: none !important;
   }
@@ -3696,4 +3682,167 @@ button {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ink-dim);
+}
+
+/* ------------------------------------------------------------
+   Price beeswarm + inline receipt (variant 1h)
+   ------------------------------------------------------------ */
+
+.swarm__figure {
+  margin: 0;
+}
+
+.swarm__plate {
+  display: block;
+  touch-action: manipulation;
+}
+
+.swarm__plate:focus {
+  outline: none;
+}
+
+.swarm__plate:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.swarm__axis,
+.swarm__row-label,
+.swarm__row-count {
+  font-family: var(--f-mono);
+  font-size: 10px;
+}
+
+.swarm__axis {
+  fill: var(--ink-dim);
+}
+
+.swarm__row-label {
+  fill: var(--ink-mid);
+  letter-spacing: 0.04em;
+}
+
+.swarm__row-label.is-unknown {
+  fill: var(--unknown);
+}
+
+.swarm__row-count {
+  fill: var(--ink-faint);
+  font-size: 9px;
+}
+
+.swarm__hit {
+  cursor: pointer;
+}
+
+/* Dots file into their rows in price order; nothing bounces. */
+.swarm__dot {
+  opacity: 0;
+  animation: basisFadeIn 260ms ease forwards;
+  animation-delay: var(--swarm-delay, 0ms);
+}
+
+.swarm__receipt-slot {
+  /* Reserved height: the receipt files in without moving the page. */
+  min-height: 104px;
+  margin-top: 10px;
+  display: flex;
+  align-items: stretch;
+}
+
+.swarm__receipt-hint,
+.swarm__receipt {
+  flex: 1;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+}
+
+.swarm__receipt-hint {
+  display: flex;
+  align-items: center;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+  border-style: dashed;
+}
+
+.swarm__receipt {
+  border-color: var(--accent-line);
+  background: var(--accent-bg);
+  /* A tap stamps the receipt; it does not slide or bounce. */
+  animation: basisFadeIn 80ms ease both;
+}
+
+.swarm__receipt-eyebrow {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 6px;
+}
+
+.swarm__receipt-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.swarm__receipt-who {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-hi);
+}
+
+.swarm__receipt-terms {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-mid);
+}
+
+.swarm__receipt-price {
+  font-family: var(--f-serif);
+  font-size: 22px;
+  color: var(--ink-hi);
+  font-variant-numeric: tabular-nums;
+}
+
+.swarm__receipt-unit {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.swarm__receipt-link {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-line);
+  text-underline-offset: 3px;
+}
+
+.swarm__empty {
+  margin: 0;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--ink-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swarm__dot,
+  .swarm__receipt {
+    opacity: 1 !important;
+    animation: none !important;
+  }
 }

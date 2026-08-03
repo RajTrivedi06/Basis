@@ -1,10 +1,8 @@
 import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DispersionBand } from "@/app/dispersion/DispersionBand";
-import {
-  FactorStripPlot,
-  type StripPlotPoint,
-} from "@/app/basis/FactorStripPlot";
+import { BeeswarmReceipt } from "@/app/basis/BeeswarmReceipt";
+import type { SwarmPoint } from "@/app/basis/factorPoints";
 import { ResidualSeriesChart } from "@/components/charts/ResidualSeriesChart";
 import { ResidualTimeSeriesChart } from "@/components/ResidualTimeSeriesChart";
 import { getBasisTimeseries } from "@/lib/api";
@@ -49,11 +47,11 @@ const SERIES = [
   timeseriesPoint("2026-07-30", 48),
 ];
 
-function stripPoint(
+function swarmPoint(
   id: number,
   price: number,
   groupKey: string
-): StripPlotPoint {
+): SwarmPoint {
   return {
     canonicalOfferId: id,
     rawObservationId: id,
@@ -67,13 +65,13 @@ function stripPoint(
   };
 }
 
-const STRIP_POINTS = [
-  stripPoint(1, 1.9, "vast_ai · spot"),
-  stripPoint(2, 2.4, "vast_ai · spot"),
-  stripPoint(3, 3.1, "vast_ai · spot"),
-  stripPoint(4, 2.2, "runpod · spot"),
-  stripPoint(5, 2.8, "runpod · spot"),
-  stripPoint(6, 3.4, "runpod · spot"),
+const SWARM_POINTS = [
+  swarmPoint(1, 1.9, "vast_ai · spot"),
+  swarmPoint(2, 2.4, "vast_ai · spot"),
+  swarmPoint(3, 3.1, "vast_ai · spot"),
+  swarmPoint(4, 2.2, "runpod · spot"),
+  swarmPoint(5, 2.8, "runpod · spot"),
+  swarmPoint(6, 3.4, "runpod · spot"),
 ];
 
 describe("chart-mark accent grammar", () => {
@@ -197,25 +195,33 @@ describe("chart-mark accent grammar", () => {
     expect(container.innerHTML).not.toContain("var(--residual");
   });
 
-  it("accents the residual strip-plot dots but keeps factor views categorical", () => {
+  it("accents the residual swarm dots but keeps factor views categorical", () => {
     const residual = render(
-      <FactorStripPlot factor="residual" points={STRIP_POINTS} />
+      <BeeswarmReceipt
+        factor="residual"
+        points={SWARM_POINTS}
+        gpuSku="h100_sxm_80gb"
+        onInspect={() => {}}
+      />
     );
     const residualDots = Array.from(
-      residual.container.querySelectorAll("circle.basis-strip-dot")
+      residual.container.querySelectorAll("circle.swarm__dot")
     );
-    expect(residualDots).toHaveLength(STRIP_POINTS.length);
+    expect(residualDots).toHaveLength(SWARM_POINTS.length);
     for (const dot of residualDots) {
       expect(dot.getAttribute("fill")).toBe("var(--accent)");
     }
     residual.unmount();
 
     const provider = render(
-      <FactorStripPlot factor="provider" points={STRIP_POINTS} />
+      <BeeswarmReceipt
+        factor="provider"
+        points={SWARM_POINTS}
+        gpuSku="h100_sxm_80gb"
+        onInspect={() => {}}
+      />
     );
-    for (const dot of provider.container.querySelectorAll(
-      "circle.basis-strip-dot"
-    )) {
+    for (const dot of provider.container.querySelectorAll("circle.swarm__dot")) {
       expect(dot.getAttribute("fill")).toBe(factorColor("provider"));
     }
   });
