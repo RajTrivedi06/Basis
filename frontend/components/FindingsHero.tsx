@@ -92,9 +92,8 @@ function FindingsHeroInner() {
 
   return (
     <section
-      className="grid items-start grid-cols-1 md:grid-cols-[1.3fr_1fr]"
+      className="block"
       style={{
-        gap: 64,
         padding: "40px 0 36px",
         borderBottom: "1px solid var(--line-lo)",
       }}
@@ -104,7 +103,7 @@ function FindingsHeroInner() {
           className="eyebrow basis-fade"
           style={
             {
-              marginBottom: 22,
+              marginBottom: 18,
               "--basis-delay": "100ms",
             } as React.CSSProperties
           }
@@ -113,88 +112,53 @@ function FindingsHeroInner() {
         </div>
 
         <h1
-          className="serif basis-fade"
-          style={
-            {
-              margin: "0 0 26px",
-              fontSize: "clamp(26px, 3vw, 40px)",
-              fontWeight: 500,
-              lineHeight: 1.12,
-              letterSpacing: "-0.02em",
-              color: "var(--ink-hi)",
-              maxWidth: 560,
-              "--basis-delay": "150ms",
-            } as React.CSSProperties
-          }
+          className="serif basis-fade fh-statement"
+          style={{ "--basis-delay": "150ms" } as React.CSSProperties}
         >
           A bigger model doesn&rsquo;t explain it away.
         </h1>
 
-        {gapPp !== null || icc !== null ? (
-          <dl
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "clamp(32px, 5vw, 48px)",
-              margin: 0,
-            }}
-          >
-            <HeroNumber
-              valueLabel={gapDisplay}
-              ariaValue={
-                gapPp === null
-                  ? "gap unavailable"
-                  : `negative ${Math.abs(gapPp).toFixed(1)} percentage points`
-              }
-              primary="out-of-sample gap"
-              secondary="45 features still explain less than 4 simple factors"
-              numberDelay="250ms"
-              labelDelay="700ms"
-            />
-            <HeroNumber
-              valueLabel={iccDisplay}
-              ariaValue={icc === null ? "ICC unavailable" : icc.toFixed(2)}
-              primary="host-identity ICC"
-              secondary={`${icc === null ? "how much" : iccQualifier(icc)} of what's left sticks to specific machines`}
-              numberDelay="250ms"
-              labelDelay="700ms"
-            />
-          </dl>
-        ) : (
-          <p
-            className="caption basis-fade"
-            style={{ maxWidth: 480, margin: "0 0 4px" } as React.CSSProperties}
-          >
-            The anchored figures load from the published artifact — see the{" "}
-            <Link href="/explainability">explainability page</Link>.
-          </p>
-        )}
+        <dl className="fh-tape basis-fade" style={{ "--basis-delay": "350ms" } as React.CSSProperties}>
+          <TapeCell
+            value={gapDisplay}
+            aria={
+              gapPp === null
+                ? "gap unavailable"
+                : `negative ${Math.abs(gapPp).toFixed(1)} percentage points`
+            }
+            label="out-of-sample gap"
+          />
+          <TapeCell
+            value={iccDisplay}
+            aria={icc === null ? "ICC unavailable" : icc.toFixed(2)}
+            label="host-identity ICC"
+          />
+          <TapeCell
+            value="~20–61%"
+            aria="approximately 20 to 61 percent"
+            label="unexplained · recent weeks"
+          />
+        </dl>
 
-        <p
-          className="basis-fade"
-          style={
-            {
-              maxWidth: 560,
-              marginTop: 22,
-              fontSize: 13,
-              lineHeight: 1.65,
-              color: "var(--ink-mid)",
-              "--basis-delay": "900ms",
-            } as React.CSSProperties
-          }
+        <div
+          className="fh-actions basis-fade"
+          style={{ "--basis-delay": "600ms" } as React.CSSProperties}
         >
-          Unexplained share in market-priced segments has ranged ~20–61%
-          across recent weeks — basis risk is segment- and
-          time-conditional.
-        </p>
+          <Link className="btn" href="/basis">
+            See the decomposition →
+          </Link>
+          <Link className="btn ghost" href="/methodology">
+            Methodology
+          </Link>
+        </div>
 
         <div
           className="basis-fade"
           style={
             {
-              maxWidth: 560,
-              marginTop: 14,
-              "--basis-delay": "1050ms",
+              maxWidth: 620,
+              marginTop: 18,
+              "--basis-delay": "750ms",
             } as React.CSSProperties
           }
         >
@@ -208,6 +172,11 @@ function FindingsHeroInner() {
               {icc === null ? "" : ` (ICC ${icc.toFixed(2)})`}.
             </p>
             <p>
+              Unexplained share in market-priced segments has ranged ~20–61%
+              across recent weeks — basis risk is segment- and
+              time-conditional.
+            </p>
+            <p>
               The gap compares the 45-feature model&rsquo;s honest
               out-of-sample fit against the four simple factors&rsquo;
               in-sample share — one picture, not two separate confirmations.
@@ -217,30 +186,11 @@ function FindingsHeroInner() {
             </p>
           </ShowMeHow>
         </div>
-
-        <div
-          className="basis-fade"
-          style={
-            {
-              display: "flex",
-              gap: 10,
-              marginTop: 28,
-              "--basis-delay": "1550ms",
-            } as React.CSSProperties
-          }
-        >
-          <Link className="btn" href="/basis">
-            See the decomposition →
-          </Link>
-          <Link className="btn ghost" href="/methodology">
-            Methodology
-          </Link>
-        </div>
       </div>
 
       <div
         className="panel"
-        style={{ padding: 22, marginTop: "clamp(40px, 6vh, 96px)" }}
+        style={{ padding: 22, marginTop: 36 }}
       >
         <div className="eyebrow" style={{ marginBottom: 14 }}>
           Residual share · market-priced segments · {windowLabel}
@@ -296,7 +246,7 @@ export function FindingsHero() {
     <Suspense
       fallback={
         <section
-          className="grid items-start grid-cols-1 md:grid-cols-[1.3fr_1fr]"
+          className="block"
           style={{
             gap: 64,
             padding: "40px 0 36px",
@@ -312,81 +262,25 @@ export function FindingsHero() {
   );
 }
 
-function HeroNumber({
-  valueLabel,
-  ariaValue,
-  primary,
-  secondary,
-  numberDelay,
-  labelDelay,
+function TapeCell({
+  value,
+  aria,
+  label,
 }: {
-  valueLabel: string;
-  ariaValue: string;
-  primary: string;
-  secondary: string;
-  numberDelay: string;
-  labelDelay: string;
+  value: string;
+  aria: string;
+  label: string;
 }) {
-  // Numbers are wrapped in a <dl><dt><dd> pair so screen readers read
-  // each pair as a label/value unit. aria-live="off" keeps the count-up
-  // tween from spamming announcements every frame; the aria-label is
-  // derived from the final value, not the in-flight display value, so
-  // screen readers always read the resolved number.
   return (
-    <div
-      className="basis-fade"
-      style={
-        {
-          flex: "0 0 auto",
-          "--basis-delay": numberDelay,
-        } as React.CSSProperties
-      }
-    >
+    <div className="fh-tape__cell">
       <dt
-        className="display"
+        className="display fh-tape__num"
         aria-live="off"
-        aria-label={`${ariaValue} ${primary} ${secondary}`}
-        style={{
-          fontStyle: "italic",
-          fontSize: "clamp(56px, 7.4vw, 112px)",
-          lineHeight: 0.96,
-          margin: 0,
-          color: "var(--residual)",
-          letterSpacing: "-0.03em",
-          fontVariantNumeric: "tabular-nums",
-        }}
+        aria-label={`${aria} ${label}`}
       >
-        {valueLabel}
+        {value}
       </dt>
-      <dd
-        className="basis-fade"
-        style={
-          {
-            margin: "12px 0 0",
-            "--basis-delay": labelDelay,
-          } as React.CSSProperties
-        }
-      >
-        <div
-          style={{
-            fontSize: 13,
-            color: "var(--ink)",
-            letterSpacing: "0.005em",
-          }}
-        >
-          {primary}
-        </div>
-        <div
-          style={{
-            fontSize: 12,
-            color: "var(--ink-dim)",
-            marginTop: 2,
-            letterSpacing: "0.005em",
-          }}
-        >
-          {secondary}
-        </div>
-      </dd>
+      <dd className="fh-tape__label">{label}</dd>
     </div>
   );
 }
