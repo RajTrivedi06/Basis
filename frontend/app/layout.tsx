@@ -5,12 +5,14 @@ import { AskWidgetRoot } from "@/components/ask/AskWidgetRoot";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
 
-// Sans and mono are system stacks (see --f-sans / --f-mono in globals.css);
-// only the serif is loaded. Pending Raj decision #1 — swap the family here.
+// Newsreader is the one serif site-wide; sans and mono are system stacks
+// (see --f-sans / --f-mono in globals.css). Loaded variable so weights
+// 400–600 and `font-optical-sizing: auto` both resolve from one file.
 const serif = Newsreader({
   subsets: ["latin"],
   variable: "--font-serif",
   style: ["normal", "italic"],
+  axes: ["opsz"],
   display: "swap",
 });
 

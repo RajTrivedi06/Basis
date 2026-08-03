@@ -6,8 +6,10 @@
    Basis — design tokens
    Cream-editorial direction, frozen in design/stage6-references/.
    Ground is paper, surfaces are white, hairlines carry the structure.
-   Terracotta is the interface accent (links, focus, progress) and is
-   never used to render the residual.
+   Two colours carry meaning and must not be confused: the residual is
+   void near-black and encodes the unexplained share wherever it appears;
+   terracotta is purely editorial (eyebrows, links, annotations, active
+   nav) and never encodes data.
    ============================================================ */
 
 :root {
@@ -30,17 +32,20 @@
   --ink-dim:     #A09B90;
   --ink-faint:   #C9C2B4;
 
-  /* Interface accent — terracotta. Links, focus, progress, callouts. */
+  /* Editorial accent — terracotta. Eyebrows, links, annotations, active
+     nav, progress. Never encodes data. */
   --accent:      #C15F3C;
   --accent-dim:  #A84E2E;
   --accent-bg:   #FBF4EE;
   --accent-line: #E8D5C9;
 
-  /* STAGE6: residual color pending Raj decision #2 (ADR-0005 addendum) — one-line swap here */
-  --residual:      #1F1D1A;
-  --residual-dim:  #55504A;
-  --residual-bg:   rgba(31, 29, 26, 0.07);
-  --residual-line: rgba(31, 29, 26, 0.30);
+  /* THE RESIDUAL — void near-black (Raj ruling 2026-08-02, ADR-0005 addendum).
+     Encodes the unexplained share and nothing else. Everything below is
+     derived from it, so the hex is defined exactly once. */
+  --residual:      #171512;
+  --residual-dim:  color-mix(in srgb, var(--residual) 64%, var(--bg));
+  --residual-bg:   color-mix(in srgb, var(--residual) 7%, transparent);
+  --residual-line: color-mix(in srgb, var(--residual) 30%, transparent);
 
   /* Factor palette — muted warm neutrals, visually SUBORDINATE to residual */
   --factor-provider:   #AC9282;
