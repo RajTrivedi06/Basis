@@ -1,7 +1,12 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { SkuPicker } from "@/components/SkuPicker";
+import { ShowMeHow } from "@/components/disclosure/TwoLayer";
+import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
+import { getDispersion } from "@/lib/api";
 import { useSku } from "@/lib/useSku";
+import type { DispersionPoint } from "@/lib/types";
 import { DispersionChart } from "./DispersionChart";
 
 export function DispersionPageClient() {
@@ -9,54 +14,107 @@ export function DispersionPageClient() {
 
   return (
     <div className="page-wide fade-up">
-      <section className="pb-2.5 pt-9">
-        <div className="eyebrow mb-2.5">02 · Dispersion</div>
-        <h1 className="display m-0 text-[clamp(2rem,5vw,2.75rem)] font-normal leading-[1.1] tracking-[-0.02em] text-[var(--ink-hi)]">
-          <span className="mono text-[0.92em]">{sku}</span> price,{" "}
-          <em className="font-serif not-italic text-[var(--ink-mid)]">
-            p25 – median – p75
-          </em>
+      <div className="int-head">
+        <div className="int-head__eyebrow">
+          <span className="num">02</span>
+          <span>Raw price spread</span>
+        </div>
+        <h1 className="int-head__title">
+          <span className="mono text-[0.78em]">{sku}</span>{" "}
+          <em>p25 – median – p75</em>
         </h1>
-        <p className="caption mt-2.5 max-w-[620px]">
-          Interquartile band and median per collection day. Wider bands mean
-          more same-day price disagreement across providers for this SKU.
+        <p className="int-head__lede">
+          Wider bands mean more same-day price disagreement across providers for
+          this SKU.
         </p>
-      </section>
+      </div>
 
-      <section className="pt-6">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <span className="caption mono uppercase tracking-[0.1em]">
-            GPU SKU
-          </span>
+      <div className="int-controls">
+        <div className="int-controls__group">
+          <span className="int-controls__label">Canonical GPU SKU</span>
           <SkuPicker value={sku} onChange={setSku} />
         </div>
+        <DispersionMeta gpuSku={sku} />
+      </div>
 
-        <div className="panel px-2.5 pb-2 pt-[18px]">
-          <DispersionChart gpuSku={sku} />
+      <div className="panel px-2.5 pb-2 pt-[18px]">
+        <DispersionChart gpuSku={sku} />
+      </div>
+
+      <section className="int-section">
+        <div className="int-section__head">
+          <span className="int-section__num">03</span>
+          <h2 className="int-section__title">How to read this chart</h2>
+        </div>
+
+        <div className="int-notes int-notes--three" style={{ borderTop: 0, paddingTop: 0, marginTop: 0 }}>
+          <p>
+            <strong>Median.</strong> The middle quoted price each day — robust
+            to a single extreme listing in either direction.
+          </p>
+          <p>
+            <strong>Interquartile range.</strong> The shaded band spans the 25th
+            to 75th percentile: half of the day&apos;s quotes fall inside it.
+          </p>
+          <p>
+            <strong>Band width.</strong> Densely quoted SKUs tend to form
+            tighter bands than thin ones, so compare a SKU with itself over time
+            before comparing two SKUs.
+          </p>
+        </div>
+
+        <div className="mt-7 max-w-[68ch]">
+          <ShowMeHow label="Show me how the band is built">
+            <p>
+              Each day&apos;s offers for this SKU are pooled across every
+              provider, then reduced to three numbers: the 25th percentile, the
+              median, and the 75th percentile. A day needs at least three offers
+              to be plotted at all; thinner days are held out rather than drawn
+              with false confidence.
+            </p>
+            <p>
+              Percentiles are used instead of a mean and standard deviation
+              because quoted GPU prices are not symmetric — a handful of very
+              cheap{" "}
+              <GlossaryTerm term="spot">spot</GlossaryTerm> listings or one
+              mispriced marketplace row would drag an average somewhere no
+              buyer could actually transact.
+            </p>
+            <p>
+              The band is spread, not explanation. It says quotes disagree; it
+              does not say why. Naming the causes is the{" "}
+              <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
+              on the Basis page, and what survives it is the{" "}
+              <GlossaryTerm term="residual">residual</GlossaryTerm>.
+            </p>
+          </ShowMeHow>
         </div>
       </section>
-
-      <div className="sec-eyebrow max-w-3xl">
-        <span className="num">03</span>
-        <h2>How to read this chart</h2>
-      </div>
-      <div className="caption max-w-3xl space-y-2 leading-relaxed">
-        <p>
-          <span className="text-[var(--ink)]">Median</span> is the middle quoted
-          price across all offers that day.
-        </p>
-        <p>
-          The shaded band spans the{" "}
-          <span className="text-[var(--ink)]">25th to 75th percentile</span>{" "}
-          (interquartile range): half of observed quotes fall inside the band
-          for that day.
-        </p>
-        <p>
-          The line tracks the median through time. Use the SKU control to
-          compare models; dense SKUs like H100 SXM usually show a tighter band
-          than thinly traded ones.
-        </p>
-      </div>
     </div>
+  );
+}
+
+/**
+ * Window summary for the control row. Shares the chart's query key, so
+ * React Query serves both from one request.
+ */
+function DispersionMeta({ gpuSku }: { gpuSku: string }) {
+  const { data } = useQuery({
+    queryKey: ["dispersion", gpuSku],
+    queryFn: () => getDispersion(gpuSku),
+  });
+
+  if (!data || data.points.length === 0) return <span />;
+
+  const totalObs = data.points.reduce(
+    (sum: number, p: DispersionPoint) => sum + p.observation_count,
+    0
+  );
+
+  return (
+    <span className="int-controls__meta">
+      {data.points.length} {data.points.length === 1 ? "day" : "days"} ·{" "}
+      {totalObs.toLocaleString()} offers
+    </span>
   );
 }

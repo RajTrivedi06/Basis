@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { ShowMeHow } from "@/components/disclosure/TwoLayer";
 import { DecompBar, type DecompShares } from "@/components/charts/DecompBar";
 import { getBasisDecomposition } from "@/lib/api";
 import { factorColor, type Factor } from "@/lib/factorColor";
@@ -43,6 +44,21 @@ export function MethodologyComparisonSection() {
         </p>
       </div>
 
+      <ShowMeHow>
+        <p>
+          The two panels are drawn from one API response — the same day, the
+          same SKU, the same numbers. Nothing is recomputed between them.
+        </p>
+        <p>
+          A stacked bar reads on one axis, so a segment&apos;s length is its
+          share and the eye compares lengths directly. A donut asks the reader
+          to compare angles instead, and angle is a weaker cue: the largest
+          slice stops looking dominant once it is bent around a circle. The
+          geometry, not the data, is what changes which factor a reader walks
+          away remembering.
+        </p>
+      </ShowMeHow>
+
       {basisQuery.isLoading ? (
         <ComparisonState
           title="Loading comparison…"
@@ -83,7 +99,7 @@ function ComparisonPanels({
   const shares = toDecompShares(decomposition);
 
   return (
-    <div className="grid gap-6">
+    <div className="mt-7 grid gap-6">
       <div className="panel p-[26px]">
         <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
           <div className="eyebrow">v2 · residual-first bar</div>
@@ -222,7 +238,7 @@ function ComparisonState({
   tone?: "muted" | "error";
 }) {
   return (
-    <div className="panel p-[22px]">
+    <div className="panel mt-7 p-[22px]">
       <div
         className="mono text-[12px] uppercase tracking-[0.1em]"
         style={{

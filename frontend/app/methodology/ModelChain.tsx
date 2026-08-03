@@ -25,7 +25,7 @@ const NODES: ChainNode[] = [
   {
     factor: "provider",
     label: "Provider",
-    note: "Platform identity, after region & commitment are accounted for.",
+    note: "Identity of the price source, after region & commitment.",
     order: "Step 3",
   },
   {

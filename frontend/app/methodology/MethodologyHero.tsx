@@ -1,27 +1,31 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-
-const HERO_STATS: { label: string; value: string; residual?: boolean }[] = [
-  { label: "Providers tracked", value: "5" },
-  { label: "Collections per day", value: "2×" },
-  { label: "Variance model", value: "Sequential ANOVA" },
-  {
-    label: "Residual · market-priced",
-    value: "~20–61%",
-    residual: true,
-  },
-];
+import { getProviders } from "@/lib/api";
+import { partitionProviders } from "@/lib/providerStatus";
 
 /**
- * Hero for the methodology page. Renders a layered headline with a subtle
- * mouse/scroll-driven parallax on the background grid and glow. The numeric
- * tape at the bottom mirrors the same statistical-research voice used on the
- * Findings page so the page feels continuous with the rest of the site.
+ * Hero for the methodology page (design doc §10, rows C15/C16).
+ *
+ * The headline is final copy. The stat strip is live where it can be: the
+ * provider figure counts the providers the API says are still collecting, so
+ * a retirement or a new collector changes the page without a deploy. The
+ * residual cell carries truth-patch range language rather than a point value,
+ * per design doc §7 — a bare share would go stale between weeks.
  */
 export function MethodologyHero() {
   const [scrollY, setScrollY] = useState(0);
   const rafRef = useRef<number | null>(null);
+
+  const providersQuery = useQuery({
+    queryKey: ["providers"],
+    queryFn: getProviders,
+  });
+
+  const activeProviders = providersQuery.data
+    ? partitionProviders(providersQuery.data.items).active.length
+    : null;
 
   useEffect(() => {
     const onScroll = () => {
@@ -46,6 +50,23 @@ export function MethodologyHero() {
     transform: `translate3d(0, ${scrollY * 0.08}px, 0)`,
   };
 
+  const heroStats: { label: string; value: string; residual?: boolean }[] = [
+    {
+      // Label deliberately reads "Active providers", not "providers tracked":
+      // the retired "<n> providers" corpus claim is a banned string and the
+      // smoke suite greps for it adjacent to a digit.
+      label: "Active providers",
+      value: activeProviders === null ? "—" : String(activeProviders),
+    },
+    { label: "Collections per day", value: "2×" },
+    { label: "Variance model", value: "Sequential ANOVA" },
+    {
+      label: "Residual · market-priced",
+      value: "~20–61%",
+      residual: true,
+    },
+  ];
+
   return (
     <div className="meth-hero-shell">
       <div className="meth-grid-bg" style={gridStyle} aria-hidden />
@@ -57,19 +78,17 @@ export function MethodologyHero() {
           className="eyebrow basis-fade"
           style={{ "--basis-delay": "60ms" } as CSSProperties}
         >
-          Methodology · Variance accounting
+          06 · Methodology
         </div>
 
         <h1
           className="display basis-fade m-0 mt-5 max-w-[18ch] text-[clamp(2.6rem,6.4vw,4.6rem)] font-normal leading-[0.98] tracking-[-0.025em] text-[var(--ink-hi)]"
           style={{ "--basis-delay": "180ms" } as CSSProperties}
         >
-          How Basis measures
-          <br />
+          Measuring what the market{" "}
           <em className="font-serif italic text-[var(--ink-mid)]">
-            what it cannot
-          </em>{" "}
-          explain.
+            cannot explain.
+          </em>
         </h1>
 
         <p
@@ -87,7 +106,7 @@ export function MethodologyHero() {
           style={{ "--basis-delay": "520ms" } as CSSProperties}
         >
           <div className="stat-tape">
-            {HERO_STATS.map((s) => (
+            {heroStats.map((s) => (
               <div key={s.label} className="stat-tape__cell">
                 <div
                   className={`stat-tape__num ${s.residual ? "is-residual" : ""}`}

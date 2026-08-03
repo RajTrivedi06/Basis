@@ -64,28 +64,9 @@ export function DispersionChart({ gpuSku }: { gpuSku: string }) {
     })
   );
 
-  const totalObs = data.points.reduce(
-    (sum: number, p: DispersionPoint) => sum + p.observation_count,
-    0
-  );
-
+  // The day/offer count lives on the page's control row (see
+  // DispersionPageClient) so the panel is chart and nothing else.
   const title = `Daily price dispersion for ${gpuSku}: shaded band from 25th to 75th percentile, line is median, in USD per GPU-hour.`;
 
-  return (
-    <div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-medium text-[var(--ink-hi)]">
-          Price spread ·{" "}
-          <span className="mono text-sm text-[var(--ink-dim)]">{gpuSku}</span>
-        </h2>
-        <span className="caption mono">
-          {data.points.length} {data.points.length === 1 ? "day" : "days"} ·{" "}
-          {totalObs} offers
-        </span>
-      </div>
-      <div className="mt-4">
-        <DispersionFan data={fanData} height={380} title={title} />
-      </div>
-    </div>
-  );
+  return <DispersionFan data={fanData} height={380} title={title} />;
 }

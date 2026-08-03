@@ -1,8 +1,11 @@
 import { Suspense } from "react";
+import { ShowMeHow } from "@/components/disclosure/TwoLayer";
+import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
 import { MethodologyChrome, type TocItem } from "./MethodologyChrome";
 import { MethodologyHero } from "./MethodologyHero";
 import { ModelChain } from "./ModelChain";
 import { PipelineDiagram } from "./PipelineDiagram";
+import { PooledExhibit } from "./PooledExhibit";
 import { ResidualReveal } from "./ResidualReveal";
 import { Reveal } from "./Reveal";
 import { MethodologyComparisonSection } from "./MethodologyComparisonSection";
@@ -16,6 +19,7 @@ const TOC: TocItem[] = [
   { id: "limitations", num: "06", title: "Limitations" },
   { id: "residual", num: "07", title: "What the residual means" },
   { id: "comparison", num: "08", title: "Comparison" },
+  { id: "pooling", num: "09", title: "Why pooling misleads" },
 ];
 
 const LIMITATIONS: { num: string; title: string; body: string }[] = [
@@ -70,21 +74,33 @@ export default function MethodologyPage() {
               </p>
             </Reveal>
 
+            {/* Design doc §10 C16 — final copy, reproduced verbatim. */}
+            <Reveal delay={140}>
+              <blockquote className="meth-quote">
+                <p>
+                  If a benchmark designer can&rsquo;t tell you which adjustments
+                  produced the headline number, the headline number is doing the
+                  wrong job.
+                </p>
+              </blockquote>
+            </Reveal>
+
             <Reveal className="meth-section__body" delay={180}>
-              <p>
-                The entire pipeline is rule-based and traceable. Every
-                attribution can be regenerated from the original provider
-                response, and every adjustment is small enough to argue with.
-                Interpretability is not a polish — it is the claim.
-              </p>
-              <div className="meth-note">
-                <div className="meth-note__label">Why this matters</div>
-                <div className="meth-note__body">
-                  If a benchmark designer cannot tell you which adjustments
-                  produced the headline number, the headline number is doing
-                  the wrong job.
-                </div>
-              </div>
+              <ShowMeHow>
+                <p>
+                  The entire pipeline is rule-based and traceable. Every
+                  attribution can be regenerated from the original provider
+                  response, and every adjustment is small enough to argue with.
+                  Interpretability is not a polish — it is the claim.
+                </p>
+                <p>
+                  Three numbers carry the study: how far apart quoted prices sit
+                  on a given day, how much of that spread named factors account
+                  for, and what is left over. The last one is the{" "}
+                  <GlossaryTerm term="residual">residual</GlossaryTerm>, and
+                  every page here exists to keep it honest.
+                </p>
+              </ShowMeHow>
             </Reveal>
           </section>
 
@@ -105,12 +121,20 @@ export default function MethodologyPage() {
             </Reveal>
 
             <Reveal className="meth-section__body" delay={180}>
-              <p>
-                Every collector writes its full provider response to{" "}
-                <span className="tok">raw_observations</span> as a JSONB blob.
-                Raw rows are immutable — never updated, never deleted — so the
-                normalized layer can always be regenerated from source truth.
-              </p>
+              <ShowMeHow>
+                <p>
+                  Every collector writes its full provider response to{" "}
+                  <span className="tok">raw_observations</span> as a JSONB blob.
+                  Raw rows are immutable — never updated, never deleted — so the
+                  normalized layer can always be regenerated from source truth.
+                </p>
+                <p>
+                  Two runs a day is a deliberate floor, not a limit: it is often
+                  enough to catch a repricing, and slow enough that every quote
+                  in the corpus can be traced back to a single recorded
+                  response.
+                </p>
+              </ShowMeHow>
             </Reveal>
 
             <div className="mt-10">
@@ -134,23 +158,27 @@ export default function MethodologyPage() {
             </Reveal>
 
             <Reveal className="meth-section__body" delay={180}>
-              <p>
-                Each canonical row carries a canonical GPU SKU (for example{" "}
-                <span className="tok">h100_sxm_80gb</span>), a canonical
-                commitment type (<span className="tok">on_demand</span>,{" "}
-                <span className="tok">spot</span>, or{" "}
-                <span className="tok">reserved_*</span>), country / state /
-                city region, and the bundled vCPU/RAM/storage that travelled
-                with the offer.
-              </p>
-              <p>
-                Unknown GPU names are skipped and logged, not guessed. Missing
-                factor values remain a distinct{" "}
-                <span className="pill-unknown">UNKNOWN</span> group rather
-                than being imputed away. Conservative normalization preserves
-                the residual instead of laundering ambiguity into &ldquo;region&rdquo;
-                or &ldquo;bundle.&rdquo;
-              </p>
+              <ShowMeHow>
+                <p>
+                  Each canonical row carries a canonical GPU SKU (for example{" "}
+                  <span className="tok">h100_sxm_80gb</span>), a canonical
+                  commitment type (<span className="tok">on_demand</span>,{" "}
+                  <GlossaryTerm term="spot">
+                    <span className="tok">spot</span>
+                  </GlossaryTerm>
+                  , or <span className="tok">reserved_*</span>), country /
+                  state / city region, and the bundled vCPU/RAM/storage that
+                  travelled with the offer.
+                </p>
+                <p>
+                  Unknown GPU names are skipped and logged, not guessed. Missing
+                  factor values remain a distinct{" "}
+                  <span className="pill-unknown">UNKNOWN</span> group rather
+                  than being imputed away. Conservative normalization preserves
+                  the residual instead of laundering ambiguity into &ldquo;region&rdquo;
+                  or &ldquo;bundle.&rdquo;
+                </p>
+              </ShowMeHow>
             </Reveal>
           </section>
 
@@ -171,13 +199,15 @@ export default function MethodologyPage() {
             </Reveal>
 
             <Reveal className="meth-section__body" delay={180}>
-              <p>
-                These daily aggregates live in{" "}
-                <span className="tok">daily_aggregates</span> and power the
-                time-series pages. Anything below three offers is held out:
-                noise from thin samples is precisely the kind of confidence
-                Basis is built to resist.
-              </p>
+              <ShowMeHow>
+                <p>
+                  These daily aggregates live in{" "}
+                  <span className="tok">daily_aggregates</span> and power the
+                  time-series pages. Anything below three offers is held out:
+                  noise from thin samples is precisely the kind of confidence
+                  Basis is built to resist.
+                </p>
+              </ShowMeHow>
             </Reveal>
           </section>
 
@@ -192,8 +222,10 @@ export default function MethodologyPage() {
               <p className="meth-section__lede">
                 For each <span className="tok">(date, gpu_sku)</span> with at
                 least five offers, Basis runs a sequential ANOVA on
-                log-prices. The model order is fixed and renders the same way
-                everywhere on the site:
+                log-prices — a{" "}
+                <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
+                in fixed model order that renders the same way everywhere on the
+                site:
               </p>
             </Reveal>
 
@@ -202,26 +234,28 @@ export default function MethodologyPage() {
             </div>
 
             <Reveal className="meth-section__body mt-10" delay={140}>
-              <p>
-                Each factor&apos;s attribution is the additional sum-of-squares
-                explained after conditioning on all prior factors. The
-                residual is{" "}
-                <span className="tok">total_variance − Σ attributions</span>.
-              </p>
-              <p>
-                <span className="ink">Order dependence.</span> Sequential
-                ANOVA is order-dependent: a different order redistributes
-                factor attributions, but leaves the residual unchanged. That
-                is why the Basis page and the comparison panel at the bottom
-                both render in model order rather than prototype order.
-              </p>
-              <p>
-                <span className="ink">Why log-prices.</span> Price ratios, not
-                absolute differences, are the meaningful fungibility metric.
-                A 2× price multiplier at $1/hr vs $2/hr represents the same
-                fungibility gap as 2× at $2/hr vs $4/hr; they should not be
-                conflated in absolute-variance terms.
-              </p>
+              <ShowMeHow>
+                <p>
+                  Each factor&apos;s attribution is the additional
+                  sum-of-squares explained after conditioning on all prior
+                  factors. The residual is{" "}
+                  <span className="tok">total_variance − Σ attributions</span>.
+                </p>
+                <p>
+                  <span className="ink">Order dependence.</span> Sequential
+                  ANOVA is order-dependent: a different order redistributes
+                  factor attributions, but leaves the residual unchanged. That
+                  is why the Basis page and the comparison panel at the bottom
+                  both render in model order rather than prototype order.
+                </p>
+                <p>
+                  <span className="ink">Why log-prices.</span> Price ratios, not
+                  absolute differences, are the meaningful fungibility metric.
+                  A 2× price multiplier at $1/hr vs $2/hr represents the same
+                  fungibility gap as 2× at $2/hr vs $4/hr; they should not be
+                  conflated in absolute-variance terms.
+                </p>
+              </ShowMeHow>
             </Reveal>
           </section>
 
@@ -269,6 +303,12 @@ export default function MethodologyPage() {
               <MethodologyComparisonSection />
             </Suspense>
           </section>
+
+          <section id="pooling" className="meth-section">
+            <Suspense fallback={<PoolingFallback />}>
+              <PooledExhibit />
+            </Suspense>
+          </section>
         </article>
       </div>
     </div>
@@ -283,6 +323,18 @@ function ComparisonFallback() {
         <h2>Compare to an equal-weight donut</h2>
       </div>
       <p className="caption">Loading comparison…</p>
+    </div>
+  );
+}
+
+function PoolingFallback() {
+  return (
+    <div>
+      <div className="sec-eyebrow">
+        <span className="num">09</span>
+        <h2>Why pooling misleads</h2>
+      </div>
+      <p className="caption">Loading both series…</p>
     </div>
   );
 }

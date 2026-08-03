@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DecompBar, type DecompShares } from "@/components/charts/DecompBar";
 import { SkuPicker } from "@/components/SkuPicker";
+import { TwoLayer } from "@/components/disclosure/TwoLayer";
+import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
 import { getBasisDecomposition, getDecompositionObservations, getDispersion } from "@/lib/api";
 import { factorColor, type Factor } from "@/lib/factorColor";
 import { useSku } from "@/lib/useSku";
@@ -48,7 +50,7 @@ const FACTOR_META: {
   {
     key: "provider",
     label: "Provider",
-    note: "Platform identity after conditioning on region and commitment.",
+    note: "Identity of the public price source, after region and commitment.",
   },
   {
     key: "bundle",
@@ -134,14 +136,36 @@ export function BasisPageClient() {
               </em>{" "}
               explain?
             </h1>
-            <p className="caption mt-3 max-w-[720px]">
-              Latest daily decomposition for the selected SKU. The bar and
-              table below follow the model order{" "}
-              <span className="mono text-[var(--ink)]">
-                region → commitment → provider → bundle → residual
-              </span>
-              , so the cumulative percentages match backend sequential ANOVA.
-            </p>
+            <TwoLayer
+              className="mt-5"
+              plain={
+                <>
+                  Prices for the same chip disagree. This page names the causes
+                  we can see — where it is, how it is rented, who is renting it,
+                  what came bundled with it — and measures what is left after
+                  all four.
+                </>
+              }
+            >
+              <p>
+                The bar and table below are the latest daily{" "}
+                <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
+                for the selected SKU, in the model order{" "}
+                <span className="mono text-[var(--ink)]">
+                  region → commitment → provider → bundle → residual
+                </span>
+                , so the cumulative percentages match the backend&apos;s
+                sequential ANOVA.
+              </p>
+              <p>
+                Order matters for the four factors and not for the last one.
+                Each factor is credited only with what it explains after the
+                factors before it have had their turn, so reordering them moves
+                credit between them — but the{" "}
+                <GlossaryTerm term="residual">residual</GlossaryTerm> at the end
+                is the same either way. That is what makes it worth reporting.
+              </p>
+            </TwoLayer>
           </div>
 
           <BasisMetaRail
