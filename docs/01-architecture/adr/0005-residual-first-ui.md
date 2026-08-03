@@ -86,6 +86,13 @@ It appears wherever the unexplained share is encoded — chart segments, hero
 numerals, stat values — and nowhere else. Terracotta `#C15F3C` carries no data
 meaning anywhere on the site. The amber residual of the dark theme is retired.
 
+**Amended 2026-08-03 (Raj ruling — adopt the DC reference's own chart grammar):**
+terracotta `#C15F3C` serves as the chart-mark accent for single-series line and
+dot marks (the residual-over-time line, the dispersion median, strip-plot dots).
+Void `#171512` retains exclusive ownership of residual-SHARE encodings —
+decomposition bar segments, hero numerals, stat values, bound bars. Terracotta
+never represents the residual share itself.
+
 Decision context: Stage 6 design doc §3 (`docs/analysis/stage6-design.md`) — the
 cream-editorial retheme keeps this ADR's structural mechanism (one `--residual`
 token, hand-rolled SVG consumers, grep-provable discipline) and changes only the

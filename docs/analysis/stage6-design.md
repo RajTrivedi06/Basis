@@ -86,6 +86,12 @@ meaning anywhere on the site. The amber residual of the dark theme is retired."*
 > residual; terracotta demoted to purely editorial accent.** ADR-0005 addendum
 > committed as pre-written (see `docs/01-architecture/adr/0005-residual-first-ui.md`).
 > Ruled 2026-08-02, relayed by Raj; recorded by Manager.
+>
+> **Amended 2026-08-03 (Raj):** the DC reference's own chart grammar governs —
+> terracotta is the chart-mark accent for single-series line/dot marks; void
+> keeps exclusive ownership of residual-share encodings (segments, numerals,
+> stat values, bound bars). Terracotta never represents the residual share
+> itself. ADR-0005 addendum amended to match.
 
 ## 4. RAJ DECISION #3 — pooled-series visibility (Stage 5 blocker #3)
 
