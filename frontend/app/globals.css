@@ -4,66 +4,89 @@
 
 /* ============================================================
    Basis — design tokens
-   Ported from the residual-first prototype (see temp-doc/basis-v2-proposal-r2.md).
-   Residual amber is sacred; do not use for anything else.
+   Cream-editorial direction, frozen in design/stage6-references/.
+   Ground is paper, surfaces are white, hairlines carry the structure.
+   Two colours carry meaning and must not be confused: the residual is
+   void near-black and encodes the unexplained share wherever it appears;
+   terracotta is purely editorial (eyebrows, links, annotations, active
+   nav) and never encodes data.
    ============================================================ */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Navy / neutrals */
-  --bg:          #111827;
-  --bg-deep:     #0b1220;
-  --panel:       #151e30;
-  --panel-hi:    #1a2437;
-  --panel-lo:    #0f1727;
-  --line:        #1f2b42;
-  --line-hi:     #2a3654;
-  --line-lo:     #18233a;
+  /* Ground / surfaces */
+  --bg:          #FAF9F5;
+  --bg-deep:     #F3F1E9;
+  --panel:       #FFFFFF;
+  --panel-hi:    #F1EEE5;
+  --panel-lo:    #FFFFFF;
+  --line:        #E8E4DB;
+  --line-hi:     #D9D3C6;
+  --line-lo:     #EFEBE1;
 
   /* Text */
-  --ink:         #eef1f8;
-  --ink-hi:      #ffffff;
-  --ink-mid:     #aab4c8;
-  --ink-dim:     #828ea3;
-  --ink-faint:   #5d6985;
+  --ink:         #1F1D1A;
+  --ink-hi:      #13110F;
+  --ink-mid:     #6B675E;
+  --ink-dim:     #A09B90;
+  --ink-faint:   #C9C2B4;
 
-  /* THE RESIDUAL. Used nowhere else. */
-  --residual:      #f59e0b;
-  --residual-dim:  #b47607;
-  --residual-bg:   rgba(245, 158, 11, 0.12);
-  --residual-line: rgba(245, 158, 11, 0.38);
+  /* Editorial accent — terracotta. Eyebrows, links, annotations, active
+     nav, progress. Never encodes data. */
+  --accent:      #C15F3C;
+  --accent-dim:  #A84E2E;
+  --accent-bg:   #FBF4EE;
+  --accent-line: #E8D5C9;
 
-  /* Factor palette — muted slate, visually SUBORDINATE to residual */
-  --factor-provider:   #6b8cc7;
-  --factor-commitment: #4f6996;
-  --factor-region:     #3d506f;
-  --factor-bundle:     #2f3f59;
+  /* THE RESIDUAL — void near-black (Raj ruling 2026-08-02, ADR-0005 addendum).
+     Encodes the unexplained share and nothing else. Everything below is
+     derived from it, so the hex is defined exactly once. */
+  --residual:      #171512;
+  --residual-dim:  color-mix(in srgb, var(--residual) 64%, var(--bg));
+  --residual-bg:   color-mix(in srgb, var(--residual) 7%, transparent);
+  --residual-line: color-mix(in srgb, var(--residual) 30%, transparent);
+
+  /* Factor palette — muted warm neutrals, visually SUBORDINATE to residual */
+  --factor-provider:   #AC9282;
+  --factor-commitment: #98A084;
+  --factor-region:     #8A93A1;
+  --factor-bundle:     #C5B8A3;
 
   /* Semantic */
-  --verdict-ok:   #86a573;
-  --verdict-warn: #c9a66b;
-  --verdict-bad:  #b27676;
-  --unknown:      #6f7b94;
-  --unknown-bg:   rgba(111, 123, 148, 0.14);
+  --verdict-ok:   #5C6B4A;
+  --verdict-warn: #8A6A2F;
+  --verdict-bad:  #8C4A44;
+  --unknown:      #6B675E;
+  --unknown-bg:   rgba(107, 103, 94, 0.10);
 
   /* Shadows */
-  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 2px rgba(31, 29, 26, 0.05);
+  --shadow-md: 0 18px 44px rgba(31, 29, 26, 0.12);
 
   /* Radii */
-  --r-sm: 3px;
-  --r-md: 5px;
-  --r-lg: 8px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
 
   /* Layout */
   --header-h: 54px;
   --header-rail-h: calc(var(--header-h) + 20px);
 
-  /* Fonts (wired to next/font CSS variables set in layout.tsx) */
-  --f-serif: var(--font-fraunces), Georgia, serif;
-  --f-sans:  var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --f-mono:  var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Type scale */
+  --t-display: clamp(56px, 7.4vw, 108px);
+  --t-title:   clamp(1.7rem, 3.6vw, 2.4rem);
+  --t-lede:    clamp(17px, 1.6vw, 20px);
+  --t-body:    15px;
+  --t-small:   13px;
+  --t-caption: 12px;
+  --t-label:   11px;
+  --label-tracking: 0.12em;
+
+  /* Fonts (serif is wired to the next/font CSS variable set in layout.tsx) */
+  --f-serif: var(--font-serif), Georgia, "Times New Roman", serif;
+  --f-sans:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --f-mono:  ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
 }
 
 html,
@@ -73,7 +96,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--f-sans);
-  font-size: 14px;
+  font-size: var(--t-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -83,9 +106,17 @@ body {
   min-height: 100vh;
 }
 
+::selection {
+  background: #F0DFD4;
+}
+
 a {
   color: inherit;
   text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent);
 }
 
 button {
@@ -105,12 +136,10 @@ button {
 .mono {
   font-family: var(--f-mono);
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "ss01", "zero";
 }
 
 .serif {
   font-family: var(--f-serif);
-  font-feature-settings: "ss01";
   font-optical-sizing: auto;
 }
 
@@ -123,15 +152,15 @@ button {
 
 .eyebrow {
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: var(--t-label);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--ink-dim);
+  letter-spacing: var(--label-tracking);
+  color: var(--ink-mid);
 }
 
 .caption {
-  color: var(--ink-dim);
-  font-size: 12px;
+  color: var(--ink-mid);
+  font-size: var(--t-caption);
 }
 
 .tiny {
@@ -160,13 +189,13 @@ button {
    ------------------------------------------------------------ */
 
 .panel {
-  background: var(--panel-lo);
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
 }
 
 .panel-hd {
-  padding: 14px 18px;
+  padding: 16px 22px;
   border-bottom: 1px solid var(--line-lo);
   display: flex;
   align-items: center;
@@ -175,7 +204,7 @@ button {
 }
 
 .panel-body {
-  padding: 18px;
+  padding: 22px;
 }
 
 .hr {
@@ -199,25 +228,25 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
-  border: 1px solid var(--line-hi);
-  border-radius: var(--r-sm);
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
   font-family: var(--f-mono);
   font-size: 11px;
   color: var(--ink-mid);
-  background: transparent;
+  background: var(--panel);
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 
 .chip:hover {
-  border-color: var(--ink-dim);
+  border-color: var(--line-hi);
   color: var(--ink);
 }
 
 .chip.on {
-  background: var(--panel-hi);
-  border-color: var(--ink-dim);
-  color: var(--ink-hi);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
 }
 
 .chip.residual {
@@ -240,12 +269,12 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   font-family: var(--f-mono);
   font-size: 10px;
   color: var(--unknown);
   background: var(--unknown-bg);
-  border-radius: 2px;
+  border-radius: 999px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -270,7 +299,7 @@ button {
 }
 
 :focus-visible {
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -281,18 +310,19 @@ button {
   padding: 8px 12px;
   background: var(--panel);
   color: var(--ink-hi);
-  border: 1px solid var(--line-hi);
+  border: 1px solid var(--line);
   border-radius: var(--r-sm);
   font-family: var(--f-mono);
   font-size: 12px;
   text-decoration: none;
+  box-shadow: var(--shadow-sm);
   z-index: 100;
   transition: top 0.12s;
 }
 
 .skip-link:focus-visible {
   top: 12px;
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -461,14 +491,12 @@ button {
   min-height: var(--header-h);
   margin: 0 auto;
   padding: 6px 8px 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  background: rgba(15, 23, 39, 0.38);
-  backdrop-filter: blur(14px) saturate(1.15);
-  -webkit-backdrop-filter: blur(14px) saturate(1.15);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 8px 32px rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: rgba(250, 249, 245, 0.88);
+  backdrop-filter: blur(14px) saturate(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05);
+  box-shadow: 0 6px 20px rgba(31, 29, 26, 0.06);
   transition:
     background-color 320ms ease,
     border-color 320ms ease,
@@ -478,23 +506,19 @@ button {
 
 /* At page top — lightest touch so hero/content reads through */
 .site-header-rail--top .site-header-island {
-  background: rgba(15, 23, 39, 0.28);
-  border-color: rgba(255, 255, 255, 0.05);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 4px 20px rgba(0, 0, 0, 0.14);
+  background: rgba(250, 249, 245, 0.72);
+  border-color: var(--line-lo);
+  box-shadow: 0 2px 10px rgba(31, 29, 26, 0.03);
 }
 
 /* Revealed after scrolling up — slightly stronger for legibility */
 .site-header-rail--visible .site-header-island,
 .site-header-rail.is-pinned .site-header-island {
-  background: rgba(15, 23, 39, 0.52);
-  border-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 12px 40px rgba(0, 0, 0, 0.28);
+  background: rgba(250, 249, 245, 0.94);
+  border-color: var(--line);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  box-shadow: 0 10px 30px rgba(31, 29, 26, 0.08);
 }
 
 .site-header-island__brand {
@@ -508,11 +532,11 @@ button {
 }
 
 .site-header-island__brand:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--panel-hi);
 }
 
 .site-header-island__brand:focus-visible {
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -630,32 +654,33 @@ button {
   display: none;
 }
 
+/* Numbered pills, per dc/Basis Redesign.dc.html header */
 .rail-link {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: baseline;
   gap: 7px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 7px 13px;
+  border-radius: 999px;
   white-space: nowrap;
   transition: background-color 140ms ease;
 }
 
 .rail-link:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--panel-hi);
 }
 
 .rail-link:focus-visible {
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
 .rail-link__index {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   letter-spacing: 0.06em;
-  color: var(--ink-faint);
+  color: var(--ink-dim);
   transition: color 140ms ease;
 }
 
@@ -666,52 +691,36 @@ button {
   transition: color 140ms ease;
 }
 
+/* The pill itself carries the active state; no underline in the reference. */
 .rail-link__indicator {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 6px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--residual);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  display: none;
 }
 
-.rail-link:hover .rail-link__indicator {
-  transform: scaleX(0.45);
-  background: var(--line-hi);
+.rail-link.is-active {
+  background: var(--panel-hi);
 }
 
 .rail-link.is-active .rail-link__index {
-  color: var(--residual);
+  color: var(--ink-mid);
 }
 
 .rail-link.is-active .rail-link__label {
-  font-family: var(--f-serif);
-  color: var(--ink-hi);
-}
-
-.rail-link.is-active .rail-link__indicator {
-  transform: scaleX(1);
-  background: var(--residual);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+  color: var(--ink);
 }
 
 .site-header-island__badge {
   flex-shrink: 0;
   display: none;
-  padding: 6px 10px;
+  padding: 4px 10px;
   margin-right: 4px;
-  border: 1px solid var(--line-lo);
+  border: 1px solid var(--line-hi);
   border-radius: 999px;
   font-family: var(--f-mono);
-  font-size: 9px;
-  letter-spacing: 0.14em;
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--ink-dim);
-  background: rgba(0, 0, 0, 0.18);
+  color: var(--ink-mid);
+  background: transparent;
 }
 
 .site-header-island__menu {
@@ -722,9 +731,9 @@ button {
   width: 40px;
   height: 40px;
   margin-left: auto;
-  border: 1px solid var(--line-lo);
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--panel);
   color: var(--ink);
   transition:
     border-color 140ms ease,
@@ -739,7 +748,7 @@ button {
 }
 
 .site-header-island__menu:focus-visible {
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -780,7 +789,7 @@ button {
 .site-nav-stage__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(7, 11, 20, 0.72);
+  background: rgba(31, 29, 26, 0.38);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   opacity: 0;
@@ -799,12 +808,7 @@ button {
   padding: clamp(20px, 4vw, 32px);
   border: 1px solid var(--line);
   border-radius: 20px;
-  background:
-    linear-gradient(
-      165deg,
-      rgba(21, 30, 48, 0.98) 0%,
-      rgba(11, 18, 32, 0.96) 100%
-    );
+  background: var(--bg);
   box-shadow: var(--shadow-md);
   opacity: 0;
   transform: translateY(12px) scale(0.985);
@@ -830,12 +834,12 @@ button {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .site-nav-stage__close {
   padding: 8px 12px;
-  border: 1px solid var(--line-lo);
+  border: 1px solid var(--line);
   border-radius: 999px;
   font-family: var(--f-mono);
   font-size: 10px;
@@ -850,12 +854,12 @@ button {
 
 .site-nav-stage__close:hover {
   border-color: var(--line-hi);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--panel-hi);
   color: var(--ink-hi);
 }
 
 .site-nav-stage__close:focus-visible {
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -884,7 +888,7 @@ button {
 }
 
 .stage-link:focus-visible {
-  outline: 1px solid var(--residual);
+  outline: 1px solid var(--accent);
   outline-offset: 4px;
 }
 
@@ -894,7 +898,7 @@ button {
   font-family: var(--f-mono);
   font-size: clamp(11px, 2.5vw, 12px);
   letter-spacing: 0.08em;
-  color: var(--ink-faint);
+  color: var(--ink-dim);
 }
 
 .stage-link__label {
@@ -907,7 +911,7 @@ button {
 }
 
 .stage-link.is-active .stage-link__index {
-  color: var(--residual);
+  color: var(--accent);
 }
 
 .stage-link.is-active .stage-link__label {
@@ -993,19 +997,19 @@ button {
 
 .tbl th,
 .tbl td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--line-lo);
   text-align: left;
 }
 
 .tbl th {
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-dim);
+  letter-spacing: 0.08em;
+  color: var(--ink-mid);
   font-weight: 500;
-  background: var(--panel-lo);
+  background: var(--panel);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -1013,7 +1017,7 @@ button {
 }
 
 .tbl tr:hover td {
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--bg);
 }
 
 .tbl td.num {
@@ -1037,18 +1041,18 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 12px;
-  border: 1px solid var(--line-hi);
-  border-radius: var(--r-sm);
-  font-size: 12px;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
   color: var(--ink);
-  background: var(--panel-lo);
-  transition: background 0.12s, border-color 0.12s;
+  background: var(--panel);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 
 .btn:hover {
   background: var(--panel-hi);
-  border-color: var(--ink-dim);
+  border-color: var(--line-hi);
 }
 
 .btn.ghost {
@@ -1064,9 +1068,15 @@ button {
 
 .btn.primary {
   background: var(--ink);
-  color: var(--bg-deep);
+  color: var(--bg);
   border-color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.btn.primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
 }
 
 /* ------------------------------------------------------------
@@ -1113,9 +1123,9 @@ button {
 }
 
 .sec-eyebrow .num {
-  color: var(--ink-dim);
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  color: var(--ink-mid);
+  font-size: var(--t-label);
+  letter-spacing: var(--label-tracking);
 }
 
 .sec-eyebrow h2 {
@@ -1135,7 +1145,7 @@ button {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-dim);
+  color: var(--ink-mid);
 }
 
 /* ============================================================
@@ -1155,14 +1165,8 @@ button {
 .read-progress__fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--residual-dim) 18%,
-    var(--residual) 100%
-  );
+  background: var(--accent);
   transition: width 80ms linear;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
 }
 
 /* Methodology hero — grid bleeds under the floating nav rail */
@@ -1204,8 +1208,8 @@ button {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(to right, rgba(31, 29, 26, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(31, 29, 26, 0.045) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: linear-gradient(
     to bottom,
@@ -1228,12 +1232,12 @@ button {
   background:
     radial-gradient(
       circle 480px at 78% 12%,
-      rgba(245, 158, 11, 0.10) 0%,
+      rgba(193, 95, 60, 0.07) 0%,
       transparent 60%
     ),
     radial-gradient(
       circle 600px at 8% 38%,
-      rgba(107, 140, 199, 0.10) 0%,
+      rgba(172, 146, 130, 0.10) 0%,
       transparent 60%
     );
   z-index: 0;
@@ -1253,7 +1257,7 @@ button {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line-lo);
   margin-bottom: 8px;
@@ -1267,7 +1271,7 @@ button {
   gap: 12px;
   padding: 8px 4px;
   text-align: left;
-  color: var(--ink-faint);
+  color: var(--ink-dim);
   font-family: var(--f-mono);
   font-size: 11px;
   letter-spacing: 0.04em;
@@ -1278,7 +1282,7 @@ button {
 .meth-toc__num {
   font-family: var(--f-mono);
   font-size: 10px;
-  color: var(--ink-faint);
+  color: var(--ink-dim);
   letter-spacing: 0.1em;
 }
 
@@ -1316,12 +1320,12 @@ button {
 }
 
 .meth-toc__item.is-active .meth-toc__num {
-  color: var(--residual);
+  color: var(--accent);
 }
 
 .meth-toc__item.is-active .meth-toc__rule {
   width: 38px;
-  background: var(--residual);
+  background: var(--accent);
 }
 
 /* Section structure */
@@ -1349,7 +1353,7 @@ button {
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .meth-section__index::before {
@@ -1575,7 +1579,7 @@ button {
 
 .pipe-node:hover {
   border-color: var(--line-hi);
-  background: var(--panel);
+  background: var(--bg);
   transform: translateY(-2px);
 }
 
@@ -1584,7 +1588,7 @@ button {
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .pipe-node__title {
@@ -1613,9 +1617,9 @@ button {
   font-family: var(--f-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
-  border-radius: 2px;
-  background: rgba(107, 140, 199, 0.10);
-  color: var(--factor-provider);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--factor-provider) 16%, transparent);
+  color: color-mix(in srgb, var(--factor-provider) 72%, var(--ink));
   white-space: nowrap;
   max-width: 100%;
   overflow: hidden;
@@ -1626,8 +1630,8 @@ button {
   border-color: var(--residual-line);
   background: linear-gradient(
     180deg,
-    rgba(245, 158, 11, 0.06) 0%,
-    var(--panel-lo) 70%
+    var(--residual-bg) 0%,
+    var(--panel) 70%
   );
 }
 
@@ -1710,8 +1714,8 @@ button {
 .chain__node.is-residual {
   background: linear-gradient(
     180deg,
-    rgba(245, 158, 11, 0.10) 0%,
-    rgba(245, 158, 11, 0.03) 100%
+    var(--residual-bg) 0%,
+    var(--panel) 100%
   );
   border-color: var(--residual-line);
 }
@@ -1720,7 +1724,7 @@ button {
   font-family: var(--f-mono);
   font-size: 10px;
   letter-spacing: 0.14em;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .chain__label {
@@ -1823,12 +1827,12 @@ button {
 
 .limit-card:hover {
   border-color: var(--line-hi);
-  background: var(--panel);
+  background: var(--bg);
   transform: translateY(-2px);
 }
 
 .limit-card:hover::before {
-  background: var(--residual);
+  background: var(--accent);
 }
 
 .limit-card__num {
@@ -1836,7 +1840,7 @@ button {
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .limit-card__title {
@@ -1892,8 +1896,8 @@ button {
   flex: 0 0 var(--meter-fill, 70%);
   background: linear-gradient(
     180deg,
-    rgba(245, 158, 11, 0.85) 0%,
-    rgba(245, 158, 11, 0.55) 100%
+    var(--residual) 0%,
+    color-mix(in srgb, var(--residual) 82%, var(--bg)) 100%
   );
   transition: flex-basis 1400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -1937,6 +1941,8 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* Sits inside the filled portion of the meter, so it takes the fill's
+   foreground colour rather than the page's. */
 .residual-meter__caption {
   position: absolute;
   inset: auto 20px 14px 22px;
@@ -1947,7 +1953,8 @@ button {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--bg-deep);
+  opacity: 0.6;
   pointer-events: none;
 }
 
@@ -1955,7 +1962,7 @@ button {
   position: absolute;
   left: 0;
   right: 0;
-  border-top: 1px dashed rgba(255, 255, 255, 0.07);
+  border-top: 1px dashed rgba(31, 29, 26, 0.10);
   pointer-events: none;
 }
 
@@ -1969,13 +1976,13 @@ button {
   font-size: 10px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .scroll-cue__line {
   width: 36px;
   height: 1px;
-  background: var(--ink-faint);
+  background: var(--line-hi);
   position: relative;
   overflow: hidden;
 }
@@ -1985,7 +1992,7 @@ button {
   position: absolute;
   inset: 0;
   width: 12px;
-  background: var(--residual);
+  background: var(--accent);
   animation: scrollCue 2.4s ease-in-out infinite;
 }
 
@@ -2006,10 +2013,10 @@ button {
 .meth-note {
   margin: 22px 0 0;
   padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-left: 2px solid var(--residual);
-  background: rgba(245, 158, 11, 0.04);
-  border-radius: var(--r-sm);
+  border: 1px solid var(--accent-line);
+  border-left: 2px solid var(--accent);
+  background: var(--accent-bg);
+  border-radius: var(--r-md);
   max-width: 62ch;
 }
 
@@ -2018,7 +2025,7 @@ button {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--residual);
+  color: var(--accent);
   margin-bottom: 6px;
 }
 
@@ -2034,10 +2041,10 @@ button {
   font-family: var(--f-mono);
   font-size: 0.86em;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-deep);
   padding: 1px 6px;
-  border-radius: 2px;
-  border: 1px solid var(--line-lo);
+  border-radius: 4px;
+  border: 1px solid var(--line);
   white-space: nowrap;
 }
 
@@ -2059,7 +2066,7 @@ button {
 }
 
 .obs-card:hover {
-  background: color-mix(in srgb, var(--panel) 60%, var(--panel-lo));
+  background: var(--bg);
   border-color: var(--line-hi);
 }
 
@@ -2240,14 +2247,14 @@ button {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: var(--panel-lo);
+  background: var(--bg);
   border: 1px solid var(--line-lo);
   border-radius: var(--r-sm);
 }
 
 .flow-arrow {
   font-family: var(--f-mono);
-  color: var(--ink-faint);
+  color: var(--ink-dim);
   font-size: 14px;
   line-height: 1;
 }
@@ -2268,7 +2275,7 @@ button {
   content: "▸";
   font-family: var(--f-mono);
   font-size: 10px;
-  color: var(--ink-faint);
+  color: var(--ink-dim);
   transition: transform 0.12s;
   display: inline-block;
 }
@@ -2354,18 +2361,18 @@ button {
   padding: 0 4px;
   font-size: 10px;
   letter-spacing: 0.02em;
-  color: var(--factor-provider);
-  background: rgba(107, 140, 199, 0.12);
-  border: 1px solid rgba(107, 140, 199, 0.28);
-  border-radius: 3px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-line);
+  border-radius: 4px;
   text-decoration: none;
   vertical-align: super;
   transition: background 0.12s, border-color 0.12s;
 }
 
 .ask-cite:hover {
-  background: rgba(107, 140, 199, 0.2);
-  border-color: var(--factor-provider);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
 }
 
 .ask-cursor {
@@ -2386,7 +2393,7 @@ button {
   margin: 14px 0 0;
   font-size: 10px;
   letter-spacing: 0.06em;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .ask-sources {
@@ -2423,7 +2430,7 @@ button {
 .ask-sources__chevron {
   font-family: var(--f-mono);
   font-size: 14px;
-  color: var(--ink-faint);
+  color: var(--ink-dim);
 }
 
 .ask-sources__list {
@@ -2440,14 +2447,14 @@ button {
   gap: 12px;
   align-items: start;
   padding: 10px 12px;
-  background: var(--panel);
+  background: var(--bg);
   border: 1px solid var(--line-lo);
   border-radius: var(--r-sm);
 }
 
 .ask-source__marker {
   font-size: 10px;
-  color: var(--factor-provider);
+  color: var(--accent);
   letter-spacing: 0.04em;
 }
 
@@ -2468,7 +2475,7 @@ button {
 .ask-source__link {
   font-family: var(--f-mono);
   font-size: 11px;
-  color: var(--factor-provider);
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -2524,9 +2531,9 @@ button {
   font-size: 14px;
   line-height: 1.5;
   color: var(--ink);
-  background: var(--bg-deep);
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   transition: border-color 0.12s;
 }
 
@@ -2597,8 +2604,8 @@ button {
   z-index: 45;
   padding: 10px 14px;
   border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-  background: rgba(15, 23, 39, 0.92);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: var(--ink-mid);
@@ -2614,7 +2621,7 @@ button {
 .ask-launcher:hover {
   border-color: var(--line-hi);
   color: var(--ink-hi);
-  background: rgba(21, 30, 48, 0.96);
+  background: #FFFFFF;
 }
 
 .ask-launcher:focus {
@@ -2643,7 +2650,7 @@ button {
   inset: 0;
   border: 0;
   padding: 0;
-  background: rgba(7, 11, 20, 0.55);
+  background: rgba(31, 29, 26, 0.32);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   opacity: 0;
@@ -2662,9 +2669,9 @@ button {
   width: min(440px, 100vw);
   display: flex;
   flex-direction: column;
-  background: var(--bg-deep);
+  background: var(--bg);
   border-left: 1px solid var(--line);
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.35);
+  box-shadow: -24px 0 60px rgba(31, 29, 26, 0.12);
   transform: translateX(100%);
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -2715,7 +2722,7 @@ button {
 .ask-drawer__hint {
   font-size: 10px;
   letter-spacing: 0.12em;
-  color: var(--ink-faint);
+  color: var(--ink-mid);
 }
 
 .ask-drawer__close {
