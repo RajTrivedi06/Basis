@@ -2,10 +2,9 @@
 
 **Status: SIGNED (Director, 2026-08-02) — sign-off granted effective upon
 amendments A1–A7 being committed (this commit). The gate for 6.2+ is OPEN.
-Outstanding artifacts (not gating the build's start, but required before their
-subjects propagate): the bracket-diagram sketch goes to the Director for one look
-before the motif spreads (A1/A4), and C23 ships only as Raj's own two sentences
-(A3).**
+Outstanding artifact: the bracket-diagram sketch goes to the Director for one
+look before the motif spreads (A1/A4). C23 CLOSED 2026-08-03 — Raj's own words
+on record in §10.**
 Author: Manager · 2026-08-02 · References: `design/stage6-references/` (PR #54)
 
 ---
@@ -267,7 +266,7 @@ screenshot set, truth-patch copy (verbatim, already voice-approved), or NEW.
 | C20 | Footer | "Basis — research artifact · public data · 2026" · "Not a price aggregator · Not a derivatives engine" | Story footer |
 | C21 | Glossary (tap-to-explain) | **Residual** — the share of price differences left over after accounting for everything sellers publicly disclose. · **Spot** — discounted capacity the provider can take back at any time. · **Decomposition** — splitting total price variation into named causes, one factor at a time. · **ICC** — how much of the leftover variation sticks to the same specific machines day after day. | Director seeds adopted |
 | C22 | Header tagline + meta/OG description (A2, rides §9 metadata scope) | "Basis — measuring what the GPU market cannot explain." | Director A2 |
-| C23 | Attribution block — end-of-story (or compact /about) | Who built this: **two sentences in Raj's OWN words** + GitHub/LinkedIn/contact links, house restraint. **PENDING — the one outstanding voice item; must not be drafted-and-approved (A3). Raj sends the text; Director sees it before ship.** | A3 · awaiting Raj |
+| C23 | Attribution block — end-of-story, signature-line treatment | **FINAL, verbatim (Raj, 2026-08-03):** "I was just bored and curious. So here it is: [GitHub link]" signed "— Raj". Link target: the public repo `github.com/RajTrivedi06/Basis`. **Director rider:** full name "Raj Trivedi" goes in author meta + OG metadata under C22 scope — **page copy stays exactly as written.** | A3 · CLOSED (Raj's own words; Director rider recorded) |
 | C24 | Name scene (A1, between puzzle and method) | "When a trader hedges oil with a benchmark, the gap between the benchmark and the price they actually pay is called basis. It's the risk standardization can't remove. GPUs — the commodity compute is supposed to have become — carry that gap too. This project is named after it, and it measures it." + footnote marker → Sources | Director A1 draft, voice-passed in principle |
 | C25 | Sources block (A5, story's end after C23) | Commodity-basis definition (CME glossary or standard text) · compute-as-commodity framing (Ornn public materials; Friedman essays from the original proposal) · the GPU spread (our own live data → dashboard link) | Director A5 |
 
