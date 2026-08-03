@@ -221,14 +221,16 @@ export default async function StoryPage() {
           </Reveal>
           <Reveal delayMs={150}>
             <div className="story-stencil">
-              {/* QUARANTINE TODO before merge: replace with raw strings pulled
-                  from real payloads (raw_observations via the provenance
-                  endpoint) and cite the observation ids here. */}
+              {/* Real recorded raw names, verified against raw_observations
+                  2026-08-03: vast reports "H100 SXM" (5,157 obs) and
+                  tensordock "H100 SXM5 80GB"; both canonicalize to
+                  h100_sxm_80gb in canonical_offers. Quarantine Rule: never
+                  swap these for invented strings. */}
               <div className="story-stencil__raw mono">
-                &quot;NVIDIA H100 80GB HBM3&quot;
+                &quot;H100 SXM&quot;
               </div>
               <div className="story-stencil__raw mono">
-                &quot;H100 SXM5 80 GB&quot;
+                &quot;H100 SXM5 80GB&quot;
               </div>
               <div className="story-stencil__arrow">↓</div>
               <div className="story-stencil__canonical mono">
