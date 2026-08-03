@@ -1,7 +1,7 @@
 # Stage 6 Design Doc — The Story Layer
 
-**Status: DRAFT — awaiting Raj decisions #1–#3 + voice pass, then Director sign-off.
-This doc is the GATE for Tasks 6.2+.**
+**Status: decisions #1–#3 RECORDED + voice pass COMPLETE (2026-08-02) — awaiting
+Director sign-off only. This doc is the GATE for Tasks 6.2+.**
 Author: Manager · 2026-08-02 · References: `design/stage6-references/` (PR #54)
 
 ---
@@ -110,7 +110,7 @@ the DC files' numbers (4 providers, "four clouds", 60.3%, ~60/~82, $0.45/$6.88,
 
 | # | Scene (eyebrow) | Content + data binding |
 |---|---|---|
-| 1 | **Hook** | "Right now, the exact same GPU rents for $LOW an hour on one cloud — and $HIGH on another." LOW/HIGH/multiple = live same-day min/max quoted price for the canonical hero SKU (`getDispersion` / `getOffers`), server-fetched. Renders the real ratio, whatever it is that day. |
+| 1 | **Hook** | "Right now, the exact same GPU rents for $LOW an hour on one cloud — and $HIGH on another." LOW/HIGH/multiple = live same-day **robust bounds** for the canonical hero SKU — p5/p95 of the day's quotes (or junk-filtered min/max), never raw min/max (C1 robustness spec, binding), server-fetched via `getDispersion` / `getOffers`. Renders the real ratio, whatever it is that day. |
 | 2 | **01 · The puzzle** | "A GPU-hour should be a commodity." Two price cards = the same two live offers from Scene 1, with real provider labels ("rented on a marketplace" / "rented on a hyperscaler" only if factually the segments those offers are in). |
 | 3 | **02 · The method** | "Twice a day, we ask N clouds the same question." N and the provider chip list derived structurally from `getProviders` (active = 5 today; retired TensorDock does not appear here). Offer counter = live total offers, count-up. |
 | 4 | **03 · Cleaning up** | Normalization scene as-is (raw name rows → one canonical name). Raw-name examples must be real strings from real payloads (pull from `getRawObservationExplain` samples at build/authoring time, cited in code comment). UNKNOWN-honesty line stays. |
@@ -213,14 +213,14 @@ screenshot set, truth-patch copy (verbatim, already voice-approved), or NEW.
 
 | # | Where | Proposed copy | Source |
 |---|---|---|---|
-| C1 | Scene 1 hook | "Right now, the exact same GPU rents for $LOW an hour on one cloud — and $HIGH on another." + "Same chip. Same memory. A N× difference in price. Basis is an attempt to answer one question: *why?*" | Story §1 |
+| C1 | Scene 1 hook | "Right now, the exact same GPU rents for $LOW an hour on one cloud — and $HIGH on another." + "Same chip. Same memory. A N× difference in price. Basis is an attempt to answer one question: *why?*" **Robustness spec (Director, binding on 6.2):** LOW/HIGH/N× bind to robust bounds — p5/p95 of the day's quotes for the hero SKU (or junk-filtered min/max), never raw min/max, so a $0.12 garbage listing can never put a 200× spread in the site's first sentence. Scene 2's two price cards draw from the same robust selection (real offers at/near those bounds). 6.2 proof asserts the bound source. | Story §1 · approved w/ spec |
 | C2 | Scene 2 head | "A GPU-hour should be a commodity." | Story §2 |
-| C3 | Scene 2 body | "Wheat is wheat. Oil is oil. An H100 is an H100 — the hardware is literally identical. So identical things should cost roughly the same. They don't. Not even close." | Story §2 |
+| C3 | Scene 2 body | "Wheat is wheat. Oil is oil. An H100 is an H100 — the silicon is identical. So identical things should cost roughly the same. They don't. Not even close." | Story §2 · Director edit adopted |
 | C4 | Scene 3 head | "Twice a day, we ask five clouds the same question." (count structural) | Story §3, count fixed |
-| C5 | Scene 3 body | "'What does an hour of GPU cost right now?' Every answer — every publicly quoted price — is recorded exactly as received and kept forever. No accounts, no scraping tricks, no private data." | Story §3 |
+| C5 | Scene 3 body | "'What does an hour of GPU cost right now?' Every answer — every publicly quoted price — is recorded exactly as received and kept forever. No private data, no paywalled feeds: only prices anyone could see." (The reference's "no accounts, no scraping tricks" is factually false post-auth-fixes: collection uses a Vast API key, AWS IAM, and a GCP key.) | Story §3 · Director edit adopted |
 | C6 | Scene 4 head/body | "Every cloud describes the same chip differently." + strict-rules / never-guessed / UNKNOWN-kept-visible lines | Story §4 |
 | C7 | Scene 5 captions (6) | Accounting captions, Region → Commitment → Provider → Bundle, with live-tally interpolation; final: "Everything observable, accounted for. And still — a large share of the price has no explanation." | Story §5, tally + hedge fixed |
-| C8 | Scene 6 head | "And a bigger model doesn't rescue the story." | NEW |
+| C8 | Scene 6 head | "A bigger model doesn't explain it away." | Director edit adopted |
 | C9 | Scene 6 body | "So we threw a 45-feature model at it. Out-of-sample, it still couldn't close the gap — it explains less than the four simple factors claimed in-sample (−10.9pp, as of Jul 31). And of what remains, over half tracks WHO the host is — identity, not specs (ICC 0.554)." | NEW, anchored to truth-patch hero |
 | C10 | Scene 6 range line | "Unexplained share in market-priced segments has ranged ~20–61% across recent weeks — basis risk is segment- and time-conditional." | truth patch, verbatim |
 | C11 | Scene 7 head | "You can't build financial plumbing on a price you can't explain." | Story §7 |
@@ -233,9 +233,11 @@ screenshot set, truth-patch copy (verbatim, already voice-approved), or NEW.
 | C18 | Providers head | "Five providers, five postures." (count structural; falls back gracefully as count changes) | `providers.png`, count fixed |
 | C19 | Pooled exhibit (per Decision #3) | "Why pooling misleads: add two fixed price catalogs and the pooled residual collapses — while the market keeps moving." | NEW |
 | C20 | Footer | "Basis — research artifact · public data · 2026" · "Not a price aggregator · Not a derivatives engine" | Story footer |
-| C21 | Glossary (tap-to-explain) | one-sentence house-tone definitions: residual, spot, decomposition, ICC | NEW |
+| C21 | Glossary (tap-to-explain) | **Residual** — the share of price differences left over after accounting for everything sellers publicly disclose. · **Spot** — discounted capacity the provider can take back at any time. · **Decomposition** — splitting total price variation into named causes, one factor at a time. · **ICC** — how much of the leftover variation sticks to the same specific machines day after day. | Director seeds adopted |
 
-> **VOICE PASS (Raj):** mark any row; edits land here and become final.
+> **VOICE PASS: COMPLETE 2026-08-02.** Director's edits to C3, C5, C8, and the C21
+> seeds adopted; C1 approved with the binding robustness spec; all other rows
+> approved as written. The table above IS final copy.
 
 ## 11. Out of scope (restated)
 
@@ -253,5 +255,5 @@ ML-based normalization, raw observations immutable.
 | #2 Residual color (ADR-0005 addendum) | **Void near-black `#171512`**; terracotta purely editorial | 2026-08-02 | Manager (Raj relay) |
 | #3 Pooled-series visibility | **YES** — teaching exhibit, methodology/Basis area, never landing | 2026-08-02 | Manager (Raj relay) |
 | §6 bound-visual candidate | **A** (two bars) w/ in-sample/out-of-sample labels required | 2026-08-02 | Manager (Director ruling) |
-| Voice pass | **PENDING** — §10, 21 rows | — | — |
-| **Director sign-off** | pending voice pass | — | — |
+| Voice pass | **COMPLETE** — Director edits C3/C5/C8/C21 adopted, C1 robustness spec binding, rest approved as written | 2026-08-02 | Manager (Raj relay) |
+| **Director sign-off** | **PENDING — last open item** | — | — |
