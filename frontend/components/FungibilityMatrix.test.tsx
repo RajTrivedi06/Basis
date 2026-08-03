@@ -52,9 +52,9 @@ describe("FungibilityMatrix", () => {
   it("renders rows from API data", async () => {
     renderWithQuery(<FungibilityMatrix />);
 
-    expect(await screen.findByText("h100_sxm_80gb")).toBeInTheDocument();
-    expect(screen.getByText("a100_sxm4_80gb")).toBeInTheDocument();
-    expect(screen.getByText("rtx_4090_24gb")).toBeInTheDocument();
+    expect((await screen.findAllByText("h100_sxm_80gb")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("a100_sxm4_80gb").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("rtx_4090_24gb").length).toBeGreaterThan(0);
   });
 
   it("includes a Residual column header", async () => {
@@ -69,7 +69,7 @@ describe("FungibilityMatrix", () => {
     const user = userEvent.setup();
     const { container } = renderWithQuery(<FungibilityMatrix />);
 
-    await screen.findByText("h100_sxm_80gb");
+    await screen.findAllByText("h100_sxm_80gb");
 
     const table = container.querySelector("table");
     expect(table).not.toBeNull();
@@ -81,5 +81,81 @@ describe("FungibilityMatrix", () => {
     const bodyRows = screen.getAllByRole("row").slice(1);
     const firstSku = within(bodyRows[0]).getByText(/_/).textContent;
     expect(firstSku).toContain("a100_sxm4_80gb");
+  });
+});
+
+describe("FungibilityMatrix — cards + pagination", () => {
+  beforeEach(() => {
+    mockedGetFungibilityMatrix.mockResolvedValue({ items: rows });
+  });
+
+  it("renders the card view alongside the table (CSS decides visibility)", async () => {
+    const { container } = renderWithQuery(<FungibilityMatrix />);
+    await screen.findByText(/Showing 1–3 of 3 canonical SKUs/);
+
+    const cards = container.querySelectorAll(".fung-card");
+    expect(cards.length).toBe(rows.length);
+    const first = within(cards[0] as HTMLElement);
+    // Default sort is residual desc → a100 (70%) leads.
+    expect(first.getByText("a100_sxm4_80gb")).toBeInTheDocument();
+    expect(first.getByText("80 offers")).toBeInTheDocument();
+    expect(first.getByText("$1.20/hr")).toBeInTheDocument();
+    expect(first.getByText("70%")).toBeInTheDocument();
+  });
+
+  it("shows the italic accumulating state when residual is null", async () => {
+    mockedGetFungibilityMatrix.mockResolvedValue({
+      items: [{ ...rows[0], pct_residual: null, residual_variance: null }],
+    });
+    const { container } = renderWithQuery(<FungibilityMatrix />);
+    await screen.findByText(/Showing 1–1 of 1 canonical SKUs/);
+    expect(
+      within(container.querySelector(".fung-card") as HTMLElement).getByText(
+        "accumulating observations"
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("paginates past 32 rows, shows range text, and page links jump", async () => {
+    const many = Array.from({ length: 70 }, (_, i) => ({
+      ...rows[0],
+      gpu_sku: `sku_${String(i).padStart(2, "0")}`,
+      pct_residual: 99 - i,
+    }));
+    mockedGetFungibilityMatrix.mockResolvedValue({ items: many });
+    const { container } = renderWithQuery(<FungibilityMatrix />);
+    await screen.findByText("Showing 1–32 of 70 canonical SKUs");
+
+    const links = screen.getAllByRole("button", { name: /^[0-9]+$/ });
+    expect(links.map((l) => l.textContent)).toEqual(["1", "2", "3"]);
+    expect(links[0].getAttribute("aria-current")).toBe("page");
+
+    await userEvent.click(links[2]);
+    expect(
+      screen.getByText("Showing 65–70 of 70 canonical SKUs")
+    ).toBeInTheDocument();
+    // Highest residual sorts first, so page 3 holds the tail.
+    expect(container.querySelectorAll(".fung-card").length).toBe(6);
+    expect(screen.getAllByText("sku_69").length).toBeGreaterThan(0);
+  });
+
+  it("resets to page 1 when the sort changes", async () => {
+    const many = Array.from({ length: 70 }, (_, i) => ({
+      ...rows[0],
+      gpu_sku: `sku_${String(i).padStart(2, "0")}`,
+      pct_residual: 99 - i,
+    }));
+    mockedGetFungibilityMatrix.mockResolvedValue({ items: many });
+    renderWithQuery(<FungibilityMatrix />);
+    await screen.findByText("Showing 1–32 of 70 canonical SKUs");
+
+    await userEvent.click(screen.getByRole("button", { name: "3" }));
+    await userEvent.selectOptions(
+      screen.getByLabelText("Sort SKUs"),
+      "gpu_sku"
+    );
+    expect(
+      screen.getByText("Showing 1–32 of 70 canonical SKUs")
+    ).toBeInTheDocument();
   });
 });

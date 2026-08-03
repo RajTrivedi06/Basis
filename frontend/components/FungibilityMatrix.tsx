@@ -22,6 +22,13 @@ const COLUMNS: { key: SortKey; label: string; align: "left" | "right" }[] = [
   { key: "pct_residual", label: "Residual", align: "right" },
 ];
 
+/**
+ * Rows per page. 32 keeps today's ~96 canonical SKUs at three page links
+ * (the ruled "two to three"); the control renders however many pages the
+ * live count actually needs.
+ */
+const PAGE_SIZE = 32;
+
 export function FungibilityMatrix() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["fungibility-matrix"],
@@ -30,10 +37,18 @@ export function FungibilityMatrix() {
 
   const [sortKey, setSortKey] = useState<SortKey>("pct_residual");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [page, setPage] = useState(0);
 
   const sorted = useMemo(
     () => (data ? sortRows(data.items, sortKey, sortDir) : []),
     [data, sortKey, sortDir]
+  );
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const clampedPage = Math.min(page, pageCount - 1);
+  const pageRows = sorted.slice(
+    clampedPage * PAGE_SIZE,
+    (clampedPage + 1) * PAGE_SIZE
   );
 
   const header = (
@@ -98,12 +113,47 @@ export function FungibilityMatrix() {
       setSortKey(key);
       setSortDir(key === "gpu_sku" ? "asc" : "desc");
     }
+    setPage(0);
   };
+
+  const showingFrom = clampedPage * PAGE_SIZE + 1;
+  const showingTo = Math.min(sorted.length, (clampedPage + 1) * PAGE_SIZE);
 
   return (
     <section>
       {header}
-      <div className="panel" style={{ overflow: "hidden" }}>
+
+      {/* Mobile sort control (the table's sortable headers are hidden
+          with the table below 720px) — reference: Dashboard Mobile. */}
+      <span className="fung-sort">
+        <select
+          aria-label="Sort SKUs"
+          value={sortKey}
+          onChange={(e) => {
+            const key = e.target.value as SortKey;
+            setSortKey(key);
+            setSortDir(key === "gpu_sku" ? "asc" : "desc");
+            setPage(0);
+          }}
+        >
+          <option value="pct_residual">Sort · residual</option>
+          <option value="observation_count">Sort · offers</option>
+          <option value="median_price">Sort · median $/hr</option>
+          <option value="gpu_sku">Sort · SKU name</option>
+        </select>
+        <span aria-hidden className="fung-sort__chev">
+          ▼
+        </span>
+      </span>
+
+      {/* Card view — reference treatment from Basis Dashboard Mobile */}
+      <div className="fung-cards">
+        {pageRows.map((row) => (
+          <SkuCard key={row.gpu_sku} row={row} />
+        ))}
+      </div>
+
+      <div className="panel fung-table" style={{ overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table className="tbl">
             <thead>
@@ -143,14 +193,71 @@ export function FungibilityMatrix() {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((row) => (
+              {pageRows.map((row) => (
                 <MatrixRow key={row.gpu_sku} row={row} />
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      <nav className="fung-pages" aria-label="SKU table pages">
+        <span className="mono fung-pages__showing">
+          Showing {showingFrom}–{showingTo} of {sorted.length} canonical SKUs
+        </span>
+        {pageCount > 1 && (
+          <span className="fung-pages__links">
+            {Array.from({ length: pageCount }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                className="fung-pages__link mono"
+                aria-current={i === clampedPage ? "page" : undefined}
+                onClick={() => setPage(i)}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </span>
+        )}
+      </nav>
     </section>
+  );
+}
+
+function SkuCard({ row }: { row: FungibilityMatrixRow }) {
+  const family = gpuFamily(row.gpu_sku);
+  return (
+    <div className="fung-card panel">
+      <div className="fung-card__head">
+        <span className="mono fung-card__sku">{row.gpu_sku}</span>
+        {family && <span className="badge">{family}</span>}
+      </div>
+      <div className="mono fung-card__meta">
+        <span>{row.observation_count.toLocaleString()} offers</span>
+        <span>{row.provider_count} prov</span>
+        <span className="fung-card__med">
+          ${row.median_price.toFixed(2)}/hr
+        </span>
+      </div>
+      {row.pct_residual === null ? (
+        <div className="serif fung-card__accum">accumulating observations</div>
+      ) : (
+        <div className="fung-card__res">
+          <span className="fung-card__track">
+            <span
+              className="fung-card__fill"
+              style={{
+                width: `${Math.max(0, Math.min(100, row.pct_residual))}%`,
+              }}
+            />
+          </span>
+          <span className="mono fung-card__pct">
+            {row.pct_residual.toFixed(0)}%
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 
