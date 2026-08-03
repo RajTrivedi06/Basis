@@ -5,9 +5,20 @@ import { Tally } from "@/components/story/Tally";
 import { getStoryData, shortDate, HERO_SKU } from "@/lib/story";
 
 // C22: the five-second layer. Title/description carry the one-liner.
+// Director rider on C23: the full name lives in author meta + OG only —
+// page copy renders Raj's attribution exactly as written.
 export const metadata: Metadata = {
   title: "Basis — measuring what the GPU market cannot explain.",
   description: "Basis — measuring what the GPU market cannot explain.",
+  authors: [
+    { name: "Raj Trivedi", url: "https://github.com/RajTrivedi06/Basis" },
+  ],
+  openGraph: {
+    title: "Basis — measuring what the GPU market cannot explain.",
+    description:
+      "A public-data research study of GPU-hour pricing by Raj Trivedi.",
+    type: "website",
+  },
 };
 
 export const revalidate = 900;
@@ -349,8 +360,22 @@ export default async function StoryPage() {
           </div>
         </Reveal>
 
-        {/* C23 attribution block renders here once Raj's two sentences land
-            (A3 — must be his own words; do not draft). */}
+        {/* C23 — FINAL, verbatim (Raj, 2026-08-03). Do not edit this copy. */}
+        <div className="story-frame">
+          <div className="story-attrib">
+            <p>
+              I was just bored and curious. So here it is:{" "}
+              <a
+                href="https://github.com/RajTrivedi06/Basis"
+                className="mono"
+                rel="author"
+              >
+                github.com/RajTrivedi06/Basis
+              </a>
+            </p>
+            <p className="serif story-attrib__sig">— Raj</p>
+          </div>
+        </div>
 
         <div className="story-frame">
           <div id="sources" className="story-sources">

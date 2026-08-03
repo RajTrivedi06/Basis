@@ -4156,3 +4156,19 @@ button {
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
+
+/* C23 attribution — signature-line treatment, house restraint. */
+.story-attrib {
+  margin-top: 72px;
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+  font-size: 14px;
+  color: var(--ink-mid);
+}
+.story-attrib a { color: var(--ink); }
+.story-attrib__sig {
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink);
+  margin-top: 6px;
+}
