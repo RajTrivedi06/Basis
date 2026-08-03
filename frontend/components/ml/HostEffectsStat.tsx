@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
 import type { HostAnalysis } from "@/lib/mlExplainabilityTypes";
 
 interface HostEffectsStatProps {
@@ -20,11 +21,19 @@ export function HostEffectsStat({ hostAnalysis }: HostEffectsStatProps) {
   } = hostAnalysis;
 
   return (
-    <div className="rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--panel-lo)] p-5">
-      <div className="eyebrow mb-4">Vast host identity (on-demand panel)</div>
+    <div className="panel p-[26px]">
+      <div className="eyebrow mb-2">Vast host identity (on-demand panel)</div>
+      <p className="caption max-w-[68ch] leading-relaxed">
+        How much of the leftover variation stays attached to the same specific
+        machines from one day to the next — identity, not specification.
+      </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <HostMetric label="ICC" value={icc.toFixed(3)} />
+      <div className="ml-statrow ml-statrow--four">
+        <HostMetric
+          label={<GlossaryTerm term="icc">ICC</GlossaryTerm>}
+          value={icc.toFixed(3)}
+          residual
+        />
         <HostMetric
           label="Hosts (≥ threshold)"
           value={String(n_hosts)}
@@ -38,11 +47,9 @@ export function HostEffectsStat({ hostAnalysis }: HostEffectsStatProps) {
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 caption text-[var(--ink-mid)]">
-        <span>
-          Tenure (days): min {tenure_days.min} · median {tenure_days.median} ·
-          max {tenure_days.max}
-        </span>
+      <div className="caption mt-4 text-[var(--ink-mid)]">
+        Tenure (days): min {tenure_days.min} · median {tenure_days.median} · max{" "}
+        {tenure_days.max}
       </div>
 
       <div className="mt-4 border-t border-[var(--line-lo)] pt-3">
@@ -88,15 +95,21 @@ function HostMetric({
   label,
   value,
   detail,
+  residual = false,
 }: {
-  label: string;
+  label: ReactNode;
   value: string;
   detail?: string;
+  residual?: boolean;
 }) {
   return (
-    <div>
-      <div className="caption">{label}</div>
-      <div className="mono mt-1 text-xl text-[var(--ink-hi)]">{value}</div>
+    <div className="ml-statrow__cell">
+      <div
+        className={`ml-statrow__value${residual ? " is-residual" : ""}`}
+      >
+        {value}
+      </div>
+      <div className="ml-statrow__label">{label}</div>
       {detail ? (
         <div className="caption mt-1 text-[var(--ink-dim)]">{detail}</div>
       ) : null}

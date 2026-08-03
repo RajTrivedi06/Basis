@@ -146,7 +146,7 @@ export function BoundBar({
         </p>
       ) : null}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="ml-statrow">
         <BoundStat
           label="GBM holdout R²"
           value={formatPct(gbmR2)}
@@ -238,14 +238,14 @@ function BoundStat({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-[var(--r-sm)] border border-[var(--line)] bg-[var(--panel-lo)] px-3 py-2.5">
-      <div className="caption">{label}</div>
+    <div className="ml-statrow__cell">
       <div
-        className="mono mt-1 text-lg font-medium"
-        style={{ color: accent ? "var(--verdict-ok)" : "var(--ink-hi)" }}
+        className="ml-statrow__value"
+        style={accent ? { color: "var(--verdict-ok)" } : undefined}
       >
         {value}
       </div>
+      <div className="ml-statrow__label">{label}</div>
       <div className="caption mt-1 text-[var(--ink-dim)]">{detail}</div>
     </div>
   );

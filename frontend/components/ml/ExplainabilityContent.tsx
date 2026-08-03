@@ -8,6 +8,11 @@ interface ExplainabilityContentProps {
   artifact: ExplainabilityArtifact;
 }
 
+/** ISO timestamp -> calendar date. The artifact is the only date source (A6). */
+function artifactDate(timestamp: string): string {
+  return timestamp.slice(0, 10);
+}
+
 export function ExplainabilityContent({ artifact }: ExplainabilityContentProps) {
   const { metadata, metrics, shap_summary, host_analysis, caveats } = artifact;
 
@@ -16,9 +21,9 @@ export function ExplainabilityContent({ artifact }: ExplainabilityContentProps) 
       <div className="panel p-[26px]">
         <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
           <div className="eyebrow">The bound · residual-first</div>
-          <div className="mono text-[11px] text-[var(--ink-dim)]">
-            {metadata.sku} · holdout {metrics.holdout.n_days} days · trained{" "}
-            {metadata.trained_at.slice(0, 10)}
+          <div className="ml-meta">
+            {metadata.sku} · {metrics.holdout.n_days}-day holdout · trained{" "}
+            {artifactDate(metadata.trained_at)}
           </div>
         </div>
 
@@ -33,31 +38,35 @@ export function ExplainabilityContent({ artifact }: ExplainabilityContentProps) 
           <div className="caption mb-3 text-[var(--ink-mid)]">
             Holdout R² by provider
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2.5">
             {Object.entries(metrics.r2_holdout_by_provider).map(
               ([provider, r2]) => (
-                <div
-                  key={provider}
-                  className="rounded-[var(--r-sm)] border border-[var(--line)] px-3 py-2"
-                >
-                  <div className="caption">{providerLabel(provider)}</div>
-                  <div className="mono text-sm text-[var(--ink-hi)]">
+                <span key={provider} className="ml-chip">
+                  <span>{providerLabel(provider)}</span>
+                  <span className="ml-chip__value">
                     {(r2 * 100).toFixed(1)}%
-                  </div>
-                </div>
+                  </span>
+                </span>
               )
             )}
           </div>
+          <p className="caption mt-3 max-w-[68ch] leading-relaxed">
+            The bound is not evenly hard to reach: a provider whose listings
+            carry more describable detail is easier to predict than one that
+            posts a short catalog line.
+          </p>
         </div>
       </div>
 
       <div className="panel p-[26px]">
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+        <div className="mb-1 flex flex-wrap items-baseline justify-between gap-3">
           <div className="eyebrow">SHAP top features</div>
-          <div className="mono text-[11px] text-[var(--ink-dim)]">
-            n={shap_summary.n_sample} sample rows
-          </div>
+          <div className="ml-meta">n={shap_summary.n_sample} sample rows</div>
         </div>
+        <p className="caption mb-4">
+          Mean absolute attribution — how much each feature moves the
+          model&apos;s predicted log-price, not whether it moves it up or down.
+        </p>
         <ShapFeaturesChart features={shap_summary.top_features} />
       </div>
 
@@ -80,6 +89,12 @@ export function ExplainabilityContent({ artifact }: ExplainabilityContentProps) 
             </li>
           ))}
         </ul>
+        <p className="caption mt-4 border-t border-[var(--residual-line)] pt-3">
+          Corpus through {metadata.corpus_through} ·{" "}
+          {metadata.corpus_rows.toLocaleString()} rows · model trained{" "}
+          {artifactDate(metadata.trained_at)}. Every figure on this page is read
+          from that artifact, so a retrain moves them without a copy edit.
+        </p>
       </section>
     </div>
   );

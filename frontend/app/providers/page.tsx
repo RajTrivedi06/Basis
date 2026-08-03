@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { ShowMeHow } from "@/components/disclosure/TwoLayer";
 import { getProviders } from "@/lib/api";
 import {
   PROVIDER_STALE_AFTER_DAYS,
@@ -18,8 +19,22 @@ function deviationClass(pct: number | null): string {
 
 function formatDeviation(pct: number | null): string {
   if (pct === null) return "—";
-  const sign = pct > 0 ? "+" : "";
-  return `${sign}${pct.toFixed(1)}%`;
+  // Arrow doubles the sign so the direction survives a greyscale print and
+  // does not rely on colour alone.
+  const arrow = pct > 0 ? "↑" : "↓";
+  return `${arrow} ${Math.abs(pct).toFixed(1)}%`;
+}
+
+function PageHead({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="int-head">
+      <div className="int-head__eyebrow">
+        <span className="num">04</span>
+        <span>Source posture</span>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export default function ProvidersPage() {
@@ -31,8 +46,9 @@ export default function ProvidersPage() {
   if (isLoading) {
     return (
       <div className="page-wide fade-up">
-        <div className="eyebrow mb-2.5">07 · Providers</div>
-        <p className="caption">Loading providers…</p>
+        <PageHead>
+          <p className="int-head__lede">Loading providers…</p>
+        </PageHead>
       </div>
     );
   }
@@ -40,10 +56,11 @@ export default function ProvidersPage() {
   if (isError) {
     return (
       <div className="page-wide fade-up">
-        <div className="eyebrow mb-2.5">07 · Providers</div>
-        <p className="caption text-[var(--verdict-bad)]">
-          Failed to load: {(error as Error)?.message ?? "unknown error"}
-        </p>
+        <PageHead>
+          <p className="int-head__lede text-[var(--verdict-bad)]">
+            Failed to load: {(error as Error)?.message ?? "unknown error"}
+          </p>
+        </PageHead>
       </div>
     );
   }
@@ -51,35 +68,43 @@ export default function ProvidersPage() {
   if (!data || data.items.length === 0) {
     return (
       <div className="page-wide fade-up">
-        <div className="eyebrow mb-2.5">07 · Providers</div>
-        <p className="caption">No provider data available.</p>
+        <PageHead>
+          <p className="int-head__lede">No provider data available.</p>
+        </PageHead>
       </div>
     );
   }
 
+  // C18: the count is structural. It reads the active subset, so a retirement
+  // rewrites the headline without a copy edit.
   const { active, ordered } = partitionProviders(data.items);
   const activeCount = active.length;
   const activeWord = numberWord(activeCount);
   const noun = activeCount === 1 ? "provider" : "providers";
   const posture = activeCount === 1 ? "posture" : "postures";
+  const totalOffers = ordered.reduce((sum, p) => sum + p.offer_count, 0);
 
   return (
     <div className="page-wide fade-up">
-      <section className="pb-6 pt-9">
-        <div className="eyebrow mb-2.5">07 · Providers</div>
-        <h1 className="display m-0 max-w-[720px] text-[clamp(2rem,5vw,2.5rem)] font-normal leading-[1.1] tracking-[-0.02em] text-[var(--ink-hi)]">
-          {activeWord} {noun},{" "}
-          <em className="font-serif not-italic text-[var(--ink-mid)]">
-            {activeWord.toLowerCase()} {posture}.
-          </em>
+      <PageHead>
+        <h1 className="int-head__title">
+          {activeWord} {noun}, <em>{activeWord.toLowerCase()} {posture}.</em>
         </h1>
-      </section>
+        <p className="int-head__lede">
+          Columns below are exactly what the public{" "}
+          <span className="mono text-[var(--ink)]">GET /api/providers</span>{" "}
+          returns — nothing inferred, embellished, or backfilled.
+        </p>
+      </PageHead>
 
-      <p className="caption mb-4 max-w-[720px]">
-        Columns below match the public{" "}
-        <span className="mono text-[var(--ink-mid)]">GET /api/providers</span>{" "}
-        schema only; we do not show fields the API does not return.
-      </p>
+      <div className="int-controls">
+        <div className="int-controls__group">
+          <span className="int-controls__label">Collected twice daily</span>
+        </div>
+        <span className="int-controls__meta">
+          {ordered.length} rows · {totalOffers.toLocaleString()} offers
+        </span>
+      </div>
 
       <div className="panel overflow-hidden">
         <table className="tbl">
@@ -123,25 +148,43 @@ export default function ProvidersPage() {
         </table>
       </div>
 
-      <div className="caption mt-8 max-w-3xl space-y-2 leading-relaxed">
+      <div className="mt-7 max-w-[68ch]">
+        <ShowMeHow label="Show me how Δ vs market is computed">
+          <p>
+            <span className="text-[var(--ink)]">Median Δ vs market</span> is the
+            mean across SKUs of provider median minus market median on the
+            latest collection date (see API docs). Positive values skew above
+            the cross-provider market for that SKU mix; negative values skew
+            below.
+          </p>
+          <p>
+            It is a posture, not a verdict: a provider can sit above the market
+            because it lists different regions or bundles, not because it
+            charges more for the same thing. That is exactly the confusion the
+            decomposition exists to settle.
+          </p>
+        </ShowMeHow>
+      </div>
+
+      <div className="int-notes int-notes--three">
         <p>
-          <span className="text-[var(--ink)]">Median Δ vs market</span> is the
-          mean across SKUs of provider median minus market median on the
-          latest collection date (see API docs). Positive values skew above
-          the cross-provider market for that SKU mix; negative values skew
-          below.
+          <strong>Marketplace caution.</strong> Marketplace providers aggregate
+          many independent listings; the deviation reflects the marketplace
+          aggregate, not a single price policy. Figures are quoted public
+          prices only.
         </p>
         <p>
-          Marketplace providers aggregate many independent listings; the
-          deviation reflects the marketplace aggregate, not a single price
-          policy. Figures are quoted public prices only.
+          <strong>Retired rows.</strong> A provider with no collection in the
+          last {PROVIDER_STALE_AFTER_DAYS} days is tagged Retired and sorted
+          below the active rows. Its historical offers stay in the corpus and in
+          the totals above — the tag marks that it is no longer being collected,
+          not that its data was removed.
         </p>
         <p>
-          A provider with no collection in the last {PROVIDER_STALE_AFTER_DAYS}{" "}
-          days is tagged <span className="text-[var(--ink)]">Retired</span> and
-          sorted below the active rows. Its historical offers stay in the
-          corpus and in the totals above — the tag marks that it is no longer
-          being collected, not that its data was removed.
+          <strong>Headline count.</strong> The count in the headline is the
+          number of providers still collecting, taken from the same staleness
+          rule the table uses. No provider is named in code, so a source that
+          resumes rejoins the count on its next run.
         </p>
       </div>
     </div>

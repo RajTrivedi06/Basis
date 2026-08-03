@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { ShowMeHow } from "@/components/disclosure/TwoLayer";
+import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
 import { getMlExplainability } from "@/lib/mlExplainability";
 import {
   ExplainabilityContent,
@@ -14,20 +16,47 @@ export function ExplainabilityPageClient() {
     queryFn: getMlExplainability,
   });
 
+  // A6: the SKU in the headline and every date on this page come from the
+  // artifact. Nothing here is retyped when the model is retrained.
+  const sku = query.data?.metadata.sku;
+
   return (
-    <div className="page-wide fade-up space-y-10">
-      <header className="max-w-[960px]">
-        <div className="eyebrow mb-2.5">ML explainability</div>
-        <h1 className="text-2xl font-medium text-[var(--ink-hi)] sm:text-3xl">
-          Observable-features bound on H100-SXM
+    <div className="page-wide fade-up">
+      <div className="int-head">
+        <div className="int-head__eyebrow">
+          <span className="num">05</span>
+          <span>A bound, not proof about unobservables</span>
+        </div>
+        <h1 className="int-head__title">
+          Observable-features bound{sku ? " on " : ""}
+          {sku ? <em className="mono text-[0.62em] not-italic">{sku}</em> : null}
         </h1>
-        <p className="mt-4 max-w-[68ch] text-sm leading-relaxed text-[var(--ink-mid)]">
-          Gradient-boosted trees + SHAP qualify the rule-based residual: how much
-          additional variance is explainable from observable features we collect
-          but do not use in the four-factor decomposition. This is a bound, not
-          proof about unobservables.
+        <p className="int-head__lede">
+          A gradient-boosted model tests how much of the leftover price
+          variation can be recovered from richer features we already collect but
+          do not use in the four-factor decomposition. It establishes an upper
+          bound, not a causal explanation.
         </p>
-      </header>
+
+        <div className="mt-6 max-w-[68ch]">
+          <ShowMeHow label="Show me how the bound is tested">
+            <p>
+              The four-factor decomposition is fitted and scored on the same
+              days, so its explained share flatters itself. The gradient-boosted
+              model is scored on days it never saw — a held-out window — which
+              is the honest comparison and generally the harder one.
+            </p>
+            <p>
+              Read the two numbers as a pair. If the richer model, tested
+              out-of-sample, still cannot reach what four simple factors claimed
+              in-sample, then the missing variation is not sitting in features
+              we merely forgot to use. That is what makes it a bound: it caps
+              how much of the leftover is recoverable from what sellers
+              disclose, and says nothing about attributes nobody publishes.
+            </p>
+          </ShowMeHow>
+        </div>
+      </div>
 
       {query.isLoading ? (
         <ExplainabilityLoadingState />
