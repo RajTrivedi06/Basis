@@ -36,6 +36,30 @@ Palette in the DC files: bg `#FAF9F5` · surface `#FFFFFF` · ink `#1F1D1A` ·
 mid `#6B675E` · dim `#A09B90` · lines `#E8E4DB` · terracotta `#C15F3C`.
 Serif: Newsreader (Google Fonts). Sans: system stack. Mono: ui-monospace stack.
 
+### `Basis_Explorations_dc.html` — APPROVED component explorations (Director picks, 2026-08-03, binding)
+
+Authoritative source for four components; the picks are recorded in the design
+doc (§14 as amended) and implemented as Task 6.3c:
+
+- **Bracket mark — variant 1c "The mark is the measurement":** the site monogram
+  AND nav lockup (bracket + "Basis" wordmark per 1c's desktop frame). Scene head
+  "The gap has a name."; single footnote caption from 1b: "Recorded, never
+  modeled." Motion: bracket draws once, top tick → bottom tick, label stamps,
+  nothing loops.
+- **Decomposition — variant 1e "ledger + depletion":** the ONE waterfall
+  component used everywhere (landing Scene 5 + Basis page; 1d does NOT ship in
+  parallel). Per-row depletion bars are Scene 5's scroll-scrub target.
+- **Dispersion band:** approved as shown (crosshair + mono readout, p25/p75 edge
+  hairlines, stronger band, "today's disagreement" bracket). **HARD RIDER:
+  production renders the real series' real jaggedness — the mock's smooth
+  curves are placeholder only.**
+- **Beeswarm — variant 1h inline receipt** (44px touch targets). RIDER: inline
+  insertion must not jump scroll position. Variant 1i bottom-sheet is the
+  sanctioned 6.4 fallback, decided by feel on a real phone, not re-litigated.
+
+Every `$ ·.·· LIVE` placeholder in this file binds to the API (Quarantine Rule);
+the waterfall's "X left" arithmetic computes from live shares, never hardcoded.
+
 ### `screenshots/` — copy/layout reference where stronger than the DC files
 
 | File | Authoritative for |

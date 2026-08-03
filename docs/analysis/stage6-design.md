@@ -126,7 +126,7 @@ the DC files' numbers (4 providers, "four clouds", 60.3%, ~60/~82, $0.45/$6.88,
 | 3 | **02 · Why "Basis"** (NEW — A1, the name scene) | Interstitial explaining the name via the site's one bespoke diagram: two plain price lines (benchmark, price-actually-paid) with a dimension bracket measuring the gap, labeled *basis*; the same bracket then rhymes onto two GPU price tags. Copy = C24. Fully static/SSR (no data binding; the two GPU tags may echo Scene 1's live robust bounds). The bracket is the site's monogram and recurring motif (§13) — **Director reviews the sketch before it propagates.** Carries a footnote marker to the Sources block (commodity-basis definition). |
 | 4 | **03 · The method** | "Twice a day, we ask N clouds the same question." N and the provider chip list derived structurally from `getProviders` (active = 5 today; retired TensorDock does not appear here). Offer counter = live total offers, count-up. |
 | 5 | **04 · Cleaning up** | Normalization scene as-is (raw name rows → one canonical name). Raw-name examples must be real strings from real payloads (pull from `getRawObservationExplain` samples at build/authoring time, cited in code comment). UNKNOWN-honesty line stays. |
-| 6 | **05 · The accounting** (sticky, ~520vh) | Sticky decomposition performance: segments grow as captions advance. Factor shares = live from `getBasisDecomposition` for the hero SKU (market-priced framing consistent with the hero series). Captions name Region → Commitment → Provider → Bundle in the sequential-ANOVA order the API returns; the "all four together: X%" caption interpolates the live tally — no promised "about 40%". Residual reveal = live residual share, in the residual color. |
+| 6 | **05 · The accounting** (sticky, ~520vh) — **UNIFIED with the 1e ledger-waterfall (ruling 08-03): the chart and the scene animation are the same component; scroll-scrub fills each row's depletion bar and stamps the row in** | Sticky decomposition performance: segments grow as captions advance. Factor shares = live from `getBasisDecomposition` for the hero SKU (market-priced framing consistent with the hero series). Captions name Region → Commitment → Provider → Bundle in the sequential-ANOVA order the API returns; the "all four together: X%" caption interpolates the live tally — no promised "about 40%". Residual reveal = live residual share, in the residual color. |
 | 7 | **06 · The finding — REBUILT (the missing act)** | The two-anchor + live-range finding, replacing the old ~60/~82 split. Narrative beat: *"So we threw a 45-feature model at it. Out-of-sample, it still couldn't close the gap — it explains less than the four simple factors claimed in-sample (−{gap}pp, as of {trained_date}). And of what remains, over half tracks WHO the host is (ICC {icc}) — identity, not specs."* **All three values AND the date interpolate from `/api/ml/explainability` (`trained_at`) — no hardcoded dates (A6); the 5.7 retrain must flow through with zero copy edits.** Third element in range language: *"The unexplained share in market-priced segments has ranged ~20–61% in recent weeks — segment- and week-conditional."* Range language sourced from truth-patch copy. Visual = the negative-gap bound component (§6). |
 | 8 | **07 · Why it matters + CTA** | "You can't build financial plumbing on a price you can't explain." Three honesty cards (study-not-product / every-number-has-a-receipt / honest-about-limits) carry over. C12 carries a footnote marker to the Sources block (compute-as-commodity framing). CTA: "Open the dashboard" → `/` dashboard area (Findings), "Read the methodology →". Attribution block C23 (A3) sits at story's end near the footer (or a compact /about — Manager's call at build), followed by the Sources block (§5.1). |
 
@@ -311,7 +311,7 @@ object; anything that maps to none is decoration and gets cut):
 
 | Ledger object | Component |
 |---|---|
-| **Price tag + bracket** | Scene 1/2 price cards (tags) and the dimension bracket that measures the gap between them — the *basis* bracket, the site's monogram (born in the name scene, reused on Candidate A's shortfall) |
+| **Price tag + bracket** | Scene 1/2 price cards (tags) and the dimension bracket that measures the gap between them — the *basis* bracket, the site's monogram (born in the name scene, reused on Candidate A's shortfall). **Per the 2026-08-03 ruling, the bracket is also the NAV LOCKUP (variant 1c: bracket + "Basis" wordmark), replacing the logo site-wide; it draws once — top tick → bottom tick, label stamps — and never loops.** |
 | **Receipt drawer** | The contributing-observations / provenance drawers — every number has a receipt |
 | **Stencil** | Normalization: messy vendor strings stenciled into one canonical name |
 | **Tally-stamp** | Count-up stat numerals — values get stamped into the ledger as they arrive |
@@ -333,10 +333,34 @@ leverage, unlock*. (Adds to, does not replace, the truth-patch language rules.)
 
 ## 14. Approved chart redesign briefs (Director ruling, 2026-08-03)
 
-All three approved; sequence: 6.3b recolor (chart-mark grammar, PR #58) →
-design-tool variants (Raj runs
-`temp-doc/stage6-prompts/design-tool-chart-redesign-prompt.md`) → Director/Raj
-pick → **6.3c implements**.
+All three approved; sequence: 6.3b recolor (chart-mark grammar, PR #58, merged
+#61) → design-tool variants → Director picks (below) → **6.3c implements**.
+
+**DIRECTOR PICKS (2026-08-03, binding — authoritative file
+`design/stage6-references/Basis_Explorations_dc.html`):**
+
+- **Bracket = variant 1c "The mark is the measurement"** — site monogram AND nav
+  lockup (bracket + "Basis" wordmark per 1c's desktop frame); scene head "The
+  gap has a name."; 1b's "Recorded, never modeled" as the diagram's single
+  footnote caption. Motion: draws once, top tick → bottom tick, label stamps,
+  nothing loops. (Supersedes the Manager's interim sketch
+  `temp-doc/stage6-bracket-sketch.html` — review item closed.)
+- **Decomposition = variant 1e "ledger + depletion"** — the ONE waterfall used
+  everywhere (landing Scene 5 + Basis page; 1d does not ship in parallel). The
+  per-row depletion bars ARE Scene 5's scroll-scrub target: chart and scene
+  animation are the same component.
+- **Dispersion band approved as shown** — crosshair w/ mono readout, p25/p75
+  edge hairlines, stronger band fill, "today's disagreement" bracket. **HARD
+  RIDER: production renders the real series' real jaggedness; the mock's smooth
+  curves are placeholder only. No smoothing, no idealized curves.**
+- **Beeswarm = variant 1h inline receipt** (44px touch targets). RIDER: inline
+  insertion must not jump scroll position — reserve space or anchor viewport.
+  1i bottom-sheet is the sanctioned fallback if 1h is janky on a real phone in
+  6.4 testing; decided by feel then, not re-litigated.
+
+Live-binding riders: every `$ ·.·· LIVE` placeholder binds to the API; the
+waterfall's "X left" column computes from live shares, never hardcoded; factor
+rows render whatever the API returns — no fixed 4-factor assumption.
 
 1. **Ledger waterfall** replaces the decomposition bar as the numbers-carrying
    view ("the best component idea of the stage" — Director). Small factors get
