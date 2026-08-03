@@ -1334,12 +1334,15 @@ button {
 }
 
 /* Stat tape (hero) */
+/* No rules between or around the cells: the hero already sits on the grid
+   backdrop, and a second set of hairlines reads as noise against it. Columns
+   are separated by gap alone, and the first cell keeps a flush left edge so
+   the strip lines up with the headline above it. */
 .stat-tape {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  border-top: 1px solid var(--line-lo);
-  border-bottom: 1px solid var(--line-lo);
+  column-gap: 28px;
+  row-gap: 0;
 }
 
 @media (min-width: 720px) {
@@ -1349,21 +1352,7 @@ button {
 }
 
 .stat-tape__cell {
-  padding: 22px 24px;
-  border-right: 1px solid var(--line-lo);
-}
-
-.stat-tape__cell:last-child {
-  border-right: 0;
-}
-
-@media (max-width: 719px) {
-  .stat-tape__cell:nth-child(2n) {
-    border-right: 0;
-  }
-  .stat-tape__cell:nth-child(-n + 2) {
-    border-bottom: 1px solid var(--line-lo);
-  }
+  padding: 22px 0;
 }
 
 .stat-tape__num {
@@ -3845,6 +3834,123 @@ button {
     opacity: 1 !important;
     animation: none !important;
   }
+}
+
+/* ————————————————————————————————————————————————————————————————
+   FUNGIBILITY MATRIX — mobile cards + pagination (Findings).
+   Card treatment from dc/Basis Dashboard Mobile.dc.html; the residual
+   fill stays var(--residual): it encodes a SHARE (ADR-0005 grammar). */
+
+.fung-sort {
+  position: relative;
+  display: none;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.fung-sort select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  padding: 11px 34px 11px 16px;
+  border: 1px solid var(--line-hi);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+.fung-sort__chev {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  font-size: 8px;
+  color: var(--ink-mid);
+}
+
+.fung-cards {
+  display: none;
+  flex-direction: column;
+  gap: 9px;
+}
+.fung-card { padding: 14px 16px; }
+.fung-card__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.fung-card__sku { font-size: 12.5px; color: var(--ink-hi); }
+.fung-card__meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 9px;
+  font-size: 11.5px;
+  color: var(--ink-mid);
+}
+.fung-card__med { color: var(--ink); }
+.fung-card__res {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.fung-card__track {
+  flex: 1;
+  height: 4px;
+  background: var(--panel-hi);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.fung-card__fill {
+  display: block;
+  height: 100%;
+  background: var(--residual);
+  border-radius: 99px;
+}
+.fung-card__pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-hi);
+}
+.fung-card__accum {
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--ink-dim);
+  margin-top: 10px;
+}
+
+.fung-pages {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.fung-pages__showing {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+.fung-pages__links { display: flex; gap: 8px; }
+.fung-pages__link {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line-hi);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-mid);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.fung-pages__link[aria-current="page"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+@media (max-width: 719px) {
+  .fung-sort { display: inline-flex; }
+  .fung-cards { display: flex; }
+  .fung-table { display: none; }
 }
 
 /* Basis wordmark lockup (mark + divider + basis / residual research) */
