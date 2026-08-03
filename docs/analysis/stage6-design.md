@@ -332,6 +332,44 @@ outrank the inventory):
 receipt, gap*. Banned anywhere on the site: *insights, powerful, platform,
 leverage, unlock*. (Adds to, does not replace, the truth-patch language rules.)
 
+## 14. Approved chart redesign briefs (Director ruling, 2026-08-03)
+
+All three approved; sequence: 6.3b recolor (chart-mark grammar, PR #58) →
+design-tool variants (Raj runs
+`temp-doc/stage6-prompts/design-tool-chart-redesign-prompt.md`) → Director/Raj
+pick → **6.3c implements**.
+
+1. **Ledger waterfall** replaces the decomposition bar as the numbers-carrying
+   view ("the best component idea of the stage" — Director). Small factors get
+   full-width rows so a 4.8% reads like a 60%; subtraction performed line by
+   line per the §13 metaphor; the unfileable remainder in void, measured by the
+   bracket; mobile-free by construction. The one-line stacked bar survives as a
+   glance-glyph above it.
+2. **Dispersion band**: contrast fixes (terracotta median per the amended
+   grammar, visible p25/p75 edges, stronger band), larger plot area, and a
+   tap/hover **crosshair** with a mono readout — ruled §13-legal ("it reads a
+   ledger entry").
+3. **Price-by-factor**: mobile rotation to horizontal beeswarm rows +
+   **receipt-card taps** wiring into the existing provenance drawer.
+
+**Accent colors beyond this grammar: PARKED post-Stage-6** (Director + Manager
+concurring). Guardrails for when it reopens: (a) it's a cheap token swap by
+design — 6.1 tokenized everything for exactly this; (b) the swap governs the
+accent ONLY — the void residual is ADR-law, and the cream/ink/serif identity is
+frozen. Changing terracotta is redecorating; touching the residual's color is
+reopening a ruling.
+
+## 15. Mobile amendments to Task 6.4 (Director ruling, 2026-08-03)
+
+1. **The DC mobile files are 6.4's primary layout reference**
+   (`design/stage6-references/dc/Basis Story Mobile.dc.html`,
+   `…/Basis Dashboard Mobile.dc.html`): fix pages **toward the DC mobile
+   layouts**, not toward "current desktop, squeezed."
+2. **Fluid type scale via `clamp()`** — every size defined min / preferred-vw /
+   max — plus `overflow-wrap` on long mono strings (`h100_sxm_80gb` is the
+   usual cream-page culprit). Named requirement: **no global font shrinking;
+   390px must be readable, not miniature.**
+
 ---
 
 ## Decisions record
