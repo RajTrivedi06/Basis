@@ -10,18 +10,34 @@ import {
   getProviders,
 } from "@/lib/api";
 import { ResidualTimeSeriesChart } from "@/components/ResidualTimeSeriesChart";
-import { useCountUp } from "@/lib/useCountUp";
+import { ShowMeHow } from "@/components/disclosure/TwoLayer";
+import { getMlExplainability } from "@/lib/mlExplainability";
 
 // Azure and GCP publish fixed list catalogs; excluding them leaves the
 // market-priced segments (marketplaces + spot) the hero speaks about.
 const CATALOG_PROVIDERS = ["azure", "gcp"];
 const CATALOG_EXCLUSION_KEY = `exclude:${CATALOG_PROVIDERS.join(",")}`;
 
-// Anchored structural claims, held out-of-sample as of 2026-07-31.
-// These are dated findings, not live aggregates: the GBM/ANOVA gap and
-// the host fixed-effects ICC both come from the ML bound run.
-const ML_GAP_PP = -10.9;
-const HOST_ICC = 0.554;
+// Anchored structural claims — dated findings, not live aggregates. Per
+// design doc A6 they interpolate from the artifact's trained_at, so every
+// retrain flows through with zero copy edits.
+/**
+ * Qualitative share language that can never contradict the number beside
+ * it (Quarantine Rule): the qualifier derives from the live ICC.
+ */
+export function iccQualifier(icc: number): string {
+  if (icc >= 0.5) return "over half";
+  if (icc >= 1 / 3) return "a third or more";
+  return "a persistent share";
+}
+
+function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
 
 function FindingsHeroInner() {
   const { sku } = useSku();
@@ -47,20 +63,22 @@ function FindingsHeroInner() {
     queryFn: () => getProviders(),
   });
 
+  const artifact = useQuery({
+    queryKey: ["ml-explainability"],
+    queryFn: () => getMlExplainability(),
+    staleTime: 15 * 60 * 1000,
+  });
+
   const marketPoints = tsMarket.data?.points ?? [];
 
-  // Count-up tweens. First number leads slightly, second trails by
-  // ~200ms so the eye reads them sequentially rather than competing.
-  const gapDisplay = useCountUp(ML_GAP_PP, {
-    durationMs: 1100,
-    delayMs: 300,
-    format: (n) => `−${Math.abs(n).toFixed(1)}pp`,
-  });
-  const iccDisplay = useCountUp(HOST_ICC, {
-    durationMs: 1100,
-    delayMs: 500,
-    format: (n) => n.toFixed(2),
-  });
+  const gapPp = artifact.data ? artifact.data.metrics.gap * 100 : null;
+  const icc = artifact.data ? artifact.data.host_analysis.icc : null;
+  const trainedDate = artifact.data
+    ? shortDate(artifact.data.metadata.trained_at)
+    : null;
+  const gapDisplay =
+    gapPp === null ? "—" : `−${Math.abs(gapPp).toFixed(1)}pp`;
+  const iccDisplay = icc === null ? "—" : icc.toFixed(2);
 
   const totalOffers =
     providers.data?.items.reduce((s, p) => s + p.offer_count, 0) ?? null;
@@ -94,62 +112,74 @@ function FindingsHeroInner() {
           Finding · {sku} · {windowLabel} · Market-priced segments
         </div>
 
-        <dl
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "clamp(32px, 5vw, 48px)",
-            margin: 0,
-          }}
-        >
-          <HeroNumber
-            valueLabel={gapDisplay}
-            ariaValue="negative 10.9 percentage points"
-            primary="out-of-sample ML gap"
-            secondary="(45-feature model vs. four factors)"
-            numberDelay="200ms"
-            labelDelay="1000ms"
-          />
-          <HeroNumber
-            valueLabel={iccDisplay}
-            ariaValue="0.55"
-            primary="host-identity ICC"
-            secondary="(share of what remains)"
-            numberDelay="200ms"
-            labelDelay="1000ms"
-          />
-        </dl>
-
-        <p
+        <h1
           className="serif basis-fade"
           style={
             {
-              marginTop: 28,
-              maxWidth: 620,
-              fontStyle: "italic",
-              fontSize: "clamp(16px, 1.6vw, 22px)",
-              lineHeight: 1.35,
-              color: "var(--ink)",
-              letterSpacing: "-0.005em",
-              "--basis-delay": "1250ms",
+              margin: "0 0 26px",
+              fontSize: "clamp(26px, 3vw, 40px)",
+              fontWeight: 500,
+              lineHeight: 1.12,
+              letterSpacing: "-0.02em",
+              color: "var(--ink-hi)",
+              maxWidth: 560,
+              "--basis-delay": "150ms",
             } as React.CSSProperties
           }
         >
-          Even a 45-feature ML model can&rsquo;t close the unexplained gap
-          out-of-sample (as of Jul 31); over half of what remains is
-          persistent host identity (ICC 0.55).
-        </p>
+          A bigger model doesn&rsquo;t explain it away.
+        </h1>
+
+        {gapPp !== null || icc !== null ? (
+          <dl
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "clamp(32px, 5vw, 48px)",
+              margin: 0,
+            }}
+          >
+            <HeroNumber
+              valueLabel={gapDisplay}
+              ariaValue={
+                gapPp === null
+                  ? "gap unavailable"
+                  : `negative ${Math.abs(gapPp).toFixed(1)} percentage points`
+              }
+              primary="out-of-sample gap"
+              secondary="45 features still explain less than 4 simple factors"
+              numberDelay="250ms"
+              labelDelay="700ms"
+            />
+            <HeroNumber
+              valueLabel={iccDisplay}
+              ariaValue={icc === null ? "ICC unavailable" : icc.toFixed(2)}
+              primary="host-identity ICC"
+              secondary={`${icc === null ? "how much" : iccQualifier(icc)} of what's left sticks to specific machines`}
+              numberDelay="250ms"
+              labelDelay="700ms"
+            />
+          </dl>
+        ) : (
+          <p
+            className="caption basis-fade"
+            style={{ maxWidth: 480, margin: "0 0 4px" } as React.CSSProperties}
+          >
+            The anchored figures load from the published artifact — see the{" "}
+            <Link href="/explainability">explainability page</Link>.
+          </p>
+        )}
 
         <p
           className="basis-fade"
           style={
             {
               maxWidth: 560,
-              marginTop: 18,
+              marginTop: 22,
               fontSize: 13,
               lineHeight: 1.65,
               color: "var(--ink-mid)",
-              "--basis-delay": "1400ms",
+              "--basis-delay": "900ms",
             } as React.CSSProperties
           }
         >
@@ -157,6 +187,36 @@ function FindingsHeroInner() {
           across recent weeks — basis risk is segment- and
           time-conditional.
         </p>
+
+        <div
+          className="basis-fade"
+          style={
+            {
+              maxWidth: 560,
+              marginTop: 14,
+              "--basis-delay": "1050ms",
+            } as React.CSSProperties
+          }
+        >
+          <ShowMeHow label="Show me how we know">
+            <p>
+              Even a 45-feature ML model can&rsquo;t close the unexplained
+              gap out-of-sample
+              {trainedDate ? ` (as of ${trainedDate})` : ""};{" "}
+              {icc === null ? "a persistent share" : iccQualifier(icc)} of
+              what remains is persistent host identity
+              {icc === null ? "" : ` (ICC ${icc.toFixed(2)})`}.
+            </p>
+            <p>
+              The gap compares the 45-feature model&rsquo;s honest
+              out-of-sample fit against the four simple factors&rsquo;
+              in-sample share — one picture, not two separate confirmations.
+              Both anchors are dated structural claims from the published
+              artifact; inspect them on the{" "}
+              <Link href="/explainability">explainability page</Link>.
+            </p>
+          </ShowMeHow>
+        </div>
 
         <div
           className="basis-fade"
