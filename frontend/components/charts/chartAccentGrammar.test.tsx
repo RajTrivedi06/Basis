@@ -1,6 +1,6 @@
 import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DispersionFan } from "@/app/dispersion/DispersionFan";
+import { DispersionBand } from "@/app/dispersion/DispersionBand";
 import {
   FactorStripPlot,
   type StripPlotPoint,
@@ -147,9 +147,17 @@ describe("chart-mark accent grammar", () => {
     }
   });
 
-  it("draws the dispersion median in the accent and leaves the band in ink", () => {
+  /**
+   * Amended by the 2026-08-03 Director pick: the dispersion band is approved
+   * *as shown* in `Basis_Explorations_dc.html` (1f), which fills it warm —
+   * "the band is the finding, it should never read as fog." The band and its
+   * p25/p75 hairlines join the median on the accent. What has not moved is the
+   * half of ADR-0005 that matters: nothing in this chart is a residual share,
+   * so void must appear nowhere in it.
+   */
+  it("draws the dispersion band, its edges, and the median in the accent", () => {
     const { container } = render(
-      <DispersionFan
+      <DispersionBand
         title="dispersion"
         data={[
           { date: "2026-07-28", p25: 1.8, median: 2.4, p75: 3.2 },
@@ -159,12 +167,34 @@ describe("chart-mark accent grammar", () => {
       />
     );
 
-    const paths = Array.from(container.querySelectorAll("path"));
-    const median = paths.find((p) => p.getAttribute("fill") === "none")!;
-    const band = paths.find((p) => p.getAttribute("stroke") === "none")!;
+    const band = container.querySelector(".dispersion-band__fill")!;
+    expect(band.getAttribute("fill")).toBe("var(--accent)");
 
+    const edges = Array.from(container.querySelectorAll(".dispersion-band__edge"));
+    expect(edges).toHaveLength(2);
+    for (const edge of edges) {
+      expect(edge.getAttribute("stroke")).toBe("var(--accent)");
+      // Subordinate to the median, or the band reads as three equal series.
+      expect(Number(edge.getAttribute("stroke-opacity"))).toBeLessThan(1);
+    }
+
+    const median = container.querySelector(".dispersion-band__median")!;
     expect(median.getAttribute("stroke")).toBe("var(--accent)");
-    expect(band.getAttribute("fill")).toBe("var(--ink-mid)");
+    expect(median.getAttribute("stroke-width")).toBe("1.8");
+  });
+
+  it("keeps void out of the dispersion band — nothing here is a residual share", () => {
+    const { container } = render(
+      <DispersionBand
+        title="dispersion"
+        data={[
+          { date: "2026-07-28", p25: 1.8, median: 2.4, p75: 3.2 },
+          { date: "2026-07-29", p25: 1.9, median: 2.5, p75: 3.4 },
+        ]}
+      />
+    );
+
+    expect(container.innerHTML).not.toContain("var(--residual");
   });
 
   it("accents the residual strip-plot dots but keeps factor views categorical", () => {

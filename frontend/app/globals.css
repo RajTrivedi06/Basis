@@ -3640,3 +3640,60 @@ button {
     text-align: right;
   }
 }
+
+/* ============================================================
+   STAGE 6.3c — THE DISPERSION BAND (append-only block)
+   Approved as shown (Director, 2026-08-03): warm band, its own
+   p25/p75 hairlines, crosshair readout, and the bracket
+   measuring today's disagreement.
+   ============================================================ */
+
+.dispersion-band__readout {
+  margin-bottom: 6px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-hi);
+}
+
+.dispersion-band__plate {
+  display: block;
+  max-width: 100%;
+  touch-action: pan-y;
+}
+
+.dispersion-band__plate:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.dispersion-band__axis {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  fill: var(--ink-dim);
+}
+
+.dispersion-band__tag {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  fill: var(--ink-mid);
+}
+
+.dispersion-band__delta {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--accent);
+}
+
+.dispersion-band__legend {
+  margin: 8px 0 0;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getDispersion } from "@/lib/api";
 import type { DispersionPoint } from "@/lib/types";
-import { DispersionFan, type DispersionFanPoint } from "./DispersionFan";
+import { DispersionBand, type DispersionBandPoint } from "./DispersionBand";
 
 function ChartPlaceholder({
   message,
@@ -55,7 +55,7 @@ export function DispersionChart({ gpuSku }: { gpuSku: string }) {
     );
   }
 
-  const fanData: DispersionFanPoint[] = data.points.map(
+  const bandData: DispersionBandPoint[] = data.points.map(
     (p: DispersionPoint) => ({
       date: p.date,
       p25: p.p25_price,
@@ -66,7 +66,7 @@ export function DispersionChart({ gpuSku }: { gpuSku: string }) {
 
   // The day/offer count lives on the page's control row (see
   // DispersionPageClient) so the panel is chart and nothing else.
-  const title = `Daily price dispersion for ${gpuSku}: shaded band from 25th to 75th percentile, line is median, in USD per GPU-hour.`;
+  const title = `Daily price dispersion for ${gpuSku}: shaded band from 25th to 75th percentile, line is median, in USD per GPU-hour. Move the pointer or use the arrow keys to read a single day.`;
 
-  return <DispersionFan data={fanData} height={380} title={title} />;
+  return <DispersionBand data={bandData} height={380} title={title} />;
 }
