@@ -25,6 +25,34 @@ function formatDeviation(pct: number | null): string {
   return `${arrow} ${Math.abs(pct).toFixed(1)}%`;
 }
 
+function ProviderCard({ p }: { p: ProviderSummary }) {
+  return (
+    <div className="prov-card panel">
+      <div className="prov-card__head">
+        <span className="prov-card__name">{p.provider}</span>
+        {isProviderRetired(p) ? (
+          <span className="tag-quiet mono">Retired</span>
+        ) : null}
+        <span
+          className={`mono prov-card__delta ${deviationClass(p.median_deviation_pct)}`}
+        >
+          {formatDeviation(p.median_deviation_pct)}
+        </span>
+      </div>
+      <div className="mono prov-card__meta">
+        <span>{p.offer_count.toLocaleString()} offers</span>
+        <span>{p.distinct_skus} SKUs</span>
+      </div>
+      <div className="mono prov-card__ts">
+        latest{" "}
+        {p.latest_collection
+          ? new Date(p.latest_collection).toLocaleString()
+          : "—"}
+      </div>
+    </div>
+  );
+}
+
 function PageHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="int-head">
@@ -106,7 +134,13 @@ export default function ProvidersPage() {
         </span>
       </div>
 
-      <div className="panel overflow-hidden">
+      <div className="prov-cards">
+        {ordered.map((p: ProviderSummary) => (
+          <ProviderCard key={p.provider} p={p} />
+        ))}
+      </div>
+
+      <div className="panel prov-table overflow-hidden">
         <table className="tbl">
           <thead>
             <tr>
