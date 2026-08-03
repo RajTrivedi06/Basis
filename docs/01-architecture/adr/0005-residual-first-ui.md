@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted 2026-04-21, implemented on main 2026-05-16
+Accepted 2026-04-21, implemented on main 2026-05-16.
+Amended 2026-08-02 (Stage 6 addendum below): the residual's exclusive color is now
+void near-black `#171512`; amber is retired.
 
 ## Context
 
@@ -76,6 +78,20 @@ The shape of this decision:
 **Neutral:**
 - The decision is reversible but not cheap to reverse. Going back to a library after the port lands means rewriting every chart. If the scope ever grows past simple geometries — interactive brushing, linked-view selection, animated transitions across datasets — the decision may be worth revisiting.
 - The residual-first principle is a visual *and* editorial discipline. The charts enforce the visual half. The editorial half — headlines, eyebrow labels, how copy frames the finding — lives in page components and copy, not in this ADR.
+
+## Addendum — Stage 6 (2026-08-02): the residual's exclusive color
+
+2026-08-02 (Stage 6): the residual's exclusive color is void near-black `#171512`.
+It appears wherever the unexplained share is encoded — chart segments, hero
+numerals, stat values — and nowhere else. Terracotta `#C15F3C` carries no data
+meaning anywhere on the site. The amber residual of the dark theme is retired.
+
+Decision context: Stage 6 design doc §3 (`docs/analysis/stage6-design.md`) — the
+cream-editorial retheme keeps this ADR's structural mechanism (one `--residual`
+token, hand-rolled SVG consumers, grep-provable discipline) and changes only the
+token's value. Terracotta is demoted to purely editorial accent (eyebrows, links,
+annotations, active nav) and must never encode data. Ruled by Raj 2026-08-02;
+Director concurrence on record in the Stage 6 briefing thread.
 
 ## Links
 
