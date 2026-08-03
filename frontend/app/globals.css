@@ -3846,3 +3846,83 @@ button {
     animation: none !important;
   }
 }
+
+/* Basis wordmark lockup (mark + divider + basis / residual research) */
+.basis-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1;
+}
+
+.basis-logo__mark {
+  display: block;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: var(--ink-hi);
+}
+
+.basis-logo__divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 26px;
+  background: var(--ink-hi);
+  opacity: 0.18;
+}
+
+.basis-logo__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.basis-logo__word {
+  font-family: var(--f-mono);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink-hi);
+}
+
+.basis-logo__cap {
+  font-family: var(--f-sans);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-hi);
+  opacity: 0.55;
+  white-space: nowrap;
+}
+
+.basis-logo--footer {
+  gap: 10px;
+}
+
+.basis-logo--footer .basis-logo__mark {
+  width: 22px;
+  height: 22px;
+}
+
+.basis-logo--footer .basis-logo__divider {
+  height: 22px;
+}
+
+.basis-logo--footer .basis-logo__word {
+  font-size: 13px;
+}
+
+.basis-logo--footer .basis-logo__cap {
+  font-size: 7px;
+}
+
+.basis-logo--header .basis-logo__cap {
+  display: none;
+}
+
+.basis-logo--mark .basis-logo__mark {
+  width: 32px;
+  height: 32px;
+}
