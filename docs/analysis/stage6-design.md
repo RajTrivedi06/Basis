@@ -47,7 +47,8 @@ frame where a numeral is 110px tall, and choosing it means either living with we
 text-size serifs or breaking the one-family rule.
 Load via `next/font` with `display: swap`, weights 400–600 + italic, opsz auto.
 
-> **DECISION #1 (Raj):** ______ · date ______
+> **DECISION #1 (Raj): Newsreader — site-wide, one family, per the specimen
+> evidence.** Ruled 2026-08-02, relayed by Raj; recorded by Manager.
 
 ## 3. RAJ DECISION #2 — the residual's exclusive color (ADR-0005 addendum)
 
@@ -71,13 +72,16 @@ decorative use. Candidates:
 **Recommendation: void.** Written as ADR-0005 addendum at sign-off; commit
 message references this section.
 
-Addendum text (to append to `docs/01-architecture/adr/0005-residual-first-ui.md`
-once decided): *"2026-08-02 (Stage 6): the residual's exclusive color is
-[CHOSEN]. It appears wherever the unexplained share is encoded — chart segments,
-hero numerals, stat values — and nowhere else. [OTHER COLOR] carries no data
+Addendum text (committed to `docs/01-architecture/adr/0005-residual-first-ui.md`):
+*"2026-08-02 (Stage 6): the residual's exclusive color is void near-black
+`#171512`. It appears wherever the unexplained share is encoded — chart segments,
+hero numerals, stat values — and nowhere else. Terracotta `#C15F3C` carries no data
 meaning anywhere on the site. The amber residual of the dark theme is retired."*
 
-> **DECISION #2 (Raj):** ______ · date ______
+> **DECISION #2 (Raj): void near-black `#171512`, exclusively owned by the
+> residual; terracotta demoted to purely editorial accent.** ADR-0005 addendum
+> committed as pre-written (see `docs/01-architecture/adr/0005-residual-first-ui.md`).
+> Ruled 2026-08-02, relayed by Raj; recorded by Manager.
 
 ## 4. RAJ DECISION #3 — pooled-series visibility (Stage 5 blocker #3)
 
@@ -93,7 +97,9 @@ donut-vs-bar exhibit (two framings of the same data). **Not on the landing.** Bo
 series come from `getBasisTimeseries` (with/without the catalog exclusion) — no new
 analysis, no new endpoint.
 
-> **DECISION #3 (Raj):** ______ · date ______
+> **DECISION #3 (Raj): YES — "why pooling misleads" teaching exhibit in the
+> methodology/Basis area with the Jul-28 catalog and era-D annotations; never on
+> the landing.** Ruled 2026-08-02, relayed by Raj; recorded by Manager.
 
 ## 5. Scene map — the SSR scrollytelling landing (Task 6.2)
 
@@ -152,7 +158,8 @@ either gap sign (if a future retrain flips it positive, the same geometry shows 
 bound above the line). **Manager recommendation: A** — the landing needs the
 unmissable version; B can serve the explainability interior if Director wants both.
 
-> **Director pick:** ______
+> **Director pick: Candidate A (two compared bars), with the in-sample /
+> out-of-sample labels REQUIRED on the two bars.** Ruled 2026-08-02.
 
 ## 7. Week-motion presentation (blocker #6)
 
@@ -242,9 +249,9 @@ ML-based normalization, raw observations immutable.
 
 | Decision | Choice | Date | Recorded by |
 |---|---|---|---|
-| #1 Serif | — | — | — |
-| #2 Residual color (ADR-0005 addendum) | — | — | — |
-| #3 Pooled-series visibility | — | — | — |
-| §6 bound-visual candidate | — | — | — |
-| Voice pass | — | — | — |
-| **Director sign-off** | — | — | — |
+| #1 Serif | **Newsreader**, site-wide, one family | 2026-08-02 | Manager (Raj relay) |
+| #2 Residual color (ADR-0005 addendum) | **Void near-black `#171512`**; terracotta purely editorial | 2026-08-02 | Manager (Raj relay) |
+| #3 Pooled-series visibility | **YES** — teaching exhibit, methodology/Basis area, never landing | 2026-08-02 | Manager (Raj relay) |
+| §6 bound-visual candidate | **A** (two bars) w/ in-sample/out-of-sample labels required | 2026-08-02 | Manager (Director ruling) |
+| Voice pass | **PENDING** — §10, 21 rows | — | — |
+| **Director sign-off** | pending voice pass | — | — |
