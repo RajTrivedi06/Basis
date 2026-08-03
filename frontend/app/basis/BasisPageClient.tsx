@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DecompBar, type DecompShares } from "@/components/charts/DecompBar";
+import { type DecompShares } from "@/components/charts/DecompBar";
+import { LedgerWaterfall } from "@/components/charts/LedgerWaterfall";
 import { SkuPicker } from "@/components/SkuPicker";
 import { TwoLayer } from "@/components/disclosure/TwoLayer";
 import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
@@ -148,7 +149,7 @@ export function BasisPageClient() {
               }
             >
               <p>
-                The bar and table below are the latest daily{" "}
+                The ledger and table below are the latest daily{" "}
                 <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
                 for the selected SKU, in the model order{" "}
                 <span className="mono text-[var(--ink)]">
@@ -192,9 +193,9 @@ export function BasisPageClient() {
 
         {basisState === "ready" && shares && decomposition ? (
           <div className="panel p-[18px]">
-            <DecompBar decomp={shares} height={128} />
+            <LedgerWaterfall decomposition={decomposition} glanceLabel={sku} />
             <p className="caption mt-4 max-w-[760px]">
-              The stacked bar is read as shares of total log-price variance{" "}
+              The ledger is read as shares of total log-price variance{" "}
               <span className="mono text-[var(--ink)]">
                 ({decomposition.total_variance.toFixed(4)})
               </span>
