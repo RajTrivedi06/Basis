@@ -1334,12 +1334,15 @@ button {
 }
 
 /* Stat tape (hero) */
+/* No rules between or around the cells: the hero already sits on the grid
+   backdrop, and a second set of hairlines reads as noise against it. Columns
+   are separated by gap alone, and the first cell keeps a flush left edge so
+   the strip lines up with the headline above it. */
 .stat-tape {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  border-top: 1px solid var(--line-lo);
-  border-bottom: 1px solid var(--line-lo);
+  column-gap: 28px;
+  row-gap: 0;
 }
 
 @media (min-width: 720px) {
@@ -1349,21 +1352,7 @@ button {
 }
 
 .stat-tape__cell {
-  padding: 22px 24px;
-  border-right: 1px solid var(--line-lo);
-}
-
-.stat-tape__cell:last-child {
-  border-right: 0;
-}
-
-@media (max-width: 719px) {
-  .stat-tape__cell:nth-child(2n) {
-    border-right: 0;
-  }
-  .stat-tape__cell:nth-child(-n + 2) {
-    border-bottom: 1px solid var(--line-lo);
-  }
+  padding: 22px 0;
 }
 
 .stat-tape__num {
