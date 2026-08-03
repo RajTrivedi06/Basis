@@ -245,6 +245,24 @@ Gamification mechanics · replay→true streaming for Ask (v4) · absolute-varia
 companion series (v4) · any new analysis. Also unchanged: no user accounts, no
 ML-based normalization, raw observations immutable.
 
+## 12. Animation tooling — the GSAP whitelist (Director-approved, pre-6.2)
+
+GSAP is admitted for the scrollytelling landing under a hard whitelist:
+
+- **Allowed: `gsap` core, `ScrollTrigger`, `@gsap/react` (useGSAP). Landing page
+  only.** Interior pages (6.3) stay CSS/IO — no GSAP imports outside the landing
+  route's components.
+- No other plugins without a design-doc amendment (no ScrollSmoother, SplitText,
+  Flip, Draggable, etc.).
+- The official GSAP AI skills are installed for the agents (`.agents/skills/`,
+  gitignored tooling): **skills teach how, the whitelist decides what.**
+- **`ScrollTrigger.refresh()` after live-data hydration** — API-bound text can
+  change layout, so trigger positions are recomputed once data lands.
+- §8's SSR contract is unchanged: GSAP animates presentation only; every word and
+  number exists in server HTML before any tween runs.
+- Reduced motion via `gsap.matchMedia('(prefers-reduced-motion: reduce)')` —
+  final-state rendering, no tweens, consistent with §5.
+
 ---
 
 ## Decisions record
