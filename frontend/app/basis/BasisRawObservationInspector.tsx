@@ -91,7 +91,7 @@ export function BasisRawObservationInspector({
       <div
         role="dialog"
         aria-label={`Raw observation ${rawObservationId}`}
-        className="fixed inset-4 z-[70] flex flex-col overflow-hidden rounded-[8px] border border-[var(--line-hi)] bg-[var(--bg)] shadow-2xl md:inset-10"
+        className="fixed inset-0 z-[70] flex flex-col overflow-hidden rounded-none border border-[var(--line-hi)] bg-[var(--bg)] shadow-2xl md:inset-10 md:rounded-[8px]"
         style={{
           transform: mounted ? "translateY(0)" : "translateY(8px)",
           opacity: mounted ? 1 : 0,
@@ -156,7 +156,7 @@ function InspectorHeader({
   onClose: () => void;
 }) {
   return (
-    <header className="border-b border-[var(--line-lo)] px-6 py-4">
+    <header className="border-b border-[var(--line-lo)] px-4 py-4 md:px-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="eyebrow mb-1">Raw observation</div>
@@ -196,7 +196,7 @@ function InspectorBody({
   explain: RawObservationExplainResponse;
 }) {
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6">
       <QuoteStrip raw={raw} explain={explain} />
 
       <section>
@@ -206,7 +206,7 @@ function InspectorBody({
           </h3>
           <span className="eyebrow">4 stages · sequential</span>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]">
           <PipelineStage
             step={1}
             label="GPU"
@@ -367,7 +367,7 @@ function PipelineStage({
   children?: React.ReactNode;
 }) {
   return (
-    <article className="panel flex flex-col gap-3 p-4">
+    <article className="panel flex min-w-0 flex-col gap-3 p-4 [overflow-wrap:anywhere]">
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="stage-index">{step}</span>
@@ -518,7 +518,7 @@ function CollapsibleJsonPanel({
         </span>
       </button>
       {open && (
-        <pre className="mono m-0 max-h-[400px] overflow-auto border-t border-[var(--line-lo)] px-4 py-4 text-[11px] leading-[1.55] text-[var(--ink-mid)]">
+        <pre className="mono m-0 max-h-[400px] overflow-y-auto whitespace-pre-wrap [overflow-wrap:anywhere] border-t border-[var(--line-lo)] px-4 py-4 text-[11px] leading-[1.55] text-[var(--ink-mid)]">
           {JSON.stringify(value, null, 2)}
         </pre>
       )}

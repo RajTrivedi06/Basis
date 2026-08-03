@@ -3277,6 +3277,49 @@ button {
   color: var(--ink-hi);
 }
 
+/* ————————————————————————————————————————————————————————————————
+   PROVIDERS — mobile cards (treatment from dc/Basis Dashboard
+   Mobile.dc.html §04); desktop keeps the table. */
+
+.prov-cards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+.prov-card { padding: 16px 18px; }
+.prov-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+.prov-card__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-hi);
+}
+.prov-card__delta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+}
+.prov-card__meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 9px;
+  font-size: 11.5px;
+  color: var(--ink-mid);
+}
+.prov-card__ts {
+  font-size: 10px;
+  color: var(--ink-dim);
+  margin-top: 6px;
+}
+
+@media (max-width: 719px) {
+  .prov-cards { display: flex; }
+  .prov-table { display: none; }
+}
+
 /* ============================================================
    STAGE 6.3c — THE BRACKET (append-only block)
    The dimension bracket, its monogram, the nav lockup, and the
