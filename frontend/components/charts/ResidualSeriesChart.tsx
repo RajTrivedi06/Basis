@@ -14,6 +14,10 @@ import type { BasisDecompositionResponse } from "@/lib/types";
  * Deliberately unsmoothed: the series is drawn point-to-point so a collapse or
  * a spike renders at its real angle. Both panels of the pooled exhibit share a
  * fixed 0–100% y-axis so the two shapes can be compared by eye.
+ *
+ * Color grammar (ADR-0005 as amended 2026-08-03): the accent belongs to the
+ * series mark, so the era rules are drawn in neutral ink — otherwise the
+ * annotation and the series it annotates would arrive in the same color.
  */
 
 const VIEW_W = 460;
@@ -27,7 +31,7 @@ const PLOT_H = VIEW_H - PAD_T - PAD_B;
 
 export interface ResidualSeriesChartProps {
   points: BasisDecompositionResponse[];
-  /** Stroke for the series; the residual color is reserved for market-priced. */
+  /** Stroke for the series; the accent is reserved for the market-priced panel. */
   color: string;
   /** Screen-reader description of what this panel shows. */
   ariaLabel: string;
@@ -117,7 +121,7 @@ export function ResidualSeriesChart({
               x2={x}
               y1={PAD_T - 6}
               y2={VIEW_H - PAD_B}
-              stroke="var(--accent)"
+              stroke="var(--ink-dim)"
               strokeWidth={1}
               strokeDasharray="3 3"
               vectorEffect="non-scaling-stroke"
@@ -128,7 +132,7 @@ export function ResidualSeriesChart({
               textAnchor="middle"
               fontSize={9}
               fontFamily="var(--f-mono)"
-              fill="var(--accent)"
+              fill="var(--ink-mid)"
             >
               {annotation.marker}
             </text>
@@ -169,7 +173,7 @@ export function EraAnnotationLegend({ style }: { style?: CSSProperties }) {
         <span key={annotation.date} className="pooled-legend__item">
           <span
             className="mono"
-            style={{ color: "var(--accent)", fontSize: 11 }}
+            style={{ color: "var(--ink-mid)", fontSize: 11 }}
             aria-hidden
           >
             {annotation.marker}

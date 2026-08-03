@@ -15,7 +15,7 @@ import type { DecompositionObservation } from "@/lib/types";
  *
  * The chart is the centerpiece of the factor-aware drilldown drawer:
  * tight columns mean the factor "explains" price; spread columns
- * mean it doesn't. For the residual view, dots are amber and the
+ * mean it doesn't. For the residual view, dots take the accent and the
  * X axis is provider × commitment cells — within-cell spread is the
  * residual basis risk.
  *
@@ -169,7 +169,11 @@ export function FactorStripPlot({
     return <EmptyChart />;
   }
 
-  const dotColor = factor === "residual" ? "var(--residual)" : factorColor(factor);
+  // The residual view is one undifferentiated cloud of prices, so its dots are
+  // a single-series mark and take the accent (ADR-0005 as amended 2026-08-03).
+  // The factor views stay on the decomposition's categorical palette, which the
+  // bar and the legend also speak.
+  const dotColor = factor === "residual" ? "var(--accent)" : factorColor(factor);
   const figureSummary = buildFigureSummary(factor, points, layout);
 
   // Cursor-following tooltip: position the tooltip via direct DOM
@@ -272,7 +276,7 @@ export function FactorStripPlot({
               const groupColor = isUnknown ? "var(--unknown)" : dotColor;
               const bandFill =
                 factor === "residual" && !isUnknown
-                  ? "var(--residual-bg)"
+                  ? "var(--accent-bg)"
                   : isUnknown
                     ? "var(--unknown-bg)"
                     : groupColor;

@@ -14,7 +14,11 @@ type DispersionFanProps = {
 };
 
 /**
- * Hand-rolled SVG: p25–p75 band + median. Uses ink tokens only (no residual).
+ * Hand-rolled SVG: p25–p75 band + median.
+ *
+ * Color grammar (ADR-0005 as amended 2026-08-03): the median is a single-series
+ * line mark, so it takes the accent; the band and axes stay ink. Nothing here
+ * encodes a residual share, so void appears nowhere in this chart.
  */
 export function DispersionFan({
   data,
@@ -111,7 +115,7 @@ export function DispersionFan({
           x2={xr}
           y1={ym}
           y2={ym}
-          stroke="var(--ink-hi)"
+          stroke="var(--accent)"
           strokeWidth={1.5}
         />
         <text
@@ -205,7 +209,7 @@ export function DispersionFan({
       />
       <path
         d={medPath}
-        stroke="var(--ink-hi)"
+        stroke="var(--accent)"
         strokeWidth={1.5}
         fill="none"
       />
