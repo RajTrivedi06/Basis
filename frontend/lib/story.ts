@@ -18,6 +18,9 @@ import type {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const REVALIDATE_SECONDS = 900;
+/** Bound SSG: an unset/unreachable API must degrade to null, not hang
+ *  `next build` until the 60s static-generation timeout (CI failure on #71). */
+const FETCH_TIMEOUT_MS = 5_000;
 
 /** The landing tells one SKU's story; the dashboard covers the rest. */
 export const HERO_SKU = "h100_sxm_80gb";
@@ -26,10 +29,14 @@ export const HERO_SKU = "h100_sxm_80gb";
 const RETIRED_AFTER_DAYS = 7;
 
 async function fetchJson<T>(path: string): Promise<T | null> {
+  // Production builds emit no /api rewrite (see next.config.ts). Relative
+  // fetches during SSG have nowhere to go and hang without a base URL.
+  if (!BASE_URL) return null;
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
       headers: { Accept: "application/json" },
       next: { revalidate: REVALIDATE_SECONDS },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     return (await res.json()) as T;
