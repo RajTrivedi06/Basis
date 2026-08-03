@@ -27,5 +27,11 @@ jobs:
         run: npx tsc --noEmit
       - working-directory: frontend
         run: npm test
+      # The Stage 6.2 landing is an SSR/ISR server component that fetches the
+      # live API at build time (frontend/lib/story.ts). Without a base URL,
+      # those relative /api calls hang SSG — production rewrites are
+      # development-only. Match the Vercel Production value.
       - working-directory: frontend
         run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.gpu-basis.xyz

@@ -4032,3 +4032,249 @@ button {
   width: 32px;
   height: 32px;
 }
+
+/* ————————————————————————————————————————————————————————————————
+   STORY (Stage 6.2 landing) — scene layout + reveal motion.
+   §13 motion laws: scroll-entered only; reduced-motion renders final
+   state. Appended as a self-contained block; interiors don't use it. */
+
+.story { overflow-x: clip; }
+
+.story-scene { padding: 110px 0; border-top: 1px solid var(--line); }
+.story-scene--hook {
+  min-height: 88vh;
+  display: flex;
+  align-items: center;
+  border-top: none;
+}
+.story-scene--white { background: var(--panel); }
+
+.story-frame { max-width: 1180px; margin: 0 auto; padding: 0 40px; }
+.story-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: center;
+}
+@media (max-width: 860px) {
+  .story-cols { grid-template-columns: 1fr; gap: 40px; }
+}
+
+.story-h1 {
+  font-weight: 500;
+  font-size: clamp(40px, 5.6vw, 72px);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  margin: 0;
+  max-width: 900px;
+}
+.story-h2 {
+  font-weight: 500;
+  font-size: clamp(28px, 3.2vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+}
+.story-price { color: var(--residual); font-variant-numeric: tabular-nums; }
+.story-lede {
+  font-size: 19px;
+  color: var(--ink-mid);
+  line-height: 1.6;
+  margin: 30px 0 0;
+  max-width: 580px;
+}
+.story-body {
+  font-size: 16px;
+  color: var(--ink-mid);
+  line-height: 1.7;
+  margin: 0 0 14px;
+}
+.story-strong { color: var(--ink); font-weight: 500; }
+.story-eyebrow { margin-bottom: 16px; }
+.story-fn a {
+  font-size: 11px;
+  text-decoration: none;
+  color: var(--accent);
+  padding-left: 1px;
+}
+.story-unknown { color: var(--ink); font-size: 14px; }
+
+.story-cards { display: flex; flex-direction: column; gap: 14px; }
+.story-cards__divider {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--ink-dim);
+  letter-spacing: 0.1em;
+}
+.story-tag {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 26px;
+}
+.story-tag__sku { font-size: 13px; }
+.story-tag__price { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; }
+.story-tag__price span { font-size: 14px; color: var(--ink-dim); }
+.story-tag--high .story-tag__price { color: var(--residual); }
+
+.story-method {
+  margin-top: 48px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  align-items: center;
+  justify-content: space-between;
+}
+.story-method__chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.story-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 12px;
+  background: var(--panel);
+}
+.story-method__count { text-align: center; }
+.story-count { font-size: 42px; font-weight: 500; letter-spacing: -0.02em; }
+
+.story-stencil { display: flex; flex-direction: column; gap: 10px; }
+.story-stencil__raw {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 18px;
+  font-size: 12.5px;
+  color: var(--ink-mid);
+}
+.story-stencil__arrow { text-align: center; color: var(--accent); }
+.story-stencil__canonical {
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 10px;
+  padding: 16px 18px;
+  text-align: center;
+  font-size: 14px;
+}
+.story-stencil__canonical span {
+  font-size: 11px;
+  opacity: 0.65;
+  margin-left: 10px;
+}
+
+.story-ledger {
+  display: flex;
+  height: 84px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  margin-top: 34px;
+}
+.story-ledger__seg { min-width: 0; }
+.story-ledger__seg--residual {
+  background: var(--residual);
+  color: var(--bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 16px;
+  gap: 2px;
+}
+.story-ledger__seg--residual .mono {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+.story-ledger__big { font-size: 24px; font-weight: 500; }
+.story-ledger__legend {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: var(--ink-mid);
+}
+
+.story-bound { margin-top: 26px; display: flex; flex-direction: column; gap: 14px; }
+.story-bound__row {
+  display: grid;
+  grid-template-columns: 220px 1fr 64px;
+  gap: 14px;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .story-bound__row { grid-template-columns: 1fr; gap: 6px; }
+}
+.story-bound__label { font-size: 11px; color: var(--ink-mid); }
+.story-bound__track {
+  position: relative;
+  height: 30px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.story-bound__bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--factor-provider);
+  border-radius: 6px 0 0 6px;
+}
+.story-bound__bar--oos { background: var(--residual); }
+.story-bound__rule {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  border-left: 1.5px dashed var(--ink-dim);
+}
+.story-bound__val { font-size: 12px; text-align: right; }
+
+.story-honesty { display: flex; flex-direction: column; gap: 14px; }
+.story-honesty__card { padding: 20px 24px; }
+.story-honesty__title { font-size: 14.5px; font-weight: 600; margin-bottom: 5px; }
+.story-honesty__body { font-size: 13.5px; color: var(--ink-mid); line-height: 1.6; }
+
+.story-cta { text-align: center; margin-top: 90px; }
+.story-cta__line { font-size: 26px; font-weight: 500; margin-bottom: 24px; }
+.story-cta__buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+
+.story-sources {
+  margin-top: 90px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.story-sources__list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--ink-mid);
+  line-height: 1.7;
+}
+
+/* Reveal motion — CSS owns it; the island only stamps data-seen. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.8s ease var(--reveal-delay, 0ms),
+    transform 0.8s ease var(--reveal-delay, 0ms);
+}
+[data-reveal][data-seen] { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+
+/* C23 attribution — signature-line treatment, house restraint. */
+.story-attrib {
+  margin-top: 72px;
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+  font-size: 14px;
+  color: var(--ink-mid);
+}
+.story-attrib a { color: var(--ink); }
+.story-attrib__sig {
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink);
+  margin-top: 6px;
+}
