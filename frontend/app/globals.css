@@ -3421,3 +3421,222 @@ button {
     opacity: 1;
   }
 }
+
+/* ============================================================
+   STAGE 6.3c — THE LEDGER WATERFALL (append-only block)
+   Exploration variant 1e "ledger + depletion". Every factor gets
+   a full-width row so a 4.8% line reads as easily as a 61% one;
+   the depletion bar under each row shows what remains (sand) and
+   the slice being subtracted (factor colour).
+   ============================================================ */
+
+.ledger__glyph {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.ledger__glyph > span {
+  display: block;
+  height: 100%;
+}
+
+.ledger__glyph-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 14px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.ledger__opening {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px 10px;
+  border-bottom: 1px solid var(--line-lo);
+}
+
+.ledger__opening-label {
+  font-size: var(--t-small);
+  color: var(--ink-mid);
+}
+
+.ledger__opening-value {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-hi);
+}
+
+.ledger__row {
+  padding: 8px 2px 12px;
+  border-bottom: 1px solid var(--line-lo);
+}
+
+.ledger__row:has(+ .ledger__void) {
+  border-bottom: none;
+}
+
+.ledger__line {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 62px 86px;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.ledger__op {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--ink-mid);
+}
+
+.ledger__name {
+  font-size: 13.5px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.ledger__tag {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mid);
+}
+
+.ledger__share {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink-hi);
+}
+
+.ledger__left {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink-dim);
+}
+
+.ledger__depletion {
+  display: flex;
+  height: 5px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.ledger__depletion-sand {
+  display: block;
+  height: 100%;
+  background: var(--line-lo);
+}
+
+.ledger__depletion-slice {
+  display: block;
+  height: 100%;
+}
+
+.ledger__void {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 8px;
+  padding: 13px 18px;
+  border-radius: var(--r-md);
+  background: var(--residual);
+  color: var(--bg);
+}
+
+.ledger__void-key {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.ledger__void .ledger__op {
+  color: var(--bg);
+}
+
+.ledger__void-tag {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ledger__void-value {
+  font-family: var(--f-serif);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The measuring bracket, fluid-width form: a rule with a 45° tick at each
+   end — the same grammar as BracketMark, drawn in CSS so it can be a
+   percentage of the container without shearing the ticks. */
+.ledger__measure {
+  position: relative;
+  height: 9px;
+  /* Below this the two end ticks would cross and the mark would stop reading
+     as a bracket at all. The exact figure is in the caption underneath and in
+     the void block above; this floor only keeps the annotation legible when
+     the day's residual is a couple of percent. */
+  min-width: 20px;
+  margin-top: 12px;
+  border-bottom: 1px solid var(--residual);
+}
+
+.ledger__measure::before,
+.ledger__measure::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  width: 9px;
+  height: 1px;
+  background: var(--residual);
+  transform: rotate(-45deg);
+}
+
+.ledger__measure::before {
+  left: -4px;
+}
+
+.ledger__measure::after {
+  right: -4px;
+}
+
+.ledger__measure-caption {
+  margin-top: 6px;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+@media (max-width: 560px) {
+  .ledger__line {
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    row-gap: 3px;
+  }
+
+  .ledger__share {
+    grid-column: 3;
+  }
+
+  .ledger__left {
+    grid-column: 2 / 4;
+    text-align: right;
+  }
+}
