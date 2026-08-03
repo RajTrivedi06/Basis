@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ShowMeHow } from "@/components/disclosure/TwoLayer";
-import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
 import { getMlExplainability } from "@/lib/mlExplainability";
 import {
   ExplainabilityContent,

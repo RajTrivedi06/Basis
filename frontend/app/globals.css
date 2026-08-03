@@ -2817,6 +2817,23 @@ button {
    Motion here is CSS transitions only — no GSAP (design doc §12).
    ============================================================ */
 
+/* ---- Hero stat strip: keep labels on one baseline ---- */
+
+/* A value that wraps ("Sequential ANOVA") must not push its own label below
+   the neighbouring labels, so the cells share a floor rather than stacking
+   naturally. */
+.stat-tape__cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 118px;
+}
+
+.stat-tape__num {
+  font-size: clamp(24px, 3vw, 34px);
+  text-wrap: balance;
+}
+
 /* ---- Two-layer narrative: plain sentence + "Show me how" ---- */
 
 .two-layer {
