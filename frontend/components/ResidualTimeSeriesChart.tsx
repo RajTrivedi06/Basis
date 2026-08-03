@@ -12,6 +12,10 @@ import type { BasisDecompositionResponse } from "@/lib/types";
  * Treats points as evenly spaced on the x-axis (one collection per day).
  * Real-world gaps show as straight-line interpolation; that's acceptable
  * since the chart's job is variance-share trend, not literal-time fidelity.
+ *
+ * Color grammar (ADR-0005 as amended 2026-08-03): the series line and its dots
+ * are the chart-mark accent; the median level and every printed numeral stay
+ * void, which keeps exclusive ownership of residual-share values.
  */
 
 const DEFAULT_GPU_SKU = "h100_sxm_80gb";
@@ -249,7 +253,7 @@ function Chart({
           className="basis-line-anim"
           points={linePoints}
           fill="none"
-          stroke="var(--residual)"
+          stroke="var(--accent)"
           strokeWidth={1.5}
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -276,7 +280,7 @@ function Chart({
             cx={x}
             cy={yAt(v)}
             r={isOutlier ? 4 : 2.5}
-            fill="var(--residual)"
+            fill="var(--accent)"
             stroke={isOutlier ? "var(--bg)" : "none"}
             strokeWidth={isOutlier ? 1.5 : 0}
           />

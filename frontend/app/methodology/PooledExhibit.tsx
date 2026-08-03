@@ -119,7 +119,7 @@ export function PooledExhibit() {
                 title="Pooled · every provider"
                 note="Includes the Azure and GCP list catalogs."
                 points={pooledPoints}
-                color="var(--residual-dim)"
+                color="var(--ink-mid)"
                 sku={sku}
               />
               <SeriesPanel
@@ -127,7 +127,7 @@ export function PooledExhibit() {
                 title="Market-priced · catalogs excluded"
                 note="Marketplaces and spot only — the segments the study speaks about."
                 points={marketPoints}
-                color="var(--residual)"
+                color="var(--accent)"
                 sku={sku}
               />
             </div>
@@ -164,7 +164,7 @@ function SeriesPanel({
     >
       <div className="pooled-panel__head">
         <span className="pooled-panel__title">{title}</span>
-        <span className="pooled-panel__latest" style={{ color }}>
+        <span className="pooled-panel__latest">
           {latest.pct_residual.toFixed(1)}% · {latest.date}
         </span>
       </div>
