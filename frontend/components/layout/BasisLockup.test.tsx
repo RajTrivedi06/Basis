@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { describe, expect, it, vi } from "vitest";
 import { BasisLockup } from "@/components/layout/BasisLockup";
-import { SiteHeader } from "@/components/layout/SiteHeader";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
@@ -44,14 +44,11 @@ describe("BasisLockup", () => {
 });
 
 describe("SiteHeader", () => {
-  it("uses the bracket lockup as the site logo", () => {
+  it("uses the classic wordmark logo, not the lockup (Raj reversion, 2026-08-03)", () => {
     const { container } = render(<SiteHeader />);
 
     const brand = container.querySelector(".site-header-island__brand")!;
-    expect(brand.querySelector(".basis-lockup")).not.toBeNull();
-    expect(brand.querySelector(".basis-lockup__word")!.textContent).toBe(
-      "Basis"
-    );
+    expect(brand.querySelector(".basis-lockup")).toBeNull();
     expect(screen.getByLabelText("Basis home")).toBeInTheDocument();
   });
 });

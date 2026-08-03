@@ -311,7 +311,7 @@ object; anything that maps to none is decoration and gets cut):
 
 | Ledger object | Component |
 |---|---|
-| **Price tag + bracket** | Scene 1/2 price cards (tags) and the dimension bracket that measures the gap between them — the *basis* bracket, the site's monogram (born in the name scene, reused on Candidate A's shortfall). **Per the 2026-08-03 ruling, the bracket is also the NAV LOCKUP (variant 1c: bracket + "Basis" wordmark), replacing the logo site-wide; it draws once — top tick → bottom tick, label stamps — and never loops.** |
+| **Price tag + bracket** | Scene 1/2 price cards (tags) and the dimension bracket that measures the gap between them — the *basis* bracket, the site's monogram (born in the name scene, reused on Candidate A's shortfall). **Nav-lockup REVERTED (Raj, 2026-08-03, owner override): the header/footer keep the classic wordmark logo. The bracket remains the diagram/chart motif — name scene, waterfall terminus, dispersion "today's disagreement", Candidate A shortfall — where it draws once (top tick → bottom tick, label stamps) and never loops. The `BasisLockup` component stays in the tree for the name scene's use; it just isn't the site logo.** |
 | **Receipt drawer** | The contributing-observations / provenance drawers — every number has a receipt |
 | **Stencil** | Normalization: messy vendor strings stenciled into one canonical name |
 | **Tally-stamp** | Count-up stat numerals — values get stamped into the ledger as they arrive |

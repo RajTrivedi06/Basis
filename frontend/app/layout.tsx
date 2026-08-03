@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Newsreader } from "next/font/google";
 import { AppProviders } from "@/components/providers";
 import { AskWidgetRoot } from "@/components/ask/AskWidgetRoot";
-import { BasisLockup } from "@/components/layout/BasisLockup";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
 
@@ -54,7 +53,10 @@ function Footer() {
     <footer className="mt-20 border-t border-[var(--line)]">
       <div className="mx-auto flex max-w-[1480px] flex-wrap items-baseline justify-between gap-3 px-10 py-8">
         <span className="flex items-center gap-[10px] text-[12.5px] text-[var(--ink-mid)]">
-          <BasisLockup variant="footer" />— research artifact · public data ·
+          <span className="serif mr-[10px] font-semibold text-[var(--ink)]">
+            Basis
+          </span>
+          — research artifact · public data ·
           2026
         </span>
         <span className="mono text-[11px] text-[var(--ink-dim)]">
