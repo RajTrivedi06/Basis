@@ -6154,3 +6154,562 @@ button {
 /* The live-derived deviation sentence leads the dossier, so the prose can
    never contradict the figure on the row. */
 .watch-row__dossier-live { color: var(--ink); }
+
+/* ============================================================
+   BASIS — settlement sheet (design proposal: variance ledger)
+   Aged paper + sequential ANOVA ledger; void terminus = residual
+   only. Terracotta stays editorial. CSS/IO motion only.
+   ============================================================ */
+
+.settle-page { padding-bottom: 48px; }
+
+.settle-head {
+  padding: clamp(1.75rem, 3.5vw, 2.75rem) 0 0;
+  margin-bottom: 26px;
+}
+.settle-head__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+}
+.settle-head__copy { max-width: 640px; min-width: 0; }
+.settle-head__eyebrow {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.settle-head__title {
+  margin: 12px 0 0;
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: clamp(28px, 4.2vw, 40px);
+  letter-spacing: -0.024em;
+  line-height: 1.1;
+  color: var(--ink-hi);
+}
+.settle-head__title em {
+  font-style: italic;
+  color: var(--ink-mid);
+}
+.settle-head__lede {
+  margin: 14px 0 0;
+  max-width: 54ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-mid);
+}
+.settle-head__meta {
+  flex: none;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.settle-head__meta-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.settle-sku {
+  font-family: var(--f-mono) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.04em;
+  border-radius: 999px !important;
+  padding: 7px 12px !important;
+  max-width: 280px;
+  background: transparent !important;
+}
+.settle-head__meta-value {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--ink-mid);
+  font-variant-numeric: tabular-nums;
+}
+.settle-head__live {
+  font-size: 8px;
+  border: 1px solid #e0dbd0;
+  border-radius: 999px;
+  padding: 1px 5px;
+  color: var(--ink-dim);
+  margin-left: 4px;
+  vertical-align: 1px;
+}
+.settle-head__how {
+  background: none;
+  border: 1px solid #e0dbd0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  cursor: pointer;
+}
+.settle-head__how:hover { background: #f4f1ea; }
+.settle-head__how:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+.settle-head__protocol {
+  margin-top: 18px;
+  max-width: 78ch;
+  border-left: 1px solid var(--accent);
+  padding-left: 14px;
+}
+.settle-head__protocol p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-mid);
+}
+.settle-head__protocol p:last-child { margin-bottom: 0; }
+.settle-head__protocol .mono {
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.settle-sheet {
+  background:
+    radial-gradient(circle at 10% 8%, rgba(31, 29, 26, 0.04), transparent 40%),
+    radial-gradient(circle at 90% 92%, rgba(193, 95, 60, 0.035), transparent 42%),
+    #f4f1ea;
+  border: 1px solid #e0dbd0;
+  border-radius: 3px;
+  box-shadow: 0 10px 30px rgba(31, 29, 26, 0.07);
+  padding: 18px 24px 16px;
+  animation: settleSheetIn 0.55s ease both;
+}
+@keyframes settleSheetIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.settle-sheet__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  border-bottom: 1px solid #c9c2b4;
+  padding-bottom: 9px;
+  margin-bottom: 14px;
+  font-family: "Courier New", var(--f-mono);
+}
+.settle-sheet__label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--ink-mid);
+}
+.settle-sheet__asof {
+  font-size: 10px;
+  color: var(--ink-mid);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.settle-ledger { font-family: "Courier New", var(--f-mono); }
+.settle-sheet .ledger__opening-label,
+.settle-sheet .ledger__name {
+  font-family: "Courier New", var(--f-mono);
+  font-size: 12px;
+}
+.settle-sheet .ledger__void {
+  border-radius: 3px;
+  position: relative;
+}
+.settle-sheet .ledger__void-tag {
+  letter-spacing: 0.16em;
+}
+.settle-sheet__caption {
+  margin: 14px 0 0;
+  max-width: 72ch;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-mid);
+}
+.settle-sheet__caption .mono {
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.settle-sheet__residual { color: var(--residual) !important; }
+.settle-sheet__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+  border-top: 1px solid #c9c2b4;
+  margin-top: 14px;
+  padding-top: 10px;
+  font-family: "Courier New", var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-dim);
+}
+.settle-sheet__obs {
+  flex: none;
+  background: none;
+  border: 1px solid #c9c2b4;
+  padding: 6px 11px;
+  font-family: "Courier New", var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  cursor: pointer;
+}
+.settle-sheet__obs:hover { border-color: var(--ink-dim); }
+.settle-sheet__obs:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settle-schedule { margin-top: 34px; max-width: 1024px; }
+.settle-schedule__eyebrow {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.account-sheet {
+  background: #f4f1ea;
+  border: 1px solid #e0dbd0;
+  border-radius: 3px;
+  box-shadow: 0 8px 22px rgba(31, 29, 26, 0.06);
+  font-family: "Courier New", var(--f-mono);
+  color: var(--ink);
+}
+.account-sheet__cols {
+  display: grid;
+  grid-template-columns: 160px 72px 110px 1fr 20px;
+  gap: 12px;
+  padding: 8px 18px;
+  border-bottom: 1px solid #c9c2b4;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: var(--ink-mid);
+}
+.account-sheet__right { text-align: right; }
+
+.account-row { border-bottom: 1px solid #e4dfd3; }
+.account-row.is-open { background: rgba(250, 249, 245, 0.7); }
+.account-row.is-residual .account-row__key,
+.account-row.is-residual .account-row__share,
+.account-row.is-residual .account-row__balance,
+.account-row.is-residual .account-row__note {
+  color: var(--residual);
+}
+.account-row__main {
+  display: grid;
+  grid-template-columns: 160px 72px 110px 1fr 20px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 11px 18px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.account-row__main:hover { background: rgba(250, 249, 245, 0.45); }
+.account-row__main:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -2px;
+}
+.account-row__subject {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.account-row__swatch {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 1px;
+}
+.account-row.is-residual .account-row__swatch {
+  width: 10px;
+  height: 10px;
+}
+.account-row__key {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.account-row__tag {
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  border: 1px solid var(--residual-line);
+  color: var(--residual);
+  padding: 1px 5px;
+}
+.account-row__share,
+.account-row__balance {
+  font-size: 11px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.account-row__note {
+  font-size: 10.5px;
+  color: #3d3a34;
+  line-height: 1.45;
+  text-wrap: pretty;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-row__caret {
+  font-size: 10px;
+  color: var(--ink-dim);
+  text-align: right;
+}
+.account-row__dossier {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  padding: 0 18px 14px;
+  background: rgba(250, 249, 245, 0.5);
+  animation: settleDossierIn 0.28s ease both;
+}
+@keyframes settleDossierIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.account-row__dossier-label {
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.account-row__dossier-label--dim { color: var(--ink-mid); }
+.account-row__dossier-body {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.75;
+  color: #3d3a34;
+  white-space: normal;
+}
+.account-row__dossier-side {
+  border-left: 1px solid #c9c2b4;
+  padding-left: 18px;
+}
+.account-row__inspect {
+  margin-top: 10px;
+  background: none;
+  border: 1px solid #c9c2b4;
+  padding: 5px 9px;
+  font-family: "Courier New", var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  cursor: pointer;
+}
+.account-row__inspect:hover { border-color: var(--ink-dim); }
+
+.settle-quotes { margin-top: 36px; max-width: 1024px; }
+.settle-quotes__eyebrow {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.settle-quotes__lede {
+  margin: 10px 0 16px;
+  max-width: 72ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-mid);
+}
+.settle-quotes__lede .mono {
+  font-size: 12px;
+  color: var(--ink);
+}
+.settle-quotes__sheet {
+  background: #f4f1ea;
+  border: 1px solid #e0dbd0;
+  border-radius: 3px;
+  box-shadow: 0 8px 22px rgba(31, 29, 26, 0.06);
+  padding: 16px 18px;
+}
+.settle-quotes__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.settle-quotes__chips-label {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+  margin-right: 4px;
+}
+.settle-quotes__sheet .punch {
+  border: 1px solid #c9c2b4;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-family: "Courier New", var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  background: rgba(172, 146, 130, 0.1);
+  color: #3d3a34;
+  cursor: pointer;
+}
+.settle-quotes__sheet .punch.is-on {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.settle-quotes__sheet .punch:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settle-empty {
+  background: #f4f1ea;
+  border: 1px solid #e0dbd0;
+  border-radius: 3px;
+  box-shadow: 0 8px 22px rgba(31, 29, 26, 0.06);
+  padding: 22px 24px;
+  font-family: "Courier New", var(--f-mono);
+}
+.settle-empty--bare {
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+  padding: 12px 0;
+}
+.settle-empty__title {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+.settle-empty__body {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink-mid);
+  max-width: 68ch;
+  font-family: var(--f-sans);
+}
+
+.settle-foot {
+  margin-top: 32px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  max-width: 1024px;
+}
+.settle-foot__stamp {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  color: var(--ink-dim);
+  letter-spacing: 0.06em;
+}
+.settle-foot__stamp em {
+  font-family: var(--f-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-mid);
+  letter-spacing: 0;
+}
+.settle-foot__next {
+  font-size: 13.5px;
+  color: var(--ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--ink-faint);
+}
+.settle-foot__next:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+@media (max-width: 899px) {
+  .settle-head__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .settle-head__meta {
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+  .settle-sku { max-width: none; width: 100%; }
+  .settle-head__how { width: 100%; text-align: center; }
+  .settle-head__title { font-size: 27px; }
+  .settle-sheet { padding: 14px 14px 12px; }
+  .settle-sheet__head { flex-direction: column; gap: 6px; }
+  .settle-sheet__foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .settle-sheet__obs { width: 100%; text-align: center; }
+  .account-sheet__cols { display: none; }
+  .account-row__main {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 12px 14px;
+    position: relative;
+  }
+  .account-row__share {
+    position: absolute;
+    right: 36px;
+    top: 14px;
+  }
+  .account-row__caret {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+  }
+  .account-row__balance {
+    text-align: left;
+    font-size: 9.5px;
+    color: var(--ink-dim);
+  }
+  .account-row__note {
+    white-space: normal;
+    font-size: 9.5px;
+  }
+  .account-row__dossier {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 0 14px 12px;
+  }
+  .account-row__dossier-side {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid #c9c2b4;
+    padding-top: 8px;
+  }
+  .settle-foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settle-sheet,
+  .account-row__dossier {
+    animation: none !important;
+  }
+}

@@ -38,6 +38,11 @@ export interface LedgerWaterfallProps {
   showGlanceGlyph?: boolean;
   /** Caption printed beside the glance-glyph, e.g. the SKU. */
   glanceLabel?: string;
+  /**
+   * Label on the residual terminus. Landing keeps the default "Unexplained";
+   * the Basis settlement sheet passes "Unfileable".
+   */
+  voidLabel?: string;
   className?: string;
 }
 
@@ -46,6 +51,7 @@ export function LedgerWaterfall({
   progress,
   showGlanceGlyph = true,
   glanceLabel,
+  voidLabel = "Unexplained",
   className = "",
 }: LedgerWaterfallProps) {
   // Declared interfaces carry no index signature, so the response needs one
@@ -108,7 +114,7 @@ export function LedgerWaterfall({
       >
         <span className="ledger__void-key">
           <span className="ledger__op">=</span>
-          <span className="ledger__void-tag">Unexplained</span>
+          <span className="ledger__void-tag">{voidLabel}</span>
         </span>
         <span className="ledger__void-value">
           {formatShare(residualShare)}%
