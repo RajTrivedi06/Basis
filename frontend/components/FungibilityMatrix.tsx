@@ -1,10 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { getFungibilityMatrix } from "@/lib/api";
 import { gpuFamily } from "@/lib/gpuFamily";
 import type { FungibilityMatrixRow } from "@/lib/types";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 type SortKey =
   | "gpu_sku"
@@ -23,9 +28,8 @@ const COLUMNS: { key: SortKey; label: string; align: "left" | "right" }[] = [
 ];
 
 /**
- * Rows per page. 32 keeps today's ~96 canonical SKUs at three page links
- * (the ruled "two to three"); the control renders however many pages the
- * live count actually needs.
+ * Rows per sheet. 32 keeps today's ~95 canonical SKUs at three sheets; the
+ * control renders however many sheets the live count needs.
  */
 const PAGE_SIZE = 32;
 
@@ -38,6 +42,7 @@ export function FungibilityMatrix() {
   const [sortKey, setSortKey] = useState<SortKey>("pct_residual");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
+  const root = useRef<HTMLElement | null>(null);
 
   const sorted = useMemo(
     () => (data ? sortRows(data.items, sortKey, sortDir) : []),
@@ -50,25 +55,47 @@ export function FungibilityMatrix() {
     clampedPage * PAGE_SIZE,
     (clampedPage + 1) * PAGE_SIZE
   );
+  const ready = !isLoading && !isError && sorted.length > 0;
+
+  // Entries are written into the register as they scroll into view.
+  // Batched, so 32 rows share a few ScrollTriggers instead of one each.
+  useGSAP(
+    () => {
+      if (!ready) return;
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const batches = ScrollTrigger.batch("[data-entry]", {
+          start: "top 92%",
+          once: true,
+          batchMax: 10,
+          interval: 0.08,
+          onEnter: (targets) =>
+            gsap.from(targets, {
+              opacity: 0,
+              y: 8,
+              duration: 0.35,
+              stagger: 0.045,
+              ease: "power2.out",
+              overwrite: true,
+            }),
+        });
+        // Row heights settle only after live data lands; without a refresh
+        // the later sheets' triggers sit at stale positions.
+        ScrollTrigger.refresh();
+        return () => batches.forEach((b) => b.kill());
+      });
+      return () => mm.revert();
+    },
+    { scope: root, dependencies: [ready, clampedPage, sortKey, sortDir] }
+  );
 
   const header = (
-    <header style={{ marginBottom: 18 }}>
-      <div className="eyebrow" style={{ marginBottom: 6 }}>
-        Fungibility matrix
-      </div>
-      <h2
-        className="serif"
-        style={{
-          fontSize: 28,
-          fontWeight: 400,
-          margin: 0,
-          letterSpacing: "-0.01em",
-          color: "var(--ink-hi)",
-        }}
-      >
+    <header className="dossier-head">
+      <div className="dossier-band">EXHIBIT B · CANONICAL SKU REGISTER</div>
+      <h2 className="dossier-head__title serif">
         How interchangeable is each SKU?
       </h2>
-      <p className="caption" style={{ marginTop: 6, maxWidth: 620 }}>
+      <p className="dossier-head__lede">
         A low residual means the market agrees on price given observable
         features. A high residual means it doesn&apos;t — and the SKU is a poor
         benchmark target.
@@ -78,18 +105,18 @@ export function FungibilityMatrix() {
 
   if (isLoading) {
     return (
-      <section>
+      <section className="dossier">
         {header}
-        <Placeholder message="Loading fungibility matrix…" />
+        <Placeholder message="RETRIEVING REGISTER…" />
       </section>
     );
   }
   if (isError) {
     return (
-      <section>
+      <section className="dossier">
         {header}
         <Placeholder
-          message={`Failed to load: ${
+          message={`REGISTER UNAVAILABLE — ${
             (error as Error)?.message ?? "unknown error"
           }`}
           tone="error"
@@ -99,9 +126,9 @@ export function FungibilityMatrix() {
   }
   if (!data || data.items.length === 0) {
     return (
-      <section>
+      <section className="dossier">
         {header}
-        <Placeholder message="No canonical SKUs observed yet." />
+        <Placeholder message="NO CANONICAL SKUS ON RECORD." />
       </section>
     );
   }
@@ -120,42 +147,52 @@ export function FungibilityMatrix() {
   const showingTo = Math.min(sorted.length, (clampedPage + 1) * PAGE_SIZE);
 
   return (
-    <section>
+    <section className="dossier" ref={root}>
       {header}
 
-      {/* Mobile sort control (the table's sortable headers are hidden
-          with the table below 720px) — reference: Dashboard Mobile. */}
-      <span className="fung-sort">
-        <select
-          aria-label="Sort SKUs"
-          value={sortKey}
-          onChange={(e) => {
-            const key = e.target.value as SortKey;
-            setSortKey(key);
-            setSortDir(key === "gpu_sku" ? "asc" : "desc");
-            setPage(0);
-          }}
-        >
-          <option value="pct_residual">Sort · residual</option>
-          <option value="observation_count">Sort · offers</option>
-          <option value="median_price">Sort · median $/hr</option>
-          <option value="gpu_sku">Sort · SKU name</option>
-        </select>
-        <span aria-hidden className="fung-sort__chev">
-          ▼
-        </span>
-      </span>
+      <div className="dossier-sheet">
+        <div className="dossier-sheet__tab">
+          <span>
+            SHEET {clampedPage + 1} OF {pageCount}
+          </span>
+          <span className="dossier-sheet__filed">
+            {sorted.length} SKUS ON RECORD
+          </span>
+        </div>
 
-      {/* Card view — reference treatment from Basis Dashboard Mobile */}
-      <div className="fung-cards">
-        {pageRows.map((row) => (
-          <SkuCard key={row.gpu_sku} row={row} />
-        ))}
-      </div>
+        <div className="dossier-controls">
+          <span className="dossier-sort">
+            <select
+              aria-label="Sort SKUs"
+              value={sortKey}
+              onChange={(e) => {
+                const key = e.target.value as SortKey;
+                setSortKey(key);
+                setSortDir(key === "gpu_sku" ? "asc" : "desc");
+                setPage(0);
+              }}
+            >
+              <option value="pct_residual">Sort · residual</option>
+              <option value="observation_count">Sort · offers</option>
+              <option value="median_price">Sort · median $/hr</option>
+              <option value="gpu_sku">Sort · SKU name</option>
+            </select>
+            <span aria-hidden className="dossier-sort__chev">
+              ▼
+            </span>
+          </span>
+        </div>
 
-      <div className="panel fung-table" style={{ overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table className="tbl">
+        {/* Card register — small screens */}
+        <div className="register-cards">
+          {pageRows.map((row) => (
+            <SkuCard key={row.gpu_sku} row={row} />
+          ))}
+        </div>
+
+        {/* Ruled register — wide screens */}
+        <div className="register-table">
+          <table className="register">
             <thead>
               <tr>
                 {COLUMNS.map((c) => (
@@ -171,56 +208,47 @@ export function FungibilityMatrix() {
                         : "none"
                     }
                   >
-                    <button
-                      type="button"
-                      onClick={() => toggle(c.key)}
-                      className="inline-flex items-center gap-1"
-                      style={{
-                        color:
-                          c.key === "pct_residual"
-                            ? "var(--residual)"
-                            : "inherit",
-                      }}
-                    >
+                    <button type="button" onClick={() => toggle(c.key)}>
                       {c.label}
-                      <SortIndicator
-                        active={sortKey === c.key}
-                        dir={sortDir}
-                      />
+                      <SortIndicator active={sortKey === c.key} dir={sortDir} />
                     </button>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((row) => (
-                <MatrixRow key={row.gpu_sku} row={row} />
+              {pageRows.map((row, i) => (
+                <MatrixRow
+                  key={row.gpu_sku}
+                  row={row}
+                  n={clampedPage * PAGE_SIZE + i + 1}
+                />
               ))}
             </tbody>
           </table>
         </div>
-      </div>
 
-      <nav className="fung-pages" aria-label="SKU table pages">
-        <span className="mono fung-pages__showing">
-          Showing {showingFrom}–{showingTo} of {sorted.length} canonical SKUs
-        </span>
-        {pageCount > 1 && (
-          <span className="fung-pages__links">
-            {Array.from({ length: pageCount }, (_, i) => (
-              <button
-                key={i}
-                type="button"
-                className="fung-pages__link mono"
-                aria-current={i === clampedPage ? "page" : undefined}
-                onClick={() => setPage(i)}
-              >
-                {i + 1}
-              </button>
-            ))}
+        <nav className="dossier-pages" aria-label="Register sheets">
+          <span className="dossier-pages__showing">
+            ENTRIES {showingFrom}–{showingTo} OF {sorted.length}
           </span>
-        )}
-      </nav>
+          {pageCount > 1 && (
+            <span className="dossier-pages__links">
+              {Array.from({ length: pageCount }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="dossier-pages__link"
+                  aria-current={i === clampedPage ? "page" : undefined}
+                  onClick={() => setPage(i)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </span>
+          )}
+        </nav>
+      </div>
     </section>
   );
 }
@@ -228,86 +256,49 @@ export function FungibilityMatrix() {
 function SkuCard({ row }: { row: FungibilityMatrixRow }) {
   const family = gpuFamily(row.gpu_sku);
   return (
-    <div className="fung-card panel">
-      <div className="fung-card__head">
-        <span className="mono fung-card__sku">{row.gpu_sku}</span>
-        {family && <span className="badge">{family}</span>}
+    <div className="register-card" data-entry>
+      <div className="register-card__head">
+        <span className="register-card__sku">{row.gpu_sku}</span>
+        {family && <span className="stamp-chip">{family}</span>}
       </div>
-      <div className="mono fung-card__meta">
+      <div className="register-card__meta">
         <span>{row.observation_count.toLocaleString()} offers</span>
         <span>{row.provider_count} prov</span>
-        <span className="fung-card__med">
+        <span className="register-card__med">
           ${row.median_price.toFixed(2)}/hr
         </span>
       </div>
       {row.pct_residual === null ? (
-        <div className="serif fung-card__accum">accumulating observations</div>
+        <div className="register__accum">accumulating observations</div>
       ) : (
-        <div className="fung-card__res">
-          <span className="fung-card__track">
-            <span
-              className="fung-card__fill"
-              style={{
-                width: `${Math.max(0, Math.min(100, row.pct_residual))}%`,
-              }}
-            />
-          </span>
-          <span className="mono fung-card__pct">
-            {row.pct_residual.toFixed(0)}%
-          </span>
-        </div>
+        <ResidualCell v={row.pct_residual} />
       )}
     </div>
   );
 }
 
-function MatrixRow({ row }: { row: FungibilityMatrixRow }) {
+function MatrixRow({ row, n }: { row: FungibilityMatrixRow; n: number }) {
   const family = gpuFamily(row.gpu_sku);
   return (
-    <tr>
+    <tr data-entry>
       <td>
-        <div className="flex items-baseline" style={{ gap: 10 }}>
-          <span
-            className="mono"
-            style={{ fontSize: 12, color: "var(--ink-hi)" }}
-          >
-            {row.gpu_sku}
-          </span>
-          {family && <span className="badge">{family}</span>}
-        </div>
-        <div
-          className="mono"
-          style={{
-            fontSize: 10,
-            color: "var(--ink-dim)",
-            marginTop: 2,
-            letterSpacing: "0.02em",
-          }}
-        >
-          latest · {row.latest_date}
-        </div>
+        <span className="register__n">{String(n).padStart(2, "0")}</span>
+        <span className="register__sku">{row.gpu_sku}</span>
+        {family && <span className="stamp-chip">{family}</span>}
+        <span className="register__filed">filed {row.latest_date}</span>
       </td>
-      <td
-        className="num"
-        style={{ textAlign: "right", color: "var(--ink)" }}
-      >
+      <td className="num" style={{ textAlign: "right" }}>
         {row.observation_count.toLocaleString()}
       </td>
-      <td
-        className="num"
-        style={{ textAlign: "right", color: "var(--ink-mid)" }}
-      >
+      <td className="num" style={{ textAlign: "right" }}>
         {row.provider_count}
       </td>
-      <td
-        className="num"
-        style={{ textAlign: "right", color: "var(--ink)" }}
-      >
+      <td className="num" style={{ textAlign: "right" }}>
         ${row.median_price.toFixed(2)}
       </td>
       <td style={{ textAlign: "right" }}>
         {row.pct_residual === null ? (
-          <span className="pill-unknown">accumulating</span>
+          <span className="register__accum">accumulating</span>
         ) : (
           <ResidualCell v={row.pct_residual} />
         )}
@@ -316,53 +307,23 @@ function MatrixRow({ row }: { row: FungibilityMatrixRow }) {
   );
 }
 
+/** The unexplained share, redacted — void is its exclusive encoding. */
 function ResidualCell({ v }: { v: number }) {
   const pct = Math.max(0, Math.min(100, v));
   return (
-    <span
-      className="inline-flex items-center"
-      style={{ gap: 8, minWidth: 96 }}
-    >
-      <span
-        style={{
-          width: 54,
-          height: 6,
-          background: "var(--panel-hi)",
-          borderRadius: 1,
-          overflow: "hidden",
-          display: "inline-block",
-        }}
-      >
-        <span
-          style={{
-            display: "block",
-            height: "100%",
-            width: `${pct}%`,
-            background: "var(--residual)",
-          }}
-        />
+    <span className="redaction">
+      <span className="redaction__track">
+        <span className="redaction__bar" style={{ width: `${pct}%` }} />
       </span>
-      <span
-        className="mono"
-        style={{ fontSize: 12, color: "var(--residual)" }}
-      >
-        {v.toFixed(0)}%
-      </span>
+      <span className="redaction__pct">{v.toFixed(0)}%</span>
     </span>
   );
 }
 
 function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
-  if (!active) {
-    return (
-      <span className="mono" style={{ color: "var(--ink-faint)" }}>
-        ↕
-      </span>
-    );
-  }
   return (
-    <span className="mono" style={{ color: "var(--ink-mid)" }}>
-      {dir === "asc" ? "↑" : "↓"}
+    <span className="register__caret" aria-hidden="true">
+      {!active ? "↕" : dir === "asc" ? "↑" : "↓"}
     </span>
   );
 }
@@ -375,12 +336,7 @@ function Placeholder({
   tone?: "muted" | "error";
 }) {
   return (
-    <div
-      className="panel caption flex h-48 items-center justify-center"
-      style={{
-        color: tone === "error" ? "var(--verdict-bad)" : "var(--ink-dim)",
-      }}
-    >
+    <div className="dossier-sheet dossier-sheet--empty" data-tone={tone}>
       {message}
     </div>
   );

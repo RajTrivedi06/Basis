@@ -3879,123 +3879,6 @@ button {
   }
 }
 
-/* ————————————————————————————————————————————————————————————————
-   FUNGIBILITY MATRIX — mobile cards + pagination (Findings).
-   Card treatment from dc/Basis Dashboard Mobile.dc.html; the residual
-   fill stays var(--residual): it encodes a SHARE (ADR-0005 grammar). */
-
-.fung-sort {
-  position: relative;
-  display: none;
-  align-items: center;
-  margin-bottom: 14px;
-}
-.fung-sort select {
-  appearance: none;
-  -webkit-appearance: none;
-  font-family: var(--f-mono);
-  font-size: 12px;
-  padding: 11px 34px 11px 16px;
-  border: 1px solid var(--line-hi);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--ink);
-  cursor: pointer;
-}
-.fung-sort__chev {
-  position: absolute;
-  right: 14px;
-  pointer-events: none;
-  font-size: 8px;
-  color: var(--ink-mid);
-}
-
-.fung-cards {
-  display: none;
-  flex-direction: column;
-  gap: 9px;
-}
-.fung-card { padding: 14px 16px; }
-.fung-card__head {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.fung-card__sku { font-size: 12.5px; color: var(--ink-hi); }
-.fung-card__meta {
-  display: flex;
-  gap: 16px;
-  margin-top: 9px;
-  font-size: 11.5px;
-  color: var(--ink-mid);
-}
-.fung-card__med { color: var(--ink); }
-.fung-card__res {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-}
-.fung-card__track {
-  flex: 1;
-  height: 4px;
-  background: var(--panel-hi);
-  border-radius: 99px;
-  overflow: hidden;
-}
-.fung-card__fill {
-  display: block;
-  height: 100%;
-  background: var(--residual);
-  border-radius: 99px;
-}
-.fung-card__pct {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-hi);
-}
-.fung-card__accum {
-  font-style: italic;
-  font-size: 12.5px;
-  color: var(--ink-dim);
-  margin-top: 10px;
-}
-
-.fung-pages {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-.fung-pages__showing {
-  font-size: 11px;
-  color: var(--ink-dim);
-}
-.fung-pages__links { display: flex; gap: 8px; }
-.fung-pages__link {
-  min-width: 44px;
-  min-height: 44px;
-  border: 1px solid var(--line-hi);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--ink-mid);
-  font-size: 12.5px;
-  cursor: pointer;
-}
-.fung-pages__link[aria-current="page"] {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
-}
-
-@media (max-width: 719px) {
-  .fung-sort { display: inline-flex; }
-  .fung-cards { display: flex; }
-  .fung-table { display: none; }
-}
-
 /* Basis wordmark lockup (mark + divider + basis / residual research) */
 .basis-logo {
   display: inline-flex;
@@ -4501,49 +4384,41 @@ button {
   color: var(--residual);
   font-weight: 700;
 }
+.memo-exhibit__frame {
+  position: relative;
+  overflow: hidden;
+}
 .memo-exhibit__plot {
   position: relative;
   width: 100%;
-  height: 86px;
   cursor: crosshair;
   touch-action: none;
+}
+/* Declassification swipe: a shutter parked off-frame that GSAP sweeps. */
+.memo-exhibit__shutter {
+  position: absolute;
+  inset: 0;
+  transform: translateX(101%);
+  background: linear-gradient(
+    90deg,
+    rgba(193, 95, 60, 0.22),
+    rgba(244, 241, 234, 0.9) 42%,
+    var(--memo-paper) 60%
+  );
+  pointer-events: none;
 }
 .memo-exhibit__plot:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-.memo-exhibit__svg { display: block; width: 100%; height: 100%; }
-.memo-exhibit__gridlabel {
-  position: absolute;
-  left: 2px;
-  transform: translateY(-130%);
-  font-size: 7.5px;
-  color: var(--ink-dim);
-  pointer-events: none;
-}
-.memo-exhibit__dot {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 999px;
-  background: var(--accent);
-  box-shadow: 0 0 0 1.5px var(--memo-paper);
-  pointer-events: none;
-}
-.memo-exhibit__dot--cursor { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; }
-.memo-exhibit__dot--cursor[data-pinned="true"] { background: var(--residual); }
-.memo-exhibit__axis {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -2px;
-  display: flex;
-  justify-content: space-between;
+.memo-exhibit__svg { display: block; width: 100%; }
+.memo-exhibit__gridlabel,
+.memo-exhibit__axislabel {
+  font-family: "Courier New", var(--f-mono);
   font-size: 8.5px;
-  color: var(--ink-mid);
-  pointer-events: none;
+  fill: var(--ink-dim);
 }
+.memo-exhibit__axislabel { fill: var(--ink-mid); }
 .memo-exhibit__flags {
   display: flex;
   justify-content: flex-end;
@@ -4579,6 +4454,309 @@ button {
   .memo-line__label { white-space: normal; }
   .memo-line__redaction { width: 52px; }
   .memo__stamp { font-size: 9.5px; padding: 3px 7px; border-width: 2px; }
-  .memo-exhibit__plot { height: 78px; }
   .memo-flag { min-height: 34px; }
+}
+
+/* ————————————————————————————————————————————————————————————————
+   DOSSIER — the findings page in the memorandum's language (Raj
+   ruling 08-04). Same paper, rules, typewriter voice and stamps as the
+   hero memo; void stays the exclusive encoding of the unexplained. */
+
+.dossier-page > * + * { margin-top: clamp(40px, 6vw, 72px); }
+
+.dossier {
+  --memo-paper: #f4f1ea;
+  --memo-rule: #c9c2b4;
+  --memo-rule-soft: #e4dfd3;
+  --memo-ink-mid: var(--ink-mid);
+}
+
+.dossier-band {
+  font-family: "Courier New", var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--ink-mid);
+  text-align: center;
+  border-top: 1px solid var(--memo-rule);
+  border-bottom: 1px solid var(--memo-rule);
+  padding: 5px 0;
+}
+.dossier-band--foot {
+  border-bottom: none;
+  margin-top: 14px;
+}
+
+.dossier-head { margin-bottom: 18px; }
+.dossier-head__title {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink-hi);
+  margin: 16px 0 6px;
+}
+.dossier-head__lede {
+  font-size: 13.5px;
+  color: var(--ink-mid);
+  line-height: 1.65;
+  max-width: 68ch;
+  margin: 0;
+}
+
+/* ——— the sheet ——— */
+
+.dossier-sheet {
+  background: var(--memo-paper);
+  border: 1px solid var(--line-hi);
+  box-shadow: 0 14px 40px rgba(31, 29, 26, 0.08);
+  padding: 0 0 12px;
+  font-family: "Courier New", var(--f-mono);
+  color: var(--ink);
+}
+.dossier-sheet--empty {
+  padding: 34px 20px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-mid);
+}
+.dossier-sheet--empty[data-tone="error"] { color: var(--verdict-bad); }
+
+.dossier-sheet__tab {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 18px;
+  border-bottom: 1px solid var(--memo-rule);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--ink-mid);
+}
+.dossier-sheet__filed { color: var(--ink-dim); }
+
+.dossier-controls { padding: 12px 18px 4px; }
+.dossier-sort { position: relative; display: inline-flex; align-items: center; }
+.dossier-sort select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: "Courier New", var(--f-mono);
+  font-size: 11.5px;
+  padding: 9px 32px 9px 14px;
+  border: 1px solid var(--memo-rule);
+  border-radius: 2px;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+.dossier-sort__chev {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  font-size: 7px;
+  color: var(--ink-mid);
+}
+
+/* ——— ruled register (wide) ——— */
+
+.register-table { padding: 6px 6px 0; overflow-x: auto; }
+.register {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.register thead th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--memo-rule);
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+  white-space: nowrap;
+}
+.register thead button {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.register thead button:hover { color: var(--ink); }
+.register__caret { color: var(--ink-dim); }
+.register tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px dotted var(--memo-rule);
+  vertical-align: baseline;
+}
+.register tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.42);
+}
+.register tbody tr:hover { background: rgba(255, 255, 255, 0.78); }
+.register__n {
+  color: var(--ink-dim);
+  margin-right: 10px;
+  font-size: 10px;
+}
+.register__sku { color: var(--ink-hi); }
+.register__filed {
+  display: block;
+  margin-top: 2px;
+  margin-left: 30px;
+  font-size: 9px;
+  color: var(--ink-dim);
+  letter-spacing: 0.04em;
+}
+.register__accum {
+  font-family: var(--f-serif);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+.stamp-chip {
+  display: inline-block;
+  margin-left: 8px;
+  border: 1px solid var(--memo-rule);
+  border-radius: 2px;
+  padding: 1px 6px;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+/* The unexplained share, redacted. */
+.redaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.redaction__track {
+  width: 72px;
+  height: 9px;
+  background: rgba(31, 29, 26, 0.08);
+  overflow: hidden;
+  flex: none;
+}
+.redaction__bar {
+  display: block;
+  height: 100%;
+  background: var(--residual);
+}
+.redaction__pct {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-hi);
+  min-width: 34px;
+  text-align: right;
+}
+
+/* ——— card register (small) ——— */
+
+.register-cards { display: none; flex-direction: column; gap: 8px; padding: 10px 14px 0; }
+.register-card {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--memo-rule);
+  padding: 12px 14px;
+}
+.register-card__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.register-card__sku { font-size: 12px; color: var(--ink-hi); }
+.register-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--ink-mid);
+}
+.register-card__med { color: var(--ink); }
+.register-card .redaction { margin-top: 10px; justify-content: flex-start; }
+.register-card .redaction__track { flex: 1; }
+
+/* ——— sheet footer ——— */
+
+.dossier-pages {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 18px 0;
+  margin-top: 10px;
+  border-top: 1px solid var(--memo-rule);
+}
+.dossier-pages__showing {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+}
+.dossier-pages__links { display: flex; gap: 6px; }
+.dossier-pages__link {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--memo-rule);
+  border-radius: 2px;
+  background: var(--bg);
+  color: var(--ink-mid);
+  font-family: "Courier New", var(--f-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.dossier-pages__link[aria-current="page"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* ——— appendix: file notes ——— */
+
+.notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0;
+  border-left: 1px solid var(--memo-rule);
+}
+.note {
+  display: flex;
+  gap: 12px;
+  padding: 18px 20px;
+  border-right: 1px solid var(--memo-rule);
+  border-bottom: 1px dotted var(--memo-rule);
+}
+.note__n {
+  font-family: "Courier New", var(--f-mono);
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  padding-top: 2px;
+}
+.note__title {
+  font-family: "Courier New", var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-hi);
+  margin: 0 0 6px;
+  font-weight: 400;
+}
+.note__body {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink-mid);
+  margin: 0;
+}
+
+@media (max-width: 899px) {
+  .register-cards { display: flex; }
+  .register-table { display: none; }
+  .dossier-head__title { font-size: 24px; }
 }
