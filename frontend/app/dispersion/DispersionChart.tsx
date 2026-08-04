@@ -8,21 +8,16 @@ import { DispersionBand, type DispersionBandPoint } from "./DispersionBand";
 function ChartPlaceholder({
   message,
   tone = "muted",
-  className = "",
 }: {
   message: string;
   tone?: "muted" | "error";
-  className?: string;
 }) {
-  const border =
-    tone === "error" ? "border-[var(--verdict-bad)]" : "border-[var(--line)]";
-  const text =
-    tone === "error" ? "text-[var(--verdict-bad)]" : "text-[var(--ink-dim)]";
   return (
     <div
-      className={`flex min-h-[380px] items-center justify-center rounded-[var(--r-md)] border bg-[var(--panel-lo)] px-4 text-sm ${border} ${text} ${className}`}
+      className={`obs-sheet obs-sheet--empty${tone === "error" ? " is-error" : ""}`}
     >
-      {message}
+      <span className="obs-sheet__rule" aria-hidden />
+      <div className="obs-sheet__empty-msg">{message}</div>
     </div>
   );
 }
@@ -64,9 +59,7 @@ export function DispersionChart({ gpuSku }: { gpuSku: string }) {
     })
   );
 
-  // The day/offer count lives on the page's control row (see
-  // DispersionPageClient) so the panel is chart and nothing else.
   const title = `Daily price dispersion for ${gpuSku}: shaded band from 25th to 75th percentile, line is median, in USD per GPU-hour. Move the pointer or use the arrow keys to read a single day.`;
 
-  return <DispersionBand data={bandData} height={380} title={title} />;
+  return <DispersionBand data={bandData} height={312} title={title} />;
 }

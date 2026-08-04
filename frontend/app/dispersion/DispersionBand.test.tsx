@@ -93,7 +93,7 @@ describe("DispersionBand — crosshair and readout", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Latest · JUL 28 · p25 $2.00 · med $2.20 · p75 $3.00"
+      "LATEST · JUL 28 · P25 $2.00 · MED $2.20 · P75 $3.00"
     );
     expect(container.querySelector(".dispersion-band__crosshair")).toBeNull();
   });
@@ -108,9 +108,9 @@ describe("DispersionBand — crosshair and readout", () => {
     pointAt(plate, 252);
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "JUL 25 · p25 $1.20 · med $3.90 · p75 $6.10"
+      "ENTRY · JUL 25 · P25 $1.20 · MED $3.90 · P75 $6.10"
     );
-    expect(screen.getByRole("status")).not.toHaveTextContent("Latest");
+    expect(screen.getByRole("status")).not.toHaveTextContent("LATEST");
     expect(container.querySelector(".dispersion-band__crosshair")).not.toBeNull();
   });
 
@@ -185,5 +185,15 @@ describe("DispersionBand — today's disagreement", () => {
     expect(container.querySelector(".dispersion-band__fill")).not.toBeNull();
     expect(container.querySelector(".dispersion-band__median")).not.toBeNull();
     expect(screen.getByText("Δ $1.90")).toBeInTheDocument();
+  });
+
+  it("files the plot as an observation sheet", () => {
+    const { container } = render(
+      <DispersionBand data={jagged} title="dispersion" />
+    );
+    expect(container.querySelector(".obs-sheet")).not.toBeNull();
+    expect(
+      screen.getByText(/OBSERVATION SHEET · POOLED ACROSS PROVIDERS/i)
+    ).toBeInTheDocument();
   });
 });
