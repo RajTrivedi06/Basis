@@ -4212,10 +4212,14 @@ button {
 
 .fh {
   display: grid;
-  grid-template-columns: minmax(0, 330px) minmax(0, 1fr);
-  gap: clamp(28px, 4vw, 56px);
+  /* The pair is centred as a group: left-aligning it in the 1480px
+     container stranded ~250px of dead space beside the memo while the
+     register below ran full width. */
+  grid-template-columns: minmax(0, 340px) minmax(0, 560px);
+  justify-content: center;
+  gap: clamp(28px, 5vw, 64px);
   align-items: center;
-  padding: 44px 0 40px;
+  padding: 48px 0 44px;
   border-bottom: 1px solid var(--line-lo);
 }
 .fh__col { min-width: 0; }
@@ -4245,9 +4249,10 @@ button {
 }
 .fh-claim { margin-top: 16px; }
 
-@media (max-width: 899px) {
+@media (max-width: 980px) {
   .fh {
     grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
     gap: 26px;
     padding: 32px 0 34px;
   }
