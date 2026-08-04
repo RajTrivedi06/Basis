@@ -1,16 +1,14 @@
 "use client";
 
 /**
- * The dispersion band (Director pick, approved as shown 2026-08-03).
+ * The dispersion observation sheet (Dispersion Declassified.dc.html §7a).
  *
- * p25–p75 band with its own edge hairlines, the median as a single-series line
- * mark in the accent, a crosshair (pointer, touch, or keyboard) reading out the
- * day under it, and the bracket measuring today's disagreement.
+ * p25–p75 band with edge hairlines, median as the accent mark, a crosshair
+ * reading the day under it, and the bracket measuring today's disagreement.
  *
- * HARD RIDER: this plots the real series' real jaggedness. Every vertex is a
- * real day and every segment is a straight line between two of them — no
- * smoothing, no interpolation, no idealised curve. The mock's smooth lines were
- * placeholder only.
+ * HARD RIDER: every vertex is a real day; every segment is a straight line —
+ * no smoothing, no interpolation, no idealised curve. Void black never
+ * appears: this page measures a price gap, so the bracket is ink.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -32,7 +30,7 @@ type DispersionBandProps = {
 const PAD_L = 52;
 /** Room to the right of the plot for the bracket and its label. */
 const PAD_R = 148;
-const PAD_T = 12;
+const PAD_T = 14;
 const PAD_B = 42;
 const FALLBACK_WIDTH = 1000;
 /** Below this the two-line tag costs more plot than it is worth, so the
@@ -90,7 +88,7 @@ function useMeasuredWidth<T extends Element>() {
 
 export function DispersionBand({
   data,
-  height = 380,
+  height = 312,
   title,
 }: DispersionBandProps) {
   const { ref, width } = useMeasuredWidth<HTMLDivElement>();
@@ -99,7 +97,7 @@ export function DispersionBand({
   const n = data.length;
   const H = height;
   const narrow = width < NARROW;
-  const padL = narrow ? 44 : PAD_L;
+  const padL = narrow ? 38 : PAD_L;
   const padR = narrow ? 76 : PAD_R;
   const innerW = Math.max(width - padL - padR, 120);
   const innerH = H - PAD_T - PAD_B;
@@ -165,8 +163,9 @@ export function DispersionBand({
   const readout = data[readoutIndex];
   const spread = latest.p75 - latest.p25;
 
-  const yTicks = Array.from({ length: 6 }, (_, k) => {
-    const v = scale.lo + (k / 5) * (scale.hi - scale.lo);
+  const yTickCount = narrow ? 4 : 6;
+  const yTicks = Array.from({ length: yTickCount }, (_, k) => {
+    const v = scale.lo + (k / (yTickCount - 1)) * (scale.hi - scale.lo);
     return { k, v, y: yAt(v) };
   });
 
@@ -175,14 +174,23 @@ export function DispersionBand({
     new Set(
       narrow
         ? [0, Math.floor(n * 0.5), n - 1]
-        : [0, Math.floor(n * 0.25), Math.floor(n * 0.5), Math.floor(n * 0.75), n - 1]
+        : [
+            0,
+            Math.floor(n * 0.25),
+            Math.floor(n * 0.5),
+            Math.floor(n * 0.75),
+            n - 1,
+          ]
     )
   );
 
   // Straight segments through every real vertex. No curve commands anywhere.
   const line = (pick: (d: DispersionBandPoint) => number) =>
     data
-      .map((d, i) => `${i ? "L" : "M"}${xAt(i).toFixed(1)} ${yAt(pick(d)).toFixed(1)}`)
+      .map(
+        (d, i) =>
+          `${i ? "L" : "M"}${xAt(i).toFixed(1)} ${yAt(pick(d)).toFixed(1)}`
+      )
       .join(" ");
 
   const bandPath = [
@@ -197,20 +205,32 @@ export function DispersionBand({
   ].join(" ");
 
   const plotRight = padL + innerW;
+  const plotBottom = PAD_T + innerH;
   const bracketSpine = plotRight + (narrow ? 16 : 26);
   const yHi = yAt(latest.p75);
   const yLo = yAt(latest.p25);
   const labelX = bracketSpine + (narrow ? 8 : 12);
   const labelMid = (yHi + yLo) / 2;
 
+  const readoutText = `${cursor === null ? "LATEST · " : "ENTRY · "}${shortDate(readout.date)} · P25 ${usd(readout.p25)} · MED ${usd(readout.median)} · P75 ${usd(readout.p75)}`;
+
   return (
-    <div className="dispersion-band" ref={ref}>
-      <div className="dispersion-band__readout" role="status" aria-live="polite">
-        <span>
-          {cursor === null ? "Latest · " : ""}
-          {shortDate(readout.date)} · p25 {usd(readout.p25)} · med{" "}
-          {usd(readout.median)} · p75 {usd(readout.p75)}
+    <div className="obs-sheet dispersion-band" ref={ref} data-sku-wipe>
+      <span className="obs-sheet__rule" aria-hidden />
+
+      <div className="obs-sheet__head">
+        <span className="obs-sheet__label">
+          {narrow
+            ? null
+            : "OBSERVATION SHEET · POOLED ACROSS PROVIDERS · MIN 3 OFFERS/DAY"}
         </span>
+        <div
+          className={`obs-sheet__readout${cursor !== null ? " is-active" : ""}`}
+          role="status"
+          aria-live="polite"
+        >
+          {readoutText}
+        </div>
       </div>
 
       <svg
@@ -229,25 +249,56 @@ export function DispersionBand({
       >
         <title>{title}</title>
 
+        {/* Gridlines live only inside the plot rectangle. */}
+        {yTicks.map(({ k, y }) => (
+          <line
+            key={`yg-${k}`}
+            x1={padL}
+            x2={plotRight}
+            y1={y}
+            y2={y}
+            stroke="#E6E0D3"
+          />
+        ))}
+        {xLabelIdx.map((i) => (
+          <line
+            key={`xg-${data[i].date}`}
+            x1={xAt(i)}
+            x2={xAt(i)}
+            y1={PAD_T}
+            y2={plotBottom}
+            stroke="#EDE8DC"
+          />
+        ))}
+
+        {/* Axis rules in ink. */}
+        <line
+          x1={padL}
+          x2={plotRight}
+          y1={plotBottom}
+          y2={plotBottom}
+          stroke="var(--ink)"
+          strokeWidth={0.9}
+        />
+        <line
+          x1={padL}
+          x2={padL}
+          y1={PAD_T}
+          y2={plotBottom}
+          stroke="var(--ink)"
+          strokeWidth={0.9}
+        />
+
         {yTicks.map(({ k, v, y }) => (
-          <g key={k}>
-            <line
-              x1={padL}
-              x2={plotRight}
-              y1={y}
-              y2={y}
-              stroke="var(--line-lo)"
-              strokeDasharray={k === 0 ? "0" : "2 4"}
-            />
-            <text
-              className="dispersion-band__axis"
-              x={padL - 8}
-              y={y + 3}
-              textAnchor="end"
-            >
-              {usd(v)}
-            </text>
-          </g>
+          <text
+            key={`yl-${k}`}
+            className="dispersion-band__axis"
+            x={padL - 8}
+            y={y + 3}
+            textAnchor="end"
+          >
+            {usd(v)}
+          </text>
         ))}
 
         {n > 1 ? (
@@ -256,7 +307,7 @@ export function DispersionBand({
               d={bandPath}
               className="dispersion-band__fill"
               fill="var(--accent)"
-              fillOpacity={0.16}
+              fillOpacity={0.17}
               stroke="none"
             />
             <path
@@ -264,23 +315,23 @@ export function DispersionBand({
               className="dispersion-band__edge"
               fill="none"
               stroke="var(--accent)"
-              strokeOpacity={0.55}
-              strokeWidth={1}
+              strokeOpacity={0.8}
+              strokeWidth={0.9}
             />
             <path
               d={line((d) => d.p25)}
               className="dispersion-band__edge"
               fill="none"
               stroke="var(--accent)"
-              strokeOpacity={0.55}
-              strokeWidth={1}
+              strokeOpacity={0.8}
+              strokeWidth={0.9}
             />
             <path
               d={line((d) => d.median)}
               className="dispersion-band__median"
               fill="none"
               stroke="var(--accent)"
-              strokeWidth={1.8}
+              strokeWidth={1.9}
             />
           </>
         ) : (
@@ -298,9 +349,9 @@ export function DispersionBand({
               x1={xAt(cursor)}
               x2={xAt(cursor)}
               y1={PAD_T}
-              y2={PAD_T + innerH}
+              y2={plotBottom}
               stroke="var(--ink)"
-              strokeOpacity={0.5}
+              strokeWidth={0.8}
               strokeDasharray="2 3"
             />
             <circle
@@ -308,8 +359,8 @@ export function DispersionBand({
               cy={yAt(data[cursor].median)}
               r={3.5}
               fill="var(--accent)"
-              stroke="var(--panel)"
-              strokeWidth={1.5}
+              stroke="#F4F1EA"
+              strokeWidth={1.6}
             />
           </g>
         ) : null}
@@ -323,7 +374,7 @@ export function DispersionBand({
           leaderFrom={xAt(n - 1)}
           leaderTo={bracketSpine + 8}
           tick={5}
-          strokeWidth={1.2}
+          strokeWidth={1}
         />
         {narrow ? null : (
           <>
@@ -338,7 +389,7 @@ export function DispersionBand({
         <text
           className="dispersion-band__delta"
           x={labelX}
-          y={narrow ? labelMid + 4 : labelMid + 18}
+          y={narrow ? labelMid + 4 : labelMid + 22}
         >
           Δ {usd(spread)}
         </text>
@@ -365,10 +416,24 @@ export function DispersionBand({
       </svg>
 
       {narrow ? (
-        <p className="dispersion-band__legend">
-          Bracket: today&apos;s disagreement
-        </p>
+        <div className="obs-sheet__mobile-delta">
+          <span>⟨ TODAY&apos;S DISAGREEMENT</span>
+          <span className="obs-sheet__mobile-delta-val">Δ {usd(spread)}</span>
+        </div>
       ) : null}
+
+      <div className="obs-sheet__foot">
+        <span>
+          {narrow
+            ? "REAL DAYS ONLY · NO SMOOTHING · TAP AND DRAG TO READ AN ENTRY"
+            : "EVERY VERTEX IS A REAL DAY · STRAIGHT SEGMENTS ONLY · NO SMOOTHING · THIN DAYS HELD OUT, NOT INTERPOLATED"}
+        </span>
+        {narrow ? null : (
+          <span className="obs-sheet__foot-right">
+            USD PER GPU-HOUR · ←/→ STEPS THE ENTRY
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -396,7 +461,7 @@ function SingleDay({
         width={barWidth}
         height={Math.max(Math.abs(y25 - y75), 2)}
         fill="var(--accent)"
-        fillOpacity={0.16}
+        fillOpacity={0.17}
         rx={2}
       />
       <line
@@ -406,7 +471,7 @@ function SingleDay({
         y1={yAt(point.median)}
         y2={yAt(point.median)}
         stroke="var(--accent)"
-        strokeWidth={1.8}
+        strokeWidth={1.9}
       />
     </>
   );

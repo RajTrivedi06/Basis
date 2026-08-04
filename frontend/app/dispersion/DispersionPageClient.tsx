@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SkuPicker } from "@/components/SkuPicker";
-import { ShowMeHow } from "@/components/disclosure/TwoLayer";
 import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
+import { formatMemoDate } from "@/lib/memoDate";
 import { getDispersion } from "@/lib/api";
 import { useSku } from "@/lib/useSku";
 import type { DispersionPoint } from "@/lib/types";
@@ -11,85 +13,103 @@ import { DispersionChart } from "./DispersionChart";
 
 export function DispersionPageClient() {
   const { sku, setSku } = useSku();
+  const [howOpen, setHowOpen] = useState(false);
+  const howId = useId();
 
   return (
-    <div className="page-wide fade-up">
-      <div className="int-head">
-        <div className="int-head__eyebrow">
-          <span className="num">02</span>
-          <span>Raw price spread</span>
+    <div className="page-wide fade-up disp-page">
+      <header className="disp-head">
+        <div className="disp-head__row">
+          <div className="disp-head__copy">
+            <div className="disp-head__eyebrow">02 · Raw price spread</div>
+            <h1 className="disp-head__title">
+              <span className="disp-head__sku mono">{sku}</span>
+              <em>p25 – median – p75</em>
+            </h1>
+            <p className="disp-head__lede">
+              Wider bands mean more same-day price disagreement across providers
+              for this SKU. Quoted prices only — no executed trades.
+            </p>
+          </div>
+          <div className="disp-head__meta">
+            <div className="disp-head__meta-label">Canonical GPU SKU</div>
+            <SkuPicker value={sku} onChange={setSku} className="disp-sku" />
+            <DispersionMeta gpuSku={sku} />
+          </div>
         </div>
-        <h1 className="int-head__title">
-          <span className="mono text-[0.78em]">{sku}</span>{" "}
-          <em>p25 – median – p75</em>
-        </h1>
-        <p className="int-head__lede">
-          Wider bands mean more same-day price disagreement across providers for
-          this SKU.
-        </p>
-      </div>
+      </header>
 
-      <div className="int-controls">
-        <div className="int-controls__group">
-          <span className="int-controls__label">Canonical GPU SKU</span>
-          <SkuPicker value={sku} onChange={setSku} />
-        </div>
-        <DispersionMeta gpuSku={sku} />
-      </div>
+      <DispersionChart gpuSku={sku} />
 
-      <div className="panel px-2.5 pb-2 pt-[18px]">
-        <DispersionChart gpuSku={sku} />
-      </div>
-
-      <section className="int-section">
-        <div className="int-section__head">
-          <span className="int-section__num">03</span>
-          <h2 className="int-section__title">How to read this chart</h2>
-        </div>
-
-        <div className="int-notes int-notes--three" style={{ borderTop: 0, paddingTop: 0, marginTop: 0 }}>
-          <p>
-            <strong>Median.</strong> The middle quoted price each day — robust
-            to a single extreme listing in either direction.
-          </p>
-          <p>
-            <strong>Interquartile range.</strong> The shaded band spans the 25th
-            to 75th percentile: half of the day&apos;s quotes fall inside it.
-          </p>
-          <p>
-            <strong>Band width.</strong> Densely quoted SKUs tend to form
-            tighter bands than thin ones, so compare a SKU with itself over time
-            before comparing two SKUs.
-          </p>
+      <section className="disp-guide">
+        <div className="disp-guide__head">
+          <span className="disp-guide__eyebrow">03 · How to read this chart</span>
+          <button
+            type="button"
+            className="disp-guide__how"
+            aria-expanded={howOpen}
+            aria-controls={howId}
+            onClick={() => setHowOpen((v) => !v)}
+          >
+            {howOpen ? "−" : "+"} SHOW ME HOW THE BAND IS BUILT
+          </button>
         </div>
 
-        <div className="mt-7 max-w-[68ch]">
-          <ShowMeHow label="Show me how the band is built">
+        <div className="disp-guide__notes">
+          <div>
+            <h2 className="disp-guide__title">Median</h2>
             <p>
-              Each day&apos;s offers for this SKU are pooled across every
-              provider, then reduced to three numbers: the 25th percentile, the
-              median, and the 75th percentile. A day needs at least three offers
-              to be plotted at all; thinner days are held out rather than drawn
-              with false confidence.
+              The middle quoted price of the day — robust to a single extreme
+              listing.
+            </p>
+          </div>
+          <div>
+            <h2 className="disp-guide__title">Interquartile range</h2>
+            <p>
+              25th to 75th percentile: half of the day&apos;s quotes fall inside
+              the shaded band.
+            </p>
+          </div>
+          <div>
+            <h2 className="disp-guide__title">Band width</h2>
+            <p>
+              Densely quoted SKUs run tighter. Compare a SKU with itself over
+              time before comparing two SKUs.
+            </p>
+          </div>
+        </div>
+
+        {howOpen ? (
+          <div className="disp-guide__more" id={howId}>
+            <p>
+              Every provider&apos;s quotes for the day are pooled, then reduced
+              to three numbers. A day needs at least three offers or it is held
+              out — thinner days are never drawn as confident points.
             </p>
             <p>
-              Percentiles are used instead of a mean and standard deviation
-              because quoted GPU prices are not symmetric — a handful of very
-              cheap{" "}
-              <GlossaryTerm term="spot">spot</GlossaryTerm> listings or one
-              mispriced marketplace row would drag an average somewhere no
-              buyer could actually transact.
+              Percentiles instead of mean and standard deviation: quotes are not
+              symmetric, and one cheap{" "}
+              <GlossaryTerm term="spot">spot</GlossaryTerm> row or one mispriced
+              marketplace line would average the price somewhere no buyer could
+              actually transact.
             </p>
-            <p>
-              The band is spread, not explanation. It says quotes disagree; it
-              does not say why. Naming the causes is the{" "}
-              <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
-              on the Basis page, and what survives it is the{" "}
+            <p className="disp-guide__more-span">
+              The band is spread, <em>not explanation</em>. Naming the causes is
+              the{" "}
+              <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>;
+              what survives that accounting is the{" "}
               <GlossaryTerm term="residual">residual</GlossaryTerm>.
             </p>
-          </ShowMeHow>
-        </div>
+          </div>
+        ) : null}
       </section>
+
+      <footer className="disp-sheet-foot">
+        <DispersionStamp gpuSku={sku} />
+        <Link href="/basis" className="disp-sheet-foot__next">
+          Next: which factors absorb the disagreement →
+        </Link>
+      </footer>
     </div>
   );
 }
@@ -104,7 +124,7 @@ function DispersionMeta({ gpuSku }: { gpuSku: string }) {
     queryFn: () => getDispersion(gpuSku),
   });
 
-  if (!data || data.points.length === 0) return <span />;
+  if (!data || data.points.length === 0) return null;
 
   const totalObs = data.points.reduce(
     (sum: number, p: DispersionPoint) => sum + p.observation_count,
@@ -112,9 +132,29 @@ function DispersionMeta({ gpuSku }: { gpuSku: string }) {
   );
 
   return (
-    <span className="int-controls__meta">
+    <div className="disp-head__meta-value">
       {data.points.length} {data.points.length === 1 ? "day" : "days"} ·{" "}
-      {totalObs.toLocaleString()} offers
+      {totalObs.toLocaleString()} offers{" "}
+      <span className="disp-head__live">LIVE</span>
+    </div>
+  );
+}
+
+function DispersionStamp({ gpuSku }: { gpuSku: string }) {
+  const { data } = useQuery({
+    queryKey: ["dispersion", gpuSku],
+    queryFn: () => getDispersion(gpuSku),
+  });
+
+  const latest = data?.points.length
+    ? data.points[data.points.length - 1].date
+    : null;
+  const stamp = formatMemoDate(latest);
+
+  return (
+    <span className="disp-sheet-foot__stamp">
+      SHEET 02 OF 06 · PLOTTED <em className="serif">Basis</em>
+      {stamp !== "—" ? ` · ${stamp}` : null}
     </span>
   );
 }

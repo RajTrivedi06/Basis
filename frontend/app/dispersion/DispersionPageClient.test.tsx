@@ -18,7 +18,7 @@ vi.mock("next/navigation", () => ({
 const mockedGetDispersion = vi.mocked(getDispersion);
 const mockedGetGpuSkus = vi.mocked(getGpuSkus);
 
-describe("DispersionPageClient", () => {
+describe("DispersionPageClient — declassified observation sheet", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetGpuSkus.mockResolvedValue({ items: [] });
@@ -59,15 +59,16 @@ describe("DispersionPageClient", () => {
     const user = userEvent.setup();
     renderWithQuery(<DispersionPageClient />);
 
-    expect(
-      screen.getByRole("heading", { name: "How to read this chart" })
-    ).toBeInTheDocument();
+    expect(screen.getByText(/03 · How to read this chart/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Median" })).toBeInTheDocument();
 
-    const toggle = screen.getByText("Show me how the band is built");
+    const toggle = screen.getByRole("button", {
+      name: /show me how the band is built/i,
+    });
     await user.click(toggle);
 
     expect(
-      screen.getByText(/at least three offers to be plotted at all/)
+      screen.getByText(/at least three offers or it is held out/i)
     ).toBeInTheDocument();
   });
 
@@ -75,10 +76,30 @@ describe("DispersionPageClient", () => {
     const user = userEvent.setup();
     renderWithQuery(<DispersionPageClient />);
 
+    await user.click(
+      screen.getByRole("button", { name: /show me how the band is built/i })
+    );
     await user.click(screen.getByRole("button", { name: "residual" }));
 
     expect(screen.getByRole("note")).toHaveTextContent(
       "the share of price differences left over after accounting for everything sellers publicly disclose."
     );
   });
+
+  it("stamps the sheet and links forward to the decomposition", async () => {
+    const { container } = renderWithQuery(<DispersionPageClient />);
+
+    expect(await screen.findByText(/SHEET 02 OF 06/)).toBeInTheDocument();
+    // Stamp date interpolates from the latest point once the shared query resolves.
+    await screen.findByText(/2 days · 2,500 offers/);
+    expect(container.querySelector(".disp-sheet-foot__stamp")?.textContent).toMatch(
+      /JUL 30/
+    );
+    expect(
+      screen.getByRole("link", {
+        name: /Next: which factors absorb the disagreement/i,
+      })
+    ).toHaveAttribute("href", "/basis");
+  });
 });
+
