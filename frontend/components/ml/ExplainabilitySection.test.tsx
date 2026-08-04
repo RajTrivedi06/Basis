@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMlExplainability } from "@/lib/mlExplainability";
 
@@ -19,7 +18,7 @@ import { ML_EXPLAINABILITY_FIXTURE } from "@/lib/mlExplainability";
 import { ExplainabilityPageClient } from "@/app/explainability/ExplainabilityPageClient";
 import { renderWithQuery } from "@/test/test-utils";
 
-describe("ExplainabilityContent", () => {
+describe("ExplainabilityContent — design 5b two-card file", () => {
   const artifact = ML_EXPLAINABILITY_FIXTURE;
 
   it("renders bound numbers from the artifact", () => {
@@ -31,6 +30,7 @@ describe("ExplainabilityContent", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("−10.9 pp")).toBeInTheDocument();
+    expect(screen.getByText("EXHIBIT I — THE BOUND")).toBeInTheDocument();
   });
 
   it("renders caveats verbatim", () => {
@@ -44,16 +44,29 @@ describe("ExplainabilityContent", () => {
   it("renders host ICC and host count", () => {
     render(<ExplainabilityContent artifact={artifact} />);
 
-    expect(screen.getByText("0.340")).toBeInTheDocument();
+    expect(screen.getByText("0.34")).toBeInTheDocument();
     expect(screen.getByText("61")).toBeInTheDocument();
-    expect(screen.getByText(/threshold 10 observed days/)).toBeInTheDocument();
+    expect(screen.getByText(/HOSTS ≥10D/i)).toBeInTheDocument();
+    expect(screen.getByText("EXHIBIT II — THE HOST")).toBeInTheDocument();
   });
 
-  it("renders per-provider holdout R²", () => {
+  it("renders per-provider holdout R² as punch cards", () => {
     render(<ExplainabilityContent artifact={artifact} />);
 
-    expect(screen.getByText("62.0%")).toBeInTheDocument();
-    expect(screen.getByText("51.0%")).toBeInTheDocument();
+    expect(screen.getByText("0.62")).toBeInTheDocument();
+    expect(screen.getByText("0.51")).toBeInTheDocument();
+    expect(screen.getByText("VAST")).toBeInTheDocument();
+  });
+
+  it("shows ICC sensitivity leaders without a disclosure", () => {
+    render(<ExplainabilityContent artifact={artifact} />);
+
+    expect(
+      screen.getByText(/ICC SENSITIVITY BY TENURE THRESHOLD/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText("0.29")).toBeInTheDocument();
+    expect(screen.getByText("0.41")).toBeInTheDocument();
+    expect(screen.getByText(/0\.34 · PRIMARY/)).toBeInTheDocument();
   });
 });
 
@@ -71,22 +84,6 @@ describe("ShapFeaturesChart", () => {
     expect(
       screen.getByText("No SHAP features in this artifact.")
     ).toBeInTheDocument();
-  });
-});
-
-describe("HostEffectsStat sensitivity", () => {
-  it("exposes sensitivity ICC values when expanded", async () => {
-    const user = userEvent.setup();
-    render(<ExplainabilityContent artifact={ML_EXPLAINABILITY_FIXTURE} />);
-
-    await user.click(
-      screen.getByRole("button", {
-        name: /ICC sensitivity by host tenure threshold/i,
-      })
-    );
-
-    expect(screen.getByText(/≥ 5 days: ICC 0\.290/)).toBeInTheDocument();
-    expect(screen.getByText(/≥ 20 days: ICC 0\.410/)).toBeInTheDocument();
   });
 });
 
@@ -111,7 +108,12 @@ describe("ExplainabilityPageClient", () => {
     renderWithQuery(<ExplainabilityPageClient />);
 
     expect(
-      await screen.findByText("The bound · residual-first")
+      await screen.findByRole("heading", {
+        name: /Two exhibits\. Neither one closes the file/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("EXHIBIT I — THE BOUND")
     ).toBeInTheDocument();
     expect(
       screen.getByRole("img", {
