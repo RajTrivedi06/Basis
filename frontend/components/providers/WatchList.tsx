@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { isProviderRetired } from "@/lib/providerStatus";
+import { sheetLabel } from "@/lib/nav";
 import { deltaClause, providerDossier } from "@/lib/providerDossier";
 import type { ProviderSummary } from "@/lib/types";
 
@@ -142,7 +143,7 @@ export function WatchList({ items }: { items: ProviderSummary[] }) {
         <span className="watch__overstamp">
           OVERSTAMPED: DECLASSIFIED — EVERY FIGURE HERE IS PUBLIC
         </span>
-        <span className="watch__sheet-id">WATCH LIST · SHEET 04 OF 06</span>
+        <span className="watch__sheet-id">WATCH LIST · {sheetLabel("/providers")}</span>
       </div>
 
       <div className="watch__cols" aria-hidden>

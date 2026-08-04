@@ -1,20 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useId, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { type DecompShares } from "@/components/charts/DecompBar";
 import { LedgerWaterfall } from "@/components/charts/LedgerWaterfall";
 import { SkuPicker } from "@/components/SkuPicker";
-import { TwoLayer } from "@/components/disclosure/TwoLayer";
 import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
-import { getBasisDecomposition, getDecompositionObservations, getDispersion } from "@/lib/api";
+import {
+  getBasisDecomposition,
+  getDecompositionObservations,
+} from "@/lib/api";
 import { factorColor, type Factor } from "@/lib/factorColor";
+import { formatMemoDate } from "@/lib/memoDate";
 import { useSku } from "@/lib/useSku";
 import type { BasisDecompositionResponse } from "@/lib/types";
 import { BasisObservationsDrawer } from "./BasisObservationsDrawer";
 import { BasisRawObservationInspector } from "./BasisRawObservationInspector";
 import { BeeswarmReceipt } from "./BeeswarmReceipt";
 import { pointsFromObservations } from "./factorPoints";
+import { sheetLabel } from "@/lib/nav";
 
 const SWARM_TABS: { factor: Factor; label: string }[] = [
   { factor: "region", label: "Region" },
@@ -30,7 +35,8 @@ type FactorRow = {
   key: Factor;
   label: string;
   share: number;
-  cumulative: number;
+  /** Remaining unexplained share after this row is credited. */
+  balance: number;
   note: string;
 };
 
@@ -66,31 +72,25 @@ export function BasisPageClient() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [inspectingId, setInspectingId] = useState<number | null>(null);
   const [swarmFactor, setSwarmFactor] = useState<Factor>("provider");
+  const [howOpen, setHowOpen] = useState(false);
+  const [openAccount, setOpenAccount] = useState<Factor | null>(null);
+  const howId = useId();
 
   const basisQuery = useQuery({
     queryKey: ["basis", sku],
     queryFn: () => getBasisDecomposition(sku),
   });
 
-  const dispersionQuery = useQuery({
-    queryKey: ["dispersion", sku],
-    queryFn: () => getDispersion(sku),
-  });
-
   const decomposition = basisQuery.data ?? null;
   const observationsQuery = useQuery({
     queryKey: ["decomposition-observations", sku, decomposition?.date],
     queryFn: () =>
-      getDecompositionObservations(sku, decomposition?.date ? { date: decomposition.date } : undefined),
+      getDecompositionObservations(
+        sku,
+        decomposition?.date ? { date: decomposition.date } : undefined
+      ),
     enabled: !!decomposition?.date,
   });
-
-  const sampleDates = (dispersionQuery.data?.points ?? [])
-    .map((point) => point.date)
-    .sort()
-    .slice(-3);
-  const windowLabel =
-    sampleDates.length > 0 ? `${sampleDates.length}-day sample` : "Current sample";
 
   const basisMessage = getBasisMessage(basisQuery.error);
   const basisState =
@@ -110,167 +110,181 @@ export function BasisPageClient() {
     [shares]
   );
 
-  // Swarm points are derived from the same contributing-offers payload the
-  // drawer uses. Recomputed on factor change so the bundle bin edges reflect
-  // the current selection's distribution.
   const swarmPoints = useMemo(
-    () => pointsFromObservations(swarmFactor, observationsQuery.data?.items ?? []),
+    () =>
+      pointsFromObservations(swarmFactor, observationsQuery.data?.items ?? []),
     [swarmFactor, observationsQuery.data]
   );
 
+  const stampDate = formatMemoDate(decomposition?.date ?? null);
+  const offerCount = observationsQuery.data?.items.length ?? null;
+
   return (
-    <div className="page-wide fade-up">
-      <section
-        className="border-b border-[var(--line-lo)] pb-5 pt-9"
-      >
-        <div
-          className="grid items-end gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,320px)]"
-        >
-          <div>
-            <div className="eyebrow mb-2.5">
-              03 · Basis decomposition · {windowLabel}
-            </div>
-            <h1 className="display m-0 max-w-[920px] text-[clamp(2.25rem,5vw,3rem)] font-normal leading-[1.05] tracking-[-0.02em] text-[var(--ink-hi)]">
-              What share of log-price variance do{" "}
-              <em className="font-serif not-italic text-[var(--ink-mid)]">
-                observable factors
-              </em>{" "}
-              explain?
+    <div className="page-wide fade-up settle-page">
+      <header className="settle-head">
+        <div className="settle-head__row">
+          <div className="settle-head__copy">
+            <div className="settle-head__eyebrow">03 · Variance settlement</div>
+            <h1 className="settle-head__title">
+              Four factors take their turn.
+              <em> One remainder refuses.</em>
             </h1>
-            <TwoLayer
-              className="mt-5"
-              plain={
-                <>
-                  Prices for the same chip disagree. This page names the causes
-                  we can see — where it is, how it is rented, who is renting it,
-                  what came bundled with it — and measures what is left after
-                  all four.
-                </>
-              }
-            >
-              <p>
-                The ledger and table below are the latest daily{" "}
-                <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
-                for the selected SKU, in the model order{" "}
-                <span className="mono text-[var(--ink)]">
-                  region → commitment → provider → bundle → residual
-                </span>
-                , so the cumulative percentages match the backend&apos;s
-                sequential ANOVA.
-              </p>
-              <p>
-                Order matters for the four factors and not for the last one.
-                Each factor is credited only with what it explains after the
-                factors before it have had their turn, so reordering them moves
-                credit between them — but the{" "}
-                <GlossaryTerm term="residual">residual</GlossaryTerm> at the end
-                is the same either way. That is what makes it worth reporting.
-              </p>
-            </TwoLayer>
-          </div>
-
-          <BasisMetaRail
-            sku={sku}
-            date={decomposition?.date ?? null}
-            dateLoading={basisQuery.isLoading}
-            dateError={basisState === "error"}
-            offerCount={
-              observationsQuery.data ? observationsQuery.data.items.length : null
-            }
-            offersLoading={observationsQuery.isLoading}
-            offersError={observationsQuery.isError}
-          />
-        </div>
-      </section>
-
-      <section className="pt-6">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <span className="caption mono uppercase tracking-[0.1em]">
-            GPU SKU
-          </span>
-          <SkuPicker value={sku} onChange={setSku} />
-        </div>
-
-        {basisState === "ready" && shares && decomposition ? (
-          <div className="panel p-[18px]">
-            <LedgerWaterfall decomposition={decomposition} glanceLabel={sku} />
-            <p className="caption mt-4 max-w-[760px]">
-              The ledger is read as shares of total log-price variance{" "}
-              <span className="mono text-[var(--ink)]">
-                ({decomposition.total_variance.toFixed(4)})
-              </span>
-              . Observable factors account for{" "}
-              <span className="mono text-[var(--ink)]">
-                {decomposition.pct_explained.toFixed(1)}%
-              </span>
-              ; the remaining{" "}
-              <span className="mono" style={{ color: "var(--residual)" }}>
-                {decomposition.pct_residual.toFixed(1)}%
-              </span>{" "}
-              is residual basis risk.
+            <p className="settle-head__lede">
+              Prices for the same chip disagree. This sheet names the causes we
+              can see — where it is, how it is rented, who is renting it, what
+              came bundled with it — and measures what is left after all four.
             </p>
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => setDrawerOpen(true)}
-              >
-                View contributing observations →
-              </button>
-            </div>
           </div>
-        ) : (
-          <StatePanel
-            title={
-              basisState === "loading"
-                ? "Loading decomposition…"
-                : basisState === "error"
-                  ? "Failed to load decomposition."
-                  : "No decomposition available."
-            }
-            body={
-              basisState === "loading"
-                ? "Fetching the latest daily attribution for this SKU."
-                : basisMessage.message
-            }
-            tone={basisState === "error" ? "error" : "muted"}
-          />
-        )}
-      </section>
+          <div className="settle-head__meta">
+            <div className="settle-head__meta-label">Canonical GPU SKU</div>
+            <SkuPicker value={sku} onChange={setSku} className="settle-sku" />
+            <div className="settle-head__meta-value">
+              {basisQuery.isLoading ? (
+                "Loading…"
+              ) : decomposition?.date ? (
+                <>
+                  AS OF {stampDate}
+                  {offerCount != null
+                    ? ` · ${offerCount.toLocaleString("en-US")} offers`
+                    : null}{" "}
+                  <span className="settle-head__live">LIVE</span>
+                </>
+              ) : (
+                <>
+                  No settlement yet <span className="settle-head__live">—</span>
+                </>
+              )}
+            </div>
+            <button
+              type="button"
+              className="settle-head__how"
+              aria-expanded={howOpen}
+              aria-controls={howId}
+              onClick={() => setHowOpen((v) => !v)}
+            >
+              {howOpen ? "−" : "+"} SHOW ME HOW THE LEDGER IS ORDERED
+            </button>
+          </div>
+        </div>
 
-      <section className="pt-10">
-        <div className="sec-eyebrow">
-          <span className="num">02</span>
-          <h2>Factor contributions</h2>
+        {howOpen ? (
+          <div className="settle-head__protocol" id={howId}>
+            <p>
+              The ledger and schedule below are the latest daily{" "}
+              <GlossaryTerm term="decomposition">decomposition</GlossaryTerm>{" "}
+              for the selected SKU, in the model order{" "}
+              <span className="mono">
+                region → commitment → provider → bundle → residual
+              </span>
+              , so the running balances match the backend&apos;s sequential
+              ANOVA.
+            </p>
+            <p>
+              Order matters for the four factors and not for the last one. Each
+              factor is credited only with what it explains after the factors
+              before it have had their turn — but the{" "}
+              <GlossaryTerm term="residual">residual</GlossaryTerm> at the end
+              is the same either way. That is what makes it worth reporting.
+            </p>
+          </div>
+        ) : null}
+      </header>
+
+      {/* ——— B · Settlement ledger ——— */}
+      {basisState === "ready" && shares && decomposition ? (
+        <div className="settle-sheet">
+          <div className="settle-sheet__head">
+            <span className="settle-sheet__label">
+              SETTLEMENT SHEET · SEQUENTIAL ANOVA · {sku}
+            </span>
+            <span className="settle-sheet__asof">
+              AS OF {stampDate} <span className="settle-head__live">LIVE</span>
+            </span>
+          </div>
+
+          <LedgerWaterfall
+            decomposition={decomposition}
+            glanceLabel={sku}
+            className="settle-ledger"
+          />
+
+          <p className="settle-sheet__caption">
+            Shares of total log-price variance{" "}
+            <span className="mono">
+              ({decomposition.total_variance.toFixed(4)})
+            </span>
+            . Observable factors account for{" "}
+            <span className="mono">
+              {decomposition.pct_explained.toFixed(1)}%
+            </span>
+            ; the remaining{" "}
+            <span className="mono settle-sheet__residual">
+              {decomposition.pct_residual.toFixed(1)}%
+            </span>{" "}
+            is residual basis risk — the entry above that cannot be filed.
+          </p>
+
+          <div className="settle-sheet__foot">
+            <span>
+              EVERY SHARE IS LIVE FROM GET /api/basis · ORDER CREDITS FACTORS,
+              NOT THE RESIDUAL
+            </span>
+            <button
+              type="button"
+              className="settle-sheet__obs"
+              onClick={() => setDrawerOpen(true)}
+            >
+              View contributing observations →
+            </button>
+          </div>
+        </div>
+      ) : (
+        <StateSheet
+          title={
+            basisState === "loading"
+              ? "Loading decomposition…"
+              : basisState === "error"
+                ? "Failed to load decomposition."
+                : "No decomposition available."
+          }
+          body={
+            basisState === "loading"
+              ? "Fetching the latest daily attribution for this SKU."
+              : basisMessage.message
+          }
+          tone={basisState === "error" ? "error" : "muted"}
+        />
+      )}
+
+      {/* ——— C · Schedule of accounts ——— */}
+      <section className="settle-schedule">
+        <div className="settle-schedule__eyebrow">
+          04 · Schedule of accounts
         </div>
 
         {basisState === "ready" && factorRows.length > 0 ? (
-          <div className="panel overflow-hidden">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th style={{ width: 200 }}>Factor</th>
-                  <th className="text-right" style={{ width: 120 }}>
-                    Share
-                  </th>
-                  <th style={{ width: 260 }}>Cumulative %</th>
-                  <th>Interpretation</th>
-                  <th style={{ width: 96 }} />
-                </tr>
-              </thead>
-              <tbody>
-                {factorRows.map((row) => (
-                  <FactorContributionRow
-                    key={row.key}
-                    row={row}
-                    onInspect={() => setDrawerOpen(true)}
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div className="account-sheet">
+            <div className="account-sheet__cols" aria-hidden>
+              <span>ACCOUNT</span>
+              <span className="account-sheet__right">SHARE</span>
+              <span className="account-sheet__right">RUNNING BALANCE</span>
+              <span>NOTE</span>
+              <span />
+            </div>
+            {factorRows.map((row) => (
+              <AccountRow
+                key={row.key}
+                row={row}
+                open={openAccount === row.key}
+                onToggle={() =>
+                  setOpenAccount((cur) => (cur === row.key ? null : row.key))
+                }
+                onInspect={() => setDrawerOpen(true)}
+              />
+            ))}
           </div>
         ) : (
-          <StatePanel
+          <StateSheet
             title={
               basisState === "loading"
                 ? "Loading factor table…"
@@ -280,7 +294,7 @@ export function BasisPageClient() {
             }
             body={
               basisState === "loading"
-                ? "The factor table appears once the daily decomposition has loaded."
+                ? "The schedule appears once the daily decomposition has loaded."
                 : basisMessage.message
             }
             tone={basisState === "error" ? "error" : "muted"}
@@ -288,31 +302,26 @@ export function BasisPageClient() {
         )}
       </section>
 
-      <section className="pt-10">
-        <div className="sec-eyebrow">
-          <span className="num">03</span>
-          <h2>Price by factor</h2>
-        </div>
-        <p className="caption mt-3 mb-4 max-w-[760px]">
-          Per-offer prices laid out by a single factor, one row per group. Tight
-          rows mean the factor explains the spread; broad rows mean it
-          doesn&apos;t. The{" "}
-          <span className="mono text-[var(--ink)]">Residual (within cell)</span>{" "}
-          view conditions on{" "}
-          <span className="mono text-[var(--ink)]">(provider × commitment)</span>{" "}
-          — within-row spread is the basis risk observable factors cannot
-          capture. Every dot is a real offer; select one to file its receipt.
+      {/* ——— D · Filed quotes ——— */}
+      <section className="settle-quotes">
+        <div className="settle-quotes__eyebrow">05 · Filed quotes by factor</div>
+        <p className="settle-quotes__lede">
+          Per-offer prices laid out by a single factor. Tight rows mean the
+          factor explains the spread; broad rows mean it doesn&apos;t. The{" "}
+          <span className="mono">Residual (within cell)</span> view conditions
+          on <span className="mono">(provider × commitment)</span> — within-row
+          spread is the basis risk observable factors cannot capture. Every
+          dot is a real offer; select one to file its receipt.
         </p>
-        <div className="panel p-[18px]">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-dim)]">
-              Factor
-            </span>
+
+        <div className="settle-quotes__sheet">
+          <div className="settle-quotes__chips">
+            <span className="settle-quotes__chips-label">FACTOR</span>
             {SWARM_TABS.map((tab) => (
               <button
                 key={tab.factor}
                 type="button"
-                className={`chip${swarmFactor === tab.factor ? " on" : ""}`}
+                className={`punch${swarmFactor === tab.factor ? " is-on" : ""}`}
                 onClick={() => setSwarmFactor(tab.factor)}
                 aria-pressed={swarmFactor === tab.factor}
               >
@@ -320,20 +329,23 @@ export function BasisPageClient() {
               </button>
             ))}
           </div>
+
           {observationsQuery.isLoading ? (
-            <StatePanel
+            <StateSheet
               title="Loading observations…"
               body="Fetching the canonical offers that fed the current decomposition."
               tone="muted"
+              bare
             />
           ) : observationsQuery.isError ? (
-            <StatePanel
+            <StateSheet
               title="Failed to load observations."
               body={
                 (observationsQuery.error as Error | undefined)?.message ??
                 "unknown error"
               }
               tone="error"
+              bare
             />
           ) : swarmPoints.length > 0 ? (
             <BeeswarmReceipt
@@ -343,14 +355,25 @@ export function BasisPageClient() {
               onInspect={(id) => setInspectingId(id)}
             />
           ) : (
-            <StatePanel
+            <StateSheet
               title="No observations to plot."
               body="The contributing-offer endpoint returned no canonical offers for this decomposition."
               tone="muted"
+              bare
             />
           )}
         </div>
       </section>
+
+      <footer className="settle-foot">
+        <span className="settle-foot__stamp">
+          {sheetLabel("/basis")} · SETTLED <em className="serif">Basis</em>
+          {stampDate !== "—" ? ` · ${stampDate}` : null}
+        </span>
+        <Link href="/explainability" className="settle-foot__next">
+          Next: the honesty bound →
+        </Link>
+      </footer>
 
       <BasisObservationsDrawer
         gpuSku={sku}
@@ -369,193 +392,110 @@ export function BasisPageClient() {
   );
 }
 
-function BasisMetaRail({
-  sku,
-  date,
-  dateLoading,
-  dateError,
-  offerCount,
-  offersLoading,
-  offersError,
+function AccountRow({
+  row,
+  open,
+  onToggle,
+  onInspect,
 }: {
-  sku: string;
-  date: string | null;
-  dateLoading: boolean;
-  dateError: boolean;
-  offerCount: number | null;
-  offersLoading: boolean;
-  offersError: boolean;
+  row: FactorRow;
+  open: boolean;
+  onToggle: () => void;
+  onInspect: () => void;
 }) {
-  return (
-    <div className="panel p-[18px]">
-      <div className="grid gap-4">
-        <MetaStat
-          label="Latest decomposition"
-          value={date}
-          loading={dateLoading}
-          error={dateError}
-        />
-        <MetaStat
-          label="Contributing offers"
-          value={offerCount === null ? null : offerCount.toLocaleString()}
-          loading={offersLoading}
-          error={offersError}
-        />
-        <MetaStat label="SKU" value={sku} mono />
-      </div>
-    </div>
-  );
-}
-
-function MetaStat({
-  label,
-  value,
-  loading = false,
-  error = false,
-  mono = true,
-}: {
-  label: string;
-  value: string | null;
-  loading?: boolean;
-  error?: boolean;
-  mono?: boolean;
-}) {
-  const display = loading ? "…" : error || value === null ? "—" : value;
-  const color =
-    loading || error || value === null ? "var(--ink-dim)" : "var(--ink-hi)";
+  const panelId = useId();
+  const isResidual = row.key === "residual";
+  const color = isResidual ? "var(--residual)" : factorColor(row.key);
 
   return (
-    <div>
-      <div className="eyebrow mb-1">{label}</div>
-      <div
-        className={mono ? "mono" : undefined}
-        style={{
-          fontSize: 16,
-          letterSpacing: "-0.01em",
-          color,
-        }}
+    <div
+      className={`account-row${open ? " is-open" : ""}${isResidual ? " is-residual" : ""}`}
+    >
+      <button
+        type="button"
+        className="account-row__main"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={onToggle}
       >
-        {display}
-      </div>
+        <span className="account-row__subject">
+          <span
+            className="account-row__swatch"
+            style={{ background: color }}
+            aria-hidden
+          />
+          <span className="account-row__key">{row.label}</span>
+          {isResidual ? (
+            <span className="account-row__tag">CANNOT BE FILED</span>
+          ) : null}
+        </span>
+        <span className="account-row__share">
+          {(row.share * 100).toFixed(1)}%
+        </span>
+        <span className="account-row__balance">
+          {(row.balance * 100).toFixed(1)}% left
+        </span>
+        <span className="account-row__note">{row.note}</span>
+        <span className="account-row__caret" aria-hidden>
+          {open ? "▾" : "▸"}
+        </span>
+      </button>
+      {open ? (
+        <div className="account-row__dossier" id={panelId}>
+          <div>
+            <div className="account-row__dossier-label">
+              {isResidual ? "TERMINUS · VOID" : "ACCOUNT · OBSERVED ROLE"}
+            </div>
+            <p className="account-row__dossier-body">{row.note}</p>
+          </div>
+          <div className="account-row__dossier-side">
+            <div className="account-row__dossier-label account-row__dossier-label--dim">
+              PROVENANCE
+            </div>
+            <p className="account-row__dossier-body">
+              SOURCE: GET /api/basis
+              <br />
+              FIELD: {isResidual ? "residual_variance" : `variance_from_${row.key}`}
+              <br />
+              BASIS: LATEST DECOMPOSITION DATE
+            </p>
+            <button
+              type="button"
+              className="account-row__inspect"
+              onClick={onInspect}
+            >
+              Inspect contributing observations →
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function StatePanel({
+function StateSheet({
   title,
   body,
   tone,
+  bare = false,
 }: {
   title: string;
   body: string;
   tone: "muted" | "error";
+  bare?: boolean;
 }) {
   return (
-    <div className="panel p-[18px]">
+    <div className={`settle-empty${bare ? " settle-empty--bare" : ""}`}>
       <div
-        className="mono text-[12px] uppercase tracking-[0.1em]"
+        className="settle-empty__title"
         style={{
-          color: tone === "error" ? "var(--verdict-bad)" : "var(--ink-mid)",
+          color: tone === "error" ? "var(--verdict-bad)" : undefined,
         }}
       >
         {title}
       </div>
-      <p className="caption mb-0 mt-3 max-w-[720px] leading-relaxed">
-        {body}
-      </p>
+      <p className="settle-empty__body">{body}</p>
     </div>
-  );
-}
-
-function FactorContributionRow({
-  row,
-  onInspect,
-}: {
-  row: FactorRow;
-  onInspect: () => void;
-}) {
-  const isResidual = row.key === "residual";
-  const color = isResidual ? "var(--residual)" : factorColor(row.key);
-  const labelColor = isResidual ? "var(--residual)" : "var(--ink)";
-  const shareTextColor = isResidual ? "var(--residual)" : "var(--ink)";
-  const rowBackground = isResidual
-    ? "color-mix(in srgb, var(--residual) 4%, transparent)"
-    : "transparent";
-
-  return (
-    <tr style={{ background: rowBackground }}>
-      <td>
-        <div className="flex items-center gap-2.5">
-          <span
-            style={{
-              width: isResidual ? 10 : 8,
-              height: isResidual ? 10 : 8,
-              borderRadius: 1,
-              background: color,
-            }}
-          />
-          <span
-            className={isResidual ? "mono text-[13px] uppercase tracking-[0.02em]" : undefined}
-            style={{ color: labelColor }}
-          >
-            {row.label}
-          </span>
-        </div>
-      </td>
-      <td
-        className="num text-right"
-        style={{
-          color: shareTextColor,
-          fontSize: isResidual ? 15 : 14,
-          fontWeight: isResidual ? 600 : 400,
-        }}
-      >
-        {(row.share * 100).toFixed(1)}%
-      </td>
-      <td>
-        <div className="grid gap-1.5">
-          <span className="mono text-[11px]" style={{ color: "var(--ink-mid)" }}>
-            {(row.cumulative * 100).toFixed(1)}%
-          </span>
-          <div
-            style={{
-              height: 6,
-              background: "var(--panel-hi)",
-              borderRadius: 1,
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${row.cumulative * 100}%`,
-                background: color,
-              }}
-            />
-          </div>
-        </div>
-      </td>
-      <td className="caption leading-relaxed">
-        {row.note}
-      </td>
-      <td className="text-right">
-        <button
-          type="button"
-          className="btn ghost"
-          onClick={onInspect}
-          style={
-            isResidual
-              ? {
-                  color: "var(--residual)",
-                  borderColor: "var(--residual-line)",
-                }
-              : undefined
-          }
-        >
-          Inspect →
-        </button>
-      </td>
-    </tr>
   );
 }
 
@@ -577,29 +517,30 @@ function safeShare(value: number, total: number): number {
   return Math.max(0, value / total);
 }
 
+/** Running balance = unexplained share remaining after this row. */
 function buildFactorRows(shares: DecompShares): FactorRow[] {
-  let cumulative = 0;
+  let remaining = 1;
 
   const factorRows = FACTOR_META.map((factor) => {
-    cumulative += shares[factor.key];
+    remaining -= shares[factor.key];
     return {
       key: factor.key,
       label: factor.label,
       share: shares[factor.key],
-      cumulative,
+      balance: Math.max(0, remaining),
       note: factor.note,
     };
   });
 
-  cumulative += shares.residual;
+  remaining -= shares.residual;
   return [
     ...factorRows,
     {
       key: "residual",
       label: "Residual",
       share: shares.residual,
-      cumulative,
-      note: "Everything the four observable factors do not explain on that day.",
+      balance: Math.max(0, remaining),
+      note: "Everything the four observable factors do not explain on that day — the entry that cannot be filed.",
     },
   ];
 }

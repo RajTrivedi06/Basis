@@ -185,4 +185,11 @@ describe("LedgerWaterfall", () => {
     ]);
     expect(slices).not.toContain("var(--residual)");
   });
+
+  it("lets the Basis settlement sheet rename the void terminus", () => {
+    render(
+      <LedgerWaterfall decomposition={live} voidLabel="Unfileable" />
+    );
+    expect(screen.getByText("Unfileable")).toBeInTheDocument();
+  });
 });

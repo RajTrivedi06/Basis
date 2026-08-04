@@ -8,7 +8,7 @@
  * It starts at 100% — the price we can't explain, before accounting — and
  * subtracts one factor per row. Every factor gets a full-width row, so a 4.8%
  * line reads exactly as easily as a 61% one, and the remainder column tallies
- * down to the unfileable block in void, measured by the bracket.
+ * down to the unexplained block in void, measured by the bracket.
  */
 
 import { useMemo } from "react";
@@ -38,6 +38,12 @@ export interface LedgerWaterfallProps {
   showGlanceGlyph?: boolean;
   /** Caption printed beside the glance-glyph, e.g. the SKU. */
   glanceLabel?: string;
+  /**
+   * Label on the residual terminus. Defaults to the site-wide term for the
+   * finding; every surface uses the same word (ADR-0005 — the residual is
+   * one thing with one name).
+   */
+  voidLabel?: string;
   className?: string;
 }
 
@@ -46,6 +52,7 @@ export function LedgerWaterfall({
   progress,
   showGlanceGlyph = true,
   glanceLabel,
+  voidLabel = "Unexplained",
   className = "",
 }: LedgerWaterfallProps) {
   // Declared interfaces carry no index signature, so the response needs one
@@ -108,7 +115,7 @@ export function LedgerWaterfall({
       >
         <span className="ledger__void-key">
           <span className="ledger__op">=</span>
-          <span className="ledger__void-tag">Unexplained</span>
+          <span className="ledger__void-tag">{voidLabel}</span>
         </span>
         <span className="ledger__void-value">
           {formatShare(residualShare)}%

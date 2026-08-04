@@ -3,9 +3,9 @@ import { BasisPageClient } from "./BasisPageClient";
 
 function BasisFallback() {
   return (
-    <div className="page-wide fade-up">
-      <div className="eyebrow mb-2.5">03 · Basis decomposition</div>
-      <p className="caption">Loading page…</p>
+    <div className="page-wide fade-up settle-page">
+      <div className="settle-head__eyebrow">03 · Variance settlement</div>
+      <p className="caption mt-3">Loading page…</p>
     </div>
   );
 }
