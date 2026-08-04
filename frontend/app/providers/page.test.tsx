@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProvidersPage from "@/app/providers/page";
 import { getProviders } from "@/lib/api";
@@ -28,30 +29,78 @@ const items = [
   },
 ];
 
-describe("ProvidersPage — mobile cards", () => {
+describe("ProvidersPage — declassified watch list", () => {
   beforeEach(() => {
     mockedGetProviders.mockResolvedValue({ items });
   });
 
-  it("renders one card per provider with delta, meta, and retired tag", async () => {
-    const { container } = renderWithQuery(<ProvidersPage />);
-    await screen.findAllByText("vast");
+  it("renders the C18 structural headline and sheet chrome", async () => {
+    renderWithQuery(<ProvidersPage />);
+    expect(
+      await screen.findByRole("heading", {
+        name: /one provider,\s*one posture/i,
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/04 · Source posture/i)).toBeInTheDocument();
+    expect(screen.getByText(/TOP SECRET/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/OVERSTAMPED: DECLASSIFIED/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/GET \/api\/providers/)).toBeInTheDocument();
+  });
 
-    const cards = container.querySelectorAll(".prov-card");
-    expect(cards.length).toBe(2);
-    const vastCard = within(cards[0] as HTMLElement);
-    expect(vastCard.getByText("↓ 12.4%")).toBeInTheDocument();
-    expect(vastCard.getByText("1,000 offers")).toBeInTheDocument();
-    expect(vastCard.getByText("78 SKUs")).toBeInTheDocument();
+  it("renders one watch row per provider with delta, meta, and retired tag", async () => {
+    const { container } = renderWithQuery(<ProvidersPage />);
+    await screen.findByText("vast");
+
+    const rows = container.querySelectorAll(".watch-row");
+    expect(rows.length).toBe(2);
+
+    const vastRow = within(rows[0] as HTMLElement);
+    expect(vastRow.getByText("↓ 12.4%")).toBeInTheDocument();
+    expect(vastRow.getByText("1,000")).toBeInTheDocument();
+    expect(vastRow.getByText("78")).toBeInTheDocument();
+    expect(
+      vastRow.getByText(/marketplace · thousands of independent hosts/i)
+    ).toBeInTheDocument();
+
     // stale > 7 days → retired tag, rule from #53
     expect(
-      within(cards[1] as HTMLElement).getByText("Retired")
+      within(rows[1] as HTMLElement).getByText("RETIRED")
     ).toBeInTheDocument();
   });
 
-  it("keeps the desktop table in the DOM (CSS decides visibility)", async () => {
+  it("opens a dossier with provenance on row click", async () => {
+    const user = userEvent.setup();
     const { container } = renderWithQuery(<ProvidersPage />);
-    await screen.findAllByText("vast");
-    expect(container.querySelector(".prov-table table")).not.toBeNull();
+    await screen.findByText("vast");
+
+    const vastButton = container.querySelector(
+      ".watch-row__main"
+    ) as HTMLButtonElement;
+    expect(vastButton).not.toBeNull();
+    expect(vastButton.getAttribute("aria-expanded")).toBe("false");
+
+    await user.click(vastButton);
+    expect(vastButton.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByText(/DOSSIER · OBSERVED CONDUCT/i)).toBeInTheDocument();
+    expect(screen.getByText(/FILE No\. BS-04-VAST/i)).toBeInTheDocument();
+    expect(screen.getByText(/FIELD: median_deviation_pct/i)).toBeInTheDocument();
+  });
+
+  it("reveals the Δ computation layer on demand", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<ProvidersPage />);
+    await screen.findByText("vast");
+
+    const toggle = screen.getByRole("button", {
+      name: /show me how Δ vs market is computed/i,
+    });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    await user.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(
+      screen.getByText(/posture, not a verdict/i)
+    ).toBeInTheDocument();
   });
 });

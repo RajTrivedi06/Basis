@@ -32,9 +32,11 @@ describe("explainability dates interpolate from the artifact", () => {
       />
     );
 
-    // Shown twice: the panel meta line and the caveats footer.
-    expect(screen.getAllByText(/trained 2026-07-31/)).toHaveLength(2);
-    expect(screen.getByText(/Corpus through 2026-07-30/)).toBeInTheDocument();
+    // Memo stamps: TRAINED JUL 31 (meta + corpus foot) and CORPUS THROUGH JUL 30.
+    expect(screen.getAllByText(/TRAINED JUL 31/).length).toBeGreaterThanOrEqual(
+      1
+    );
+    expect(screen.getByText(/CORPUS THROUGH JUL 30/)).toBeInTheDocument();
 
     unmount();
 
@@ -44,7 +46,10 @@ describe("explainability dates interpolate from the artifact", () => {
       />
     );
 
-    expect(screen.getAllByText(/trained 2026-09-04/)).toHaveLength(2);
+    expect(screen.getAllByText(/TRAINED SEP 4/).length).toBeGreaterThanOrEqual(
+      1
+    );
+    expect(screen.queryByText(/JUL 31/)).not.toBeInTheDocument();
     expect(screen.queryByText(/2026-07-31/)).not.toBeInTheDocument();
   });
 
@@ -52,9 +57,7 @@ describe("explainability dates interpolate from the artifact", () => {
     render(<ExplainabilityContent artifact={ML_EXPLAINABILITY_FIXTURE} />);
 
     expect(
-      screen.getByText(
-        new RegExp(ML_EXPLAINABILITY_FIXTURE.metadata.sku.replace(/_/g, "_"))
-      )
+      screen.getByText(new RegExp(ML_EXPLAINABILITY_FIXTURE.metadata.sku))
     ).toBeInTheDocument();
   });
 

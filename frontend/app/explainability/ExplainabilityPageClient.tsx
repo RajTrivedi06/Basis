@@ -1,7 +1,7 @@
 "use client";
 
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ShowMeHow } from "@/components/disclosure/TwoLayer";
 import { getMlExplainability } from "@/lib/mlExplainability";
 import {
   ExplainabilityContent,
@@ -14,48 +14,48 @@ export function ExplainabilityPageClient() {
     queryKey: ["ml-explainability"],
     queryFn: getMlExplainability,
   });
+  const [howOpen, setHowOpen] = useState(false);
+  const howId = useId();
 
-  // A6: the SKU in the headline and every date on this page come from the
-  // artifact. Nothing here is retyped when the model is retrained.
-  const sku = query.data?.metadata.sku;
+  // Holdout length is structural from the artifact when present; fall back to
+  // the design's protocol wording without inventing a day count.
+  const holdoutDays = query.data?.metrics.holdout.n_days;
 
   return (
-    <div className="page-wide fade-up">
-      <div className="int-head">
-        <div className="int-head__eyebrow">
-          <span className="num">05</span>
-          <span>A bound, not proof about unobservables</span>
+    <div className="page-wide fade-up expl-page">
+      <header className="expl-head">
+        <div className="expl-head__row">
+          <div>
+            <div className="expl-head__eyebrow">
+              05 · Explainability · a bound, not proof about unobservables
+            </div>
+            <h1 className="expl-head__title">
+              Two exhibits. Neither one closes the file.
+            </h1>
+          </div>
+          <button
+            type="button"
+            className="expl-head__how"
+            aria-expanded={howOpen}
+            aria-controls={howId}
+            onClick={() => setHowOpen((v) => !v)}
+          >
+            {howOpen ? "−" : "+"} SHOW ME HOW THE BOUND IS TESTED
+          </button>
         </div>
-        <h1 className="int-head__title">
-          Observable-features bound{sku ? " on " : ""}
-          {sku ? <em className="mono text-[0.62em] not-italic">{sku}</em> : null}
-        </h1>
-        <p className="int-head__lede">
-          A gradient-boosted model tests how much of the leftover price
-          variation can be recovered from richer features we already collect but
-          do not use in the four-factor decomposition. It establishes an upper
-          bound, not a causal explanation.
-        </p>
 
-        <div className="mt-6 max-w-[68ch]">
-          <ShowMeHow label="Show me how the bound is tested">
-            <p>
-              The four-factor decomposition is fitted and scored on the same
-              days, so its explained share flatters itself. The gradient-boosted
-              model is scored on days it never saw — a held-out window — which
-              is the honest comparison and generally the harder one.
-            </p>
-            <p>
-              Read the two numbers as a pair. If the richer model, tested
-              out-of-sample, still cannot reach what four simple factors claimed
-              in-sample, then the missing variation is not sitting in features
-              we merely forgot to use. That is what makes it a bound: it caps
-              how much of the leftover is recoverable from what sellers
-              disclose, and says nothing about attributes nobody publishes.
-            </p>
-          </ShowMeHow>
-        </div>
-      </div>
+        {howOpen ? (
+          <p className="expl-head__protocol" id={howId}>
+            Protocol: the last{" "}
+            {holdoutDays != null ? holdoutDays : "N"} distinct UTC days are held
+            out and never tuned on; both scores are read on those same days. The
+            four-factor share is the rule-based in-sample decomposition — it
+            flatters itself. The GBM is day-demeaned, so nothing is credited for
+            explaining market drift. Host IDs are banned as model features, which
+            is why card II can ask its question independently.
+          </p>
+        ) : null}
+      </header>
 
       {query.isLoading ? (
         <ExplainabilityLoadingState />
