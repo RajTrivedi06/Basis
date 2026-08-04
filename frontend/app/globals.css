@@ -5779,3 +5779,27 @@ button {
   .exhibit-card--bound { transform: rotate(-0.4deg); }
   .exhibit-card--host { transform: rotate(0.5deg); }
 }
+
+/* The two exhibits are one picture: the bridge carries the file from the
+   bound to the host (standing Director ruling — never two independent
+   confirmations). */
+.two-card__bridge {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 4px 2px 0;
+  font-family: "Courier New", var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+  color: var(--ink-mid);
+  max-width: 70ch;
+}
+.two-card__bridge-mark { color: var(--accent); flex: none; }
+
+.watch-row__delta[data-sign="parity"] { color: var(--ink); }
+/* The live-derived deviation sentence leads the dossier, so the prose can
+   never contradict the figure on the row. */
+.watch-row__dossier-live { color: var(--ink); }

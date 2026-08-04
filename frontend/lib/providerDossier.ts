@@ -22,33 +22,55 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     file: "BS-04-VAST",
     role: "marketplace · thousands of independent hosts",
     dossier:
-      "Largest contributor to the corpus by a wide margin, and the widest internal disagreement. Prices are set by many unrelated operators, so the aggregate sits below the market median without any single actor pricing low. Feature-rich listings; the only subject whose host identity can be traced day to day.",
+      "Prices are set by many unrelated operators, so whatever the aggregate does is a marketplace outcome, not one seller's policy. Feature-rich listings; the only subject whose host identity can be traced day to day.",
   },
   runpod: {
     file: "BS-04-RUNP",
     role: "curated cloud · published catalog, operator-set",
     dossier:
-      "A published price list, revised rarely. Sits just under the market median with a narrow spread, which is what a single pricing authority looks like when it is quoting the same catalog twice a day.",
+      "A published price list, revised rarely — a single pricing authority quoting the same catalog twice a day, which is what a narrow spread looks like.",
   },
   aws_spot: {
     file: "BS-04-AWS",
     role: "hyperscaler spot · regional, contract-shaped",
     dossier:
-      "Sits above the market median. Read as posture, not markup: this subject is concentrated in regions and bundle configurations the marketplace barely lists, and its commitment mix differs. Whether the same offer costs more is a question for the decomposition, not this sheet.",
+      "Read any deviation as posture, not markup: this subject is concentrated in regions and bundle configurations the marketplace barely lists, and its commitment mix differs. Whether the same offer costs more is a question for the decomposition, not this sheet.",
   },
-  lambda: {
-    file: "BS-04-LAMB",
-    role: "curated cloud · short catalog, few regions",
+  azure: {
+    file: "BS-04-AZUR",
+    role: "hyperscaler catalog · fixed list prices",
     dossier:
-      "Small and consistent. Covers a short catalog of canonical SKUs, so its Δ leans on a handful of comparisons and moves more than the larger subjects when one SKU shifts.",
+      "A published list catalog rather than a market: prices move when the catalog is revised, not when demand does. Excluded from the market-priced series for exactly that reason.",
+  },
+  gcp: {
+    file: "BS-04-GCP",
+    role: "hyperscaler catalog · fixed list prices",
+    dossier:
+      "A published list catalog rather than a market: prices move when the catalog is revised, not when demand does. Excluded from the market-priced series for exactly that reason.",
   },
   tensordock: {
     file: "BS-04-TDCK",
-    role: "marketplace · collection stopped, history kept",
+    role: "marketplace · independent hosts",
     dossier:
-      "No successful collection in seven days, so the subject is tagged and sorted below the active. Its historical offers remain in the corpus and in the totals; only the claim of live observation is withdrawn. A single successful collection reinstates it automatically.",
+      "Historical offers stay in the corpus and in the totals; when a subject is tagged, only the claim of live observation is withdrawn. A single successful collection reinstates it automatically.",
   },
 };
+
+/**
+ * The deviation sentence is derived from the live figure, never written
+ * down — prose that asserts a direction can contradict the number beside
+ * it the moment the market moves (Quarantine Rule).
+ */
+export function deltaClause(pct: number | null): string {
+  if (pct === null) {
+    return "No comparable market median on the latest collection date, so no deviation is filed.";
+  }
+  if (Math.abs(pct) < 0.05) {
+    return "Sits level with the market median on the latest collection date.";
+  }
+  const dir = pct > 0 ? "above" : "below";
+  return `Sits ${dir} the market median on the latest collection date, by ${Math.abs(pct).toFixed(1)}%.`;
+}
 
 function fileFor(key: string): string {
   const stem = key

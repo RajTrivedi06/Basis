@@ -2,20 +2,26 @@
 
 import { useId, useState } from "react";
 import { isProviderRetired } from "@/lib/providerStatus";
-import { providerDossier } from "@/lib/providerDossier";
+import { deltaClause, providerDossier } from "@/lib/providerDossier";
 import type { ProviderSummary } from "@/lib/types";
+
+/** Deviations inside this band are parity, not a direction. */
+const PARITY_EPSILON = 0.05;
 
 function deviationSign(
   pct: number | null
-): "above" | "below" | "null" {
+): "above" | "below" | "parity" | "null" {
   if (pct === null) return "null";
+  if (Math.abs(pct) < PARITY_EPSILON) return "parity";
   return pct > 0 ? "above" : "below";
 }
 
 function formatDeviation(pct: number | null): string {
   if (pct === null) return "—";
   // Arrow doubles the sign so the direction survives a greyscale print
-  // and does not rely on colour alone.
+  // and does not rely on colour alone. Exactly-level gets no arrow: a
+  // zero deviation is parity, and claiming "below" would be false.
+  if (Math.abs(pct) < PARITY_EPSILON) return `= ${Math.abs(pct).toFixed(1)}%`;
   const arrow = pct > 0 ? "↑" : "↓";
   return `${arrow} ${Math.abs(pct).toFixed(1)}%`;
 }
@@ -90,7 +96,12 @@ function WatchRow({
             <div className="watch-row__dossier-label">
               DOSSIER · OBSERVED CONDUCT
             </div>
-            <p className="watch-row__dossier-body">{meta.dossier}</p>
+            <p className="watch-row__dossier-body">
+              <span className="watch-row__dossier-live">
+                {deltaClause(p.median_deviation_pct)}
+              </span>{" "}
+              {meta.dossier}
+            </p>
           </div>
           <div className="watch-row__provenance">
             <div className="watch-row__dossier-label watch-row__dossier-label--dim">

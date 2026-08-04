@@ -168,6 +168,18 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
           </div>
         </div>
 
+        {/* The exhibits are one picture, not two independent
+            confirmations (standing Director ruling): the model's own SHAP
+            tally is what hands the file to Exhibit II. */}
+        <p className="two-card__bridge">
+          <span className="two-card__bridge-mark" aria-hidden>
+            ↓
+          </span>
+          WHAT THE MODEL KEPT REACHING FOR WAS THE MACHINE ITSELF. EXHIBIT II
+          ASKS HOW MUCH OF THE LEFTOVER IS JUST WHO IS HOSTING — ONE PICTURE
+          CONTINUED, NOT A SECOND OPINION.
+        </p>
+
         {/* ——— EXHIBIT II ——— */}
         <div className="exhibit exhibit--host">
           <div className="exhibit__tab">EXHIBIT II — THE HOST</div>

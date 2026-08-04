@@ -51,8 +51,10 @@ export function ExplainabilityPageClient() {
             out and never tuned on; both scores are read on those same days. The
             four-factor share is the rule-based in-sample decomposition — it
             flatters itself. The GBM is day-demeaned, so nothing is credited for
-            explaining market drift. Host IDs are banned as model features, which
-            is why card II can ask its question independently.
+            explaining market drift. Host IDs are banned as model features — but
+            the model finds the machines anyway through hardware fingerprints
+            (mobo_name leads its SHAP tally), which is why these two exhibits
+            are one picture, not two independent confirmations.
           </p>
         ) : null}
       </header>
