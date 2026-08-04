@@ -1,29 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useRef, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { useSku } from "@/lib/useSku";
-import {
-  getBasisTimeseries,
-  getFungibilityMatrix,
-  getProviders,
-} from "@/lib/api";
-import { ResidualTimeSeriesChart } from "@/components/ResidualTimeSeriesChart";
-import { ShowMeHow } from "@/components/disclosure/TwoLayer";
+import { getBasisTimeseries } from "@/lib/api";
 import { getMlExplainability } from "@/lib/mlExplainability";
+import { ShowMeHow } from "@/components/disclosure/TwoLayer";
+import { FindingMemo } from "@/components/findings/FindingMemo";
+
+gsap.registerPlugin(useGSAP);
 
 // Azure and GCP publish fixed list catalogs; excluding them leaves the
 // market-priced segments (marketplaces + spot) the hero speaks about.
 const CATALOG_PROVIDERS = ["azure", "gcp"];
 const CATALOG_EXCLUSION_KEY = `exclude:${CATALOG_PROVIDERS.join(",")}`;
 
-// Anchored structural claims — dated findings, not live aggregates. Per
-// design doc A6 they interpolate from the artifact's trained_at, so every
-// retrain flows through with zero copy edits.
 /**
- * Qualitative share language that can never contradict the number beside
- * it (Quarantine Rule): the qualifier derives from the live ICC.
+ * Qualitative share language derived from the live ICC, so the words can
+ * never contradict the figure beside them (Quarantine Rule).
  */
 export function iccQualifier(icc: number): string {
   if (icc >= 0.5) return "over half";
@@ -41,109 +38,173 @@ function shortDate(iso: string): string {
 
 function FindingsHeroInner() {
   const { sku } = useSku();
+  const root = useRef<HTMLElement | null>(null);
 
-  // Shares its key with the chart on the right, so the market-priced
-  // series is fetched once and read by both.
   const tsMarket = useQuery({
     queryKey: ["basis-timeseries", sku, null, null, CATALOG_EXCLUSION_KEY],
     queryFn: () =>
       getBasisTimeseries(sku, { excludeProviders: CATALOG_PROVIDERS }),
-    // The backend recomputes on demand; if it 404s while the surface
-    // is mid-deploy, fall back to the static window label rather than
-    // retrying aggressively.
     retry: 1,
   });
-
-  const matrix = useQuery({
-    queryKey: ["fungibility-matrix"],
-    queryFn: () => getFungibilityMatrix(),
-  });
-  const providers = useQuery({
-    queryKey: ["providers"],
-    queryFn: () => getProviders(),
-  });
-
   const artifact = useQuery({
     queryKey: ["ml-explainability"],
     queryFn: () => getMlExplainability(),
     staleTime: 15 * 60 * 1000,
   });
 
-  const marketPoints = tsMarket.data?.points ?? [];
+  const points = (tsMarket.data?.points ?? []).map((p) => ({
+    date: p.date,
+    pct: p.pct_residual,
+  }));
 
-  const gapPp = artifact.data ? artifact.data.metrics.gap * 100 : null;
-  const icc = artifact.data ? artifact.data.host_analysis.icc : null;
-  const trainedDate = artifact.data
-    ? shortDate(artifact.data.metadata.trained_at)
-    : null;
-  const gapDisplay =
-    gapPp === null ? "—" : `−${Math.abs(gapPp).toFixed(1)}pp`;
-  const iccDisplay = icc === null ? "—" : icc.toFixed(2);
+  const art = artifact.data ?? null;
+  const gapPp = art ? art.metrics.gap * 100 : null;
+  const icc = art ? art.host_analysis.icc : null;
+  const anovaPct = art ? art.metrics.anova_explained_same_days * 100 : null;
+  const trainedDate = art ? shortDate(art.metadata.trained_at) : null;
+  const todayPct = points.length > 0 ? points[points.length - 1].pct : null;
 
-  const totalOffers =
-    providers.data?.items.reduce((s, p) => s + p.offer_count, 0) ?? null;
-  const skuCount = matrix.data?.items.length ?? null;
-  const providerCount = providers.data?.items.length ?? null;
-
+  const ready = !tsMarket.isLoading && !artifact.isLoading;
   const windowLabel =
-    marketPoints.length > 0
-      ? `last ${marketPoints.length} days`
-      : "last 30 days";
+    points.length > 0 ? `~${points.length} days` : "recent weeks";
+
+  // Entrance choreography (design 4a motion script). Everything is visible
+  // at rest and animated with from() so a JS failure or reduced-motion
+  // preference still leaves a complete, readable memorandum.
+  useGSAP(
+    () => {
+      if (!ready) return;
+      const mm = gsap.matchMedia();
+      // Typing mutates textContent imperatively, so every label's full
+      // string is captured up front and restored on cleanup — an
+      // interrupted entrance must never leave a half-typed record.
+      const typed: { el: HTMLElement; full: string }[] = [];
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+
+        tl.from(".fh-eyebrow, .fh-statement, .fh-lede", {
+          y: 10,
+          opacity: 0,
+          duration: 0.4,
+          stagger: 0.06,
+        });
+        tl.from(
+          "[data-memo]",
+          { x: 34, rotate: 2, opacity: 0, duration: 0.5 },
+          0.15
+        );
+
+        // Each line of inquiry types, its leader draws, its result stamps.
+        // Lines overlap so the whole record is readable in ~2s.
+        gsap.utils.toArray<HTMLElement>(".memo-line").forEach((line, i) => {
+          const at = 0.45 + i * 0.16;
+          const label = line.querySelector<HTMLElement>("[data-type]");
+          if (label) {
+            const full = label.textContent ?? "";
+            typed.push({ el: label, full });
+            const state = { n: 0 };
+            tl.to(
+              state,
+              {
+                n: full.length,
+                duration: Math.min(0.34, full.length * 0.012),
+                ease: "none",
+                onStart: () => {
+                  label.textContent = "";
+                },
+                onUpdate: () => {
+                  label.textContent = full.slice(0, Math.round(state.n));
+                },
+                onComplete: () => {
+                  label.textContent = full;
+                },
+              },
+              at
+            );
+          }
+          const leader = line.querySelector(".memo-line__leader");
+          if (leader) tl.from(leader, { scaleX: 0, duration: 0.25 }, at + 0.05);
+          const value = line.querySelector(".memo-line__value");
+          if (value) tl.from(value, { opacity: 0, y: -3, duration: 0.2 }, at + 0.24);
+          const redaction = line.querySelector(".memo-line__redaction");
+          if (redaction) {
+            tl.from(
+              redaction,
+              { scaleX: 0, duration: 0.36, ease: "power3.inOut" },
+              at + 0.3
+            );
+          }
+        });
+
+        tl.from(
+          ".memo__stamp",
+          {
+            scale: 1.25,
+            rotate: -14,
+            opacity: 0,
+            duration: 0.28,
+            ease: "back.out(2.2)",
+          },
+          1.32
+        );
+
+        const line = root.current?.querySelector<SVGPolylineElement>(
+          ".memo-exhibit__line"
+        );
+        if (line && typeof line.getTotalLength === "function") {
+          const len = line.getTotalLength();
+          if (len > 0) {
+            tl.from(
+              line,
+              {
+                strokeDasharray: len,
+                strokeDashoffset: len,
+                duration: 0.7,
+                ease: "none",
+              },
+              1.1
+            );
+          }
+        }
+
+        tl.from(
+          ".memo-flag",
+          { y: -6, opacity: 0, duration: 0.25, stagger: 0.06 },
+          1.6
+        );
+
+        return () => {
+          tl.kill();
+          typed.forEach(({ el, full }) => {
+            el.textContent = full;
+          });
+        };
+      });
+
+      return () => mm.revert();
+    },
+    { scope: root, dependencies: [ready] }
+  );
 
   return (
-    <section
-      className="block"
-      style={{
-        padding: "40px 0 36px",
-        borderBottom: "1px solid var(--line-lo)",
-      }}
-    >
-      <div>
-        <div
-          className="eyebrow basis-fade"
-          style={
-            {
-              marginBottom: 18,
-              "--basis-delay": "100ms",
-            } as React.CSSProperties
-          }
-        >
-          Finding · {sku} · {windowLabel} · Market-priced segments
+    <section ref={root} className="fh">
+      <div className="fh__col">
+        <div className="fh-eyebrow eyebrow">
+          Findings · {sku} · {windowLabel}
         </div>
 
-        <h1
-          className="serif basis-fade fh-statement"
-          style={{ "--basis-delay": "150ms" } as React.CSSProperties}
-        >
-          A bigger model doesn&rsquo;t explain it away.
+        <h1 className="fh-statement serif">
+          The file is public.
+          <br />
+          <em>The cause is not.</em>
         </h1>
 
-        <dl className="fh-tape basis-fade" style={{ "--basis-delay": "350ms" } as React.CSSProperties}>
-          <TapeCell
-            value={gapDisplay}
-            aria={
-              gapPp === null
-                ? "gap unavailable"
-                : `negative ${Math.abs(gapPp).toFixed(1)} percentage points`
-            }
-            label="out-of-sample gap"
-          />
-          <TapeCell
-            value={iccDisplay}
-            aria={icc === null ? "ICC unavailable" : icc.toFixed(2)}
-            label="host-identity ICC"
-          />
-          <TapeCell
-            value="~20–61%"
-            aria="approximately 20 to 61 percent"
-            label="unexplained · recent weeks"
-          />
-        </dl>
+        <p className="fh-lede">
+          Every observable lead closes. What remains is the finding.
+        </p>
 
-        <div
-          className="fh-actions basis-fade"
-          style={{ "--basis-delay": "600ms" } as React.CSSProperties}
-        >
+        <div className="fh-actions">
           <Link className="btn" href="/basis">
             See the decomposition →
           </Link>
@@ -152,23 +213,15 @@ function FindingsHeroInner() {
           </Link>
         </div>
 
-        <div
-          className="basis-fade"
-          style={
-            {
-              maxWidth: 620,
-              marginTop: 18,
-              "--basis-delay": "750ms",
-            } as React.CSSProperties
-          }
-        >
-          <ShowMeHow label="Show me how we know">
+        <div className="fh-claim">
+          <ShowMeHow
+            label={`Precise claim${trainedDate ? `, as of ${trainedDate}` : ""}`}
+          >
             <p>
-              Even a 45-feature ML model can&rsquo;t close the unexplained
-              gap out-of-sample
-              {trainedDate ? ` (as of ${trainedDate})` : ""};{" "}
-              {icc === null ? "a persistent share" : iccQualifier(icc)} of
-              what remains is persistent host identity
+              Even a 45-feature ML model can&rsquo;t close the unexplained gap
+              out-of-sample{trainedDate ? ` (as of ${trainedDate})` : ""};{" "}
+              {icc === null ? "a persistent share" : iccQualifier(icc)} of what
+              remains is persistent host identity
               {icc === null ? "" : ` (ICC ${icc.toFixed(2)})`}.
             </p>
             <p>
@@ -188,54 +241,18 @@ function FindingsHeroInner() {
         </div>
       </div>
 
-      <div
-        className="panel"
-        style={{ padding: 22, marginTop: 36 }}
-      >
-        <div className="eyebrow" style={{ marginBottom: 14 }}>
-          Residual share · market-priced segments · {windowLabel}
-        </div>
-        <ResidualTimeSeriesChart
-          gpuSku={sku}
-          excludeProviders={CATALOG_PROVIDERS}
-        />
-        <p
-          className="caption"
-          style={{ marginTop: 12, marginBottom: 0, lineHeight: 1.55 }}
-        >
-          Jul 26 — Era D: Vast spot pricing becomes visible (collector fix).
-          Jul 28 — Azure/GCP list catalogs join the corpus (excluded from
-          this series).
-        </p>
-        <div
-          style={{
-            marginTop: 20,
-            paddingTop: 16,
-            borderTop: "1px solid var(--line-lo)",
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 14,
+      <div className="fh__memo">
+        <FindingMemo
+          facts={{
+            sku,
+            anovaPct,
+            gapPp,
+            icc,
+            todayPct,
+            trainedDate,
+            points,
           }}
-        >
-          <Stat
-            label="Offers"
-            val={totalOffers === null ? null : totalOffers.toLocaleString()}
-            loading={providers.isLoading}
-            error={providers.isError}
-          />
-          <Stat
-            label="Canonical SKUs"
-            val={skuCount === null ? null : skuCount.toLocaleString()}
-            loading={matrix.isLoading}
-            error={matrix.isError}
-          />
-          <Stat
-            label="Providers"
-            val={providerCount === null ? null : providerCount.toLocaleString()}
-            loading={providers.isLoading}
-            error={providers.isError}
-          />
-        </div>
+        />
       </div>
     </section>
   );
@@ -245,74 +262,12 @@ export function FindingsHero() {
   return (
     <Suspense
       fallback={
-        <section
-          className="block"
-          style={{
-            gap: 64,
-            padding: "40px 0 36px",
-            borderBottom: "1px solid var(--line-lo)",
-          }}
-        >
+        <section className="fh">
           <p className="caption">Loading…</p>
         </section>
       }
     >
       <FindingsHeroInner />
     </Suspense>
-  );
-}
-
-function TapeCell({
-  value,
-  aria,
-  label,
-}: {
-  value: string;
-  aria: string;
-  label: string;
-}) {
-  return (
-    <div className="fh-tape__cell">
-      <dt
-        className="display fh-tape__num"
-        aria-live="off"
-        aria-label={`${aria} ${label}`}
-      >
-        {value}
-      </dt>
-      <dd className="fh-tape__label">{label}</dd>
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  val,
-  loading,
-  error,
-}: {
-  label: string;
-  val: string | null;
-  loading: boolean;
-  error: boolean;
-}) {
-  const display = loading ? "…" : error || val === null ? "—" : val;
-  const dim = loading || error || val === null;
-  return (
-    <div>
-      <div className="eyebrow" style={{ marginBottom: 4 }}>
-        {label}
-      </div>
-      <div
-        className="mono"
-        style={{
-          fontSize: 16,
-          color: dim ? "var(--ink-dim)" : "var(--ink)",
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {display}
-      </div>
-    </div>
   );
 }
