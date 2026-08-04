@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { WatchList, formatObserved } from "@/components/providers/WatchList";
 import { getProviders } from "@/lib/api";
+import { sheetLabel } from "@/lib/nav";
 import {
   PROVIDER_STALE_AFTER_DAYS,
   numberWord,
@@ -133,7 +134,7 @@ export default function ProvidersPage() {
 
       <footer className="prov-sheet-foot">
         <span className="prov-sheet-foot__stamp">
-          SHEET 04 OF 06 · COMPILED{" "}
+          {sheetLabel("/providers")} · COMPILED{" "}
           <em className="serif">Basis</em>
           {compiled !== "—" ? ` · ${compiled}` : null}
         </span>

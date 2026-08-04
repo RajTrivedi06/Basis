@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BasisLogo } from "@/components/layout/BasisLogo";
+import { NAV_ITEMS, navNumber } from "@/lib/nav";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   Suspense,
@@ -12,19 +13,6 @@ import {
   useState,
 } from "react";
 
-const NAV_ITEMS: { href: string; label: string }[] = [
-  { href: "/findings", label: "Findings" },
-  { href: "/dispersion", label: "Dispersion" },
-  { href: "/basis", label: "Basis" },
-  { href: "/providers", label: "Providers" },
-  { href: "/explainability", label: "Explainability" },
-  { href: "/methodology", label: "Methodology" },
-];
-
-/** Nav numbers are positional: 01–06 follow the order of NAV_ITEMS. */
-function navNumber(index: number): string {
-  return String(index + 1).padStart(2, "0");
-}
 
 function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);

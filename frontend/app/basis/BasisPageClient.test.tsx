@@ -43,7 +43,11 @@ describe("BasisPageClient — settlement sheet", () => {
     vi.clearAllMocks();
     mockedSkus.mockResolvedValue({ items: [] });
     mockedBasis.mockResolvedValue(live);
-    mockedObs.mockResolvedValue({ items: [], total: 0, date: live.date });
+    mockedObs.mockResolvedValue({
+      gpu_sku: live.gpu_sku,
+      date: live.date,
+      items: [],
+    });
   });
 
   it("renders the settlement head and ledger chrome", async () => {
@@ -58,26 +62,26 @@ describe("BasisPageClient — settlement sheet", () => {
     expect(
       await screen.findByText(/SETTLEMENT SHEET · SEQUENTIAL ANOVA/i)
     ).toBeInTheDocument();
-    expect(await screen.findByText("Unfileable")).toBeInTheDocument();
+    expect(await screen.findByText("Unexplained")).toBeInTheDocument();
   });
 
   it("shows the schedule of accounts with a running balance", async () => {
     const { container } = renderWithQuery(<BasisPageClient />);
-    await screen.findByText("Unfileable");
+    await screen.findByText("Unexplained");
 
     expect(screen.getByText(/04 · Schedule of accounts/i)).toBeInTheDocument();
     const rows = container.querySelectorAll(".account-row");
     expect(rows.length).toBe(5);
 
     const residual = within(rows[4] as HTMLElement);
-    expect(residual.getByText("UNFILEABLE")).toBeInTheDocument();
+    expect(residual.getByText("CANNOT BE FILED")).toBeInTheDocument();
     expect(residual.getByText("61.3%")).toBeInTheDocument();
   });
 
   it("reveals the ledger-order protocol on demand", async () => {
     const user = userEvent.setup();
     renderWithQuery(<BasisPageClient />);
-    await screen.findByText("Unfileable");
+    await screen.findByText("Unexplained");
 
     await user.click(
       screen.getByRole("button", {

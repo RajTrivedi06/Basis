@@ -19,6 +19,7 @@ import { BasisObservationsDrawer } from "./BasisObservationsDrawer";
 import { BasisRawObservationInspector } from "./BasisRawObservationInspector";
 import { BeeswarmReceipt } from "./BeeswarmReceipt";
 import { pointsFromObservations } from "./factorPoints";
+import { sheetLabel } from "@/lib/nav";
 
 const SWARM_TABS: { factor: Factor; label: string }[] = [
   { factor: "region", label: "Region" },
@@ -204,7 +205,6 @@ export function BasisPageClient() {
           <LedgerWaterfall
             decomposition={decomposition}
             glanceLabel={sku}
-            voidLabel="Unfileable"
             className="settle-ledger"
           />
 
@@ -221,7 +221,7 @@ export function BasisPageClient() {
             <span className="mono settle-sheet__residual">
               {decomposition.pct_residual.toFixed(1)}%
             </span>{" "}
-            is residual basis risk — stamped unfileable above.
+            is residual basis risk — the entry above that cannot be filed.
           </p>
 
           <div className="settle-sheet__foot">
@@ -367,7 +367,7 @@ export function BasisPageClient() {
 
       <footer className="settle-foot">
         <span className="settle-foot__stamp">
-          SHEET 03 OF 06 · SETTLED <em className="serif">Basis</em>
+          {sheetLabel("/basis")} · SETTLED <em className="serif">Basis</em>
           {stampDate !== "—" ? ` · ${stampDate}` : null}
         </span>
         <Link href="/explainability" className="settle-foot__next">
@@ -403,6 +403,7 @@ function AccountRow({
   onToggle: () => void;
   onInspect: () => void;
 }) {
+  const panelId = useId();
   const isResidual = row.key === "residual";
   const color = isResidual ? "var(--residual)" : factorColor(row.key);
 
@@ -414,6 +415,7 @@ function AccountRow({
         type="button"
         className="account-row__main"
         aria-expanded={open}
+        aria-controls={panelId}
         onClick={onToggle}
       >
         <span className="account-row__subject">
@@ -424,7 +426,7 @@ function AccountRow({
           />
           <span className="account-row__key">{row.label}</span>
           {isResidual ? (
-            <span className="account-row__tag">UNFILEABLE</span>
+            <span className="account-row__tag">CANNOT BE FILED</span>
           ) : null}
         </span>
         <span className="account-row__share">
@@ -439,7 +441,7 @@ function AccountRow({
         </span>
       </button>
       {open ? (
-        <div className="account-row__dossier">
+        <div className="account-row__dossier" id={panelId}>
           <div>
             <div className="account-row__dossier-label">
               {isResidual ? "TERMINUS · VOID" : "ACCOUNT · OBSERVED ROLE"}
@@ -538,7 +540,7 @@ function buildFactorRows(shares: DecompShares): FactorRow[] {
       label: "Residual",
       share: shares.residual,
       balance: Math.max(0, remaining),
-      note: "Everything the four observable factors do not explain on that day.",
+      note: "Everything the four observable factors do not explain on that day — the entry that cannot be filed.",
     },
   ];
 }

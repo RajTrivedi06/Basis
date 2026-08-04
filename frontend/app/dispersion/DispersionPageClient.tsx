@@ -10,6 +10,7 @@ import { getDispersion } from "@/lib/api";
 import { useSku } from "@/lib/useSku";
 import type { DispersionPoint } from "@/lib/types";
 import { DispersionChart } from "./DispersionChart";
+import { sheetLabel } from "@/lib/nav";
 
 export function DispersionPageClient() {
   const { sku, setSku } = useSku();
@@ -153,7 +154,7 @@ function DispersionStamp({ gpuSku }: { gpuSku: string }) {
 
   return (
     <span className="disp-sheet-foot__stamp">
-      SHEET 02 OF 06 · PLOTTED <em className="serif">Basis</em>
+      {sheetLabel("/dispersion")} · PLOTTED <em className="serif">Basis</em>
       {stamp !== "—" ? ` · ${stamp}` : null}
     </span>
   );
