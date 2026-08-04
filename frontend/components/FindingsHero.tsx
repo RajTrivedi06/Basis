@@ -168,6 +168,14 @@ function FindingsHeroInner() {
           }
         }
 
+        // The declassification swipe: the shutter uncovers the record.
+        tl.fromTo(
+          ".memo-exhibit__shutter",
+          { xPercent: 0 },
+          { xPercent: 101, duration: 0.75, ease: "power2.inOut" },
+          1.05
+        );
+
         tl.from(
           ".memo-flag",
           { y: -6, opacity: 0, duration: 0.25, stagger: 0.06 },

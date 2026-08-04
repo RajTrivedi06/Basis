@@ -91,9 +91,9 @@ describe("FungibilityMatrix — cards + pagination", () => {
 
   it("renders the card view alongside the table (CSS decides visibility)", async () => {
     const { container } = renderWithQuery(<FungibilityMatrix />);
-    await screen.findByText(/Showing 1–3 of 3 canonical SKUs/);
+    await screen.findByText(/ENTRIES 1–3 OF 3/);
 
-    const cards = container.querySelectorAll(".fung-card");
+    const cards = container.querySelectorAll(".register-card");
     expect(cards.length).toBe(rows.length);
     const first = within(cards[0] as HTMLElement);
     // Default sort is residual desc → a100 (70%) leads.
@@ -108,9 +108,9 @@ describe("FungibilityMatrix — cards + pagination", () => {
       items: [{ ...rows[0], pct_residual: null, residual_variance: null }],
     });
     const { container } = renderWithQuery(<FungibilityMatrix />);
-    await screen.findByText(/Showing 1–1 of 1 canonical SKUs/);
+    await screen.findByText(/ENTRIES 1–1 OF 1/);
     expect(
-      within(container.querySelector(".fung-card") as HTMLElement).getByText(
+      within(container.querySelector(".register-card") as HTMLElement).getByText(
         "accumulating observations"
       )
     ).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("FungibilityMatrix — cards + pagination", () => {
     }));
     mockedGetFungibilityMatrix.mockResolvedValue({ items: many });
     const { container } = renderWithQuery(<FungibilityMatrix />);
-    await screen.findByText("Showing 1–32 of 70 canonical SKUs");
+    await screen.findByText("ENTRIES 1–32 OF 70");
 
     const links = screen.getAllByRole("button", { name: /^[0-9]+$/ });
     expect(links.map((l) => l.textContent)).toEqual(["1", "2", "3"]);
@@ -132,10 +132,10 @@ describe("FungibilityMatrix — cards + pagination", () => {
 
     await userEvent.click(links[2]);
     expect(
-      screen.getByText("Showing 65–70 of 70 canonical SKUs")
+      screen.getByText("ENTRIES 65–70 OF 70")
     ).toBeInTheDocument();
     // Highest residual sorts first, so page 3 holds the tail.
-    expect(container.querySelectorAll(".fung-card").length).toBe(6);
+    expect(container.querySelectorAll(".register-card").length).toBe(6);
     expect(screen.getAllByText("sku_69").length).toBeGreaterThan(0);
   });
 
@@ -147,7 +147,7 @@ describe("FungibilityMatrix — cards + pagination", () => {
     }));
     mockedGetFungibilityMatrix.mockResolvedValue({ items: many });
     renderWithQuery(<FungibilityMatrix />);
-    await screen.findByText("Showing 1–32 of 70 canonical SKUs");
+    await screen.findByText("ENTRIES 1–32 OF 70");
 
     await userEvent.click(screen.getByRole("button", { name: "3" }));
     await userEvent.selectOptions(
@@ -155,7 +155,7 @@ describe("FungibilityMatrix — cards + pagination", () => {
       "gpu_sku"
     );
     expect(
-      screen.getByText("Showing 1–32 of 70 canonical SKUs")
+      screen.getByText("ENTRIES 1–32 OF 70")
     ).toBeInTheDocument();
   });
 });
