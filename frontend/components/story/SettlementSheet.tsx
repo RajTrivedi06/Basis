@@ -1,93 +1,121 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { LedgerWaterfall } from "@/components/charts/LedgerWaterfall";
+import { buildLedger } from "@/lib/ledger";
 import type { BasisDecompositionResponse } from "@/lib/types";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
+/** First entry present from the outset, so the sheet is never a blank form. */
+const PROGRESS_FLOOR = 0.06;
+
 /**
- * The settlement sheet: the approved ledger waterfall (variant 1e) with the
- * scroll doing the subtracting. One row is filed per turn of the scroll, and
- * the remainder lands last.
+ * Exhibit C — the settlement sheet, as the reference draws it: ONE sheet of
+ * ruled paper you see whole.
  *
- * `progress === undefined` means "finished", which is what the server renders,
- * what a JS-less client keeps, and what reduced motion and phones get. The
- * scrub only takes over when the sheet is still below the fold at mount, so a
- * deep link into the middle of the page never sees a filled sheet empty itself.
+ * It is deliberately not pinned. A pinned 100svh frame cannot hold a heading,
+ * a slate, five filed rows and a footer at laptop heights, so it ends up either
+ * clipping the sheet or turning it into a nested scroll region — and then the
+ * reader never sees the exhibit all at once, which is the whole point of an
+ * exhibit. Instead the section scrolls normally, and arriving at it files the
+ * sheet: rows are credited one at a time and the remainder lands last, then it
+ * settles as a finished sheet and stays that way.
+ *
+ * `progress === undefined` means "finished" — what the server renders, what a
+ * JS-less client keeps, what reduced motion gets, and what the filing hands
+ * back to on completion. The animation only ever adds the filing; it never
+ * gates the content.
  *
  * There is no population toggle here by ruling (design doc Decision #3, "never
- * on the landing"). The population is stated instead, in the slate.
+ * on the landing"). The population is stated in the head instead.
  */
 export function SettlementSheet({
   decomposition,
-  population,
+  head,
+  foot,
 }: {
   decomposition: BasisDecompositionResponse;
-  population: string;
+  /** Eyebrow, statement and the population, aligned to the sheet's left edge. */
+  head: ReactNode;
+  /** Verdict and standing note, printed on the sheet rather than after it. */
+  foot: ReactNode;
 }) {
-  const root = useRef<HTMLDivElement | null>(null);
-  const stage = useRef<HTMLDivElement | null>(null);
+  const scene = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState<number | undefined>(undefined);
+
+  const steps = useMemo(() => {
+    const ledger = buildLedger(
+      decomposition as unknown as Record<string, unknown>
+    );
+    return ledger.rows.length + 1;
+  }, [decomposition]);
 
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
 
-      mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
-        const section = root.current;
-        const pinned = stage.current;
-        if (section === null || pinned === null) return;
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const card = scene.current;
+        if (card === null) return;
 
-        // Already on screen: leave the finished sheet alone.
-        if (section.getBoundingClientRect().top < window.innerHeight * 0.85) {
-          return;
-        }
+        // Scroll-ENTERED, not scroll-scrubbed. A scrub ties how much of the
+        // sheet is filled to where the reader happens to have stopped, so the
+        // exhibit sits half-credited with reserved blank space below it — which
+        // reads as a broken component, not as a ledger mid-subtraction. Entering
+        // the sheet starts the filing; it always finishes, and then the sheet
+        // hands itself back to its finished state.
+        const state = { p: PROGRESS_FLOOR };
+        setProgress(PROGRESS_FLOOR);
 
-        // A floor of 0.06 keeps the first entry on the sheet from the
-        // moment it pins: an empty ruled card, however briefly, reads as a
-        // component that failed rather than a ledger about to be written.
-        const floor = (value: number) => Math.max(0.06, value);
+        const fill = gsap.to(state, {
+          p: 1,
+          duration: 0.22 * steps + 0.35,
+          ease: "power1.inOut",
+          paused: true,
+          onUpdate: () => setProgress(state.p),
+          onComplete: () => setProgress(undefined),
+        });
 
-        setProgress(floor(0));
-        const trigger = ScrollTrigger.create({
-          trigger: section,
-          start: "top 8%",
-          end: "+=150%",
-          pin: pinned,
-          anticipatePin: 1,
-          onUpdate: (self) => setProgress(floor(self.progress)),
-          onRefreshInit: () => setProgress(floor(0)),
+        const st = ScrollTrigger.create({
+          trigger: card,
+          start: "top 80%",
+          once: true,
+          onEnter: () => fill.play(),
         });
 
         return () => {
-          trigger.kill();
+          st.kill();
+          fill.kill();
           setProgress(undefined);
         };
       });
 
       return () => mm.revert();
     },
-    { scope: root }
+    { scope: scene, dependencies: [steps] }
   );
 
   return (
-    <div ref={root} className="fc-sheet">
-      <div ref={stage} className="fc-sheet__stage">
+    <div className="fc-wrap">
+      <div className="fc-sheet__head">{head}</div>
+
+      <div ref={scene} className="fc-sheet__card">
+        {/* One line. The population is stated once, on the head, and the
+            ledger's own glyph caption already carries the Live tag — both
+            used to be repeated here. */}
         <div className="fc-sheet__slate">
           <span>
             <span translate="no">{decomposition.gpu_sku}</span> ·{" "}
             {decomposition.date} · sequential ANOVA on log price
           </span>
-          <span className="fc-sheet__pop">{population}</span>
         </div>
-        {/* No stamp attributes here on purpose: the desktop scrub writes
-            opacity and width inline through React, and a GSAP from() on the
-            same nodes would fight it. Phones get the finished sheet, which is
-            the right call anyway — a ledger reads as a ledger standing still. */}
+
+        {/* No stamp attributes: the scrub writes opacity and width through
+            React, and a GSAP from() on the same nodes would fight it. */}
         <div className="fc-sheet__ledger">
           <LedgerWaterfall
             decomposition={decomposition}
@@ -96,6 +124,8 @@ export function SettlementSheet({
             glanceLabel={decomposition.gpu_sku}
           />
         </div>
+
+        <div className="fc-sheet__foot">{foot}</div>
       </div>
     </div>
   );

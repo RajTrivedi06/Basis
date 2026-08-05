@@ -551,52 +551,75 @@ export default async function StoryPage() {
 
       {/* ——————————————————————————————— VII · Exhibit C (C7) */}
       <section className="fc-act fc-act--exhibit-c" aria-labelledby="fc-sheet">
-        <div className="fc-wrap">
-          <div className="fc-exhibit__head">
-            <div>
-              <span className="fc-eyebrow fc-eyebrow--accent">
-                06 · Exhibit C
-              </span>
-              <h2 id="fc-sheet" className="fc-h2 serif" data-lines>
-                <span className="fc-line">
-                  <span>The settlement sheet.</span>
-                </span>
-              </h2>
-              <p className="fc-lede">
-                One hundred units of disagreement, filed against everything
-                sellers disclose.
-              </p>
-            </div>
-          </div>
-        </div>
+        <div className="fc-ruled fc-ruled--lines" data-parallax style={{ "--fc-depth": 0.1 } as React.CSSProperties} aria-hidden />
+        <div className="fc-ruled fc-ruled--cross" data-parallax style={{ "--fc-depth": 0.24 } as React.CSSProperties} aria-hidden />
+        <div className="fc-sheet__wash" aria-hidden />
 
         {decomposition ? (
-          <>
-            <SettlementSheet
-              decomposition={decomposition}
-              population={population}
-            />
-            <div className="fc-wrap fc-sheet__after">
-              <p className="fc-body">
-                Where the machine is. How it&rsquo;s rented. Who sells it. What
-                comes bundled with it. Everything observable, accounted for, and
-                still a share of the price has no explanation.
-              </p>
-              <p className="fc-note">
-                Change the order of the factors and the four credits move. The
-                remainder does not. That is why the remainder is the headline.
-                {residualRange
-                  ? ` In market-priced segments it has ranged ${residualRange.minPct.toFixed(
-                      0
-                    )}% to ${residualRange.maxPct.toFixed(0)}% across the last ${
-                      residualRange.days
-                    } days, so basis risk is segment- and time-conditional.`
-                  : " Basis risk is segment- and time-conditional."}
-              </p>
-            </div>
-          </>
+          <SettlementSheet
+            decomposition={decomposition}
+            head={
+              <>
+                <div>
+                  <span className="fc-eyebrow fc-eyebrow--accent">
+                    06 · Exhibit C
+                  </span>
+                  {/* Title and lede are one statement, as the reference sets
+                      it — the sheet gets its own sentence, not a stacked
+                      heading plus a subheading. */}
+                  <h2 id="fc-sheet" className="fc-h2 serif" data-lines>
+                    <span className="fc-line">
+                      <span>The settlement sheet. One hundred</span>
+                    </span>
+                    <span className="fc-line">
+                      <span>units of disagreement, filed against</span>
+                    </span>
+                    <span className="fc-line">
+                      <span>what sellers disclose.</span>
+                    </span>
+                  </h2>
+                </div>
+                <div className="fc-sheet__popblock">
+                  <span className="fc-sheet__poplabel">Sample population</span>
+                  <span className="fc-sheet__poptag">{population}</span>
+                </div>
+              </>
+            }
+            foot={
+              <>
+                <p className="fc-sheet__verdict">
+                  Where the machine is. How it&rsquo;s rented. Who sells it.
+                  What comes bundled with it. Everything observable, accounted
+                  for, and still a share of the price has no explanation.
+                </p>
+                <p className="fc-sheet__standing">
+                  Change the order of the factors and the four credits move. The
+                  remainder does not. That is why the remainder is the headline.
+                  {residualRange ? (
+                    <em>
+                      Market-priced range · {residualRange.minPct.toFixed(0)}% to{" "}
+                      {residualRange.maxPct.toFixed(0)}% across{" "}
+                      {residualRange.days} days · segment- and time-conditional
+                    </em>
+                  ) : (
+                    <em>Segment- and time-conditional</em>
+                  )}
+                </p>
+              </>
+            }
+          />
         ) : (
           <div className="fc-wrap">
+            <div className="fc-sheet__head">
+              <div>
+                <span className="fc-eyebrow fc-eyebrow--accent">
+                  06 · Exhibit C
+                </span>
+                <h2 id="fc-sheet" className="fc-h2 serif">
+                  The settlement sheet.
+                </h2>
+              </div>
+            </div>
             <p className="fc-body">
               The live decomposition is momentarily unavailable. The{" "}
               <Link href="/basis">Basis page</Link> holds the full ledger.
@@ -618,8 +641,11 @@ export default async function StoryPage() {
           </h2>
 
           <FindingsFile>
-            {/* Card 1 — the bound. Values interpolate from the artifact (A6). */}
-            <article className="fc-card fc-card--dark">
+            {/* Sheet 1 — thermal fax: the bound. */}
+            <article className="fc-card fc-card--fax">
+              <span className="fc-card__folio" aria-hidden>
+                FAX TRANSMISSION · 01/03
+              </span>
               <header className="fc-card__head">
                 <span>Subject · observable bound</span>
                 <span className="fc-stamp">Bound, not victory</span>
@@ -680,8 +706,11 @@ export default async function StoryPage() {
               )}
             </article>
 
-            {/* Card 2 — host identity. */}
-            <article className="fc-card fc-card--paper">
+            {/* Sheet 2 — ruled index card: host identity. */}
+            <article className="fc-card fc-card--memo">
+              <span className="fc-card__folio" aria-hidden>
+                INDEX CARD · 02/03
+              </span>
               <header className="fc-card__head">
                 <span>Subject · host identity</span>
                 <span className="fc-stamp fc-stamp--green">
@@ -739,8 +768,11 @@ export default async function StoryPage() {
               )}
             </article>
 
-            {/* Card 3 — the moving series. Photographic plate. */}
-            <article className="fc-card fc-card--plate">
+            {/* Sheet 3 — bond sheet with a clipped photograph. */}
+            <article className="fc-card fc-card--clip">
+              <span className="fc-card__folio" aria-hidden>
+                ATTACHMENT · 03/03
+              </span>
               <div className="fc-card__plate">
                 <PlateFrame plate={FINDING_ANALYST} depth={0.14} />
               </div>
