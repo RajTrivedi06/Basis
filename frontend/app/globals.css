@@ -86,7 +86,7 @@
   /* Fonts (serif is wired to the next/font CSS variable set in layout.tsx) */
   --f-serif: var(--font-serif), Georgia, "Times New Roman", serif;
   --f-sans:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-  --f-mono:  ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --f-mono:  var(--font-mono), ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
 }
 
 html,
@@ -4787,251 +4787,6 @@ button {
   height: 32px;
 }
 
-/* ————————————————————————————————————————————————————————————————
-   STORY (Stage 6.2 landing) — scene layout + reveal motion.
-   §13 motion laws: scroll-entered only; reduced-motion renders final
-   state. Appended as a self-contained block; interiors don't use it. */
-
-.story { overflow-x: clip; }
-
-.story-scene { padding: 110px 0; border-top: 1px solid var(--line); }
-.story-scene--hook {
-  min-height: 88vh;
-  display: flex;
-  align-items: center;
-  border-top: none;
-}
-.story-scene--white { background: var(--panel); }
-
-.story-frame { max-width: 1180px; margin: 0 auto; padding: 0 40px; }
-.story-cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 72px;
-  align-items: center;
-}
-@media (max-width: 860px) {
-  .story-cols { grid-template-columns: 1fr; gap: 40px; }
-}
-
-.story-h1 {
-  font-weight: 500;
-  font-size: clamp(40px, 5.6vw, 72px);
-  line-height: 1.08;
-  letter-spacing: -0.025em;
-  margin: 0;
-  max-width: 900px;
-}
-.story-h2 {
-  font-weight: 500;
-  font-size: clamp(28px, 3.2vw, 38px);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  margin: 0 0 18px;
-}
-.story-price { color: var(--residual); font-variant-numeric: tabular-nums; }
-.story-lede {
-  font-size: 19px;
-  color: var(--ink-mid);
-  line-height: 1.6;
-  margin: 30px 0 0;
-  max-width: 580px;
-}
-.story-body {
-  font-size: 16px;
-  color: var(--ink-mid);
-  line-height: 1.7;
-  margin: 0 0 14px;
-}
-.story-strong { color: var(--ink); font-weight: 500; }
-.story-eyebrow { margin-bottom: 16px; }
-.story-fn a {
-  font-size: 11px;
-  text-decoration: none;
-  color: var(--accent);
-  padding-left: 1px;
-}
-.story-unknown { color: var(--ink); font-size: 14px; }
-
-.story-cards { display: flex; flex-direction: column; gap: 14px; }
-.story-cards__divider {
-  text-align: center;
-  font-size: 10.5px;
-  color: var(--ink-dim);
-  letter-spacing: 0.1em;
-}
-.story-tag {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 22px 26px;
-}
-.story-tag__sku { font-size: 13px; }
-.story-tag__price { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; }
-.story-tag__price span { font-size: 14px; color: var(--ink-dim); }
-.story-tag--high .story-tag__price { color: var(--residual); }
-
-.story-method {
-  margin-top: 48px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 40px;
-  align-items: center;
-  justify-content: space-between;
-}
-.story-method__chips { display: flex; flex-wrap: wrap; gap: 10px; }
-.story-chip {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 9px 16px;
-  font-size: 12px;
-  background: var(--panel);
-}
-.story-method__count { text-align: center; }
-.story-count { font-size: 42px; font-weight: 500; letter-spacing: -0.02em; }
-
-.story-stencil { display: flex; flex-direction: column; gap: 10px; }
-.story-stencil__raw {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 13px 18px;
-  font-size: 12.5px;
-  color: var(--ink-mid);
-}
-.story-stencil__arrow { text-align: center; color: var(--accent); }
-.story-stencil__canonical {
-  background: var(--ink);
-  color: var(--bg);
-  border-radius: 10px;
-  padding: 16px 18px;
-  text-align: center;
-  font-size: 14px;
-}
-.story-stencil__canonical span {
-  font-size: 11px;
-  opacity: 0.65;
-  margin-left: 10px;
-}
-
-.story-ledger {
-  display: flex;
-  height: 84px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  margin-top: 34px;
-}
-.story-ledger__seg { min-width: 0; }
-.story-ledger__seg--residual {
-  background: var(--residual);
-  color: var(--bg);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-left: 16px;
-  gap: 2px;
-}
-.story-ledger__seg--residual .mono {
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  opacity: 0.75;
-}
-.story-ledger__big { font-size: 24px; font-weight: 500; }
-.story-ledger__legend {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  font-size: 11.5px;
-  color: var(--ink-mid);
-}
-
-.story-bound { margin-top: 26px; display: flex; flex-direction: column; gap: 14px; }
-.story-bound__row {
-  display: grid;
-  grid-template-columns: 220px 1fr 64px;
-  gap: 14px;
-  align-items: center;
-}
-@media (max-width: 700px) {
-  .story-bound__row { grid-template-columns: 1fr; gap: 6px; }
-}
-.story-bound__label { font-size: 11px; color: var(--ink-mid); }
-.story-bound__track {
-  position: relative;
-  height: 30px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-}
-.story-bound__bar {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: var(--factor-provider);
-  border-radius: 6px 0 0 6px;
-}
-.story-bound__bar--oos { background: var(--residual); }
-.story-bound__rule {
-  position: absolute;
-  top: -6px;
-  bottom: -6px;
-  border-left: 1.5px dashed var(--ink-dim);
-}
-.story-bound__val { font-size: 12px; text-align: right; }
-
-.story-honesty { display: flex; flex-direction: column; gap: 14px; }
-.story-honesty__card { padding: 20px 24px; }
-.story-honesty__title { font-size: 14.5px; font-weight: 600; margin-bottom: 5px; }
-.story-honesty__body { font-size: 13.5px; color: var(--ink-mid); line-height: 1.6; }
-
-.story-cta { text-align: center; margin-top: 90px; }
-.story-cta__line { font-size: 26px; font-weight: 500; margin-bottom: 24px; }
-.story-cta__buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
-
-.story-sources {
-  margin-top: 90px;
-  border-top: 1px solid var(--line);
-  padding-top: 24px;
-}
-.story-sources__list {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 12.5px;
-  color: var(--ink-mid);
-  line-height: 1.7;
-}
-
-/* Reveal motion — CSS owns it; the island only stamps data-seen. */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(28px);
-  transition:
-    opacity 0.8s ease var(--reveal-delay, 0ms),
-    transform 0.8s ease var(--reveal-delay, 0ms);
-}
-[data-reveal][data-seen] { opacity: 1; transform: translateY(0); }
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1; transform: none; transition: none; }
-}
-
-/* C23 attribution — signature-line treatment, house restraint. */
-.story-attrib {
-  margin-top: 72px;
-  border-top: 1px solid var(--line);
-  padding-top: 28px;
-  font-size: 14px;
-  color: var(--ink-mid);
-}
-.story-attrib a { color: var(--ink); }
-.story-attrib__sig {
-  font-style: italic;
-  font-size: 17px;
-  color: var(--ink);
-  margin-top: 6px;
-}
 
 /* ————————————————————————————————————————————————————————————————
    FINDINGS HERO — declassified finding memorandum (design 4a,
@@ -6713,3 +6468,2035 @@ button {
     animation: none !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   THE FILE COPY — landing (Stage 6.2 redesign)
+
+   A released file: film-black acts for the footage, cream acts for the
+   paper, and nothing in between. Two grounds, one accent, one residual.
+
+   Palette discipline (ADR-0005): the film ground is `--film` #0E0D0B,
+   which is NOT the residual hex. Void #171512 stays exclusive to
+   residual-share encodings, terracotta stays purely editorial. Neither
+   is ever spent on a section background.
+
+   Motion contract (§13): every animated property here rests at its
+   FINAL value. GSAP only ever plays from() into these values, so the
+   server HTML, a JS failure and prefers-reduced-motion all render the
+   finished composition.
+
+   Mobile is a separate direction, not a narrower column: its own
+   plates, its own type ramp, its own reel (a swipe, not a pin) and no
+   parallax depth it cannot afford. See the @media block at the end.
+   ════════════════════════════════════════════════════════════════ */
+
+.filecopy {
+  --film:        #0E0D0B;
+  --film-panel:  #14120F;
+  --film-line:   #3D3A34;
+  --film-line-hi:#565047;
+  --film-ink:    #FAF9F5;
+  --film-mid:    #C9C2B4;
+  --film-dim:    #A09B90;
+  --film-faint:  #8E8779;
+  --paper-warm:  #EDE6D9;
+
+  /* One grain, mixed at different strengths per ground. It rides the
+     section (not the viewport) so scrolling never repaints a fixed
+     layer — the single biggest scroll cost on a phone. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  --act-y: clamp(84px, 9vw, 132px);
+  --gutter: clamp(20px, 4.4vw, 48px);
+
+  overflow-x: clip;
+  /* Room for the ribbon so the last line of the file is never under it. */
+  padding-bottom: 42px;
+}
+
+.fc-motion-scope { display: none; }
+
+/* ——— shared frame ———————————————————————————————————————————— */
+
+.fc-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.fc-act {
+  position: relative;
+  padding: var(--act-y) 0;
+  isolation: isolate;
+}
+
+.fc-act::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: var(--grain);
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+}
+
+/* Film acts */
+.fc-act--open,
+.fc-act--name,
+.fc-act--reel,
+.fc-act--stakes {
+  background: var(--film);
+  color: var(--film-ink);
+}
+
+.fc-act--open::after,
+.fc-act--name::after,
+.fc-act--reel::after,
+.fc-act--stakes::after {
+  opacity: 0.075;
+  mix-blend-mode: screen;
+}
+
+/* Paper acts */
+.fc-act--brief { background: var(--bg); }
+.fc-act--exhibit-a { background: var(--panel); }
+.fc-act--exhibit-b { background: var(--bg); }
+.fc-act--exhibit-c { background: var(--bg-deep); }
+.fc-act--findings { background: var(--paper-warm); }
+
+.fc-act--exhibit-a,
+.fc-act--exhibit-b,
+.fc-act--exhibit-c,
+.fc-act--findings { border-top: 1px solid var(--line); }
+
+.fc-act__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(14, 13, 11, 0.94) 0%,
+      rgba(14, 13, 11, 0.74) 38%,
+      rgba(14, 13, 11, 0.28) 72%,
+      rgba(14, 13, 11, 0.1) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(14, 13, 11, 0.55) 0%,
+      rgba(14, 13, 11, 0) 24%,
+      rgba(14, 13, 11, 0) 68%,
+      rgba(14, 13, 11, 0.88) 100%
+    );
+}
+
+.fc-act__scrim--soft {
+  background: linear-gradient(
+    to right,
+    rgba(14, 13, 11, 0.92) 0%,
+    rgba(14, 13, 11, 0.7) 52%,
+    rgba(14, 13, 11, 0.42) 100%
+  );
+}
+
+.fc-act__scrim--deep {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(14, 13, 11, 0.86) 0%,
+      rgba(14, 13, 11, 0.66) 34%,
+      rgba(14, 13, 11, 0.95) 100%
+    );
+}
+
+/* ——— type ————————————————————————————————————————————————————— */
+
+.fc-eyebrow {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: clamp(10px, 1.05vw, 11px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-eyebrow--accent { color: var(--accent); }
+
+.fc-act--open .fc-eyebrow,
+.fc-act--name .fc-eyebrow,
+.fc-act--reel .fc-eyebrow,
+.fc-act--stakes .fc-eyebrow { color: var(--film-faint); }
+
+.fc-act--open .fc-eyebrow--accent,
+.fc-act--name .fc-eyebrow--accent,
+.fc-act--reel .fc-eyebrow--accent,
+.fc-act--stakes .fc-eyebrow--accent { color: #D98A64; }
+
+.fc-h2 {
+  margin: 16px 0 0;
+  font-weight: 500;
+  font-size: clamp(27px, 4.5vw, 50px);
+  line-height: 1.07;
+  letter-spacing: -0.025em;
+  color: var(--ink-hi);
+  max-width: 22ch;
+}
+
+.fc-h2--invert { color: var(--film-ink); max-width: 26ch; }
+
+/* Any heading or body copy inside a film act inverts without needing a
+   modifier: the ground decides the colour, not the call site. */
+.fc-act--open .fc-h2,
+.fc-act--name .fc-h2,
+.fc-act--reel .fc-h2,
+.fc-act--stakes .fc-h2 { color: var(--film-ink); }
+
+.fc-act--name .fc-body,
+.fc-act--reel .fc-body,
+.fc-act--stakes .fc-body { color: var(--film-mid); }
+
+.fc-act--name .fc-lede,
+.fc-act--reel .fc-lede,
+.fc-act--stakes .fc-lede { color: var(--film-mid); }
+
+.fc-act--name .fc-note,
+.fc-act--reel .fc-note,
+.fc-act--stakes .fc-note { color: var(--film-dim); }
+
+.fc-act--name .fc-slate-label,
+.fc-act--stakes .fc-slate-label { color: var(--film-faint); }
+
+/* The bracket diagram is drawn for cream; on film it is redrawn, not
+   dimmed — its hairlines, labels and the italic mark all invert. */
+.fc-act--name .bracket-diagram__plate line { stroke: var(--film-line-hi); }
+.fc-act--name .bracket-diagram__plate text { fill: var(--film-mid); }
+.fc-act--name .bracket-diagram__plate .bracket-mark__label { fill: #E8B79E; }
+.fc-act--name .bracket-diagram__plate .bracket-mark__seg:not(.bracket-mark__leader) {
+  stroke: #E8B79E;
+}
+.fc-act--name .bracket-diagram figcaption,
+.fc-act--name .bracket-diagram__note { color: var(--film-faint); }
+.fc-h2--big {
+  font-size: clamp(32px, 5.4vw, 72px);
+  max-width: 20ch;
+  color: var(--film-ink);
+}
+
+.fc-line {
+  display: block;
+  overflow: hidden;
+  /* Descenders would clip against the overflow box the reveal needs. */
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+.fc-line > span { display: block; }
+
+.fc-lede {
+  margin: 18px 0 0;
+  font-size: clamp(16.5px, 1.7vw, 20px);
+  line-height: 1.55;
+  color: var(--ink-mid);
+  max-width: 54ch;
+}
+
+.fc-lede--invert { color: var(--film-mid); max-width: 58ch; }
+
+.fc-body {
+  margin: 16px 0 0;
+  font-size: clamp(15.5px, 1.5vw, 17.5px);
+  line-height: 1.66;
+  color: var(--ink-mid);
+  max-width: 58ch;
+}
+
+.fc-body strong { color: var(--ink); font-weight: 500; }
+.fc-body--invert { color: var(--film-mid); }
+.fc-body--invert em { color: var(--film-ink); font-style: italic; }
+.fc-body a,
+.fc-note a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+.fc-note {
+  margin: 20px 0 0;
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 1.15vw, 12px);
+  line-height: 1.8;
+  letter-spacing: 0.04em;
+  color: var(--ink-mid);
+  max-width: 76ch;
+}
+
+.fc-note--invert { color: var(--film-dim); }
+
+.fc-fn a {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--accent);
+  vertical-align: super;
+  /* Padded out to a hittable size without disturbing the line box. */
+  padding: 10px 6px;
+  margin: -10px -2px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.fc-slate-label {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.fc-unknown {
+  font-family: var(--f-mono);
+  font-size: 0.92em;
+  color: var(--film-ink);
+  border-bottom: 1px dotted var(--film-line-hi);
+}
+
+/* A rubber stamp: rotated, outlined, never filled. */
+.fc-stamp {
+  display: inline-block;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  transform: rotate(-1.6deg);
+  white-space: nowrap;
+}
+
+.fc-stamp--green { border-color: #7A8A5E; color: #5F6D45; }
+.fc-stamp--big {
+  border-width: 2px;
+  font-size: clamp(10px, 1.1vw, 11px);
+  letter-spacing: 0.28em;
+  padding: 10px 18px;
+}
+
+/* ——— the ribbon ——————————————————————————————————————————————— */
+
+.fc-ribbon {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 46;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  height: 30px;
+  padding: 0 clamp(12px, 2.4vw, 22px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(14, 13, 11, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--film-line);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+  pointer-events: none;
+}
+
+.fc-ribbon__rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 2px;
+  background: rgba(61, 58, 52, 0.8);
+  overflow: hidden;
+}
+
+.fc-ribbon__rule-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.fc-ribbon__authority {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #D98A64;
+}
+
+.fc-ribbon__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.fc-ribbon__sep {
+  width: 1px;
+  height: 9px;
+  background: var(--film-line-hi);
+  flex: none;
+}
+
+.fc-ribbon__authority-tail { color: var(--film-faint); }
+
+.fc-ribbon__meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: none;
+}
+
+.fc-ribbon__footage span { color: var(--film-ink); font-variant-numeric: tabular-nums; }
+
+/* The Ask launcher and the ribbon both own the bottom edge; on the
+   landing the launcher steps up over it. */
+body:has(.filecopy) .ask-launcher { bottom: calc(20px + 34px); }
+
+/* Over the cold open the header inverts, and takes its type with it —
+   the pill alone left cream-page nav colours on a film ground. It
+   returns to the house treatment as soon as the page leaves the top. */
+body:has(.filecopy) .site-header-rail--top .site-header-island {
+  background: rgba(14, 13, 11, 0.62);
+  border-color: rgba(250, 249, 245, 0.18);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.34);
+}
+
+body:has(.filecopy) .site-header-rail--top .basis-logo,
+body:has(.filecopy) .site-header-rail--top .basis-logo__word {
+  color: #FAF9F5;
+}
+
+body:has(.filecopy) .site-header-rail--top .rail-link__label {
+  color: #C9C2B4;
+}
+
+body:has(.filecopy) .site-header-rail--top .rail-link__index {
+  color: #8E8779;
+}
+
+body:has(.filecopy) .site-header-rail--top .rail-link:hover .rail-link__label,
+body:has(.filecopy) .site-header-rail--top .rail-link.is-active .rail-link__label {
+  color: #FAF9F5;
+}
+
+body:has(.filecopy) .site-header-rail--top .site-header-island__badge {
+  color: #C9C2B4;
+  border-color: rgba(250, 249, 245, 0.22);
+}
+
+body:has(.filecopy) .site-header-rail--top .site-header-island__menu-bars span {
+  background: #FAF9F5;
+}
+
+/* ——— plates ——————————————————————————————————————————————————— */
+
+.fc-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--film);
+}
+
+.fc-plate__shift {
+  position: absolute;
+  /* Slack above and below equals the parallax travel, so the frame is
+     never revealed at either end of the scroll. */
+  inset: calc(var(--fc-depth, 0) * -100%) 0;
+  will-change: transform;
+}
+
+.fc-plate__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--fc-pos, 50% 50%);
+  /* Graded to the site's warmth: the plates are period stock, and the
+     cream/terracotta palette cannot carry raw colour photography. */
+  filter: grayscale(0.55) sepia(0.22) saturate(0.85) contrast(1.06)
+    brightness(0.86);
+}
+
+.fc-plate__slate {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 2;
+  font-family: var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(250, 249, 245, 0.72);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+}
+
+.fc-plate--mobile-only { display: none; }
+
+/* ——— I · cold open ———————————————————————————————————————————— */
+
+.fc-act--open {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: calc(var(--header-rail-h) + 24px);
+  padding-bottom: clamp(72px, 12vh, 128px);
+}
+
+.fc-open {
+  position: relative;
+  z-index: 2;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  width: 100%;
+}
+
+.fc-open__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.fc-open__rule {
+  flex: 1;
+  max-width: 180px;
+  height: 1px;
+  background: var(--film-line-hi);
+}
+
+.fc-open__head-line {
+  margin: clamp(20px, 3vh, 30px) 0 0;
+  font-weight: 500;
+  font-size: clamp(38px, 7.4vw, 88px);
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  color: var(--film-ink);
+  max-width: 15ch;
+}
+
+.fc-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(10px, 1.6vw, 24px);
+  margin-top: clamp(24px, 4vh, 44px);
+}
+
+.fc-pair__side { min-width: 0; }
+
+.fc-pair__price {
+  display: block;
+  font-size: clamp(34px, 5.4vw, 68px);
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: var(--film-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-pair__side--high .fc-pair__price { color: #E8B79E; }
+
+.fc-pair__foot {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-pair__gap {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: clamp(84px, 15vw, 220px);
+  margin-bottom: 14px;
+}
+
+.fc-pair__multiple {
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 1.15vw, 13px);
+  letter-spacing: 0.1em;
+  color: var(--film-mid);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fc-pair__bracket {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.fc-pair__bracket .bracket-mark__label { fill: var(--film-ink); }
+.fc-pair__bracket line { stroke: var(--film-line-hi); }
+.fc-pair__bracket .bracket-mark__spine,
+.fc-pair__bracket line:not(.bracket-mark__leader) { stroke: #E8B79E; }
+
+.fc-open__foot {
+  display: grid;
+  grid-template-columns: minmax(0, 460px);
+  gap: 14px;
+  margin-top: clamp(26px, 4vh, 46px);
+}
+
+.fc-open__lede {
+  margin: 0;
+  font-size: clamp(16px, 1.6vw, 18px);
+  line-height: 1.6;
+  color: var(--film-mid);
+}
+
+.fc-open__slate {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-open__cue {
+  position: relative;
+  z-index: 2;
+  max-width: 1240px;
+  margin: clamp(30px, 6vh, 60px) auto 0;
+  padding: 0 var(--gutter);
+  width: 100%;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-open__cue::before {
+  content: "↓";
+  margin-right: 10px;
+  color: var(--accent);
+}
+
+/* ——— II · the brief ——————————————————————————————————————————— */
+
+.fc-punch {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+  background: var(--bg-deep);
+  border-right: 1px dashed var(--line-hi);
+  z-index: 1;
+}
+
+.fc-punch::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 34px;
+  bottom: 34px;
+  width: 8px;
+  background-image: radial-gradient(
+    circle,
+    var(--line-hi) 3.2px,
+    transparent 3.4px
+  );
+  background-size: 8px 30px;
+}
+
+.fc-brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+}
+
+.fc-brief__copy { min-width: 0; }
+
+.fc-redact-card {
+  margin-top: 28px;
+  padding: 20px 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 14px 40px rgba(31, 29, 26, 0.05);
+}
+
+.fc-redact {
+  margin: 12px 0 0;
+  font-family: var(--f-serif);
+  font-size: clamp(18px, 2vw, 21px);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.fc-redact__toggle {
+  position: relative;
+  display: inline-block;
+  padding: 4px 3px;
+  margin: -4px -3px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.fc-redact__word { position: relative; z-index: 1; }
+
+.fc-redact__bar {
+  position: absolute;
+  inset: 2px -2px;
+  background: var(--residual);
+  transform-origin: left center;
+  transition:
+    transform 320ms cubic-bezier(0.2, 0.75, 0.2, 1),
+    opacity 260ms ease;
+}
+
+.fc-redact__toggle:hover .fc-redact__bar,
+.fc-redact__toggle:focus-visible .fc-redact__bar,
+.fc-redact[data-lifted="true"] .fc-redact__bar {
+  transform: scaleX(0.02);
+  opacity: 0;
+}
+
+.fc-redact__toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.fc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fc-chips li {
+  border: 1px solid var(--line-hi);
+  border-radius: 999px;
+  padding: 8px 15px;
+  background: var(--panel);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-chips__accent { border-color: var(--accent-line); color: var(--accent); }
+
+.fc-registry {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 18px 44px rgba(31, 29, 26, 0.05);
+}
+
+.fc-registry__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-registry__live { color: var(--accent); }
+
+.fc-registry__rows { margin: 0; padding: 4px 20px 14px; }
+
+.fc-registry__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px dotted var(--line-hi);
+}
+
+.fc-registry__row:last-child { border-bottom: none; }
+
+.fc-registry__row dt {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-registry__row dd {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 26px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-hi);
+}
+
+.fc-registry__foot {
+  margin: 0;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-deep);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  line-height: 1.9;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* ——— III · exhibit A ————————————————————————————————————————— */
+
+.fc-tags {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(16px, 2.6vw, 40px);
+  margin-top: clamp(32px, 5vw, 56px);
+}
+
+.fc-tag {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 24px 26px;
+  border: 1px solid var(--line-hi);
+  background: var(--bg);
+  min-width: 0;
+}
+
+/* The costly side is the one that carries the accent line, so the pair
+   is asymmetric on purpose: these two are not peers. */
+.fc-tag--high {
+  border-color: var(--accent-line);
+  background: var(--accent-bg);
+  transform: translateY(-14px);
+}
+
+.fc-tag__meta { min-width: 0; }
+
+.fc-tag__sku {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fc-tag__where {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.fc-tag__price {
+  font-size: clamp(30px, 3.6vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink-hi);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fc-tag__price span { font-size: 0.34em; color: var(--ink-dim); margin-left: 2px; }
+.fc-tag--high .fc-tag__price { color: var(--accent-dim); }
+
+.fc-tags__divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.fc-tags__line {
+  width: 1px;
+  height: clamp(40px, 6vw, 72px);
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--accent) 0 4px,
+    transparent 4px 9px
+  );
+}
+
+/* ——— IV · the name ———————————————————————————————————————————— */
+
+.fc-name {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(30px, 5vw, 70px);
+  align-items: center;
+}
+
+.fc-name__copy { min-width: 0; }
+.fc-name__diagram { min-width: 0; }
+
+.fc-act--name .bracket-diagram__plate line { stroke: var(--film-line-hi); }
+.fc-act--name .bracket-diagram { color: var(--film-mid); }
+
+/* ——— V · the reel ————————————————————————————————————————————— */
+
+.fc-act--reel { padding-bottom: 0; }
+
+.fc-reel__headrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(24px, 3.4vw, 40px);
+}
+
+.fc-reel__hint {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-reel__hint-touch { display: none; }
+
+/* The stage holds the title still while the strip runs under it, so the
+   pin reads as footage advancing past a fixed head rather than as the
+   page having lost its heading. */
+.fc-reel {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* The foot clears the ribbon, which owns the bottom 30px of every
+     viewport on this page. */
+  padding: clamp(48px, 7vh, 88px) 0 calc(clamp(40px, 6vh, 72px) + 30px);
+}
+
+.fc-reel__viewport {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  max-height: 620px;
+}
+
+.fc-reel__track {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(16px, 2vw, 28px);
+  padding: 0 max(var(--gutter), calc((100vw - 1240px) / 2));
+  will-change: transform;
+}
+
+.fc-reel__track:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.fc-frame {
+  flex: none;
+  width: min(540px, 60vw);
+  min-height: min(500px, 58vh);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--film-line);
+  background: rgba(250, 249, 245, 0.035);
+}
+
+.fc-frame__leader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--film-line);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.fc-frame__index { color: var(--accent); }
+.fc-frame__label { color: var(--film-mid); }
+
+.fc-frame__perf {
+  flex: 1;
+  height: 8px;
+  background-image: radial-gradient(
+    circle,
+    var(--film-line-hi) 2.6px,
+    transparent 2.8px
+  );
+  background-size: 16px 8px;
+  opacity: 0.7;
+}
+
+.fc-frame__body {
+  padding: clamp(22px, 2.6vw, 34px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.fc-frame__lede {
+  margin: 0;
+  font-size: clamp(21px, 2.3vw, 30px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--film-ink);
+}
+
+.fc-frame__foot {
+  margin: 0;
+  font-size: clamp(14px, 1.4vw, 15.5px);
+  line-height: 1.62;
+  color: var(--film-dim);
+}
+
+.fc-frame__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fc-frame__chips li {
+  border: 1px solid var(--film-line-hi);
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--film-mid);
+}
+
+.fc-frame__tally {
+  margin-top: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fc-frame__tally .serif {
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--film-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-frame__tally-label {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-stencil {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.fc-stencil__raw {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--film-dim);
+  padding: 7px 12px;
+  border: 1px dashed var(--film-line-hi);
+  overflow-wrap: anywhere;
+}
+
+.fc-stencil__arrow { color: var(--accent); font-size: 13px; }
+
+.fc-stencil__out {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--film-ink);
+  padding: 8px 13px;
+  border: 1px solid #6B4231;
+  background: rgba(193, 95, 60, 0.1);
+  overflow-wrap: anywhere;
+}
+
+/* ——— VI · exhibit B ————————————————————————————————————————— */
+
+.fc-exhibit__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.fc-exhibit__meta {
+  margin: 0;
+  text-align: right;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.fc-exhibit__meta-hint { display: block; margin-top: 6px; }
+
+.fc-quotes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+  gap: clamp(20px, 2.6vw, 34px);
+  margin-top: clamp(28px, 4vw, 44px);
+  align-items: start;
+}
+
+.fc-quotes__plot {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px clamp(16px, 2vw, 24px) 14px;
+}
+
+.fc-quotes__slate {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-quotes__grid { position: relative; padding: 22px 0 0; }
+
+.fc-quotes__bound {
+  position: absolute;
+  top: 6px;
+  bottom: 26px;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--accent) 0 4px,
+    transparent 4px 9px
+  );
+  z-index: 3;
+}
+
+.fc-quotes__bound-tag {
+  position: absolute;
+  top: -18px;
+  left: 0;
+  transform: translateX(2px);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.fc-quotes__bound--high .fc-quotes__bound-tag {
+  left: auto;
+  right: 0;
+  transform: translateX(-2px);
+}
+
+.fc-lane {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.fc-lane__key {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+  padding-right: 2px;
+}
+
+.fc-lane__name {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fc-lane__count {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--ink-dim);
+}
+
+.fc-lane__track {
+  position: relative;
+  height: 44px;
+  min-width: 0;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.fc-lane__track:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.fc-lane__rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--line);
+}
+
+.fc-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(31, 29, 26, 0.28);
+  background: var(--ink-mid);
+  opacity: 0.62;
+  cursor: pointer;
+  /* The lane is the target. Dots stay focusable for the keyboard path,
+     but they never intercept a pointer: the lane resolves the nearest
+     quote to the cursor or thumb, which is both kinder to a finger and
+     cheaper than hit-testing hundreds of 8px circles. */
+  pointer-events: none;
+}
+
+.fc-dot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.fc-lane__marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  background: rgba(193, 95, 60, 0.16);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.fc-quotes__axis {
+  position: relative;
+  height: 22px;
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.fc-quotes__tick {
+  position: absolute;
+  top: 6px;
+  transform: translateX(-50%);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  color: var(--ink-dim);
+}
+
+.fc-quotes__note {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-mid);
+  max-width: 62ch;
+}
+
+/* The slip is a fixed shape: selecting a quote must never reflow the
+   exhibit under the reader's thumb (variant 1h rider). */
+.fc-slip {
+  border: 1px solid var(--residual);
+  background: var(--residual);
+  color: var(--film-ink);
+  display: flex;
+  flex-direction: column;
+  min-height: 330px;
+}
+
+.fc-slip__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--film-line);
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-slip__tag { color: var(--accent); }
+.fc-slip__body { padding: 18px 18px 14px; flex: 1; }
+
+.fc-slip__price {
+  font-family: var(--f-serif);
+  font-size: clamp(34px, 3.6vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-slip__price span {
+  font-size: 0.3em;
+  letter-spacing: 0;
+  color: var(--film-faint);
+  margin-left: 3px;
+}
+
+.fc-slip__rows { margin: 18px 0 0; padding: 0; border-top: 1px solid var(--film-line); }
+
+.fc-slip__rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px dotted var(--film-line);
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+}
+
+.fc-slip__rows dt { color: var(--film-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+.fc-slip__rows dd { margin: 0; color: var(--film-ink); text-align: right; overflow-wrap: anywhere; }
+
+.fc-slip__note {
+  margin: 14px 0 0;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  line-height: 1.8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-slip__pull {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--film-line);
+  background: rgba(193, 95, 60, 0.14);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #E8B79E;
+  min-height: 46px;
+}
+
+.fc-slip__pull:hover,
+.fc-slip__pull:focus-visible {
+  background: rgba(193, 95, 60, 0.26);
+  color: var(--film-ink);
+}
+
+/* ——— VII · exhibit C ————————————————————————————————————————— */
+
+.fc-sheet { position: relative; margin-top: clamp(26px, 4vw, 40px); }
+
+.fc-sheet__stage {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.fc-sheet__slate {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 13px 0;
+  border-top: 1px solid var(--line-hi);
+  border-bottom: 1px solid var(--line-hi);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-sheet__pop { color: var(--accent); }
+
+.fc-sheet__ledger {
+  padding: clamp(20px, 3vw, 34px) clamp(16px, 2.4vw, 30px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: none;
+  box-shadow: 0 24px 60px rgba(31, 29, 26, 0.06);
+}
+
+.fc-sheet__after {
+  margin-top: clamp(24px, 3.4vw, 38px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+
+.fc-sheet__after .fc-body { margin-top: 0; }
+.fc-sheet__after .fc-note { margin-top: 0; padding-top: 6px; }
+
+/* ——— VIII · findings ————————————————————————————————————————— */
+
+.fc-file {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+  margin-top: clamp(40px, 6vw, 64px);
+  align-items: start;
+}
+
+.fc-card {
+  --fc-lift: 1;
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 calc(16px * var(--fc-lift)) calc(44px * var(--fc-lift))
+    rgba(31, 29, 26, calc(0.09 * var(--fc-lift)));
+  padding: 22px 24px 26px;
+}
+
+/* Three sheets dropped by a person, not a grid: each keeps the angle and
+   offset it landed at. */
+.fc-card:nth-child(1) { transform: rotate(-1.4deg) translateY(8px); z-index: 2; }
+.fc-card:nth-child(2) { transform: rotate(1.1deg) translateY(-10px); z-index: 4; }
+.fc-card:nth-child(3) { transform: rotate(-0.7deg) translateY(16px); z-index: 3; }
+
+.fc-card--dark {
+  background: var(--residual);
+  border-color: var(--residual);
+  color: var(--film-ink);
+}
+
+.fc-card--plate { padding: 0; overflow: hidden; }
+.fc-card__plate { position: relative; height: 172px; }
+.fc-card__inner { padding: 22px 24px 26px; }
+
+.fc-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.fc-card--dark .fc-card__head { color: var(--film-faint); }
+
+.fc-card__title {
+  margin: 16px 0 0;
+  font-size: clamp(21px, 2.1vw, 26px);
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+  color: var(--ink-hi);
+}
+
+.fc-card--dark .fc-card__title { color: var(--film-ink); }
+
+.fc-card__body {
+  margin: 12px 0 0;
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--ink-mid);
+}
+
+.fc-card--dark .fc-card__body { color: var(--film-dim); }
+.fc-card__body a { color: var(--accent); text-decoration: underline; }
+
+.fc-bars { margin-top: 20px; display: flex; flex-direction: column; gap: 13px; }
+
+.fc-bar__label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-bar__value { color: var(--film-ink); font-variant-numeric: tabular-nums; }
+
+.fc-bar__track {
+  margin-top: 5px;
+  height: 11px;
+  background: rgba(250, 249, 245, 0.08);
+}
+
+.fc-bar__fill { display: block; height: 100%; }
+.fc-bar__fill--pale { background: var(--film-mid); }
+.fc-bar__fill--accent { background: var(--accent); }
+
+.fc-bars__delta {
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fc-bars__delta span {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+}
+
+.fc-figure { display: flex; align-items: baseline; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+
+.fc-figure__value {
+  font-size: clamp(40px, 4.4vw, 54px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  color: var(--residual);
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-figure__label {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  line-height: 1.7;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+  max-width: 20ch;
+}
+
+.fc-range { display: flex; align-items: baseline; gap: 12px; margin-top: 16px; }
+
+.fc-range .serif {
+  font-size: clamp(32px, 3.4vw, 42px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--residual);
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-range__to {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.fc-sens { list-style: none; margin: 0 0 10px; padding: 0; display: flex; gap: 14px; flex-wrap: wrap; }
+
+.fc-sens li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.fc-sens li span:first-child { color: var(--ink-dim); font-size: 9.5px; letter-spacing: 0.12em; }
+
+/* The house disclosure, dressed for these cards. */
+.fc-card .two-layer__more { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+.fc-card--dark .two-layer__more { border-color: var(--film-line); }
+
+.fc-card .two-layer__toggle {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+  list-style: none;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fc-card .two-layer__toggle::-webkit-details-marker { display: none; }
+
+.fc-card .two-layer__body {
+  font-size: 13.5px;
+  line-height: 1.68;
+  color: var(--ink-mid);
+  border-left: 2px solid var(--accent-line);
+  padding-left: 13px;
+  margin-top: 10px;
+}
+
+.fc-card--dark .two-layer__body { color: var(--film-dim); border-left-color: #6B4231; }
+.fc-card .two-layer__body p { margin: 0; }
+
+.fc-limits {
+  list-style: none;
+  margin: clamp(34px, 5vw, 52px) 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--line-hi);
+  display: flex;
+  justify-content: space-between;
+  gap: 26px;
+  flex-wrap: wrap;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  line-height: 1.8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-limits li { max-width: 46ch; }
+.fc-limits span { display: block; color: var(--accent); }
+
+/* ——— IX · stakes ————————————————————————————————————————————— */
+
+.fc-act--stakes { padding-bottom: clamp(56px, 8vw, 88px); }
+
+.fc-honesty {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: clamp(40px, 6vw, 64px) 0 0;
+  padding: 0;
+  background: var(--film-line);
+}
+
+.fc-honesty li { background: rgba(14, 13, 11, 0.78); padding: 24px 22px; }
+
+.fc-honesty h3 {
+  margin: 0 0 8px;
+  font-family: var(--f-serif);
+  font-size: clamp(17px, 1.8vw, 19px);
+  font-weight: 500;
+  color: var(--film-ink);
+}
+
+.fc-honesty p { margin: 0; font-size: 14px; line-height: 1.62; color: var(--film-dim); }
+
+.fc-cta { text-align: center; margin-top: clamp(56px, 9vw, 96px); }
+
+.fc-cta__line {
+  margin: 26px 0 28px;
+  font-size: clamp(21px, 2.8vw, 32px);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  color: var(--film-ink);
+}
+
+.fc-cta__buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+
+.fc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 14px 30px;
+  border-radius: 999px;
+  background: var(--film-ink);
+  color: var(--film);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.fc-btn:hover { background: var(--accent); color: var(--film-ink); }
+
+.fc-btn--ghost {
+  background: transparent;
+  color: var(--film-mid);
+  border: 1px solid var(--film-line-hi);
+}
+
+.fc-btn--ghost:hover { color: var(--film-ink); border-color: var(--accent); background: transparent; }
+
+.fc-attrib {
+  margin-top: clamp(52px, 8vw, 82px);
+  padding-top: 22px;
+  border-top: 1px solid var(--film-line);
+  font-size: 14.5px;
+  color: var(--film-dim);
+}
+
+.fc-attrib p { margin: 0; }
+.fc-attrib a { color: var(--film-ink); text-decoration: underline; text-underline-offset: 3px; }
+.fc-attrib__sig { font-style: italic; font-size: 17px; color: var(--film-ink); margin-top: 6px !important; }
+
+.fc-sources { margin-top: 40px; }
+
+.fc-sources ol {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--film-faint);
+  max-width: 76ch;
+}
+
+.fc-sources li { margin-bottom: 5px; }
+.fc-sources a { color: var(--film-mid); text-decoration: underline; }
+
+/* ════════════════════════════════════════════════════════════════
+   PHONES — a designed direction, not a squeeze.
+
+   What changes and why:
+   · the reel stops being a pinned scrub and becomes a snap-swipe
+   · lanes get their label above the track, because a 96px label column
+     inside 390px leaves no exhibit
+   · the slip moves above the lanes, so a thumb selecting a quote is not
+     covering the readout
+   · type keeps a floor: nothing here is smaller on a phone than it is
+     on a desktop, per §15 ("390px must be readable, not miniature")
+   · every target that does something is at least 44px
+   ════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .filecopy {
+    --act-y: clamp(66px, 13vw, 92px);
+    /* Clear the ribbon and the Ask launcher at the foot of the file. */
+    padding-bottom: 76px;
+  }
+
+  .fc-plate--mobile-only { display: block; }
+
+  .fc-plate__img { object-position: var(--fc-pos-mobile, 50% 50%); }
+
+  /* Mono is the voice of this page, so it keeps a floor on a phone: no
+     label drops below 10px, per §15 (390px readable, not miniature). */
+  .fc-pair__foot,
+  .fc-quotes__bound-tag,
+  .fc-lane__count,
+  .fc-slip__tag,
+  .fc-slip__rows > div,
+  .fc-slip__head,
+  .fc-sheet__ledger .ledger__glyph-caption,
+  .fc-tags__divider,
+  .fc-plate__slate,
+  .fc-stamp { font-size: 10px; }
+
+  .fc-stamp { padding: 5px 9px; letter-spacing: 0.14em; }
+
+  /* I · cold open: the portrait plate carries it, type sits in the dark.
+     The plate is already almost black in its lower half, so the scrim
+     only has to finish the job rather than flatten the frame. */
+  .fc-act--open {
+    justify-content: flex-end;
+    padding-bottom: clamp(76px, 15vh, 112px);
+  }
+
+  .fc-act--open .fc-act__scrim {
+    background: linear-gradient(
+      to bottom,
+      rgba(14, 13, 11, 0.34) 0%,
+      rgba(14, 13, 11, 0.12) 22%,
+      rgba(14, 13, 11, 0.72) 52%,
+      rgba(14, 13, 11, 0.94) 100%
+    );
+  }
+
+  /* Sized so each sentence holds its own line at 390px: the hook is
+     three statements, and a statement that wraps stops being one. */
+  .fc-open__head-line {
+    font-size: clamp(27px, 8vw, 38px);
+    line-height: 1.06;
+    max-width: 100%;
+  }
+
+  .fc-open__head { gap: 10px; }
+  .fc-open__rule { display: none; }
+
+  .fc-pair {
+    display: grid;
+    grid-template-columns: auto minmax(56px, 1fr) auto;
+    align-items: end;
+    gap: 8px;
+  }
+
+  .fc-pair__price { font-size: clamp(30px, 8.6vw, 40px); }
+  .fc-pair__foot { letter-spacing: 0.08em; }
+  .fc-pair__gap { width: 100%; min-width: 56px; margin-bottom: 10px; gap: 4px; }
+  .fc-open__foot { margin-top: 26px; }
+  .fc-open__lede { font-size: 16px; }
+  .fc-open__cue { margin-top: 26px; }
+
+  .fc-ribbon {
+    height: 28px;
+    gap: 10px;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+  }
+
+  .fc-ribbon__authority,
+  .fc-ribbon__meta,
+  .fc-ribbon__footage { white-space: nowrap; }
+
+  /* Two readouts fit; four do not. The authority line keeps its first
+     half, the copy number goes. */
+  .fc-ribbon__authority-tail,
+  .fc-ribbon__sep,
+  .fc-ribbon__copy { display: none; }
+
+  /* II · brief */
+  .fc-brief { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .fc-punch { width: 16px; }
+  .fc-punch::before { left: 4px; width: 7px; background-size: 7px 26px; }
+  .filecopy .fc-act--brief .fc-wrap { padding-left: calc(var(--gutter) + 10px); }
+  .fc-redact-card { padding: 18px 18px 20px; }
+  .fc-redact { font-size: 18px; }
+  /* A real tap target for the bar, without shifting the line box. */
+  .fc-redact__toggle { padding: 10px 4px; margin: -10px -4px; }
+
+  /* III · exhibit A: the tags stack, and the divider turns into a rule
+     that reads across rather than down. */
+  .fc-tags { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .fc-tag { padding: 18px 18px; align-items: flex-end; }
+  .fc-tag--high { transform: none; }
+  .fc-tag__price { font-size: clamp(28px, 8.4vw, 36px); }
+
+  .fc-tags__divider {
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+    padding: 2px 0;
+  }
+
+  .fc-tags__line {
+    width: clamp(40px, 22vw, 110px);
+    height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      var(--accent) 0 4px,
+      transparent 4px 9px
+    );
+  }
+
+  /* IV · the name */
+  .fc-name { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .fc-act--name { padding-top: clamp(150px, 42vw, 260px); }
+  .fc-act--name .fc-act__scrim--soft {
+    background: linear-gradient(
+      to bottom,
+      rgba(14, 13, 11, 0.42) 0%,
+      rgba(14, 13, 11, 0.86) 42%,
+      rgba(14, 13, 11, 0.96) 100%
+    );
+  }
+
+  /* V · the reel becomes a swipe. No pin, no scrub, native momentum. */
+  .fc-reel {
+    height: auto;
+    display: block;
+    padding: 0;
+  }
+
+  .fc-reel__viewport { overflow: visible; max-height: none; }
+  .fc-frame { min-height: 0; }
+
+  .fc-reel__track {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scroll-padding-left: var(--gutter);
+    padding: 4px var(--gutter) 20px;
+    gap: 12px;
+    scrollbar-width: none;
+    transform: none !important;
+  }
+
+  .fc-reel__track::-webkit-scrollbar { display: none; }
+
+  .fc-frame {
+    width: min(86vw, 420px);
+    scroll-snap-align: center;
+  }
+
+  .fc-frame__body { padding: 20px 18px 22px; gap: 14px; }
+  .fc-frame__lede { font-size: clamp(20px, 5.6vw, 25px); }
+  .fc-frame__foot { font-size: 14.5px; }
+  .fc-reel__hint-desk { display: none; }
+  .fc-reel__hint-touch { display: inline; }
+  .fc-reel__headrow { margin-bottom: 22px; }
+  .fc-act--reel { padding-bottom: var(--act-y); }
+
+  /* VI · exhibit B */
+  .fc-quotes { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .fc-slip { order: -1; min-height: 0; }
+  .fc-slip__body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: center; }
+  .fc-slip__price { grid-row: span 2; font-size: 34px; }
+  .fc-slip__rows { margin: 0; border-top: none; }
+  .fc-slip__rows > div { padding: 5px 0; border-bottom: none; font-size: 10px; }
+  .fc-slip__note { grid-column: 1 / -1; margin-top: 8px; }
+  .fc-exhibit__meta { text-align: left; }
+
+  .fc-lane {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 2px 0;
+  }
+
+  .fc-lane__key {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    text-align: left;
+  }
+
+  /* Taller lanes: the whole lane is the tap target, so it has to be one. */
+  .fc-lane__track { height: 46px; }
+  .fc-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; }
+  .fc-quotes__plot { padding: 16px 14px 12px; }
+
+  /* VII · exhibit C */
+  .fc-sheet__ledger { padding: 18px 14px; }
+  .fc-sheet__after { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+
+  /* VIII · findings: a stack of paper, overlapped and alternately
+     tilted, rather than three cards in a column. */
+  .fc-file { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 34px; }
+  .fc-card { padding: 20px 20px 24px; }
+  .fc-card:nth-child(1) { transform: rotate(-0.7deg); }
+  .fc-card:nth-child(2) { transform: rotate(0.6deg); margin-top: -10px; }
+  .fc-card:nth-child(3) { transform: rotate(-0.4deg); margin-top: -10px; }
+  .fc-card__head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .fc-card__title { font-size: clamp(20px, 5.6vw, 24px); }
+  .fc-card__plate { height: 136px; }
+  .fc-card__inner { padding: 20px 20px 24px; }
+  .fc-limits { flex-direction: column; gap: 14px; }
+
+  /* IX · stakes */
+  .fc-honesty { grid-template-columns: minmax(0, 1fr); }
+  .fc-honesty li { padding: 20px 18px; }
+  .fc-cta { text-align: left; }
+  .fc-cta__buttons { justify-content: flex-start; }
+  .fc-btn { width: 100%; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .fc-file { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .fc-card:nth-child(3) { grid-column: span 2; }
+  .fc-honesty { grid-template-columns: minmax(0, 1fr); }
+  .fc-quotes { grid-template-columns: minmax(0, 1fr); }
+  .fc-slip { order: -1; min-height: 0; }
+  .fc-frame { width: min(480px, 72vw); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Everything already rests at its final state; this only stops the
+     transitions that are not GSAP's. */
+  .filecopy *,
+  .fc-ribbon * { transition: none !important; }
+  .fc-plate__shift { will-change: auto; }
+}
+
+/* ——— review pass: interaction, focus, touch and typographic polish ———
+   Findings from the Web Interface Guidelines review, applied in one place
+   so the rules and their fixes stay legible. */
+
+/* Every interactive thing on this page states its focus ring. The CTA
+   pair had hover but no keyboard affordance. */
+.filecopy .fc-btn:focus-visible,
+.filecopy .fc-slip__pull:focus-visible,
+.filecopy .fc-attrib a:focus-visible,
+.filecopy .fc-sources a:focus-visible,
+.filecopy .fc-fn a:focus-visible,
+.filecopy .fc-body a:focus-visible,
+.filecopy .fc-note a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.filecopy .fc-btn:focus-visible { outline-color: var(--film-ink); }
+
+/* No 300ms tap delay, and a tap highlight chosen rather than inherited. */
+.filecopy a,
+.filecopy button,
+.filecopy summary,
+.filecopy [tabindex="0"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(193, 95, 60, 0.18);
+}
+
+/* Anchor targets clear the sticky header rather than landing under it. */
+.filecopy [id] { scroll-margin-top: calc(var(--header-rail-h) + 16px); }
+
+/* Headings set their own rag instead of leaving an orphan. The hero and
+   the act heads that carry explicit line spans are excluded: their breaks
+   are authored, and balancing would fight them. */
+.fc-h2:not([data-lines]),
+.fc-card__title,
+.fc-frame__lede,
+.fc-honesty h3 { text-wrap: balance; }
+
+.fc-open__lede,
+.fc-body,
+.fc-lede,
+.fc-card__body { text-wrap: pretty; }

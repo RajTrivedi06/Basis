@@ -1,5 +1,5 @@
 /**
- * Display labels for the four canonical provider names used across
+ * Display labels for the canonical provider names used across
  * canonical_offers.provider. Keep this list in sync with the collectors
  * registered in backend/basis/collectors/__init__.py.
  *
@@ -11,6 +11,8 @@ export const PROVIDER_LABELS: Record<string, string> = {
   vast: "Vast.ai",
   runpod: "RunPod",
   aws_spot: "AWS Spot",
+  azure: "Azure",
+  gcp: "Google Cloud",
   tensordock: "TensorDock",
 };
 
