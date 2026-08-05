@@ -7988,40 +7988,244 @@ body:has(.filecopy) footer {
 
 /* ——— VIII · findings ————————————————————————————————————————— */
 
+/* A desk blotter the sheets land on — not a sticky board, just the
+   surface that makes paper cast a real shadow. */
 .fc-file {
+  --paper-grain: var(--grain);
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(12px, 1.6vw, 20px);
-  margin-top: clamp(40px, 6vw, 64px);
+  gap: 0;
+  margin-top: clamp(36px, 5.5vw, 56px);
+  padding: clamp(18px, 2.4vw, 32px) clamp(8px, 1.2vw, 16px)
+    clamp(28px, 3.6vw, 44px);
   align-items: start;
+  background:
+    radial-gradient(
+      120% 80% at 50% 40%,
+      rgba(250, 249, 245, 0.55) 0%,
+      transparent 62%
+    ),
+    linear-gradient(165deg, #E4DCCE 0%, #D8CFBD 48%, #E8E0D2 100%);
+  border: 1px solid rgba(31, 29, 26, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 18px 40px rgba(31, 29, 26, 0.06);
+}
+
+.fc-file::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--paper-grain);
+  opacity: 0.045;
+  mix-blend-mode: multiply;
 }
 
 .fc-card {
   --fc-lift: 1;
+  --fc-paper: #F7F1E6;
+  --fc-ink: var(--ink);
+  --fc-ink-mid: var(--ink-mid);
+  --fc-ink-dim: var(--ink-dim);
+  --fc-rule: rgba(31, 29, 26, 0.12);
   position: relative;
+  z-index: 1;
   min-width: 0;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  box-shadow: 0 calc(16px * var(--fc-lift)) calc(44px * var(--fc-lift))
-    rgba(31, 29, 26, calc(0.09 * var(--fc-lift)));
-  padding: 22px 24px 26px;
+  padding: 22px 22px 26px;
+  color: var(--fc-ink);
+  background-color: var(--fc-paper);
+  border: 1px solid rgba(31, 29, 26, 0.14);
+  border-radius: 1px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 calc(1px + 2px * var(--fc-lift)) calc(3px + 4px * var(--fc-lift))
+      rgba(31, 29, 26, calc(0.08 * var(--fc-lift))),
+    0 calc(10px * var(--fc-lift)) calc(28px * var(--fc-lift))
+      rgba(31, 29, 26, calc(0.14 * var(--fc-lift)));
 }
 
-/* Three sheets dropped by a person, not a grid: each keeps the angle and
-   offset it landed at. */
-.fc-card:nth-child(1) { transform: rotate(-1.4deg) translateY(8px); z-index: 2; }
-.fc-card:nth-child(2) { transform: rotate(1.1deg) translateY(-10px); z-index: 4; }
-.fc-card:nth-child(3) { transform: rotate(-0.7deg) translateY(16px); z-index: 3; }
-
-.fc-card--dark {
-  background: var(--residual);
-  border-color: var(--residual);
-  color: var(--film-ink);
+/* Fibre in the stock — every sheet, quieter than the desk grain. */
+.fc-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--paper-grain);
+  opacity: 0.055;
+  mix-blend-mode: multiply;
+  z-index: 0;
 }
 
-.fc-card--plate { padding: 0; overflow: hidden; }
-.fc-card__plate { position: relative; height: 172px; }
-.fc-card__inner { padding: 22px 24px 26px; }
+/* Soft dog-ear on the top-right corner. */
+.fc-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  background: linear-gradient(
+    225deg,
+    rgba(31, 29, 26, 0.07) 0%,
+    rgba(31, 29, 26, 0.07) 48%,
+    transparent 50%
+  );
+  z-index: 2;
+}
+
+.fc-card > * { position: relative; z-index: 1; }
+
+/* Three different landings — a spill, not a grid. */
+.fc-card:nth-child(1) {
+  transform: rotate(-2.6deg) translate(2px, 22px);
+  z-index: 2;
+}
+.fc-card:nth-child(2) {
+  transform: rotate(2.8deg) translate(-10px, -18px);
+  z-index: 4;
+  margin-left: -18px;
+  margin-right: -18px;
+}
+.fc-card:nth-child(3) {
+  transform: rotate(-1.8deg) translate(4px, 26px);
+  z-index: 3;
+}
+
+.fc-card__folio {
+  display: block;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--fc-rule);
+  font-family: var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fc-ink-dim);
+}
+
+/* 1 · Thermal fax — cool grey stock, scan banding, perforated leader. */
+.fc-card--fax {
+  --fc-paper: #E7E4DC;
+  --fc-ink: #1C1B18;
+  --fc-ink-mid: #4A463E;
+  --fc-ink-dim: #7A7468;
+  --fc-rule: rgba(28, 27, 24, 0.18);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 3px,
+      rgba(28, 27, 24, 0.025) 3px 4px
+    ),
+    linear-gradient(180deg, #EFECE4 0%, #E7E4DC 40%, #DEDAD0 100%);
+  border-color: rgba(28, 27, 24, 0.22);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 calc(1px + 2px * var(--fc-lift)) calc(3px + 4px * var(--fc-lift))
+      rgba(31, 29, 26, calc(0.1 * var(--fc-lift))),
+    0 calc(12px * var(--fc-lift)) calc(30px * var(--fc-lift))
+      rgba(31, 29, 26, calc(0.16 * var(--fc-lift)));
+}
+
+.fc-card--fax .fc-card__folio {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-image: repeating-linear-gradient(
+      to right,
+      var(--fc-ink-dim) 0 6px,
+      transparent 6px 10px
+    )
+    1;
+  letter-spacing: 0.22em;
+}
+
+/* 2 · Ruled index / memo card — manila, blue guidelines, red margin. */
+.fc-card--memo {
+  --fc-paper: #F3E6C8;
+  --fc-ink: #2A2418;
+  --fc-ink-mid: #5C5344;
+  --fc-ink-dim: #8A7E68;
+  --fc-rule: rgba(70, 110, 150, 0.28);
+  background-color: #F3E6C8;
+  background-image:
+    linear-gradient(
+      to right,
+      transparent 0,
+      transparent 28px,
+      rgba(180, 64, 48, 0.35) 28px,
+      rgba(180, 64, 48, 0.35) 29px,
+      transparent 29px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 27px,
+      rgba(70, 110, 150, 0.22) 27px 28px
+    );
+  border-color: rgba(90, 70, 40, 0.28);
+  padding-left: 36px;
+}
+
+.fc-card--memo .fc-card__folio {
+  border-bottom-color: rgba(180, 64, 48, 0.35);
+  border-bottom-style: solid;
+}
+
+.fc-card--memo .fc-figure__value { color: #2A2418; }
+
+/* 3 · Bond sheet with a clipped photograph — cream letter stock. */
+.fc-card--clip {
+  --fc-paper: #FAF6EE;
+  --fc-ink: var(--ink);
+  --fc-ink-mid: var(--ink-mid);
+  --fc-ink-dim: var(--ink-dim);
+  --fc-rule: rgba(31, 29, 26, 0.14);
+  padding: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, #FFFCF6 0%, #FAF6EE 55%, #F3EDE2 100%);
+  border-color: rgba(31, 29, 26, 0.16);
+}
+
+.fc-card--clip .fc-card__folio {
+  margin: 14px 18px 0;
+  padding-bottom: 8px;
+}
+
+.fc-card__plate {
+  position: relative;
+  height: 158px;
+  margin: 12px 14px 0;
+  border: 1px solid rgba(31, 29, 26, 0.2);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65) inset,
+    0 6px 14px rgba(31, 29, 26, 0.12);
+  background: #1A1814;
+}
+
+/* Tiny paperclip mark at the top of the photo. */
+.fc-card__plate::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  z-index: 3;
+  width: 14px;
+  height: 28px;
+  transform: translateX(-50%);
+  border: 1.5px solid rgba(120, 120, 118, 0.85);
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(200, 200, 198, 0.35),
+    rgba(240, 240, 238, 0.55),
+    rgba(200, 200, 198, 0.35)
+  );
+  box-shadow: 0 1px 2px rgba(31, 29, 26, 0.2);
+}
+
+.fc-card__inner { padding: 16px 20px 24px; }
 
 .fc-card__head {
   display: flex;
@@ -8032,33 +8236,28 @@ body:has(.filecopy) footer {
   font-size: 9px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-dim);
+  color: var(--fc-ink-dim);
 }
 
-.fc-card--dark .fc-card__head { color: var(--film-faint); }
-
 .fc-card__title {
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   font-size: clamp(21px, 2.1vw, 26px);
   font-weight: 500;
   line-height: 1.16;
   letter-spacing: -0.02em;
-  color: var(--ink-hi);
+  color: var(--fc-ink);
 }
-
-.fc-card--dark .fc-card__title { color: var(--film-ink); }
 
 .fc-card__body {
   margin: 12px 0 0;
   font-size: 14.5px;
   line-height: 1.62;
-  color: var(--ink-mid);
+  color: var(--fc-ink-mid);
 }
 
-.fc-card--dark .fc-card__body { color: var(--film-dim); }
 .fc-card__body a { color: var(--accent); text-decoration: underline; }
 
-.fc-bars { margin-top: 20px; display: flex; flex-direction: column; gap: 13px; }
+.fc-bars { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
 
 .fc-bar__label {
   display: flex;
@@ -8068,19 +8267,23 @@ body:has(.filecopy) footer {
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--film-faint);
+  color: var(--fc-ink-dim);
 }
 
-.fc-bar__value { color: var(--film-ink); font-variant-numeric: tabular-nums; }
+.fc-bar__value {
+  color: var(--fc-ink);
+  font-variant-numeric: tabular-nums;
+}
 
 .fc-bar__track {
   margin-top: 5px;
-  height: 11px;
-  background: rgba(250, 249, 245, 0.08);
+  height: 10px;
+  background: rgba(31, 29, 26, 0.08);
+  border: 1px solid rgba(31, 29, 26, 0.1);
 }
 
 .fc-bar__fill { display: block; height: 100%; }
-.fc-bar__fill--pale { background: var(--film-mid); }
+.fc-bar__fill--pale { background: #8A8374; }
 .fc-bar__fill--accent { background: var(--accent); }
 
 .fc-bars__delta {
@@ -8100,17 +8303,23 @@ body:has(.filecopy) footer {
   font-size: 9.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--film-faint);
+  color: var(--fc-ink-dim);
 }
 
-.fc-figure { display: flex; align-items: baseline; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+.fc-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
 
 .fc-figure__value {
   font-size: clamp(40px, 4.4vw, 54px);
   font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 0.9;
-  color: var(--residual);
+  color: var(--fc-ink);
   font-variant-numeric: tabular-nums;
 }
 
@@ -8120,17 +8329,17 @@ body:has(.filecopy) footer {
   line-height: 1.7;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-mid);
+  color: var(--fc-ink-mid);
   max-width: 20ch;
 }
 
-.fc-range { display: flex; align-items: baseline; gap: 12px; margin-top: 16px; }
+.fc-range { display: flex; align-items: baseline; gap: 12px; margin-top: 14px; }
 
 .fc-range .serif {
   font-size: clamp(32px, 3.4vw, 42px);
   font-weight: 500;
   letter-spacing: -0.03em;
-  color: var(--residual);
+  color: var(--fc-ink);
   font-variant-numeric: tabular-nums;
 }
 
@@ -8139,10 +8348,17 @@ body:has(.filecopy) footer {
   font-size: 9.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-dim);
+  color: var(--fc-ink-dim);
 }
 
-.fc-sens { list-style: none; margin: 0 0 10px; padding: 0; display: flex; gap: 14px; flex-wrap: wrap; }
+.fc-sens {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
 
 .fc-sens li {
   display: flex;
@@ -8150,14 +8366,21 @@ body:has(.filecopy) footer {
   gap: 2px;
   font-family: var(--f-mono);
   font-size: 11px;
-  color: var(--ink);
+  color: var(--fc-ink);
 }
 
-.fc-sens li span:first-child { color: var(--ink-dim); font-size: 9.5px; letter-spacing: 0.12em; }
+.fc-sens li span:first-child {
+  color: var(--fc-ink-dim);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+}
 
-/* The house disclosure, dressed for these cards. */
-.fc-card .two-layer__more { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
-.fc-card--dark .two-layer__more { border-color: var(--film-line); }
+/* Disclosure, dressed for paper. */
+.fc-card .two-layer__more {
+  margin-top: 16px;
+  border-top: 1px dashed var(--fc-rule);
+  padding-top: 12px;
+}
 
 .fc-card .two-layer__toggle {
   font-family: var(--f-mono);
@@ -8178,13 +8401,12 @@ body:has(.filecopy) footer {
 .fc-card .two-layer__body {
   font-size: 13.5px;
   line-height: 1.68;
-  color: var(--ink-mid);
+  color: var(--fc-ink-mid);
   border-left: 2px solid var(--accent-line);
   padding-left: 13px;
   margin-top: 10px;
 }
 
-.fc-card--dark .two-layer__body { color: var(--film-dim); border-left-color: #6B4231; }
 .fc-card .two-layer__body p { margin: 0; }
 
 .fc-limits {
@@ -8525,17 +8747,30 @@ body:has(.filecopy) footer {
   .fc-sheet__ledger { padding: 18px 14px; }
   .fc-sheet__after { grid-template-columns: minmax(0, 1fr); gap: 18px; }
 
-  /* VIII · findings: a stack of paper, overlapped and alternately
-     tilted, rather than three cards in a column. */
-  .fc-file { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 34px; }
-  .fc-card { padding: 20px 20px 24px; }
-  .fc-card:nth-child(1) { transform: rotate(-0.7deg); }
-  .fc-card:nth-child(2) { transform: rotate(0.6deg); margin-top: -10px; }
-  .fc-card:nth-child(3) { transform: rotate(-0.4deg); margin-top: -10px; }
+  /* VIII · findings: stacked spill on a short blotter. */
+  .fc-file {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-top: 28px;
+    padding: 16px 12px 22px;
+  }
+  .fc-card { padding: 18px 18px 22px; }
+  .fc-card--memo { padding-left: 32px; }
+  .fc-card--clip { padding: 0; }
+  .fc-card:nth-child(1) { transform: rotate(-1.2deg); }
+  .fc-card:nth-child(2) {
+    transform: rotate(1.1deg);
+    margin: -14px 0 0;
+  }
+  .fc-card:nth-child(3) {
+    transform: rotate(-0.8deg);
+    margin-top: -12px;
+  }
   .fc-card__head { flex-direction: column; align-items: flex-start; gap: 10px; }
   .fc-card__title { font-size: clamp(20px, 5.6vw, 24px); }
-  .fc-card__plate { height: 136px; }
-  .fc-card__inner { padding: 20px 20px 24px; }
+  .fc-card__plate { height: 128px; margin: 10px 12px 0; }
+  .fc-card__inner { padding: 14px 18px 22px; }
+  .fc-card__folio { margin-bottom: 10px; }
   .fc-limits { flex-direction: column; gap: 14px; }
 
   /* IX · stakes */
@@ -8547,8 +8782,18 @@ body:has(.filecopy) footer {
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-  .fc-file { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .fc-card:nth-child(3) { grid-column: span 2; }
+  .fc-file {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    padding: 20px 14px 28px;
+  }
+  .fc-card:nth-child(2) { margin-left: -8px; margin-right: -8px; }
+  .fc-card:nth-child(3) {
+    grid-column: span 2;
+    max-width: 72%;
+    justify-self: center;
+    margin-top: -8px;
+  }
   .fc-honesty { grid-template-columns: minmax(0, 1fr); }
   .fc-quotes { grid-template-columns: minmax(0, 1fr); }
   .fc-slip { order: -1; min-height: 0; }

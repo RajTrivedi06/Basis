@@ -618,8 +618,11 @@ export default async function StoryPage() {
           </h2>
 
           <FindingsFile>
-            {/* Card 1 — the bound. Values interpolate from the artifact (A6). */}
-            <article className="fc-card fc-card--dark">
+            {/* Sheet 1 — thermal fax: the bound. */}
+            <article className="fc-card fc-card--fax">
+              <span className="fc-card__folio" aria-hidden>
+                FAX TRANSMISSION · 01/03
+              </span>
               <header className="fc-card__head">
                 <span>Subject · observable bound</span>
                 <span className="fc-stamp">Bound, not victory</span>
@@ -680,8 +683,11 @@ export default async function StoryPage() {
               )}
             </article>
 
-            {/* Card 2 — host identity. */}
-            <article className="fc-card fc-card--paper">
+            {/* Sheet 2 — ruled index card: host identity. */}
+            <article className="fc-card fc-card--memo">
+              <span className="fc-card__folio" aria-hidden>
+                INDEX CARD · 02/03
+              </span>
               <header className="fc-card__head">
                 <span>Subject · host identity</span>
                 <span className="fc-stamp fc-stamp--green">
@@ -739,8 +745,11 @@ export default async function StoryPage() {
               )}
             </article>
 
-            {/* Card 3 — the moving series. Photographic plate. */}
-            <article className="fc-card fc-card--plate">
+            {/* Sheet 3 — bond sheet with a clipped photograph. */}
+            <article className="fc-card fc-card--clip">
+              <span className="fc-card__folio" aria-hidden>
+                ATTACHMENT · 03/03
+              </span>
               <div className="fc-card__plate">
                 <PlateFrame plate={FINDING_ANALYST} depth={0.14} />
               </div>
