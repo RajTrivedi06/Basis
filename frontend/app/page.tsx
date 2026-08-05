@@ -22,8 +22,11 @@ import {
 import {
   COLD_OPEN,
   FINDING_ANALYST,
-  NAME_STILL,
+  NAME_BACKDROP,
+  PUZZLE_HYPERSCALER,
+  PUZZLE_MARKETPLACE,
   STAKES_FLOOR,
+  type PlateSpec,
 } from "@/lib/plates";
 import {
   buildLedger,
@@ -366,9 +369,9 @@ export default async function StoryPage() {
         <div className="fc-wrap">
           <span className="fc-eyebrow fc-eyebrow--accent">02 · Exhibit A</span>
 
-          {bounds ? (
-            <>
-              <h2 id="fc-exhibit-a" className="fc-h2 serif" data-lines>
+          <h2 id="fc-exhibit-a" className="fc-h2 serif" data-lines>
+            {bounds ? (
+              <>
                 <span className="fc-line">
                   <span>Same accelerator.</span>
                 </span>
@@ -378,124 +381,59 @@ export default async function StoryPage() {
                 <span className="fc-line">
                   <span>{bounds.multiple.toFixed(1)}× apart.</span>
                 </span>
-              </h2>
+              </>
+            ) : (
+              <>
+                <span className="fc-line">
+                  <span>Two quotes for the same</span>
+                </span>
+                <span className="fc-line">
+                  <span>{HERO_SKU_DISPLAY}.</span>
+                </span>
+              </>
+            )}
+          </h2>
 
-              <p className="fc-body fc-exhibit__lede" data-stamp>
-                Same {HERO_SKU_DISPLAY} accelerator, same collection day — but
-                different provider, region, and commitment structure. The hero
-                quoted p5 and p95 across {bounds.sampleSize}{" "}
-                {commitmentLabel(bounds.lowOffer.commitment)} quotes (
-                {usd(bounds.low)} and {usd(bounds.high)}). Below are the
-                nearest real offers to each bound.
-              </p>
-
-              <div className="fc-exhibit-matrix" data-stamp data-stamp-group>
-                <div className="fc-exhibit-matrix__head" aria-hidden>
-                  <span />
-                  <span>Quote A</span>
-                  <span>Quote B</span>
-                  <span />
-                </div>
-                <ExhibitMatrixRow
-                  label="GPU"
-                  a={HERO_SKU_DISPLAY}
-                  b={HERO_SKU_DISPLAY}
-                  same
-                />
-                <ExhibitMatrixRow
-                  label="Date"
-                  a={
-                    collectedAt
-                      ? shortDate(collectedAt)
-                      : shortDate(bounds.lowOffer.collectedAt)
-                  }
-                  b={
-                    collectedAt
-                      ? shortDate(collectedAt)
-                      : shortDate(bounds.highOffer.collectedAt)
-                  }
-                  same
-                />
-                <ExhibitMatrixRow
-                  label="Provider"
-                  a={providerLabel(bounds.lowOffer.provider)}
-                  b={providerLabel(bounds.highOffer.provider)}
-                  same={
-                    bounds.lowOffer.provider === bounds.highOffer.provider
-                  }
-                />
-                <ExhibitMatrixRow
-                  label="Region"
-                  a={regionLabel(bounds.lowOffer.region)}
-                  b={regionLabel(bounds.highOffer.region)}
-                  same={bounds.lowOffer.region === bounds.highOffer.region}
-                />
-                <ExhibitMatrixRow
-                  label="Contract"
-                  a={commitmentLabel(bounds.lowOffer.commitment)}
-                  b={commitmentLabel(bounds.highOffer.commitment)}
-                  same={
-                    bounds.lowOffer.commitment === bounds.highOffer.commitment
-                  }
-                  emphasize
-                />
-                <ExhibitMatrixRow
-                  label="Price"
-                  a={usd(bounds.lowOffer.price)}
-                  b={usd(bounds.highOffer.price)}
-                  outcome={bounds.multiple}
-                />
+          {bounds ? (
+            <div className="fc-tags" data-stamp>
+              <PriceTag
+                offer={bounds.lowOffer}
+                plate={PUZZLE_MARKETPLACE}
+              />
+              <div className="fc-tags__divider" aria-hidden>
+                <svg
+                  className="fc-tags__bracket"
+                  viewBox="0 0 28 140"
+                  role="presentation"
+                >
+                  <BracketMark
+                    orientation="vertical"
+                    spine={14}
+                    start={10}
+                    length={120}
+                    tone="ink"
+                    tick={5}
+                    strokeWidth={1.2}
+                  />
+                </svg>
+                <span className="fc-tags__aside">
+                  <span>same</span>
+                  <span>hardware</span>
+                  <span>same</span>
+                  <span>day</span>
+                </span>
               </div>
-
-              <div className="fc-exhibit-quotes" data-stamp>
-                <ExhibitQuote
-                  label="Quote A"
-                  offer={bounds.lowOffer}
-                  boundLabel={`p5 · ${usd(bounds.low)}`}
-                />
-                <div className="fc-exhibit-quotes__gap" aria-hidden>
-                  <span className="fc-exhibit-quotes__multiple">
-                    {bounds.multiple.toFixed(1)}×
-                  </span>
-                  <svg
-                    className="fc-exhibit-quotes__bracket"
-                    viewBox="0 0 220 30"
-                    role="presentation"
-                  >
-                    <BracketMark
-                      orientation="horizontal"
-                      spine={16}
-                      start={6}
-                      length={208}
-                      tone="ink"
-                      tick={5}
-                      strokeWidth={1.2}
-                    />
-                  </svg>
-                </div>
-                <ExhibitQuote
-                  label="Quote B"
-                  offer={bounds.highOffer}
-                  boundLabel={`p95 · ${usd(bounds.high)}`}
-                  high
-                />
-              </div>
-
-              <p className="fc-exhibit__bridge serif" data-stamp>
-                Some of that difference should be explainable.{" "}
-                <strong>The question is how much.</strong>
-              </p>
-            </>
+              <PriceTag
+                offer={bounds.highOffer}
+                plate={PUZZLE_HYPERSCALER}
+                high
+              />
+            </div>
           ) : (
-            <>
-              <h2 id="fc-exhibit-a" className="fc-h2 serif">
-                Two quotes for the same {HERO_SKU_DISPLAY}.
-              </h2>
-              <p className="fc-body">
-                Live quotes are momentarily unavailable. The dispersion page keeps
-                the full record.
-              </p>
-            </>
+            <p className="fc-body">
+              Live quotes are momentarily unavailable. The dispersion page keeps
+              the full record.
+            </p>
           )}
         </div>
       </section>
@@ -507,9 +445,9 @@ export default async function StoryPage() {
         data-nav-backdrop="film"
       >
         <PlateFrame
-          plate={NAME_STILL}
+          plate={NAME_BACKDROP}
           depth={0.1}
-          className="fc-plate--mobile-only"
+          className="fc-plate--anchor-right"
           showSlate={false}
         />
         <div className="fc-act__scrim fc-act__scrim--soft" aria-hidden />
@@ -1197,85 +1135,56 @@ function MethodDepletion({
   );
 }
 
-function ExhibitMatrixRow({
-  label,
-  a,
-  b,
-  same,
-  emphasize = false,
-  outcome,
-}: {
-  label: string;
-  a: string;
-  b: string;
-  same?: boolean;
-  emphasize?: boolean;
-  outcome?: number;
-}) {
-  const status =
-    outcome !== undefined
-      ? `${outcome.toFixed(1)}×`
-      : same
-        ? "Same"
-        : "Different";
-
-  return (
-    <div
-      className={`fc-exhibit-matrix__row${
-        emphasize ? " fc-exhibit-matrix__row--emphasize" : ""
-      }${outcome !== undefined ? " fc-exhibit-matrix__row--outcome" : ""}`}
-    >
-      <span className="fc-exhibit-matrix__label">{label}</span>
-      <span className="fc-exhibit-matrix__cell">{a}</span>
-      <span className="fc-exhibit-matrix__cell">{b}</span>
-      <span
-        className={`fc-exhibit-matrix__status${
-          outcome !== undefined
-            ? " fc-exhibit-matrix__status--outcome"
-            : same
-              ? " fc-exhibit-matrix__status--same"
-              : " fc-exhibit-matrix__status--diff"
-        }`}
-      >
-        {status}
-      </span>
-    </div>
-  );
-}
-
-function ExhibitQuote({
-  label,
+function PriceTag({
   offer,
-  boundLabel,
+  plate,
   high = false,
 }: {
-  label: string;
   offer: HeroBounds["lowOffer"];
-  boundLabel: string;
+  plate: PlateSpec;
   high?: boolean;
 }) {
   return (
-    <article
-      className={`fc-exhibit-quote${high ? " fc-exhibit-quote--high" : ""}`}
-    >
-      <div className="fc-exhibit-quote__head">
-        <span className="fc-exhibit-quote__label">{label}</span>
-        <span className="fc-exhibit-quote__bound">{boundLabel}</span>
+    <article className={`fc-tag${high ? " fc-tag--high" : ""}`}>
+      <div className="fc-tag__media" aria-hidden>
+        <picture>
+          {plate.sources.map((source) => (
+            <source
+              key={source.srcSet}
+              media={source.media}
+              srcSet={source.srcSet}
+              type="image/webp"
+            />
+          ))}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="fc-tag__img"
+            src={plate.src}
+            alt=""
+            width={plate.width}
+            height={plate.height}
+            loading="lazy"
+            decoding="async"
+            style={
+              {
+                "--fc-pos": plate.position ?? "50% 50%",
+              } as React.CSSProperties
+            }
+          />
+        </picture>
       </div>
-      <p className="fc-exhibit-quote__id">Quote #{offer.id}</p>
-      <p className="fc-exhibit-quote__terms serif">
-        {providerLabel(offer.provider)} · {regionLabel(offer.region)} ·{" "}
-        <span className="fc-exhibit-quote__contract">
-          {commitmentLabel(offer.commitment)}
-        </span>
-      </p>
-      <p className="fc-exhibit-quote__price serif">{usd(offer.price)}</p>
-      <p className="fc-exhibit-quote__meta">
-        Provider response · collected {stampDate(offer.collectedAt)}
-      </p>
-      <Link className="fc-exhibit-quote__link" href={`/basis?sku=${HERO_SKU}`}>
-        Inspect quote →
-      </Link>
+      <div className="fc-tag__foot">
+        <div className="fc-tag__meta">
+          <span className="fc-tag__sku" translate="no">
+            {HERO_SKU_DISPLAY}
+          </span>
+          <span className="fc-tag__where">
+            {providerLabel(offer.provider)} · {regionLabel(offer.region)} ·{" "}
+            {commitmentLabel(offer.commitment)}
+          </span>
+        </div>
+        <div className="fc-tag__price serif">{usd(offer.price)}</div>
+      </div>
     </article>
   );
 }
