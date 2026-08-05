@@ -19,6 +19,17 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const SHEET_COUNT = 3;
 
+const THROW_FROM = [
+  { xPercent: -62, yPercent: 38, rotate: -16, scale: 0.94 },
+  { xPercent: -10, yPercent: 72, rotate: 12, scale: 0.91 },
+  { xPercent: 52, yPercent: 50, rotate: -10, scale: 0.93 },
+];
+
+function clearSheetMotion(sheets: HTMLElement[], limitsEl: HTMLElement | null) {
+  gsap.set(sheets, { clearProps: "opacity,transform,x,y,xPercent,yPercent,rotate,scale" });
+  if (limitsEl) gsap.set(limitsEl, { clearProps: "opacity,transform,y" });
+}
+
 /**
  * Three documents spilled onto the blotter — a fax, an index card, a clipped
  * photograph sheet. The wrapper only throws; each child brings its own stock.
@@ -37,7 +48,7 @@ export function FindingsFile({
   const limitsRef = useRef<HTMLDivElement | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
-  const [settled, setSettled] = useState(false);
+  const [landed, setLanded] = useState(false);
   const active = pinned ?? hovered;
 
   const activate = useCallback((index: number) => {
@@ -50,32 +61,23 @@ export function FindingsFile({
       const wraps = () =>
         gsap.utils.toArray<HTMLElement>(".fc-card-wrap", root.current);
 
+      const finish = (sheets: HTMLElement[]) => {
+        clearSheetMotion(sheets, limitsRef.current);
+        setLanded(true);
+      };
+
       mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
         const sheets = wraps();
         if (sheets.length === 0) return;
 
-        // Deterministic throw paths — fax, index card, attachment, in order.
-        const throws = [
-          { xPercent: -62, yPercent: 38, rotate: -16, scale: 0.94 },
-          { xPercent: -10, yPercent: 72, rotate: 12, scale: 0.91 },
-          { xPercent: 52, yPercent: 50, rotate: -10, scale: 0.93 },
-        ];
-
+        const limitsEl = limitsRef.current;
         const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: root.current,
-            start: "top 92%",
-            end: "top 24%",
-            scrub: 0.65,
-            onUpdate: (self) => {
-              setSettled(self.progress >= 0.98);
-            },
-          },
+          paused: true,
+          onComplete: () => finish(sheets),
         });
 
         sheets.forEach((sheet, index) => {
-          const from = throws[index % throws.length];
-          const at = index * 0.14;
+          const from = THROW_FROM[index % THROW_FROM.length];
           tl.from(
             sheet,
             {
@@ -84,32 +86,46 @@ export function FindingsFile({
               rotate: from.rotate,
               scale: from.scale,
               opacity: 0,
+              duration: 0.72,
               ease: "back.out(1.15)",
-              duration: 1,
+              immediateRender: false,
             },
-            at
+            index * 0.12
           );
           tl.fromTo(
             sheet,
             { "--fc-lift": 0 },
-            { "--fc-lift": 1, ease: "power1.in", duration: 0.45 },
-            at + 0.38
+            { "--fc-lift": 1, ease: "power1.in", duration: 0.4 },
+            index * 0.12 + 0.32
           );
         });
 
-        const limitsEl = limitsRef.current;
         if (limitsEl) {
           tl.from(
             limitsEl,
-            { opacity: 0, y: 16, duration: 0.55, ease: "power2.out" },
-            0.52
+            { opacity: 0, y: 16, duration: 0.5, ease: "power2.out", immediateRender: false },
+            0.42
           );
         }
 
+        const st = ScrollTrigger.create({
+          trigger: root.current,
+          start: "top 88%",
+          once: true,
+          animation: tl,
+        });
+
+        ScrollTrigger.refresh();
+        if (st.progress > 0) {
+          tl.progress(1);
+          finish(sheets);
+        }
+
         return () => {
-          tl.scrollTrigger?.kill();
+          st.kill();
           tl.kill();
-          setSettled(false);
+          clearSheetMotion(sheets, limitsEl);
+          setLanded(false);
         };
       });
 
@@ -117,6 +133,7 @@ export function FindingsFile({
         const sheets = wraps();
         if (sheets.length === 0) return;
 
+        const limitsEl = limitsRef.current;
         const tweens = sheets.map((sheet, index) =>
           gsap.from(sheet, {
             y: 28,
@@ -124,18 +141,25 @@ export function FindingsFile({
             opacity: 0,
             duration: 0.55,
             ease: "power3.out",
-            scrollTrigger: { trigger: sheet, start: "top 94%", once: true },
-            onComplete: () => setSettled(true),
+            immediateRender: false,
+            scrollTrigger: {
+              trigger: sheet,
+              start: "top 94%",
+              once: true,
+              onEnter: () => {
+                if (index === sheets.length - 1) finish(sheets);
+              },
+            },
           })
         );
 
-        const limitsEl = limitsRef.current;
         if (limitsEl) {
           gsap.from(limitsEl, {
             opacity: 0,
             y: 12,
             duration: 0.5,
             ease: "power2.out",
+            immediateRender: false,
             scrollTrigger: { trigger: limitsEl, start: "top 94%", once: true },
           });
         }
@@ -145,13 +169,20 @@ export function FindingsFile({
             t.scrollTrigger?.kill();
             t.kill();
           });
-          setSettled(false);
+          clearSheetMotion(sheets, limitsEl);
+          setLanded(false);
         };
+      });
+
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        const sheets = wraps();
+        finish(sheets);
+        return () => setLanded(false);
       });
 
       return () => mm.revert();
     },
-    { scope: root, dependencies: [limits] }
+    { scope: root }
   );
 
   useEffect(() => {
@@ -238,8 +269,9 @@ export function FindingsFile({
         ref={root}
         className={[
           "fc-file",
+          landed ? "is-landed" : "",
           active !== null ? "has-front" : "",
-          settled ? "is-settled" : "",
+          landed ? "is-settled" : "",
         ]
           .filter(Boolean)
           .join(" ")}
