@@ -49,6 +49,38 @@ export const COLD_OPEN: PlateSpec = {
   positionMobile: "50% 28%",
 };
 
+/**
+ * Act III · Exhibit A — the cheap side of the puzzle: a marketplace host
+ * rack, unfinished room. Decoration only; type carries the live quote.
+ */
+export const PUZZLE_MARKETPLACE: PlateSpec = {
+  src: `${P}/puzzle-marketplace-2048.webp`,
+  width: 2048,
+  height: 1366,
+  sources: [
+    { media: "(max-width: 767px)", srcSet: `${P}/puzzle-marketplace-1024.webp` },
+    { srcSet: `${P}/puzzle-marketplace-2048.webp` },
+  ],
+  slate: "Plate 01a · marketplace",
+  position: "50% 45%",
+};
+
+/**
+ * Act III · Exhibit A — the costly side: an administered-catalog aisle.
+ * Paired with PUZZLE_MARKETPLACE; never states a figure on its own.
+ */
+export const PUZZLE_HYPERSCALER: PlateSpec = {
+  src: `${P}/puzzle-hyperscaler-2048.webp`,
+  width: 2048,
+  height: 1364,
+  sources: [
+    { media: "(max-width: 767px)", srcSet: `${P}/puzzle-hyperscaler-1024.webp` },
+    { srcSet: `${P}/puzzle-hyperscaler-2048.webp` },
+  ],
+  slate: "Plate 01b · hyperscaler",
+  position: "50% 50%",
+};
+
 /** Act IV, phones only: the sheet, the stamp, and the bracket drawn by hand. */
 export const NAME_STILL: PlateSpec = {
   src: `${P}/name-still-900.webp`,

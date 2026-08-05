@@ -19,7 +19,15 @@ import {
   titleCase,
   usd,
 } from "@/lib/fileCopy";
-import { COLD_OPEN, FINDING_ANALYST, NAME_STILL, STAKES_FLOOR } from "@/lib/plates";
+import {
+  COLD_OPEN,
+  FINDING_ANALYST,
+  NAME_STILL,
+  PUZZLE_HYPERSCALER,
+  PUZZLE_MARKETPLACE,
+  STAKES_FLOOR,
+  type PlateSpec,
+} from "@/lib/plates";
 import { providerLabel } from "@/lib/providerLabel";
 import {
   CATALOG_PROVIDERS,
@@ -306,19 +314,56 @@ export default async function StoryPage() {
           {bounds ? (
             <>
               <div className="fc-tags">
-                <PriceTag offer={bounds.lowOffer} />
+                <PriceTag
+                  offer={bounds.lowOffer}
+                  plate={PUZZLE_MARKETPLACE}
+                />
                 <div className="fc-tags__divider" aria-hidden>
-                  <span>same hardware</span>
-                  <span className="fc-tags__line" />
-                  <span>same day</span>
+                  <svg
+                    className="fc-tags__bracket"
+                    viewBox="0 0 28 140"
+                    role="presentation"
+                  >
+                    <BracketMark
+                      orientation="vertical"
+                      spine={14}
+                      start={10}
+                      length={120}
+                      tone="ink"
+                      tick={5}
+                      strokeWidth={1.2}
+                    />
+                  </svg>
+                  <span className="fc-tags__aside">
+                    <span>same</span>
+                    <span>hardware</span>
+                    <span>same</span>
+                    <span>day</span>
+                  </span>
                 </div>
-                <PriceTag offer={bounds.highOffer} high />
+                <PriceTag
+                  offer={bounds.highOffer}
+                  plate={PUZZLE_HYPERSCALER}
+                  high
+                />
               </div>
-              <p className="fc-note">
-                {bounds.crossProvider
-                  ? "Two sellers, one canonical chip, the same collection day. Nothing about the hardware accounts for the distance between them."
-                  : "One catalog, one canonical chip, the same collection day. Even inside a single seller, nothing about the hardware accounts for the distance between them."}
-              </p>
+              <div className="fc-field-note" data-stamp>
+                <p>
+                  Field note ·{" "}
+                  {providerLabel(bounds.lowOffer.provider)}{" "}
+                  {regionLabel(bounds.lowOffer.region)}{" "}
+                  {usd(bounds.lowOffer.price)} versus{" "}
+                  {providerLabel(bounds.highOffer.provider)}{" "}
+                  {regionLabel(bounds.highOffer.region)}{" "}
+                  {usd(bounds.highOffer.price)}.{" "}
+                  {bounds.crossProvider
+                    ? "Two sellers, one canonical chip, the same collection day."
+                    : "One catalog, one canonical chip, the same collection day."}
+                </p>
+                <span className="fc-field-note__multiple">
+                  {bounds.multiple.toFixed(1)}×
+                </span>
+              </div>
             </>
           ) : (
             <p className="fc-body">
@@ -880,25 +925,55 @@ function RegistryRow({
 
 function PriceTag({
   offer,
+  plate,
   high = false,
 }: {
   offer: HeroBounds["lowOffer"];
+  plate: PlateSpec;
   high?: boolean;
 }) {
   return (
-    <div className={`fc-tag${high ? " fc-tag--high" : ""}`} data-stamp>
-      <div className="fc-tag__meta">
-        <span className="fc-tag__sku" translate="no">{HERO_SKU}</span>
-        <span className="fc-tag__where">
-          {providerLabel(offer.provider)} · {regionLabel(offer.region)} ·{" "}
-          {commitmentLabel(offer.commitment)}
-        </span>
+    <article className={`fc-tag${high ? " fc-tag--high" : ""}`} data-stamp>
+      <div className="fc-tag__media" aria-hidden>
+        <picture>
+          {plate.sources.map((source) => (
+            <source
+              key={source.srcSet}
+              media={source.media}
+              srcSet={source.srcSet}
+              type="image/webp"
+            />
+          ))}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="fc-tag__img"
+            src={plate.src}
+            alt=""
+            width={plate.width}
+            height={plate.height}
+            loading="lazy"
+            decoding="async"
+            style={
+              {
+                "--fc-pos": plate.position ?? "50% 50%",
+              } as React.CSSProperties
+            }
+          />
+        </picture>
       </div>
-      <div className="fc-tag__price serif">
-        {usd(offer.price)}
-        <span>/hr</span>
+      <div className="fc-tag__foot">
+        <div className="fc-tag__meta">
+          <span className="fc-tag__sku" translate="no">
+            {HERO_SKU}
+          </span>
+          <span className="fc-tag__where">
+            {providerLabel(offer.provider)} · {regionLabel(offer.region)} ·{" "}
+            {commitmentLabel(offer.commitment)}
+          </span>
+        </div>
+        <div className="fc-tag__price serif">{usd(offer.price)}</div>
       </div>
-    </div>
+    </article>
   );
 }
 

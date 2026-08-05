@@ -6545,6 +6545,7 @@ button {
 
 /* Film acts */
 .fc-act--open,
+.fc-act--exhibit-a,
 .fc-act--name,
 .fc-act--reel,
 .fc-act--stakes {
@@ -6553,6 +6554,7 @@ button {
 }
 
 .fc-act--open::after,
+.fc-act--exhibit-a::after,
 .fc-act--name::after,
 .fc-act--reel::after,
 .fc-act--stakes::after {
@@ -6562,12 +6564,10 @@ button {
 
 /* Paper acts */
 .fc-act--brief { background: var(--bg); }
-.fc-act--exhibit-a { background: var(--panel); }
 .fc-act--exhibit-b { background: var(--bg); }
 .fc-act--exhibit-c { background: var(--bg-deep); }
 .fc-act--findings { background: var(--paper-warm); }
 
-.fc-act--exhibit-a,
 .fc-act--exhibit-b,
 .fc-act--exhibit-c,
 .fc-act--findings { border-top: 1px solid var(--line); }
@@ -6627,11 +6627,13 @@ button {
 .fc-eyebrow--accent { color: var(--accent); }
 
 .fc-act--open .fc-eyebrow,
+.fc-act--exhibit-a .fc-eyebrow,
 .fc-act--name .fc-eyebrow,
 .fc-act--reel .fc-eyebrow,
 .fc-act--stakes .fc-eyebrow { color: var(--film-faint); }
 
 .fc-act--open .fc-eyebrow--accent,
+.fc-act--exhibit-a .fc-eyebrow--accent,
 .fc-act--name .fc-eyebrow--accent,
 .fc-act--reel .fc-eyebrow--accent,
 .fc-act--stakes .fc-eyebrow--accent { color: #D98A64; }
@@ -6651,9 +6653,12 @@ button {
 /* Any heading or body copy inside a film act inverts without needing a
    modifier: the ground decides the colour, not the call site. */
 .fc-act--open .fc-h2,
+.fc-act--exhibit-a .fc-h2,
 .fc-act--name .fc-h2,
 .fc-act--reel .fc-h2,
 .fc-act--stakes .fc-h2 { color: var(--film-ink); }
+
+.fc-act--exhibit-a .fc-body { color: var(--film-mid); }
 
 .fc-act--name .fc-body,
 .fc-act--reel .fc-body,
@@ -7296,28 +7301,54 @@ body:has(.filecopy) footer {
 .fc-tags {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(16px, 2.6vw, 40px);
+  align-items: stretch;
+  gap: clamp(14px, 2.2vw, 28px);
   margin-top: clamp(32px, 5vw, 56px);
 }
 
 .fc-tag {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  padding: 24px 26px;
-  border: 1px solid var(--line-hi);
-  background: var(--bg);
+  flex-direction: column;
   min-width: 0;
+  overflow: hidden;
+  background: var(--film-panel);
+  border: 1px solid transparent;
 }
 
-/* The costly side is the one that carries the accent line, so the pair
-   is asymmetric on purpose: these two are not peers. */
+/* The costly side carries the accent frame — the pair is asymmetric
+   on purpose: these two are not peers. */
 .fc-tag--high {
-  border-color: var(--accent-line);
-  background: var(--accent-bg);
-  transform: translateY(-14px);
+  border-color: rgba(193, 95, 60, 0.55);
+}
+
+.fc-tag__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #0A0908;
+}
+
+.fc-tag__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--fc-pos, 50% 50%);
+  display: block;
+}
+
+.fc-tag__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 16px 18px 18px;
+  background: rgba(14, 13, 11, 0.92);
+  border-top: 1px solid rgba(250, 249, 245, 0.08);
+}
+
+.fc-tag--high .fc-tag__foot {
+  background: rgba(40, 24, 18, 0.94);
+  border-top-color: rgba(193, 95, 60, 0.28);
 }
 
 .fc-tag__meta { min-width: 0; }
@@ -7325,8 +7356,8 @@ body:has(.filecopy) footer {
 .fc-tag__sku {
   display: block;
   font-family: var(--f-mono);
-  font-size: 11.5px;
-  color: var(--ink);
+  font-size: 12px;
+  color: var(--film-ink);
   overflow-wrap: anywhere;
 }
 
@@ -7337,7 +7368,7 @@ body:has(.filecopy) footer {
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-dim);
+  color: var(--film-faint);
 }
 
 .fc-tag__price {
@@ -7345,34 +7376,74 @@ body:has(.filecopy) footer {
   font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1;
-  color: var(--ink-hi);
+  color: var(--film-ink);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.fc-tag__price span { font-size: 0.34em; color: var(--ink-dim); margin-left: 2px; }
-.fc-tag--high .fc-tag__price { color: var(--accent-dim); }
+.fc-tag--high .fc-tag__price { color: #E8B79E; }
 
 .fc-tags__divider {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  align-self: center;
   font-family: var(--f-mono);
   font-size: 9px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-dim);
+  color: var(--film-mid);
 }
 
-.fc-tags__line {
-  width: 1px;
-  height: clamp(40px, 6vw, 72px);
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--accent) 0 4px,
-    transparent 4px 9px
-  );
+.fc-tags__bracket {
+  width: 18px;
+  height: clamp(72px, 12vw, 120px);
+  overflow: visible;
+}
+
+.fc-tags__bracket line { stroke: #C15F3C; }
+.fc-tags__bracket .bracket-mark__spine,
+.fc-tags__bracket line:not(.bracket-mark__leader) { stroke: #C15F3C; }
+
+.fc-tags__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.35;
+  color: var(--film-ink);
+}
+
+.fc-field-note {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: clamp(28px, 4vw, 40px);
+  padding-top: 18px;
+  border-top: 1px solid var(--film-line);
+}
+
+.fc-field-note p {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: clamp(10px, 1.05vw, 11px);
+  line-height: 1.7;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--film-faint);
+  max-width: 72ch;
+}
+
+.fc-field-note__multiple {
+  flex: none;
+  font-family: var(--f-mono);
+  font-size: clamp(12px, 1.2vw, 14px);
+  letter-spacing: 0.08em;
+  color: #D98A64;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ——— IV · the name ———————————————————————————————————————————— */
@@ -8334,28 +8405,43 @@ body:has(.filecopy) footer {
   /* A real tap target for the bar, without shifting the line box. */
   .fc-redact__toggle { padding: 10px 4px; margin: -10px -4px; }
 
-  /* III · exhibit A: the tags stack, and the divider turns into a rule
-     that reads across rather than down. */
-  .fc-tags { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .fc-tag { padding: 18px 18px; align-items: flex-end; }
-  .fc-tag--high { transform: none; }
+  /* III · exhibit A: cards stack; the bracket becomes a cross-rule. */
+  .fc-tags { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .fc-tag__media { aspect-ratio: 16 / 10; }
+  .fc-tag__foot { padding: 14px 16px 16px; }
   .fc-tag__price { font-size: clamp(28px, 8.4vw, 36px); }
 
   .fc-tags__divider {
     flex-direction: row;
     justify-content: center;
+    align-items: center;
     gap: 12px;
-    padding: 2px 0;
+    padding: 6px 0;
   }
 
-  .fc-tags__line {
-    width: clamp(40px, 22vw, 110px);
+  .fc-tags__bracket { display: none; }
+
+  .fc-tags__divider::before,
+  .fc-tags__divider::after {
+    content: "";
+    flex: 1;
+    max-width: 72px;
     height: 1px;
-    background: repeating-linear-gradient(
-      to right,
-      var(--accent) 0 4px,
-      transparent 4px 9px
-    );
+    background: #C15F3C;
+  }
+
+  .fc-tags__aside {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 8px;
+    max-width: none;
+  }
+
+  .fc-field-note {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   /* IV · the name */
