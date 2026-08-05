@@ -81,34 +81,39 @@ export const PUZZLE_HYPERSCALER: PlateSpec = {
   position: "50% 50%",
 };
 
-/** Act IV, phones only: the sheet, the stamp, and the bracket drawn by hand. */
-export const NAME_STILL: PlateSpec = {
-  src: `${P}/name-still-900.webp`,
-  width: 900,
-  height: 1124,
-  sources: [
-    { media: "(max-width: 430px)", srcSet: `${P}/name-still-640.webp` },
-    { srcSet: `${P}/name-still-900.webp` },
-  ],
-  slate: "Plate 02 · the mark",
-  position: "50% 18%",
-};
-
-/** Act VIII, card three: reading the printout. */
-export const FINDING_ANALYST: PlateSpec = {
+/** Act IV · The name — analyst at the desk, right-anchored on film. */
+export const NAME_BACKDROP: PlateSpec = {
   src: `${P}/finding-analyst-1600.webp`,
-  width: 1600,
-  height: 1067,
+  width: 1024,
+  height: 682,
   sources: [
     {
       media: "(max-width: 767px)",
       srcSet: `${P}/finding-analyst-mobile-819.webp`,
     },
+    { media: "(max-width: 1280px)", srcSet: `${P}/finding-analyst-900.webp` },
+    { srcSet: `${P}/finding-analyst-1600.webp` },
+  ],
+  slate: "Plate 03 · the desk",
+  position: "78% 46%",
+  positionMobile: "62% 38%",
+};
+
+/** Act VIII, card three: reading the printout. */
+export const FINDING_ANALYST: PlateSpec = {
+  src: `${P}/finding-analyst-1600.webp`,
+  width: 1024,
+  height: 682,
+  sources: [
+    {
+      media: "(max-width: 767px)",
+      srcSet: `${P}/finding-analyst-mobile-819.webp`,
+    },
+    { media: "(max-width: 1280px)", srcSet: `${P}/finding-analyst-900.webp` },
     { srcSet: `${P}/finding-analyst-1600.webp` },
   ],
   slate: "Plate 06 · reading the printout",
   position: "54% 46%",
-  /* Portrait crop: corridor detail sits high; lower field stays dark. */
   positionMobile: "50% 24%",
 };
 

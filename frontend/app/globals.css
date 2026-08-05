@@ -7019,6 +7019,38 @@ body:has(.filecopy) .ask-launcher { bottom: calc(20px + 34px); }
 
 .fc-plate--mobile-only { display: none; }
 
+/* Right-anchored plates bleed from the right edge and dissolve into the
+   film ground so type on the left stays legible. */
+.fc-plate--anchor-right {
+  left: clamp(30%, 38vw, 52%);
+  right: 0;
+  width: auto;
+  background: var(--film);
+}
+
+.fc-plate--anchor-right::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    var(--film) 0%,
+    rgba(14, 13, 11, 0.88) 18%,
+    rgba(14, 13, 11, 0.42) 46%,
+    rgba(14, 13, 11, 0.08) 72%,
+    transparent 100%
+  );
+}
+
+.fc-plate--anchor-right .fc-plate__img {
+  object-position: var(--fc-pos, 78% 46%);
+  filter: grayscale(0.42) sepia(0.16) saturate(0.72) contrast(1.05)
+    brightness(0.7);
+  opacity: 0.94;
+}
+
 /* ——— I · cold open ———————————————————————————————————————————— */
 
 /* Pull under the sticky header rail so the plate paints edge-to-edge at
@@ -7879,6 +7911,17 @@ body:has(.filecopy) footer {
 .fc-act--name {
   padding-top: clamp(64px, 10vh, 108px);
   padding-bottom: clamp(64px, 10vh, 108px);
+  overflow: hidden;
+}
+
+.fc-act--name .fc-act__scrim--soft {
+  background: linear-gradient(
+    to right,
+    rgba(14, 13, 11, 0.94) 0%,
+    rgba(14, 13, 11, 0.78) 42%,
+    rgba(14, 13, 11, 0.34) 68%,
+    rgba(14, 13, 11, 0.12) 100%
+  );
 }
 
 .fc-name {
@@ -9555,6 +9598,28 @@ body:has(.filecopy) footer {
     padding-top: clamp(72px, 14vh, 120px);
     padding-bottom: clamp(56px, 10vh, 96px);
   }
+
+  .fc-plate--anchor-right {
+    left: 0;
+    inset: 0;
+  }
+
+  .fc-plate--anchor-right .fc-plate__img {
+    object-position: var(--fc-pos-mobile, 62% 38%);
+    opacity: 0.52;
+    filter: grayscale(0.48) sepia(0.14) saturate(0.68) contrast(1.04)
+      brightness(0.62);
+  }
+
+  .fc-plate--anchor-right::after {
+    background: linear-gradient(
+      to bottom,
+      rgba(14, 13, 11, 0.28) 0%,
+      rgba(14, 13, 11, 0.72) 38%,
+      rgba(14, 13, 11, 0.96) 100%
+    );
+  }
+
   .fc-act--name .fc-act__scrim--soft {
     background: linear-gradient(
       to bottom,
