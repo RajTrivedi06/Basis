@@ -6950,13 +6950,34 @@ body:has(.filecopy) .site-header-rail--top .site-header-island__menu-bars span {
 
 /* ——— I · cold open ———————————————————————————————————————————— */
 
+/* Pull under the sticky header rail so the plate paints edge-to-edge at
+   the top of the viewport (same bleed pattern as .meth-hero-shell). The
+   padding restores clearance for the island; the plate stays at inset:0. */
 .fc-act--open {
+  margin-top: calc(-1 * var(--header-rail-h));
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding-top: calc(var(--header-rail-h) + 24px);
   padding-bottom: clamp(72px, 12vh, 128px);
+}
+
+/* Landing opens on film: keep the document ground dark so the sticky
+   rail never flashes cream above the cold-open plate. Paper acts and
+   the site footer paint their own cream. */
+body:has(.filecopy) {
+  background: #0E0D0B;
+}
+
+body:has(.filecopy) footer {
+  background: var(--bg);
+}
+
+/* The hall plate is already low-key; keep colour and LEDs instead of the
+   period-stock grade used on the other stills. */
+.fc-act--open .fc-plate__img {
+  filter: saturate(1.05) contrast(1.08) brightness(0.92);
 }
 
 .fc-open {
