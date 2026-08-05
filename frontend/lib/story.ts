@@ -27,6 +27,9 @@ const FETCH_TIMEOUT_MS = 5_000;
 /** The landing tells one SKU's story; the dashboard covers the rest. */
 export const HERO_SKU = "h100_sxm_80gb";
 
+/** Human-readable SKU for hero slates and metadata. */
+export const HERO_SKU_DISPLAY = "H100 SXM 80GB";
+
 /** Providers whose staleness exceeds this are retired (rule from #53). */
 const RETIRED_AFTER_DAYS = 7;
 
@@ -67,16 +70,20 @@ export interface HeroBounds {
   multiple: number;
   /** Real offers nearest each bound, for the Scene 2 price cards. */
   lowOffer: {
+    id: number;
     provider: string;
     commitment: string;
     price: number;
     region: string | null;
+    collectedAt: string;
   };
   highOffer: {
+    id: number;
     provider: string;
     commitment: string;
     price: number;
     region: string | null;
+    collectedAt: string;
   };
   sampleSize: number;
   /**
@@ -89,10 +96,12 @@ export interface HeroBounds {
 }
 
 interface PricedOffer {
+  id: number;
   provider: string;
   commitment: string;
   price: number;
   region: string | null;
+  collectedAt: string;
 }
 
 function quantile(sorted: number[], q: number): number {
@@ -103,24 +112,24 @@ function quantile(sorted: number[], q: number): number {
   return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
 }
 
-/** Exported for test: the cross-provider rule is a truth rule, not a detail. */
-export function computeHeroBounds(
-  offers: OfferListResponse | null
-): HeroBounds | null {
-  const items = offers?.items ?? [];
-  const priced = items
+function normalizePricedOffers(offers: OfferListResponse | null): PricedOffer[] {
+  return (offers?.items ?? [])
     .map((o) => ({
+      id: o.id,
       provider: o.provider,
       commitment: o.commitment_type ?? "unknown",
       price: o.normalized_price_usd_per_hour ?? o.price_usd_per_hour,
       region: o.region_country,
+      collectedAt: o.collected_at,
     }))
     .filter(
       (o): o is PricedOffer =>
         typeof o.price === "number" && Number.isFinite(o.price) && o.price > 0
     )
     .sort((a, b) => a.price - b.price);
+}
 
+function boundsFromPool(priced: PricedOffer[]): HeroBounds | null {
   // Below this the quantiles are noise, and the hook would be built on a
   // handful of listings — fall back to range language instead.
   if (priced.length < 20) return null;
@@ -159,6 +168,41 @@ export function computeHeroBounds(
   };
 }
 
+function pickBestBounds(candidates: HeroBounds[]): HeroBounds | null {
+  if (candidates.length === 0) return null;
+
+  const crossProvider = candidates.filter((b) => b.crossProvider);
+  const pool = crossProvider.length > 0 ? crossProvider : candidates;
+  return pool.reduce((best, b) => (b.multiple > best.multiple ? b : best));
+}
+
+/**
+ * Exported for test: the cross-provider rule is a truth rule, not a detail.
+ * Pools are commitment-homogeneous so the hero never pairs spot with reserved.
+ */
+export function computeHeroBounds(
+  offers: OfferListResponse | null
+): HeroBounds | null {
+  const priced = normalizePricedOffers(offers);
+  if (priced.length < 20) return null;
+
+  const byCommitment = new Map<string, PricedOffer[]>();
+  for (const offer of priced) {
+    const pool = byCommitment.get(offer.commitment) ?? [];
+    pool.push(offer);
+    byCommitment.set(offer.commitment, pool);
+  }
+
+  const homogeneous = [...byCommitment.values()]
+    .map((pool) => boundsFromPool(pool))
+    .filter((bounds): bounds is HeroBounds => bounds !== null);
+
+  const bestHomogeneous = pickBestBounds(homogeneous);
+  if (bestHomogeneous) return bestHomogeneous;
+
+  return boundsFromPool(priced);
+}
+
 /**
  * Live range for the week-motion line (§7). The truth patch's frozen
  * "~20–61%" is kept as the sentence's shape, but the figures come from the
@@ -170,19 +214,36 @@ export interface ResidualRange {
   days: number;
 }
 
+/** Daily residual shares for compact sparklines on the story page. */
+export interface ResidualSeries {
+  values: number[];
+  days: number;
+}
+
+function residualShares(ts: BasisTimeseriesResponse | null): number[] {
+  return (ts?.points ?? [])
+    .map((p) => p.pct_residual)
+    .filter((v) => typeof v === "number" && Number.isFinite(v));
+}
+
 function computeResidualRange(
   ts: BasisTimeseriesResponse | null
 ): ResidualRange | null {
-  const points = ts?.points ?? [];
-  const shares = points
-    .map((p) => p.pct_residual)
-    .filter((v) => typeof v === "number" && Number.isFinite(v));
+  const shares = residualShares(ts);
   if (shares.length < 5) return null;
   return {
     minPct: Math.min(...shares),
     maxPct: Math.max(...shares),
     days: shares.length,
   };
+}
+
+function computeResidualSeries(
+  ts: BasisTimeseriesResponse | null
+): ResidualSeries | null {
+  const values = residualShares(ts);
+  if (values.length < 5) return null;
+  return { values, days: values.length };
 }
 
 export interface StoryData {
@@ -197,6 +258,7 @@ export interface StoryData {
    */
   decomposition: BasisDecompositionResponse | null;
   residualRange: ResidualRange | null;
+  residualSeries: ResidualSeries | null;
   /** One real collection day of quotes for the hero SKU. */
   quotes: QuoteExhibit | null;
   artifact: ExplainabilityArtifact | null;
@@ -273,6 +335,7 @@ export async function getStoryData(): Promise<StoryData> {
     skuCount: matrix?.items.length ?? null,
     decomposition,
     residualRange: computeResidualRange(timeseries),
+    residualSeries: computeResidualSeries(timeseries),
     quotes,
     artifact,
     collectedAt,

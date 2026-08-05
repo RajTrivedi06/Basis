@@ -30,7 +30,7 @@ export const GLOSSARY: Record<GlossaryTermKey, GlossaryEntry> = {
   decomposition: {
     term: "Decomposition",
     definition:
-      "splitting total price variation into named causes, one factor at a time.",
+      "splitting total price variation into named causes, modeled jointly from observed quotes.",
   },
   icc: {
     term: "ICC",

@@ -2,8 +2,16 @@
 
 import { BracketMark, useDrawOnce } from "@/components/marks/BracketMark";
 
+/** The diagram's reference-price gloss (variant 1b, adopted by the 1c ruling). */
+export const BRACKET_REFERENCE_HINT =
+  "Median quote · same SKU & collection day";
+
 /** The diagram's single footnote line (variant 1b, adopted by the 1c ruling). */
-export const BRACKET_FOOTNOTE = "Recorded, never modeled.";
+export const BRACKET_FOOTNOTE =
+  "Observed quotes only. Basis names what normalization cannot explain.";
+
+export const BRACKET_BENCHMARK_LABEL = "REFERENCE PRICE";
+export const BRACKET_PAID_LABEL = "QUOTED PRICE";
 
 const BENCHMARK_Y = 52;
 const PAID_Y = 162;
@@ -44,7 +52,7 @@ export function BracketDiagram({
         className="bracket-diagram__plate"
         viewBox="0 0 452 216"
         role="img"
-        aria-label="Two price lines — the benchmark price and the price actually paid — with a dimension bracket measuring the gap between them, labelled basis."
+        aria-label="Two price lines — a reference price and a quoted price — with a dimension bracket measuring the gap between them, labelled basis."
       >
         <line
           x1={LINE_X0}
@@ -62,7 +70,7 @@ export function BracketDiagram({
           x={LINE_X0}
           y={BENCHMARK_Y - 13}
         >
-          BENCHMARK PRICE
+          {BRACKET_BENCHMARK_LABEL}
         </text>
         {benchmarkValue ? (
           <text
@@ -87,7 +95,7 @@ export function BracketDiagram({
           pathLength={1}
         />
         <text className="bracket-diagram__tag" x={LINE_X0} y={PAID_Y + 20}>
-          WHAT YOU ACTUALLY PAY
+          {BRACKET_PAID_LABEL}
         </text>
         {paidValue ? (
           <text
@@ -111,8 +119,9 @@ export function BracketDiagram({
       </svg>
 
       {showFootnote ? (
-        <figcaption className="bracket-diagram__footnote">
-          {BRACKET_FOOTNOTE}
+        <figcaption className="bracket-diagram__caption">
+          <span className="bracket-diagram__hint">{BRACKET_REFERENCE_HINT}</span>
+          <span className="bracket-diagram__footnote">{BRACKET_FOOTNOTE}</span>
         </figcaption>
       ) : null}
     </figure>

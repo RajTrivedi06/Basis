@@ -5,9 +5,9 @@ import { BracketMark } from "@/components/marks/BracketMark";
 import { ShowMeHow } from "@/components/disclosure/TwoLayer";
 import { FilmRibbon } from "@/components/story/FilmRibbon";
 import { FindingsFile } from "@/components/story/FindingsFile";
+import { ResidualSparkline } from "@/components/story/ResidualSparkline";
 import { PlateFrame } from "@/components/story/PlateFrame";
 import { QuoteLanes } from "@/components/story/QuoteLanes";
-import { RedactedLine } from "@/components/story/RedactedLine";
 import { Reel, ReelFrame } from "@/components/story/Reel";
 import { SettlementSheet } from "@/components/story/SettlementSheet";
 import { StoryMotion } from "@/components/story/StoryMotion";
@@ -23,17 +23,20 @@ import {
   COLD_OPEN,
   FINDING_ANALYST,
   NAME_STILL,
-  PUZZLE_HYPERSCALER,
-  PUZZLE_MARKETPLACE,
   STAKES_FLOOR,
-  type PlateSpec,
 } from "@/lib/plates";
-import { providerLabel } from "@/lib/providerLabel";
+import {
+  buildLedger,
+  formatShare,
+} from "@/lib/ledger";
+import { catalogLabel, providerLabel } from "@/lib/providerLabel";
+import type { BasisDecompositionResponse } from "@/lib/types";
 import {
   CATALOG_PROVIDERS,
   COLLECTIONS_PER_DAY,
   getStoryData,
   HERO_SKU,
+  HERO_SKU_DISPLAY,
   shortDate,
   stampDate,
   type HeroBounds,
@@ -84,6 +87,7 @@ export default async function StoryPage() {
     skuCount,
     decomposition,
     residualRange,
+    residualSeries,
     quotes,
     artifact,
     collectedAt,
@@ -109,13 +113,20 @@ export default async function StoryPage() {
     " and "
   )} excluded`;
 
+  const receipt =
+    quotes?.lanes.flatMap((lane) => lane.dots).find((dot) => dot.id > 0) ?? null;
+
   return (
     <div className="filecopy">
       <StoryMotion />
       <FilmRibbon />
 
       {/* ——————————————————————————————— I · Cold open (C1) */}
-      <section className="fc-act fc-act--open" aria-labelledby="fc-hook">
+      <section
+        className="fc-act fc-act--open"
+        aria-labelledby="fc-hook"
+        data-nav-backdrop="film"
+      >
         <PlateFrame plate={COLD_OPEN} depth={0.16} priority showSlate={false} />
         <div className="fc-act__scrim" aria-hidden />
 
@@ -198,79 +209,120 @@ export default async function StoryPage() {
 
           <div className="fc-open__foot" data-stamp data-stamp-group>
             <p className="fc-open__lede">
-              Basis is a public study of the part of that price nothing
-              observable explains. Every figure here walks back to the raw
-              response a provider returned.
+              Basis studies what makes identical compute cost differently — and
+              how much of that difference observable facts still cannot explain.
+              Every figure traces back to the raw response a provider returned.
             </p>
-            <p className="fc-open__slate">
-              {bounds
-                ? `p5 and p95 of ${bounds.sampleSize} quotes · ${HERO_SKU}`
-                : `${HERO_SKU} · live quotes momentarily unavailable`}
-              {collectedAt ? ` · ${stampDate(collectedAt)}` : ""}
-            </p>
+            <div className="fc-open__proof">
+              <p className="fc-open__slate">
+                {bounds ? (
+                  <>
+                    {bounds.sampleSize} {commitmentLabel(bounds.lowOffer.commitment)}{" "}
+                    quotes · {HERO_SKU_DISPLAY}
+                    {providerCount !== null
+                      ? ` · ${providerCount} providers`
+                      : ""}{" "}
+                    · USD/GPU-hour
+                  </>
+                ) : (
+                  <>
+                    {HERO_SKU_DISPLAY} · live quotes momentarily unavailable
+                  </>
+                )}
+                {collectedAt ? ` · ${stampDate(collectedAt)}` : ""}
+              </p>
+              <a href="#fc-brief" className="fc-open__cue">
+                Open the findings
+              </a>
+            </div>
           </div>
         </div>
-
-        <span className="fc-open__cue" aria-hidden>
-          Scroll to open the file
-        </span>
       </section>
 
       {/* ——————————————————————————————— II · The brief (C2, C3) */}
-      <section className="fc-act fc-act--brief" aria-labelledby="fc-brief">
+      <section
+        className="fc-act fc-act--brief"
+        aria-labelledby="fc-brief"
+        data-nav-backdrop="paper"
+      >
         <div className="fc-punch" aria-hidden />
         <div className="fc-wrap fc-brief">
           <div className="fc-brief__copy">
-            <span className="fc-eyebrow fc-eyebrow--accent">01 · The brief</span>
+            <div className="fc-brief__intro">
+              <span className="fc-eyebrow fc-eyebrow--accent">01 · The brief</span>
+              <span className="fc-brief__badge">A study, not a product</span>
+            </div>
             <h2 id="fc-brief" className="fc-h2 serif" data-lines>
               <span className="fc-line">
-                <span>A commodity is a thing</span>
+                <span>Commodities converge</span>
               </span>
               <span className="fc-line">
-                <span>that trades at one price.</span>
+                <span>toward a price.</span>
+              </span>
+              <span className="fc-line">
+                <span>GPU-hours don&rsquo;t.</span>
               </span>
             </h2>
             <p className="fc-body">
-              A GPU-hour should be one of them. Wheat is wheat. Oil is oil. An
-              H100 is an H100, and the silicon is identical.
+              An H100 SXM 80GB has the same silicon wherever you rent it.
               <sup className="fc-fn">
                 <a href="#sources">1</a>
               </sup>{" "}
-              So identical things should cost roughly the same.{" "}
+              Region, commitment, and contract structure explain part of the
+              spread — but once those observable differences are accounted for,
+              prices ought to converge.{" "}
               <strong>They don&rsquo;t. Not even close.</strong>
             </p>
             <p className="fc-body">
               Nobody had published, on public data, with a method you can rerun,
-              how much of that price is actually explainable. So we started
+              how much of that dispersion is actually explainable. So we started
               asking twice a day, and writing down every answer.
             </p>
 
-            <div className="fc-redact-card" data-stamp>
-              <span className="fc-slate-label">
-                Paragraph 4 · struck on receipt · lift it
-              </span>
-              <RedactedLine
-                before="Every figure in this file walks back to "
-                redacted="the raw response"
-                after=" a provider returned, and none of it came from a paid feed."
-              />
+            <div className="fc-receipt" data-stamp>
+              <div className="fc-receipt__head">
+                <span className="fc-receipt__label">Sample receipt</span>
+                {receipt ? (
+                  <span className="fc-receipt__id">Quote #{receipt.id}</span>
+                ) : null}
+              </div>
+              {receipt ? (
+                <>
+                  <p className="fc-receipt__terms serif">
+                    {providerLabel(receipt.provider)} ·{" "}
+                    {commitmentLabel(receipt.commitment)} · {usd(receipt.price)}
+                    /GPU-hr
+                  </p>
+                  <p className="fc-receipt__meta">
+                    Provider response · collected {stampDate(receipt.collectedAt)}
+                  </p>
+                  <Link className="fc-receipt__link" href={`/basis?sku=${HERO_SKU}`}>
+                    Inspect on Basis →
+                  </Link>
+                </>
+              ) : (
+                <p className="fc-receipt__fallback">
+                  Every figure traces back to a raw provider response — no
+                  paywalled feeds.
+                </p>
+              )}
             </div>
-
-            <ul className="fc-chips" data-stamp data-stamp-group>
-              <li>A study, not a product</li>
-              <li>No paywalled feeds</li>
-              <li className="fc-chips__accent">Every figure has a receipt</li>
-            </ul>
           </div>
 
           <aside className="fc-registry" data-stamp>
             <div className="fc-registry__head">
               <span>Registry summary</span>
-              <span className="fc-registry__live">Live</span>
+              {collectedAt ? (
+                <span className="fc-registry__stamp">
+                  Updated {stampDate(collectedAt)}
+                </span>
+              ) : (
+                <span className="fc-registry__stamp">Current</span>
+              )}
             </div>
             <dl className="fc-registry__rows">
               <RegistryRow
-                label="Canonical offers"
+                label="GPU offers indexed"
                 value={
                   totalOffers === null ? null : (
                     <Tally value={totalOffers} grouping />
@@ -278,11 +330,11 @@ export default async function StoryPage() {
                 }
               />
               <RegistryRow
-                label="Canonical SKUs"
+                label="Unique GPU configurations"
                 value={skuCount === null ? null : <Tally value={skuCount} />}
               />
               <RegistryRow
-                label="Public catalogs"
+                label="Public provider catalogs"
                 value={providerCount === null ? null : String(providerCount)}
               />
               <RegistryRow
@@ -291,91 +343,169 @@ export default async function StoryPage() {
               />
             </dl>
             <p className="fc-registry__foot">
-              Quoted prices only. No transactions claimed. Raw responses are
+              Quoted prices only — no transactions claimed. Raw responses are
               write-once and kept.
+              {bounds && totalOffers !== null ? (
+                <>
+                  {" "}
+                  The hero&rsquo;s {bounds.sampleSize} {HERO_SKU_DISPLAY} quotes
+                  are one day&rsquo;s slice of this index.
+                </>
+              ) : null}
             </p>
           </aside>
         </div>
       </section>
 
       {/* ——————————————————————————————— III · Exhibit A */}
-      <section className="fc-act fc-act--exhibit-a" aria-labelledby="fc-exhibit-a">
+      <section
+        className="fc-act fc-act--exhibit-a"
+        aria-labelledby="fc-exhibit-a"
+        data-nav-backdrop="film"
+      >
         <div className="fc-wrap">
           <span className="fc-eyebrow fc-eyebrow--accent">02 · Exhibit A</span>
-          <h2 id="fc-exhibit-a" className="fc-h2 serif" data-lines>
-            <span className="fc-line">
-              <span>Two quotes for the same</span>
-            </span>
-            <span className="fc-line">
-              <span>eighty gigabytes of silicon.</span>
-            </span>
-          </h2>
 
           {bounds ? (
             <>
-              <div className="fc-tags">
-                <PriceTag
-                  offer={bounds.lowOffer}
-                  plate={PUZZLE_MARKETPLACE}
+              <h2 id="fc-exhibit-a" className="fc-h2 serif" data-lines>
+                <span className="fc-line">
+                  <span>Same accelerator.</span>
+                </span>
+                <span className="fc-line">
+                  <span>Same day.</span>
+                </span>
+                <span className="fc-line">
+                  <span>{bounds.multiple.toFixed(1)}× apart.</span>
+                </span>
+              </h2>
+
+              <p className="fc-body fc-exhibit__lede" data-stamp>
+                Same {HERO_SKU_DISPLAY} accelerator, same collection day — but
+                different provider, region, and commitment structure. The hero
+                quoted p5 and p95 across {bounds.sampleSize}{" "}
+                {commitmentLabel(bounds.lowOffer.commitment)} quotes (
+                {usd(bounds.low)} and {usd(bounds.high)}). Below are the
+                nearest real offers to each bound.
+              </p>
+
+              <div className="fc-exhibit-matrix" data-stamp data-stamp-group>
+                <div className="fc-exhibit-matrix__head" aria-hidden>
+                  <span />
+                  <span>Quote A</span>
+                  <span>Quote B</span>
+                  <span />
+                </div>
+                <ExhibitMatrixRow
+                  label="GPU"
+                  a={HERO_SKU_DISPLAY}
+                  b={HERO_SKU_DISPLAY}
+                  same
                 />
-                <div className="fc-tags__divider" aria-hidden>
+                <ExhibitMatrixRow
+                  label="Date"
+                  a={
+                    collectedAt
+                      ? shortDate(collectedAt)
+                      : shortDate(bounds.lowOffer.collectedAt)
+                  }
+                  b={
+                    collectedAt
+                      ? shortDate(collectedAt)
+                      : shortDate(bounds.highOffer.collectedAt)
+                  }
+                  same
+                />
+                <ExhibitMatrixRow
+                  label="Provider"
+                  a={providerLabel(bounds.lowOffer.provider)}
+                  b={providerLabel(bounds.highOffer.provider)}
+                  same={
+                    bounds.lowOffer.provider === bounds.highOffer.provider
+                  }
+                />
+                <ExhibitMatrixRow
+                  label="Region"
+                  a={regionLabel(bounds.lowOffer.region)}
+                  b={regionLabel(bounds.highOffer.region)}
+                  same={bounds.lowOffer.region === bounds.highOffer.region}
+                />
+                <ExhibitMatrixRow
+                  label="Contract"
+                  a={commitmentLabel(bounds.lowOffer.commitment)}
+                  b={commitmentLabel(bounds.highOffer.commitment)}
+                  same={
+                    bounds.lowOffer.commitment === bounds.highOffer.commitment
+                  }
+                  emphasize
+                />
+                <ExhibitMatrixRow
+                  label="Price"
+                  a={usd(bounds.lowOffer.price)}
+                  b={usd(bounds.highOffer.price)}
+                  outcome={bounds.multiple}
+                />
+              </div>
+
+              <div className="fc-exhibit-quotes" data-stamp>
+                <ExhibitQuote
+                  label="Quote A"
+                  offer={bounds.lowOffer}
+                  boundLabel={`p5 · ${usd(bounds.low)}`}
+                />
+                <div className="fc-exhibit-quotes__gap" aria-hidden>
+                  <span className="fc-exhibit-quotes__multiple">
+                    {bounds.multiple.toFixed(1)}×
+                  </span>
                   <svg
-                    className="fc-tags__bracket"
-                    viewBox="0 0 28 140"
+                    className="fc-exhibit-quotes__bracket"
+                    viewBox="0 0 220 30"
                     role="presentation"
                   >
                     <BracketMark
-                      orientation="vertical"
-                      spine={14}
-                      start={10}
-                      length={120}
+                      orientation="horizontal"
+                      spine={16}
+                      start={6}
+                      length={208}
                       tone="ink"
                       tick={5}
                       strokeWidth={1.2}
                     />
                   </svg>
-                  <span className="fc-tags__aside">
-                    <span>same</span>
-                    <span>hardware</span>
-                    <span>same</span>
-                    <span>day</span>
-                  </span>
                 </div>
-                <PriceTag
+                <ExhibitQuote
+                  label="Quote B"
                   offer={bounds.highOffer}
-                  plate={PUZZLE_HYPERSCALER}
+                  boundLabel={`p95 · ${usd(bounds.high)}`}
                   high
                 />
               </div>
-              <div className="fc-field-note" data-stamp>
-                <p>
-                  Field note ·{" "}
-                  {providerLabel(bounds.lowOffer.provider)}{" "}
-                  {regionLabel(bounds.lowOffer.region)}{" "}
-                  {usd(bounds.lowOffer.price)} versus{" "}
-                  {providerLabel(bounds.highOffer.provider)}{" "}
-                  {regionLabel(bounds.highOffer.region)}{" "}
-                  {usd(bounds.highOffer.price)}.{" "}
-                  {bounds.crossProvider
-                    ? "Two sellers, one canonical chip, the same collection day."
-                    : "One catalog, one canonical chip, the same collection day."}
-                </p>
-                <span className="fc-field-note__multiple">
-                  {bounds.multiple.toFixed(1)}×
-                </span>
-              </div>
+
+              <p className="fc-exhibit__bridge serif" data-stamp>
+                Some of that difference should be explainable.{" "}
+                <strong>The question is how much.</strong>
+              </p>
             </>
           ) : (
-            <p className="fc-body">
-              Live quotes are momentarily unavailable. The dispersion page keeps
-              the full record.
-            </p>
+            <>
+              <h2 id="fc-exhibit-a" className="fc-h2 serif">
+                Two quotes for the same {HERO_SKU_DISPLAY}.
+              </h2>
+              <p className="fc-body">
+                Live quotes are momentarily unavailable. The dispersion page keeps
+                the full record.
+              </p>
+            </>
           )}
         </div>
       </section>
 
       {/* ——————————————————————————————— IV · The name (C24) */}
-      <section className="fc-act fc-act--name" aria-labelledby="fc-name">
+      <section
+        className="fc-act fc-act--name"
+        aria-labelledby="fc-name"
+        data-nav-backdrop="film"
+      >
         <PlateFrame
           plate={NAME_STILL}
           depth={0.1}
@@ -392,21 +522,27 @@ export default async function StoryPage() {
               </span>
             </h2>
             <p className="fc-body fc-body--invert">
-              When a trader hedges oil with a benchmark, the gap between the
-              benchmark and the price they actually pay is called{" "}
-              <em className="serif">basis</em>.
+              In commodity markets, <em className="serif">basis</em> names the
+              gap between a local cash price and the relevant futures price —
+              the part geography, timing, and contract terms cannot standardize
+              away.
               <sup className="fc-fn">
                 <a href="#sources">2</a>
               </sup>{" "}
-              It&rsquo;s the risk standardization can&rsquo;t remove. GPUs, the
-              commodity compute is supposed to have become, carry that gap too.
-              This project is named after it, and it measures it.
+              Traders have a word for the gap between a reference price and the
+              price realized in a particular market. We borrow it for compute.
+            </p>
+            <p className="fc-body fc-body--invert">
+              If GPU compute is becoming a commodity, it appears to carry a
+              basis of its own. In this study,{" "}
+              <strong>Basis</strong> is the share of quoted price dispersion
+              that remains after provider, region, commitment, and other
+              observable terms are accounted for — not the raw spread between
+              two quotes, but the part normalization still cannot explain.
             </p>
           </div>
-          {/* No figures on this diagram. Its labels read "benchmark price"
-              and "what you actually pay", and two same-day quotes are
-              neither of those things — feeding them in would make the
-              diagram state something false. It stays definitional. */}
+          {/* Definitional only: no live figures. The labels name the two
+              quantities the decomposition later measures against. */}
           <div className="fc-name__diagram" data-stamp>
             <BracketDiagram />
           </div>
@@ -414,7 +550,11 @@ export default async function StoryPage() {
       </section>
 
       {/* ——————————————————————————————— V · The reel (C4, C5, C6) */}
-      <section className="fc-act fc-act--reel" aria-labelledby="fc-method">
+      <section
+        className="fc-act fc-act--reel"
+        aria-labelledby="fc-method"
+        data-nav-backdrop="film"
+      >
         <Reel
           head={
             <div className="fc-wrap fc-reel__headrow">
@@ -427,9 +567,9 @@ export default async function StoryPage() {
                 </h2>
               </div>
               <p className="fc-reel__hint">
-                Four frames.{" "}
-                <span className="fc-reel__hint-desk">Keep scrolling.</span>
-                <span className="fc-reel__hint-touch">Swipe the strip.</span>
+                Four frames ·{" "}
+                <span className="fc-reel__hint-desk">keep scrolling</span>
+                <span className="fc-reel__hint-touch">swipe the strip</span>
               </p>
             </div>
           }
@@ -439,43 +579,57 @@ export default async function StoryPage() {
               At 08:00 and 20:00 UTC we ask {providerWord} public catalogs the
               same question: what does an hour of this GPU cost right now?
             </p>
-            <ul className="fc-frame__chips">
+            <ul className="fc-frame__chips" aria-label="Active catalogs">
               {activeProviders.map((p) => (
-                <li key={p}>{providerLabel(p)}</li>
+                <li key={p}>{catalogLabel(p)}</li>
               ))}
             </ul>
             <p className="fc-frame__foot">
-              No private data and no paywalled feeds: only prices anyone could
-              see.
+              Spot, on-demand, and reserved quotes are collected as separate
+              observations — commitment type is never folded into the provider
+              name. No private data and no paywalled feeds.
             </p>
           </ReelFrame>
 
           <ReelFrame index="02" label="File">
             <p className="fc-frame__lede serif">
-              Every answer is written down exactly as received, in full, and
-              never edited again.
+              Every provider response is written down exactly as received, in
+              full, and never edited again.
             </p>
             <p className="fc-frame__foot">
               Raw is sacred. Everything derived from it is disposable, and can be
               rebuilt from the file.
             </p>
+            {receipt ? (
+              <div className="fc-frame__receipt">
+                <span className="fc-frame__receipt-label">Sample record</span>
+                <span className="fc-frame__receipt-id">Quote #{receipt.id}</span>
+                <span className="fc-frame__receipt-meta">
+                  {providerLabel(receipt.provider)} · collected{" "}
+                  {stampDate(receipt.collectedAt)}
+                </span>
+              </div>
+            ) : null}
             {totalOffers !== null ? (
               <div className="fc-frame__tally">
                 <span className="serif">
                   <Tally value={totalOffers} grouping />
                 </span>
-                <span className="fc-frame__tally-label">answers on file</span>
+                <span className="fc-frame__tally-label">
+                  canonical offers indexed
+                </span>
               </div>
             ) : null}
           </ReelFrame>
 
-          <ReelFrame index="03" label="Canonicalise">
+          <ReelFrame index="03" label="Canonicalize">
             <p className="fc-frame__lede serif">
               Every cloud describes the same chip differently.
             </p>
             {/* Real recorded raw names, verified against raw_observations
                 2026-08-03: vast reports "H100 SXM" (5,157 obs) and tensordock
-                "H100 SXM5 80GB"; both canonicalize to h100_sxm_80gb.
+                "H100 SXM5 80GB"; both canonicalize to h100_sxm_80gb under
+                explicit lookup rules — never inferred from partial strings.
                 Quarantine Rule: never swap these for invented strings. */}
             <div className="fc-stencil">
               <span className="fc-stencil__raw" translate="no">&quot;H100 SXM&quot;</span>
@@ -486,27 +640,38 @@ export default async function StoryPage() {
               <span className="fc-stencil__out" translate="no">{HERO_SKU}</span>
             </div>
             <p className="fc-frame__foot">
-              A name that matches no rule is set aside, never guessed. Missing
+              Each alias maps under a documented rule — never guessed from a
+              partial name. A string that matches no rule is set aside. Missing
               information stays <span className="fc-unknown">UNKNOWN</span> and
               stays visible.
             </p>
           </ReelFrame>
 
-          <ReelFrame index="04" label="Subtract">
+          <ReelFrame index="04" label="Account">
             <p className="fc-frame__lede serif">
-              Then we subtract, one factor at a time, every reason the prices
-              ought to differ.
+              Then we account for every observable reason prices should differ —
+              provider, region, commitment, bundle — together.
             </p>
             <p className="fc-frame__foot">
               Where it is. How it&rsquo;s rented. Who sells it. What comes with
-              it. What survives the subtraction is the finding.
+              it. What survives that accounting is the finding.
             </p>
+            {decomposition ? (
+              <MethodDepletion decomposition={decomposition} />
+            ) : null}
+            <Link className="fc-frame__link" href="/methodology">
+              Read full methodology →
+            </Link>
           </ReelFrame>
         </Reel>
       </section>
 
       {/* ——————————————————————————————— VI · Exhibit B */}
-      <section className="fc-act fc-act--exhibit-b" aria-labelledby="fc-exhibit-b">
+      <section
+        className="fc-act fc-act--exhibit-b"
+        aria-labelledby="fc-exhibit-b"
+        data-nav-backdrop="paper"
+      >
         <div className="fc-wrap">
           <div className="fc-exhibit__head">
             <div>
@@ -515,30 +680,45 @@ export default async function StoryPage() {
               </span>
               <h2 id="fc-exhibit-b" className="fc-h2 serif" data-lines>
                 <span className="fc-line">
-                  <span>One day of quotes,</span>
+                  <span>One collection day.</span>
                 </span>
                 <span className="fc-line">
-                  <span>one canonical chip.</span>
+                  <span>One canonical GPU.</span>
                 </span>
               </h2>
             </div>
             {quotes ? (
               <p className="fc-exhibit__meta">
-                {quotes.day} · {quotes.lanes.length} catalogs
+                <span className="fc-exhibit__meta-sku" translate="no">
+                  {HERO_SKU_DISPLAY}
+                </span>
+                {" · "}
+                {quotes.day}
+                {collectedAt ? ` · ${stampDate(collectedAt)}` : ""}
+                {" · "}
+                {quotes.total} quotes · raw dispersion before controls
                 <span className="fc-exhibit__meta-hint">
-                  Hover, tap or arrow through a lane to read a quote.
+                  Log scale: equal horizontal distance is an equal price
+                  multiple. Hover, tap or arrow through a lane to read a quote.
                 </span>
               </p>
             ) : null}
           </div>
 
           {quotes ? (
-            <QuoteLanes
-              exhibit={quotes}
-              boundLow={bounds?.low ?? null}
-              boundHigh={bounds?.high ?? null}
-              sku={HERO_SKU}
-            />
+            <>
+              <QuoteLanes
+                exhibit={quotes}
+                boundLow={bounds?.low ?? null}
+                boundHigh={bounds?.high ?? null}
+                sku={HERO_SKU}
+                skuDisplay={HERO_SKU_DISPLAY}
+              />
+              <p className="fc-exhibit__bridge fc-exhibit__bridge--paper">
+                The spread is real. Region, commitment, provider, and bundle
+                explain some of it. Next, we remove what we can explain.
+              </p>
+            </>
           ) : (
             <p className="fc-body">
               Today&rsquo;s quotes are momentarily unavailable. The{" "}
@@ -550,7 +730,11 @@ export default async function StoryPage() {
       </section>
 
       {/* ——————————————————————————————— VII · Exhibit C (C7) */}
-      <section className="fc-act fc-act--exhibit-c" aria-labelledby="fc-sheet">
+      <section
+        className="fc-act fc-act--exhibit-c"
+        aria-labelledby="fc-sheet"
+        data-nav-backdrop="paper-deep"
+      >
         <div className="fc-ruled fc-ruled--lines" data-parallax style={{ "--fc-depth": 0.1 } as React.CSSProperties} aria-hidden />
         <div className="fc-ruled fc-ruled--cross" data-parallax style={{ "--fc-depth": 0.24 } as React.CSSProperties} aria-hidden />
         <div className="fc-sheet__wash" aria-hidden />
@@ -629,7 +813,11 @@ export default async function StoryPage() {
       </section>
 
       {/* ——————————————————————————————— VIII · Findings (C8, C9, C10) */}
-      <section className="fc-act fc-act--findings" aria-labelledby="fc-findings">
+      <section
+        className="fc-act fc-act--findings"
+        aria-labelledby="fc-findings"
+        data-nav-backdrop="paper-warm"
+      >
         <div className="fc-wrap">
           <span className="fc-eyebrow fc-eyebrow--accent">
             07 · Findings of record
@@ -640,7 +828,20 @@ export default async function StoryPage() {
             </span>
           </h2>
 
-          <FindingsFile>
+          <FindingsFile
+            limits={
+              <ul className="fc-limits">
+                <li>
+                  <span>Limitation L1</span>Quoted prices, not transactions.
+                  Negotiated and realized prices are not observed.
+                </li>
+                <li>
+                  <span>Limitation L2</span>A marketplace and a hyperscaler are not
+                  like-for-like populations.
+                </li>
+              </ul>
+            }
+          >
             {/* Sheet 1 — thermal fax: the bound. */}
             <article className="fc-card fc-card--fax">
               <span className="fc-card__folio" aria-hidden>
@@ -651,17 +852,18 @@ export default async function StoryPage() {
                 <span className="fc-stamp">Bound, not victory</span>
               </header>
               <h3 className="fc-card__title serif">
-                We built a richer model to kill the finding. It did worse.
+                A richer model on the same days still falls short.
               </h3>
               {anovaPct !== null && gbmPct !== null && gapPp !== null ? (
                 <>
                   <p className="fc-card__body">
                     Forty-five features, day-based validation, and a leakage
-                    guard that fails the run.
+                    guard — scored on the same held-out days as the four-factor
+                    bound.
                   </p>
                   <div className="fc-bars">
                     <BoundBar
-                      label="Four factors · in-sample"
+                      label="Four factors · same holdout days"
                       value={anovaPct}
                       tone="pale"
                     />
@@ -691,6 +893,8 @@ export default async function StoryPage() {
                             2
                           )}.`
                         : ""}{" "}
+                      Both bars use the same holdout window
+                      {holdoutDays !== null ? ` (${holdoutDays} days)` : ""}.
                       The gap bounds what observables can do. It says nothing
                       about what nobody publishes.
                     </p>
@@ -718,7 +922,7 @@ export default async function StoryPage() {
                 </span>
               </header>
               <h3 className="fc-card__title serif">
-                The leftover is not noise. It sticks to specific machines.
+                The remainder isn&rsquo;t only noise. It persists by host.
               </h3>
               {icc !== null ? (
                 <>
@@ -727,7 +931,7 @@ export default async function StoryPage() {
                       {icc.toFixed(2)}
                     </span>
                     <span className="fc-figure__label">
-                      Intraclass correlation
+                      Intraclass correlation · host identity
                       {hostCount !== null ? ` · ${hostCount} hosts` : ""}
                       {iccThreshold !== null
                         ? ` · ${iccThreshold}-day tenure`
@@ -735,10 +939,10 @@ export default async function StoryPage() {
                     </span>
                   </div>
                   <p className="fc-card__body">
-                    Over half of what survives the subtraction tracks who the
-                    host is, day after day. In a market of independent
-                    operators, price is substantially a function of identity.
-                    That is very nearly the opposite of a commodity.
+                    Over half of what survives the subtraction tracks which host
+                    listed the offer, day after day. That persistence is
+                    inconsistent with a fully fungible market — at least within
+                    the factors and period studied.
                   </p>
                   {sensitivity.length > 0 ? (
                     <ShowMeHow label="Show the sensitivity">
@@ -774,12 +978,16 @@ export default async function StoryPage() {
                 ATTACHMENT · 03/03
               </span>
               <div className="fc-card__plate">
-                <PlateFrame plate={FINDING_ANALYST} depth={0.14} />
+                <PlateFrame
+                  plate={FINDING_ANALYST}
+                  depth={0.14}
+                  showSlate={false}
+                />
               </div>
               <div className="fc-card__inner">
                 <header className="fc-card__head">
                   <span>Subject · the moving share</span>
-                  <span className="fc-stamp">A range, not a favourite</span>
+                  <span className="fc-stamp">A range, not a favorite</span>
                 </header>
                 <h3 className="fc-card__title serif">
                   The number moves. We publish the range it moves in.
@@ -797,6 +1005,9 @@ export default async function StoryPage() {
                         {residualRange.maxPct.toFixed(0)}%
                       </span>
                     </div>
+                    {residualSeries ? (
+                      <ResidualSparkline values={residualSeries.values} />
+                    ) : null}
                     <p className="fc-card__body">
                       Unexplained share in market-priced segments across the last{" "}
                       {residualRange.days} days. A single figure would be a
@@ -813,22 +1024,15 @@ export default async function StoryPage() {
               </div>
             </article>
           </FindingsFile>
-
-          <ul className="fc-limits">
-            <li>
-              <span>Limitation L1</span>Quoted prices, not transactions. This is
-              a lower bound.
-            </li>
-            <li>
-              <span>Limitation L2</span>A marketplace and a hyperscaler are not
-              like-for-like populations.
-            </li>
-          </ul>
         </div>
       </section>
 
       {/* ——————————————————————————————— IX · Why it matters (C11–C14, C23, C25) */}
-      <section className="fc-act fc-act--stakes" aria-labelledby="fc-stakes">
+      <section
+        className="fc-act fc-act--stakes"
+        aria-labelledby="fc-stakes"
+        data-nav-backdrop="film"
+      >
         <PlateFrame plate={STAKES_FLOOR} depth={0.18} showSlate={false} />
         <div className="fc-act__scrim fc-act__scrim--deep" aria-hidden />
 
@@ -921,8 +1125,8 @@ export default async function StoryPage() {
                 schema).
               </li>
               <li>
-                Commodity basis, standard definition — CME Group education
-                materials on basis and hedging.
+                Commodity basis — cash price minus futures price; CME Group
+                education materials on basis and hedging.
               </li>
               <li>
                 Compute-as-commodity framing — Ornn AI public materials; the
@@ -955,56 +1159,121 @@ function RegistryRow({
   );
 }
 
-function PriceTag({
+function MethodDepletion({
+  decomposition,
+}: {
+  decomposition: BasisDecompositionResponse;
+}) {
+  const { rows, residualShare } = buildLedger(decomposition);
+
+  return (
+    <div
+      className="fc-depletion"
+      aria-label="Observable factors accounted for together; what remains is Basis."
+    >
+      {rows.map((row) => (
+        <div key={row.key} className="fc-depletion__row">
+          <span className="fc-depletion__tag">{row.tag}</span>
+          <div className="fc-depletion__bar" aria-hidden>
+            <span
+              className="fc-depletion__fill"
+              style={{ width: `${row.share * 100}%`, background: row.color }}
+            />
+          </div>
+          <span className="fc-depletion__pct">{formatShare(row.share)}%</span>
+        </div>
+      ))}
+      <div className="fc-depletion__residual">
+        <span className="fc-depletion__tag">Basis</span>
+        <span className="fc-depletion__pct">{formatShare(residualShare)}%</span>
+        <span className="fc-depletion__note">unexplained residual</span>
+      </div>
+      <p className="fc-depletion__philosophy">
+        Prices are observed. The decomposition is modeled from those quotes.
+      </p>
+    </div>
+  );
+}
+
+function ExhibitMatrixRow({
+  label,
+  a,
+  b,
+  same,
+  emphasize = false,
+  outcome,
+}: {
+  label: string;
+  a: string;
+  b: string;
+  same?: boolean;
+  emphasize?: boolean;
+  outcome?: number;
+}) {
+  const status =
+    outcome !== undefined
+      ? `${outcome.toFixed(1)}×`
+      : same
+        ? "Same"
+        : "Different";
+
+  return (
+    <div
+      className={`fc-exhibit-matrix__row${
+        emphasize ? " fc-exhibit-matrix__row--emphasize" : ""
+      }${outcome !== undefined ? " fc-exhibit-matrix__row--outcome" : ""}`}
+    >
+      <span className="fc-exhibit-matrix__label">{label}</span>
+      <span className="fc-exhibit-matrix__cell">{a}</span>
+      <span className="fc-exhibit-matrix__cell">{b}</span>
+      <span
+        className={`fc-exhibit-matrix__status${
+          outcome !== undefined
+            ? " fc-exhibit-matrix__status--outcome"
+            : same
+              ? " fc-exhibit-matrix__status--same"
+              : " fc-exhibit-matrix__status--diff"
+        }`}
+      >
+        {status}
+      </span>
+    </div>
+  );
+}
+
+function ExhibitQuote({
+  label,
   offer,
-  plate,
+  boundLabel,
   high = false,
 }: {
+  label: string;
   offer: HeroBounds["lowOffer"];
-  plate: PlateSpec;
+  boundLabel: string;
   high?: boolean;
 }) {
   return (
-    <article className={`fc-tag${high ? " fc-tag--high" : ""}`} data-stamp>
-      <div className="fc-tag__media" aria-hidden>
-        <picture>
-          {plate.sources.map((source) => (
-            <source
-              key={source.srcSet}
-              media={source.media}
-              srcSet={source.srcSet}
-              type="image/webp"
-            />
-          ))}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="fc-tag__img"
-            src={plate.src}
-            alt=""
-            width={plate.width}
-            height={plate.height}
-            loading="lazy"
-            decoding="async"
-            style={
-              {
-                "--fc-pos": plate.position ?? "50% 50%",
-              } as React.CSSProperties
-            }
-          />
-        </picture>
+    <article
+      className={`fc-exhibit-quote${high ? " fc-exhibit-quote--high" : ""}`}
+    >
+      <div className="fc-exhibit-quote__head">
+        <span className="fc-exhibit-quote__label">{label}</span>
+        <span className="fc-exhibit-quote__bound">{boundLabel}</span>
       </div>
-      <div className="fc-tag__foot">
-        <div className="fc-tag__meta">
-          <span className="fc-tag__sku" translate="no">
-            {HERO_SKU}
-          </span>
-          <span className="fc-tag__where">
-            {providerLabel(offer.provider)} · {regionLabel(offer.region)} ·{" "}
-            {commitmentLabel(offer.commitment)}
-          </span>
-        </div>
-        <div className="fc-tag__price serif">{usd(offer.price)}</div>
-      </div>
+      <p className="fc-exhibit-quote__id">Quote #{offer.id}</p>
+      <p className="fc-exhibit-quote__terms serif">
+        {providerLabel(offer.provider)} · {regionLabel(offer.region)} ·{" "}
+        <span className="fc-exhibit-quote__contract">
+          {commitmentLabel(offer.commitment)}
+        </span>
+      </p>
+      <p className="fc-exhibit-quote__price serif">{usd(offer.price)}</p>
+      <p className="fc-exhibit-quote__meta">
+        Provider response · collected {stampDate(offer.collectedAt)}
+      </p>
+      <Link className="fc-exhibit-quote__link" href={`/basis?sku=${HERO_SKU}`}>
+        Inspect quote →
+      </Link>
     </article>
   );
 }

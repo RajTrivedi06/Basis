@@ -13,7 +13,7 @@ const C21 = {
     "the share of price differences left over after accounting for everything sellers publicly disclose.",
   spot: "discounted capacity the provider can take back at any time.",
   decomposition:
-    "splitting total price variation into named causes, one factor at a time.",
+    "splitting total price variation into named causes, modeled jointly from observed quotes.",
   icc: "how much of the leftover variation sticks to the same specific machines day after day.",
 } as const;
 

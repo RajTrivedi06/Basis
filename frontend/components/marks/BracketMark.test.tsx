@@ -2,7 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { BracketMark } from "@/components/marks/BracketMark";
 import {
+  BRACKET_BENCHMARK_LABEL,
   BRACKET_FOOTNOTE,
+  BRACKET_PAID_LABEL,
+  BRACKET_REFERENCE_HINT,
   BracketDiagram,
 } from "@/components/marks/BracketDiagram";
 
@@ -80,21 +83,22 @@ describe("BracketMark", () => {
 });
 
 describe("BracketDiagram", () => {
-  it("carries the single footnote line", () => {
+  it("carries the reference gloss and footnote", () => {
     render(<BracketDiagram />);
+    expect(screen.getByText(BRACKET_REFERENCE_HINT)).toBeInTheDocument();
     expect(screen.getByText(BRACKET_FOOTNOTE)).toBeInTheDocument();
-    expect(screen.getByText("Recorded, never modeled.")).toBeInTheDocument();
   });
 
   it("suppresses the footnote when the caption already carries it", () => {
     render(<BracketDiagram showFootnote={false} />);
     expect(screen.queryByText(BRACKET_FOOTNOTE)).not.toBeInTheDocument();
+    expect(screen.queryByText(BRACKET_REFERENCE_HINT)).not.toBeInTheDocument();
   });
 
   it("labels both price lines and omits figures it has not been given", () => {
     const { container } = render(<BracketDiagram />);
-    expect(screen.getByText("BENCHMARK PRICE")).toBeInTheDocument();
-    expect(screen.getByText("WHAT YOU ACTUALLY PAY")).toBeInTheDocument();
+    expect(screen.getByText(BRACKET_BENCHMARK_LABEL)).toBeInTheDocument();
+    expect(screen.getByText(BRACKET_PAID_LABEL)).toBeInTheDocument();
     expect(container.querySelectorAll(".bracket-diagram__value")).toHaveLength(0);
   });
 
