@@ -23,21 +23,55 @@ test.describe("check 2 · truth-patch positive", () => {
   test("landing hero carries both anchored structural claims", async ({ page }) => {
     await gotoRendered(page, "/");
 
-    // The hero is client-rendered; wait for the eyebrow before reading copy.
-    await expect(page.getByText(/Market-priced segments/i).first()).toBeVisible();
+    // The findings act is server-rendered now, but its figures still arrive
+    // from the artifact; wait for the range line before reading copy.
+    await expect(page.getByText(/market-priced segments/i).first()).toBeVisible();
 
     const text = await bodyText(page);
-    expect(text, "ML anchor").toContain("45-feature");
-    expect(text, "host-identity anchor").toMatch(/ICC 0\.55/);
+
+    // Both anchors, asserted by substance rather than by one phrasing: the
+    // file-copy landing spells the feature count and labels the ICC in full,
+    // and neither claim may quietly disappear behind a redesign again.
+    expect(text, "ML anchor · feature count").toMatch(
+      /(45[\s-]feature|forty-five features)/i
+    );
+    expect(text, "ML anchor · the bound falls short").toMatch(
+      /out-of-sample/i
+    );
+    expect(text, "ML anchor · dated").toMatch(/as of [a-z]{3} \d{1,2}/i);
+    expect(text, "host-identity anchor · label").toMatch(
+      /intraclass correlation/i
+    );
+    expect(text, "host-identity anchor · figure").toMatch(/0\.\d{2}/);
+    expect(text, "host-identity anchor · reading").toMatch(
+      /tracks who the host is/i
+    );
   });
 
-  test("landing hero states the live 20-61% range", async ({ page }) => {
+  test("landing narrates the residual as a live range, never a point value", async ({
+    page,
+  }) => {
     await gotoRendered(page, "/");
-    await expect(page.getByText(/Market-priced segments/i).first()).toBeVisible();
+    await expect(page.getByText(/market-priced segments/i).first()).toBeVisible();
 
-    // normalize() folds en dash / em dash / unicode minus to "-".
     const text = await bodyText(page);
-    expect(text, "live range with dash variants folded").toMatch(/20-61\s*%/);
+
+    // The frozen "~20-61%" was replaced by the live series range (design doc
+    // §7 wants range language; the Quarantine Rule wants the figures live, and
+    // the patch's floor had already gone stale). What must hold is the SHAPE:
+    // two percentages, a window in days, and the population named.
+    expect(text, "range language").toMatch(
+      /ranged\s+\d{1,3}%\s*to\s*\d{1,3}%/i
+    );
+    expect(text, "window is dated in days").toMatch(
+      /across the last \d{1,3} days/i
+    );
+    expect(text, "population named beside the number").toMatch(
+      /market-priced segments/i
+    );
+    expect(text, "range is conditional, not a headline constant").toMatch(
+      /segment-\s*and time-conditional/i
+    );
   });
 
   test("Ask Basis is labelled Experimental", async ({ page }) => {
