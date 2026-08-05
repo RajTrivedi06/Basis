@@ -55,8 +55,10 @@ export function StoryMotion() {
       };
 
       // Statement lines rise out of their own overflow, one after another.
+      // The cold open runs its own mount sequence instead.
       const lines = () => {
         gsap.utils.toArray<HTMLElement>("[data-lines]").forEach((group) => {
+          if (group.closest(".fc-act--open")) return;
           const inner = group.querySelectorAll<HTMLElement>("[data-line] > *");
           if (inner.length === 0) return;
           gsap.from(inner, {
@@ -72,6 +74,7 @@ export function StoryMotion() {
       // Entries get stamped into the ledger: no drift, no slide, just arrival.
       const stamps = () => {
         gsap.utils.toArray<HTMLElement>("[data-stamp]").forEach((el) => {
+          if (el.closest(".fc-act--open")) return;
           const children = el.hasAttribute("data-stamp-group")
             ? Array.from(el.children)
             : [el];
@@ -84,6 +87,50 @@ export function StoryMotion() {
             scrollTrigger: { trigger: el, start: "top 90%", once: true },
           });
         });
+      };
+
+      // Cold open: photograph resolves, headline staggers, prices arrive.
+      const coldOpen = () => {
+        const act = document.querySelector<HTMLElement>(".fc-act--open");
+        if (!act) return;
+
+        const plate = act.querySelector<HTMLElement>(".fc-plate__img");
+        const head = act.querySelector<HTMLElement>(".fc-open__head");
+        const headline = act.querySelectorAll<HTMLElement>(
+          ".fc-open__head-line [data-line] > *"
+        );
+        const pairSides = act.querySelectorAll<HTMLElement>(".fc-pair__side");
+        const multiple = act.querySelector<HTMLElement>(".fc-pair__multiple");
+        const bracket = act.querySelector<HTMLElement>(".fc-pair__bracket");
+        const foot = act.querySelector<HTMLElement>(".fc-open__foot");
+
+        const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+
+        if (plate) {
+          tl.from(plate, { opacity: 0, scale: 1.03, duration: 0.9 }, 0);
+        }
+        if (head) {
+          tl.from(head, { opacity: 0, y: 8, duration: 0.45 }, 0.08);
+        }
+        if (headline.length > 0) {
+          tl.from(
+            headline,
+            { yPercent: 110, duration: 0.8, stagger: 0.08 },
+            0.12
+          );
+        }
+        if (pairSides.length > 0) {
+          tl.from(pairSides, { opacity: 0, y: 14, duration: 0.5, stagger: 0.1 }, 0.42);
+        }
+        if (multiple) {
+          tl.from(multiple, { opacity: 0, scale: 0.88, duration: 0.35 }, 0.58);
+        }
+        if (bracket) {
+          tl.from(bracket, { opacity: 0, duration: 0.4 }, 0.62);
+        }
+        if (foot) {
+          tl.from(foot.children, { opacity: 0, y: 10, duration: 0.45, stagger: 0.08 }, 0.72);
+        }
       };
 
       // Bars are measurements, so they draw with the scroll rather than on a
@@ -105,6 +152,7 @@ export function StoryMotion() {
       };
 
       mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
+        coldOpen();
         parallax(1);
         lines();
         stamps();
@@ -127,6 +175,7 @@ export function StoryMotion() {
       });
 
       mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
+        coldOpen();
         // Half the travel: a phone viewport is short, so the same depth reads
         // as a lurch. Dots fade as one layer — 300+ tweens is a dropped frame.
         parallax(0.5);

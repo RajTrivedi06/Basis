@@ -87,4 +87,48 @@ describe("computeHeroBounds", () => {
     const bounds = computeHeroBounds(response(ramp("vast", 1, 9, 33)));
     expect(bounds!.sampleSize).toBe(33);
   });
+
+  it("keeps low and high offers on the same commitment type", () => {
+    const bounds = computeHeroBounds(
+      response([
+        ...ramp("vast", 0.5, 2, 20, 100).map((o) => ({
+          ...o,
+          commitment_type: "spot",
+        })),
+        ...ramp("azure", 2, 14, 20, 200).map((o) => ({
+          ...o,
+          commitment_type: "reserved_1y",
+        })),
+        ...ramp("runpod", 0.4, 1.8, 20, 300).map((o) => ({
+          ...o,
+          commitment_type: "on_demand",
+        })),
+      ])
+    );
+    expect(bounds).not.toBeNull();
+    expect(bounds!.lowOffer.commitment).toBe(bounds!.highOffer.commitment);
+  });
+
+  it("prefers a commitment pool with a cross-provider spread", () => {
+    const bounds = computeHeroBounds(
+      response([
+        ...ramp("vast", 1, 2, 20, 100).map((o) => ({
+          ...o,
+          commitment_type: "on_demand",
+        })),
+        ...ramp("runpod", 2, 12, 20, 200).map((o) => ({
+          ...o,
+          commitment_type: "on_demand",
+        })),
+        ...ramp("azure", 0.2, 0.4, 25, 300).map((o) => ({
+          ...o,
+          commitment_type: "spot",
+        })),
+      ])
+    );
+    expect(bounds).not.toBeNull();
+    expect(bounds!.lowOffer.commitment).toBe("on_demand");
+    expect(bounds!.highOffer.commitment).toBe("on_demand");
+    expect(bounds!.crossProvider).toBe(true);
+  });
 });

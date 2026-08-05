@@ -100,11 +100,16 @@ export const FINDING_ANALYST: PlateSpec = {
   width: 1600,
   height: 1067,
   sources: [
-    { media: "(max-width: 767px)", srcSet: `${P}/finding-analyst-900.webp` },
+    {
+      media: "(max-width: 767px)",
+      srcSet: `${P}/finding-analyst-mobile-819.webp`,
+    },
     { srcSet: `${P}/finding-analyst-1600.webp` },
   ],
   slate: "Plate 06 · reading the printout",
   position: "54% 46%",
+  /* Portrait crop: corridor detail sits high; lower field stays dark. */
+  positionMobile: "50% 24%",
 };
 
 /** Act IX: the floor the rules get written for. */

@@ -10,11 +10,20 @@ import {
   type QuoteDot,
   type QuoteExhibit,
 } from "@/lib/fileCopy";
-import { providerLabel } from "@/lib/providerLabel";
+import { catalogLabel, providerLabel } from "@/lib/providerLabel";
 
 interface Cursor {
   lane: number;
   dot: number;
+}
+
+function medianComparison(price: number, dayMedian: number): string {
+  if (dayMedian <= 0) return "";
+  const delta = price - dayMedian;
+  const pct = Math.round(Math.abs((delta / dayMedian) * 100));
+  const sign = delta >= 0 ? "+" : "−";
+  const direction = delta >= 0 ? "above" : "below";
+  return `${sign}${usd(Math.abs(delta))} · ${pct}% ${direction} day median (${usd(dayMedian)})`;
 }
 
 /**
@@ -41,11 +50,13 @@ export function QuoteLanes({
   boundLow,
   boundHigh,
   sku,
+  skuDisplay,
 }: {
   exhibit: QuoteExhibit;
   boundLow: number | null;
   boundHigh: number | null;
   sku: string;
+  skuDisplay: string;
 }) {
   const [cursor, setCursor] = useState<Cursor | null>(null);
   const laneRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -130,12 +141,18 @@ export function QuoteLanes({
     boundLow !== null && boundLow > exhibit.lo && boundLow < exhibit.hi;
   const showHigh =
     boundHigh !== null && boundHigh > exhibit.lo && boundHigh < exhibit.hi;
+  const bandLeft = showLow ? at(boundLow) * 100 : 0;
+  const bandWidth =
+    showLow && showHigh ? (at(boundHigh) - at(boundLow)) * 100 : 0;
 
   return (
     <div className="fc-quotes">
       <div className="fc-quotes__plot">
         <div className="fc-quotes__slate">
-          <span>Quoted price · log scale · USD per GPU-hour</span>
+          <span>
+            Raw quoted dispersion · log scale · USD per GPU-hour · before
+            controls
+          </span>
           <span>
             n = {exhibit.total}
             {exhibit.recorded > exhibit.total
@@ -145,6 +162,13 @@ export function QuoteLanes({
         </div>
 
         <div className="fc-quotes__grid">
+          {showLow && showHigh ? (
+            <span
+              className="fc-quotes__band"
+              style={{ left: `${bandLeft}%`, width: `${bandWidth}%` }}
+              aria-hidden
+            />
+          ) : null}
           {showLow ? (
             <span
               className="fc-quotes__bound"
@@ -170,7 +194,7 @@ export function QuoteLanes({
               <div className="fc-lane" key={lane.provider}>
                 <div className="fc-lane__key">
                   <span className="fc-lane__name">
-                    {providerLabel(lane.provider)}
+                    {catalogLabel(lane.provider)}
                   </span>
                   <span className="fc-lane__count">{lane.dots.length}</span>
                 </div>
@@ -181,7 +205,7 @@ export function QuoteLanes({
                     laneRefs.current[laneIndex] = node;
                   }}
                   role="group"
-                  aria-label={`${providerLabel(lane.provider)}: ${
+                  aria-label={`${catalogLabel(lane.provider)}: ${
                     lane.dots.length
                   } quotes, ${usd(lane.low)} to ${usd(
                     lane.high
@@ -235,8 +259,9 @@ export function QuoteLanes({
         </div>
 
         <p className="fc-quotes__note">
-          Percentiles, never a mean. One mispriced listing would drag an average
-          somewhere no buyer could actually transact.
+          We report the middle 90% (p5–p95), not the mean — the quote
+          distribution is skewed, and outliers can distort an average without
+          describing the market.
         </p>
       </div>
 
@@ -254,11 +279,15 @@ export function QuoteLanes({
           </div>
           <dl className="fc-slip__rows">
             <div>
+              <dt>Canonical SKU</dt>
+              <dd translate="no">{skuDisplay}</dd>
+            </div>
+            <div>
               <dt>Provider</dt>
               <dd>
                 {selected === null
                   ? `median of ${exhibit.total}`
-                  : providerLabel(selected.provider)}
+                  : catalogLabel(selected.provider)}
               </dd>
             </div>
             <div>
@@ -283,9 +312,7 @@ export function QuoteLanes({
           <p className="fc-slip__note">
             {selected === null
               ? "Pick a quote to read the one behind it."
-              : selected.price > dayMedian
-                ? `Above the day median of ${usd(dayMedian)}.`
-                : `At or below the day median of ${usd(dayMedian)}.`}
+              : medianComparison(selected.price, dayMedian)}
           </p>
         </div>
         <Link
@@ -324,7 +351,7 @@ const Dots = memo(function Dots({
           data-dot={dotIndex}
           className="fc-dot"
           tabIndex={-1}
-          aria-label={`${usd(dot.price)} per GPU-hour, ${providerLabel(
+          aria-label={`${usd(dot.price)} per GPU-hour, ${catalogLabel(
             dot.provider
           )}, ${regionLabel(dot.region)}, ${commitmentLabel(dot.commitment)}`}
           style={{ left: `${dot.x * 100}%`, top: `${18 + dot.y * 64}%` }}

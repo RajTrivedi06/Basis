@@ -19,3 +19,16 @@ export const PROVIDER_LABELS: Record<string, string> = {
 export function providerLabel(canonical: string): string {
   return PROVIDER_LABELS[canonical] ?? canonical;
 }
+
+/** Catalog name for collection lanes — provider only, not commitment type. */
+export function catalogLabel(provider: string): string {
+  const labels: Record<string, string> = {
+    aws_spot: "AWS",
+    azure: "Azure",
+    gcp: "Google Cloud",
+    runpod: "RunPod",
+    vast: "Vast.ai",
+    tensordock: "TensorDock",
+  };
+  return labels[provider] ?? providerLabel(provider);
+}

@@ -48,7 +48,7 @@ export function Reel({
           scrollTrigger: {
             trigger: stage,
             start: "top top",
-            end: () => `+=${distance() + window.innerHeight * 0.5}`,
+            end: () => `+=${distance() + window.innerHeight * 0.35}`,
             pin: true,
             anticipatePin: 1,
             scrub: 0.55,

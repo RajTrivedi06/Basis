@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BasisLogo } from "@/components/layout/BasisLogo";
 import { NAV_ITEMS, navNumber } from "@/lib/nav";
+import { useNavBackdrop } from "@/lib/useNavBackdrop";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   Suspense,
@@ -67,6 +68,8 @@ function SiteHeaderInner() {
 
   const sku = params.get("sku");
   const suffix = sku ? `?sku=${encodeURIComponent(sku)}` : "";
+  const isStoryLanding = pathname === "/";
+  const navTheme = useNavBackdrop(isStoryLanding);
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
@@ -142,6 +145,7 @@ function SiteHeaderInner() {
     <>
       <div
         className={`site-header-rail site-header-rail--${navState}${menuOpen ? " is-pinned" : ""}`}
+        data-nav-theme={isStoryLanding ? navTheme : "paper"}
         aria-hidden={railHidden}
       >
         <header className="site-header-island">
