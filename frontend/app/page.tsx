@@ -1164,7 +1164,9 @@ function MethodDepletion({
 }: {
   decomposition: BasisDecompositionResponse;
 }) {
-  const { rows, residualShare } = buildLedger(decomposition);
+  const { rows, residualShare } = buildLedger(
+    decomposition as unknown as Record<string, unknown>
+  );
 
   return (
     <div
