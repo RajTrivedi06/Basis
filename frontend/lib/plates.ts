@@ -29,22 +29,24 @@ export interface PlateSpec {
 const P = "/plates";
 
 /**
- * Act I. A wall of filing drawers: the archive the whole page is a copy from.
- * Phones get the corridor crop, which is nearly black across its lower half,
- * so the hook's type sits on the plate rather than on a scrim.
+ * Act I. A dark data-hall corridor: racks recede into a warm distant light.
+ * Phones get the portrait crop (dark lower half for the hook); desktops get
+ * the landscape frame with negative space on the left for type.
  */
 export const COLD_OPEN: PlateSpec = {
-  src: `${P}/ledger-files-1920.webp`,
-  width: 1920,
-  height: 1280,
+  src: `${P}/cold-open-hall-2048.webp`,
+  width: 2048,
+  height: 1364,
   sources: [
-    { media: "(max-width: 767px)", srcSet: `${P}/hero-corridor-900.webp` },
-    { media: "(max-width: 1280px)", srcSet: `${P}/ledger-files-1200.webp` },
-    { srcSet: `${P}/ledger-files-1920.webp` },
+    { media: "(max-width: 767px)", srcSet: `${P}/cold-open-hall-mobile-819.webp` },
+    { media: "(max-width: 1280px)", srcSet: `${P}/cold-open-hall-1024.webp` },
+    { srcSet: `${P}/cold-open-hall-2048.webp` },
   ],
-  slate: "Plate 00 · the archive",
-  position: "50% 42%",
-  positionMobile: "62% 22%",
+  slate: "Plate 00 · cold open",
+  /* Bias right so the aisle and racks read; left stays in shadow for type. */
+  position: "68% 48%",
+  /* Portrait crop already parks type in the black lower field. */
+  positionMobile: "50% 28%",
 };
 
 /** Act IV, phones only: the sheet, the stamp, and the bracket drawn by hand. */
