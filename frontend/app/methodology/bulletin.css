@@ -51,6 +51,19 @@
   font-family: var(--f-serif);
 }
 
+/* The global footer carries mt-20, which would flash cream (--bg) between the
+   desk and the footer bar. Drop that margin on this route and seat the footer
+   on the same desk tone so the page reads as one continuous ground. */
+body:has(.bulletin-page) {
+  background: #C9C2B2;
+}
+
+body:has(.bulletin-page) > footer {
+  margin-top: 0;
+  background: #C9C2B2;
+  border-top-color: rgba(28, 27, 23, 0.22);
+}
+
 /* One sheet of paper, centred on the desk. Every band of the bulletin sits
    inside it, so there is exactly one left and right margin on the page. */
 .bulletin-sheet {
@@ -1315,5 +1328,63 @@
   .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__meta {
     border-bottom-width: 1px;
     padding-block: 6px;
+  }
+}
+
+/* —— The thumb —— */
+.bull-book__stage {
+  /* Vertical stays with the browser, horizontal comes to us. Without this the
+     swipe and the scroll fight over the same finger. */
+  touch-action: pan-y;
+}
+
+/* One page at a time below the spread breakpoint. */
+.bull-book__stage.is-single .bull-spread {
+  grid-template-columns: 1fr;
+}
+
+.bull-book__stage.is-single .bull-spread > .bull-leaf,
+.bull-book__stage.is-single .bull-spread > .bull-leaf + .bull-leaf {
+  border-left: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1099px) {
+  .bull-leaf__face { padding: 0; }
+
+  /* Thumb-sized controls, and a hint that the page is swipeable. */
+  .bull-pager {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--bull-paper);
+  }
+
+  .bull-pager__btn {
+    min-height: 44px;
+    padding: 8px 14px;
+  }
+
+  .bull-pager__count {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+}
+
+@media (max-width: 1099px) and (hover: none) {
+  .bull-pager::before {
+    content: "Swipe to turn";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--f-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
   }
 }

@@ -24,28 +24,44 @@ import gsap from "gsap";
 export function BulletinPager({ children }: { children: ReactNode }) {
   const leaves = Children.toArray(children);
 
-  // The front page stands alone, the way a folded newspaper does; everything
-  // after it reads as an open spread. 9 leaves -> cover + 4 spreads.
-  const views: number[][] = [[0]];
-  for (let i = 1; i < leaves.length; i += 2) {
-    views.push(leaves.slice(i, i + 2).map((_, k) => i + k));
-  }
-  const total = views.length;
-
   const [page, setPage] = useState(0);
   const [paged, setPaged] = useState(false);
+  const [spreads, setSpreads] = useState(false);
+
+  // A phone has no room for two pages, so it turns one at a time. Wide
+  // screens keep the cover-then-spreads shape.
+  const views: number[][] = spreads
+    ? (() => {
+        const v: number[][] = [[0]];
+        for (let i = 1; i < leaves.length; i += 2) {
+          v.push(leaves.slice(i, i + 2).map((_, k) => i + k));
+        }
+        return v;
+      })()
+    : leaves.map((_, i) => [i]);
+  const total = views.length;
   const stage = useRef<HTMLDivElement | null>(null);
   const turning = useRef(false);
+  const [still, setStill] = useState(false);
 
-  // Only paginate where there is room for it, and only when motion is welcome.
+  // Turning is on everywhere now; only the shape of a view changes with room.
+  // Reduced motion keeps the pager and drops the animation, rather than
+  // dropping the whole reader.
   useEffect(() => {
-    const mq = window.matchMedia(
-      "(min-width: 1100px) and (prefers-reduced-motion: no-preference)"
-    );
-    const sync = () => setPaged(mq.matches);
+    const wide = window.matchMedia("(min-width: 1100px)");
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => {
+      setSpreads(wide.matches);
+      setPaged(true);
+      setStill(calm.matches);
+    };
     sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+    wide.addEventListener("change", sync);
+    calm.addEventListener("change", sync);
+    return () => {
+      wide.removeEventListener("change", sync);
+      calm.removeEventListener("change", sync);
+    };
   }, []);
 
   const go = useCallback(
@@ -68,6 +84,11 @@ export function BulletinPager({ children }: { children: ReactNode }) {
         `[data-leaf="${turnIndex}"]`
       );
       if (leaf === null) {
+        setPage(next);
+        return;
+      }
+
+      if (still) {
         setPage(next);
         return;
       }
@@ -108,7 +129,72 @@ export function BulletinPager({ children }: { children: ReactNode }) {
 
       setPage(next);
     },
-    [paged, page, total, views]
+    [paged, page, total, views, still]
+  );
+
+
+  // —— The thumb ——
+  // `touch-action: pan-y` on the stage leaves vertical scrolling to the
+  // browser and hands us the horizontal gestures, so a swipe to turn and a
+  // scroll to read never fight over the same finger. The first few pixels
+  // decide the axis; once vertical wins we stay out of the way entirely.
+  const drag = useRef<{
+    x: number;
+    y: number;
+    axis: "" | "x" | "y";
+    t: number;
+  } | null>(null);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (!paged || turning.current) return;
+    if (e.pointerType === "mouse") return;
+    drag.current = { x: e.clientX, y: e.clientY, axis: "", t: Date.now() };
+  }, [paged]);
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      const d = drag.current;
+      if (d === null) return;
+      const dx = e.clientX - d.x;
+      const dy = e.clientY - d.y;
+
+      if (d.axis === "") {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        d.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      }
+      if (d.axis !== "x") return;
+
+      const cur = stage.current?.querySelector<HTMLElement>(
+        ".bull-spread[data-current]"
+      );
+      if (!cur) return;
+      // Resist at the ends so the paper feels bound, not broken.
+      const atEnd = (dx > 0 && page === 0) || (dx < 0 && page === total - 1);
+      gsap.set(cur, { x: atEnd ? dx * 0.25 : dx });
+    },
+    [page, total]
+  );
+
+  const endDrag = useCallback(
+    (e: React.PointerEvent) => {
+      const d = drag.current;
+      drag.current = null;
+      if (d === null || d.axis !== "x") return;
+
+      const cur = stage.current?.querySelector<HTMLElement>(
+        ".bull-spread[data-current]"
+      );
+      const dx = e.clientX - d.x;
+      const width = stage.current?.clientWidth ?? 1;
+      const velocity = Math.abs(dx) / Math.max(1, Date.now() - d.t);
+      // A short flick counts as much as a long drag.
+      const commit = Math.abs(dx) > width * 0.22 || velocity > 0.45;
+
+      if (cur) gsap.to(cur, { x: 0, duration: 0.28, ease: "power2.out" });
+      if (!commit) return;
+      go(dx < 0 ? page + 1 : page - 1);
+    },
+    [go, page]
   );
 
   // Arrow keys turn the page, as they would in any reader.
@@ -150,8 +236,14 @@ export function BulletinPager({ children }: { children: ReactNode }) {
   return (
     <div className="bull-book">
       <div
-        className={`bull-book__stage${views[page].length === 1 ? " is-cover" : ""}`}
+        className={`bull-book__stage${
+          spreads && views[page].length === 1 ? " is-cover" : ""
+        }${spreads ? "" : " is-single"}`}
         ref={stage}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
       >
         {views.map((group, v) => (
           <div
@@ -181,7 +273,7 @@ export function BulletinPager({ children }: { children: ReactNode }) {
         </button>
         <span className="bull-pager__count">
           {views[page].length === 1
-            ? `Page 1 of ${leaves.length}`
+            ? `Page ${views[page][0] + 1} of ${leaves.length}`
             : `Pages ${views[page][0] + 1}\u2013${
                 views[page][views[page].length - 1] + 1
               } of ${leaves.length}`}
