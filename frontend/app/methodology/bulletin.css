@@ -472,10 +472,21 @@
   line-height: 1.5;
 }
 
-.bull-exhibit svg {
+/* Chart SVGs fill the exhibit; the inline key chips must not. This rule used
+   to catch every svg in the figure, so each 14px pattern swatch in the ledger
+   stretched to the full cell and drove its row to ~360px tall. */
+.bull-exhibit svg:not(.bull-swatch) {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.bull-swatch {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  flex: none;
+  vertical-align: -2px;
 }
 
 .bull-stages {

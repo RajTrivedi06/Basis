@@ -12,7 +12,7 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
   return (
     <figure className="bull-exhibit bull-exhibit--strong">
       <figcaption className="bull-exhibit__cap">
-        <span>Exhibit E — The ledger of accounts (operable)</span>
+        <span>Exhibit E: The ledger of accounts (operable)</span>
         <span className="bull-exhibit__cap-meta">
           {view.skuCode} · MARKET-PRICED PANEL, n = {view.mktN} ·{" "}
           <span className="bull-sim">[SIM]</span>
@@ -28,7 +28,7 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
             letterSpacing="2"
             fill="var(--ink-mid)"
           >
-            ALL DISAGREEMENT, 100% —— SUBTRACTED LEFT TO RIGHT
+            ALL DISAGREEMENT, 100% · SUBTRACTED LEFT TO RIGHT
           </text>
           {view.segs.map((g) => (
             <rect
@@ -86,10 +86,8 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
                 <td>{r.pos}</td>
                 <td>
                   <svg
-                    width="14"
-                    height="14"
+                    className="bull-swatch"
                     viewBox="0 0 14 14"
-                    style={{ verticalAlign: "-2px" }}
                     aria-hidden="true"
                   >
                     <rect
@@ -127,13 +125,11 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
               </tr>
             ))}
             <tr>
-              <td style={{ fontWeight: 700 }}>—</td>
+              <td style={{ fontWeight: 700 }}>-</td>
               <td>
                 <svg
-                  width="14"
-                  height="14"
+                  className="bull-swatch"
                   viewBox="0 0 14 14"
-                  style={{ verticalAlign: "-2px" }}
                   aria-hidden="true"
                 >
                   <rect
@@ -144,7 +140,7 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
                     fill="var(--residual)"
                   />
                 </svg>{" "}
-                THE REMAINDER — UNEXPLAINED
+                THE REMAINDER: UNEXPLAINED
                 <BulletinStamp size="sm" className="bull-stamp--inline">
                   Cannot be filed
                 </BulletinStamp>
@@ -172,7 +168,7 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
         </table>
         </div>
         <div className="bull-ledger-note">
-          Current order: {view.orderText} · Reorder freely — the shares move;
+          Current order: {view.orderText} · Reorder freely: the shares move;
           the remainder does not.
         </div>
       </div>
