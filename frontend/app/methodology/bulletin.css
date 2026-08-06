@@ -1103,25 +1103,49 @@
   perspective: 2200px;
 }
 
-.bull-leaf {
+.bull-spread {
   position: absolute;
   inset: 0;
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  background: var(--bull-paper);
-  /* Off-leaf pages stay in the DOM and stay findable; they are simply not
-     painted. `display: none` would take them out of Cmd-F and the a11y tree. */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   visibility: hidden;
 }
 
-.bull-leaf[data-current] {
+/* The front page stands alone and takes the full sheet. */
+.bull-book__stage.is-cover .bull-spread[data-current] {
+  grid-template-columns: 1fr;
+}
+
+.bull-spread[data-current] {
   position: relative;
   visibility: visible;
   z-index: 2;
 }
 
-/* The turning leaf paints while it moves, whichever side of the fold it is on. */
+/* The gutter: two pages meeting at a fold, with the crease shaded on both
+   sides so the spread reads as one folded sheet rather than two cards. */
+.bull-spread > .bull-leaf + .bull-leaf {
+  border-left: 1px solid var(--ink-dim);
+  box-shadow: inset 14px 0 22px -16px rgba(28, 27, 23, 0.5);
+}
+
+.bull-spread > .bull-leaf:first-child:not(:only-child) {
+  box-shadow: inset -14px 0 22px -16px rgba(28, 27, 23, 0.5);
+}
+
+.bull-leaf {
+  position: relative;
+  min-width: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  background: var(--bull-paper);
+}
+
+/* Off-spread pages stay in the DOM and stay findable; they are simply not
+   painted. `display: none` would take them out of Cmd-F and the a11y tree. */
+
+/* The turning leaf paints while it moves, whichever side of the fold. */
 .bull-leaf[style*="rotate"] { visibility: visible; }
 
 .bull-leaf__shade {
@@ -1182,3 +1206,11 @@
 .bulletin-page [id] {
   scroll-margin-top: calc(var(--header-rail-h) + 16px);
 }
+
+.bull-leaf__face {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 clamp(12px, 1.6vw, 24px);
+}
+
+.bull-book__stage.is-cover .bull-leaf__face { padding: 0; }

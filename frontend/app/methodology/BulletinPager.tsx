@@ -23,7 +23,14 @@ import gsap from "gsap";
  */
 export function BulletinPager({ children }: { children: ReactNode }) {
   const leaves = Children.toArray(children);
-  const total = leaves.length;
+
+  // The front page stands alone, the way a folded newspaper does; everything
+  // after it reads as an open spread. 9 leaves -> cover + 4 spreads.
+  const views: number[][] = [[0]];
+  for (let i = 1; i < leaves.length; i += 2) {
+    views.push(leaves.slice(i, i + 2).map((_, k) => i + k));
+  }
+  const total = views.length;
 
   const [page, setPage] = useState(0);
   const [paged, setPaged] = useState(false);
@@ -53,9 +60,10 @@ export function BulletinPager({ children }: { children: ReactNode }) {
       }
 
       const forward = next > page;
-      // The leaf that visually turns is the one being left behind when moving
-      // forward, and the one arriving when moving back.
-      const turnIndex = forward ? page : next;
+      // A spread turns on its gutter: the right-hand page of the view being
+      // left swings over to become the left-hand page of the next one.
+      const fromView = forward ? views[page] : views[next];
+      const turnIndex = fromView[fromView.length - 1];
       const leaf = root.querySelector<HTMLElement>(
         `[data-leaf="${turnIndex}"]`
       );
@@ -100,7 +108,7 @@ export function BulletinPager({ children }: { children: ReactNode }) {
 
       setPage(next);
     },
-    [paged, page, total]
+    [paged, page, total, views]
   );
 
   // Arrow keys turn the page, as they would in any reader.
@@ -124,12 +132,16 @@ export function BulletinPager({ children }: { children: ReactNode }) {
       if (!id) return;
       const el = document.getElementById(id);
       const leaf = el?.closest<HTMLElement>("[data-leaf]");
-      if (leaf) setPage(Number(leaf.dataset.leaf));
+      if (leaf) {
+        const idx = Number(leaf.dataset.leaf);
+        const v = views.findIndex((g) => g.includes(idx));
+        if (v >= 0) setPage(v);
+      }
     };
     jump();
     window.addEventListener("hashchange", jump);
     return () => window.removeEventListener("hashchange", jump);
-  }, [paged]);
+  }, [paged, views]);
 
   if (!paged) {
     return <>{children}</>;
@@ -137,17 +149,23 @@ export function BulletinPager({ children }: { children: ReactNode }) {
 
   return (
     <div className="bull-book">
-      <div className="bull-book__stage" ref={stage}>
-        {leaves.map((leaf, i) => (
+      <div
+        className={`bull-book__stage${views[page].length === 1 ? " is-cover" : ""}`}
+        ref={stage}
+      >
+        {views.map((group, v) => (
           <div
-            key={i}
-            data-leaf={i}
-            className="bull-leaf"
-            data-current={i === page ? "" : undefined}
-            aria-hidden={i === page ? undefined : true}
+            key={v}
+            className="bull-spread"
+            data-current={v === page ? "" : undefined}
+            aria-hidden={v === page ? undefined : true}
           >
-            <div className="bull-leaf__face">{leaf}</div>
-            <div className="bull-leaf__shade" aria-hidden />
+            {group.map((i) => (
+              <div key={i} data-leaf={i} className="bull-leaf">
+                <div className="bull-leaf__face">{leaves[i]}</div>
+                <div className="bull-leaf__shade" aria-hidden />
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -162,7 +180,11 @@ export function BulletinPager({ children }: { children: ReactNode }) {
           ◀ Previous
         </button>
         <span className="bull-pager__count">
-          Page {page + 1} of {total}
+          {views[page].length === 1
+            ? `Page 1 of ${leaves.length}`
+            : `Pages ${views[page][0] + 1}\u2013${
+                views[page][views[page].length - 1] + 1
+              } of ${leaves.length}`}
         </span>
         <button
           type="button"
