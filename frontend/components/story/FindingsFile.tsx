@@ -17,17 +17,71 @@ import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const SHEET_COUNT = 3;
-
+/**
+ * One entry per sheet. `dur` and `at` differ per sheet on purpose — identical
+ * timing on every card is what makes a stagger read as a machine rather than
+ * three pieces of paper with slightly different mass.
+ *
+ * `origin` puts the pivot near the corner that touches down first, so the
+ * rotation reads as a sheet settling on a hinge instead of spinning about
+ * its centre. `tilt` is the damped overshoot applied to the card itself.
+ */
 const THROW_FROM = [
-  { xPercent: -62, yPercent: 38, rotate: -16, scale: 0.94 },
-  { xPercent: -10, yPercent: 72, rotate: 12, scale: 0.91 },
-  { xPercent: 52, yPercent: 50, rotate: -10, scale: 0.93 },
+  {
+    xPercent: -58,
+    yPercent: 34,
+    rotate: -15,
+    scale: 1.05,
+    origin: "22% 86%",
+    tilt: -1.9,
+    dur: 0.82,
+    at: 0,
+  },
+  {
+    xPercent: -8,
+    yPercent: 64,
+    rotate: 12,
+    scale: 1.07,
+    origin: "50% 92%",
+    tilt: 2.1,
+    dur: 0.9,
+    at: 0.1,
+  },
+  {
+    xPercent: 48,
+    yPercent: 44,
+    rotate: -9,
+    scale: 1.04,
+    origin: "78% 84%",
+    tilt: -1.6,
+    dur: 0.86,
+    at: 0.23,
+  },
 ];
 
+const SHEET_PROPS =
+  "opacity,transform,transformOrigin,willChange,x,y,xPercent,yPercent,rotate,scale";
+
+type SheetParts = {
+  wrap: HTMLElement;
+  card: HTMLElement | null;
+  shadow: HTMLElement | null;
+};
+
+function partsOf(sheets: HTMLElement[]): SheetParts[] {
+  return sheets.map((wrap) => ({
+    wrap,
+    card: wrap.querySelector<HTMLElement>(".fc-card"),
+    shadow: wrap.querySelector<HTMLElement>(".fc-card-wrap__shadow"),
+  }));
+}
+
 function clearSheetMotion(sheets: HTMLElement[], limitsEl: HTMLElement | null) {
-  gsap.set(sheets, { clearProps: "opacity,transform,x,y,xPercent,yPercent,rotate,scale" });
-  if (limitsEl) gsap.set(limitsEl, { clearProps: "opacity,transform,y" });
+  const layers = partsOf(sheets).flatMap(({ wrap, card, shadow }) =>
+    [wrap, card, shadow].filter((el): el is HTMLElement => el !== null)
+  );
+  gsap.set(layers, { clearProps: SHEET_PROPS });
+  if (limitsEl) gsap.set(limitsEl, { clearProps: "opacity,transform,y,willChange" });
 }
 
 /**
@@ -71,40 +125,87 @@ export function FindingsFile({
         if (sheets.length === 0) return;
 
         const limitsEl = limitsRef.current;
+        const parts = partsOf(sheets);
+
+        // Nothing shows before the throw fires, so a fast scroll can't catch
+        // the sheets at rest and then re-throw them.
+        gsap.set(sheets, { opacity: 0 });
+
         const tl = gsap.timeline({
           paused: true,
+          defaults: { immediateRender: false, force3D: true },
           onComplete: () => finish(sheets),
         });
 
-        sheets.forEach((sheet, index) => {
+        parts.forEach(({ wrap, card, shadow }, index) => {
           const from = THROW_FROM[index % THROW_FROM.length];
-          tl.from(
-            sheet,
-            {
-              xPercent: from.xPercent,
-              yPercent: from.yPercent,
-              rotate: from.rotate,
-              scale: from.scale,
-              opacity: 0,
-              duration: 0.72,
-              ease: "back.out(1.15)",
-              immediateRender: false,
-            },
-            index * 0.12
+          const { at, dur } = from;
+
+          const layers = [wrap, card, shadow].filter(
+            (el): el is HTMLElement => el !== null
           );
+          gsap.set(wrap, { transformOrigin: from.origin });
+          // Promote for the throw only; clearSheetMotion drops it again so we
+          // are not holding three compositor layers for the rest of the page.
+          gsap.set(layers, { willChange: "transform" });
+
+          // Paper is opaque. Resolve it fast and let motion carry the rest —
+          // a 0.7s fade is what made the sheets read as ghosting UI.
           tl.fromTo(
-            sheet,
-            { "--fc-lift": 0 },
-            { "--fc-lift": 1, ease: "power1.in", duration: 0.4 },
-            index * 0.12 + 0.32
+            wrap,
+            { opacity: 0 },
+            { opacity: 1, duration: 0.26, ease: "power1.out" },
+            at
           );
+
+          // x and y are separate tweens with different curves and lengths.
+          // Equal easing on both axes gives a straight line; a slower, deeper
+          // vertical settle bends the path into an arc.
+          tl.from(wrap, { xPercent: from.xPercent, duration: dur, ease: "power2.out" }, at);
+          tl.from(
+            wrap,
+            { yPercent: from.yPercent, duration: dur * 1.16, ease: "power3.out" },
+            at
+          );
+          tl.from(wrap, { rotate: from.rotate, duration: dur * 0.92, ease: "power2.out" }, at);
+          // Larger → rest reads as dropping toward the desk, not flying in
+          // from the distance.
+          tl.from(wrap, { scale: from.scale, duration: dur, ease: "power2.out" }, at);
+
+          // Depth cue: the cast shadow is wide and absent while the sheet is
+          // off the surface, and tightens as it touches down.
+          if (shadow) {
+            tl.fromTo(
+              shadow,
+              { opacity: 0, scale: 1.22, yPercent: -10 },
+              {
+                opacity: 1,
+                scale: 1,
+                yPercent: 0,
+                duration: dur * 1.08,
+                ease: "power3.out",
+              },
+              at
+            );
+          }
+
+          // The settle. Travel stops; the sheet keeps a little angular energy
+          // and damps it out. This is the whole difference between "lands"
+          // and "snaps into place".
+          if (card) {
+            tl.from(
+              card,
+              { rotate: from.tilt, duration: 0.9, ease: "elastic.out(1, 0.62)" },
+              at + dur * 0.58
+            );
+          }
         });
 
         if (limitsEl) {
           tl.from(
             limitsEl,
-            { opacity: 0, y: 16, duration: 0.5, ease: "power2.out", immediateRender: false },
-            0.42
+            { opacity: 0, y: 16, duration: 0.55, ease: "power3.out" },
+            0.52
           );
         }
 
@@ -134,41 +235,71 @@ export function FindingsFile({
         if (sheets.length === 0) return;
 
         const limitsEl = limitsRef.current;
-        const tweens = sheets.map((sheet, index) =>
-          gsap.from(sheet, {
-            y: 28,
-            rotate: index % 2 === 0 ? -1.4 : 1.4,
-            opacity: 0,
-            duration: 0.55,
-            ease: "power3.out",
-            immediateRender: false,
-            scrollTrigger: {
-              trigger: sheet,
-              start: "top 94%",
-              once: true,
-              onEnter: () => {
-                if (index === sheets.length - 1) finish(sheets);
-              },
-            },
-          })
-        );
+        const parts = partsOf(sheets);
+        let settled = 0;
 
-        if (limitsEl) {
-          gsap.from(limitsEl, {
-            opacity: 0,
-            y: 12,
-            duration: 0.5,
-            ease: "power2.out",
-            immediateRender: false,
-            scrollTrigger: { trigger: limitsEl, start: "top 94%", once: true },
+        gsap.set(sheets, { opacity: 0 });
+
+        // The mobile layout pins the wrapper with `transform: none !important`,
+        // which an inline GSAP transform cannot beat — so travel goes on the
+        // card and only opacity goes on the wrapper.
+        const timelines = parts.map(({ wrap, card, shadow }, index) => {
+          const layers = [wrap, card, shadow].filter(
+            (el): el is HTMLElement => el !== null
+          );
+          gsap.set(layers, { willChange: "transform" });
+
+          const tl = gsap.timeline({
+            defaults: { immediateRender: false, force3D: true },
+            scrollTrigger: { trigger: wrap, start: "top 94%", once: true },
+            onComplete: () => {
+              settled += 1;
+              if (settled === parts.length) finish(sheets);
+            },
           });
-        }
+
+          tl.fromTo(wrap, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: "power1.out" }, 0);
+          if (card) {
+            tl.from(card, { y: 26 + index * 4, duration: 0.62, ease: "power3.out" }, 0);
+            tl.from(
+              card,
+              {
+                rotate: index % 2 === 0 ? -1.5 : 1.5,
+                duration: 0.7,
+                ease: "elastic.out(1, 0.68)",
+              },
+              0.24
+            );
+          }
+          if (shadow) {
+            tl.fromTo(
+              shadow,
+              { opacity: 0, scale: 1.14 },
+              { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" },
+              0
+            );
+          }
+          return tl;
+        });
+
+        const limitsTween = limitsEl
+          ? gsap.from(limitsEl, {
+              opacity: 0,
+              y: 12,
+              duration: 0.5,
+              ease: "power3.out",
+              immediateRender: false,
+              scrollTrigger: { trigger: limitsEl, start: "top 94%", once: true },
+            })
+          : null;
 
         return () => {
-          tweens.forEach((t) => {
-            t.scrollTrigger?.kill();
-            t.kill();
+          timelines.forEach((tl) => {
+            tl.scrollTrigger?.kill();
+            tl.kill();
           });
+          limitsTween?.scrollTrigger?.kill();
+          limitsTween?.kill();
           clearSheetMotion(sheets, limitsEl);
           setLanded(false);
         };
@@ -244,6 +375,7 @@ export function FindingsFile({
           activate(index);
         }}
       >
+        <span className="fc-card-wrap__shadow" aria-hidden />
         {cloneElement(sheet, {
           tabIndex: 0,
           className: [sheet.props.className, isActive ? "is-front" : ""]

@@ -6,9 +6,9 @@ import { ShowMeHow } from "@/components/disclosure/TwoLayer";
 import { FilmRibbon } from "@/components/story/FilmRibbon";
 import { FindingsFile } from "@/components/story/FindingsFile";
 import { ResidualSparkline } from "@/components/story/ResidualSparkline";
+import { MethodPassport } from "@/components/story/MethodPassport";
 import { PlateFrame } from "@/components/story/PlateFrame";
 import { QuoteLanes } from "@/components/story/QuoteLanes";
-import { Reel, ReelFrame } from "@/components/story/Reel";
 import { SettlementSheet } from "@/components/story/SettlementSheet";
 import { StoryMotion } from "@/components/story/StoryMotion";
 import { Tally } from "@/components/story/Tally";
@@ -28,12 +28,7 @@ import {
   STAKES_FLOOR,
   type PlateSpec,
 } from "@/lib/plates";
-import {
-  buildLedger,
-  formatShare,
-} from "@/lib/ledger";
-import { catalogLabel, providerLabel } from "@/lib/providerLabel";
-import type { BasisDecompositionResponse } from "@/lib/types";
+import { providerLabel } from "@/lib/providerLabel";
 import {
   CATALOG_PROVIDERS,
   COLLECTIONS_PER_DAY,
@@ -64,24 +59,6 @@ export const metadata: Metadata = {
 
 export const revalidate = 900;
 
-const COUNT_WORDS = [
-  "zero",
-  "one",
-  "two",
-  "three",
-  "four",
-  "five",
-  "six",
-  "seven",
-  "eight",
-  "nine",
-];
-
-function countWord(n: number | null): string {
-  if (n === null) return "the";
-  return COUNT_WORDS[n] ?? String(n);
-}
-
 export default async function StoryPage() {
   const {
     bounds,
@@ -97,7 +74,6 @@ export default async function StoryPage() {
   } = await getStoryData();
 
   const providerCount = activeProviders.length > 0 ? activeProviders.length : null;
-  const providerWord = countWord(providerCount);
 
   const gapPp = artifact ? artifact.metrics.gap * 100 : null;
   const icc = artifact?.host_analysis.icc ?? null;
@@ -487,121 +463,28 @@ export default async function StoryPage() {
         </div>
       </section>
 
-      {/* ——————————————————————————————— V · The reel (C4, C5, C6) */}
+      {/* ——————————————————————————————— V · The method */}
       <section
-        className="fc-act fc-act--reel"
+        className="fc-act fc-act--reel fc-act--method-passport"
         aria-labelledby="fc-method"
         data-nav-backdrop="film"
       >
-        <Reel
-          head={
-            <div className="fc-wrap fc-reel__headrow">
-              <div>
-                <span className="fc-eyebrow fc-eyebrow--accent">
-                  04 · The method
-                </span>
-                <h2 id="fc-method" className="fc-h2 fc-h2--invert serif">
-                  Twice a day, we ask {providerWord} clouds the same question.
-                </h2>
-              </div>
-              <p className="fc-reel__hint">
-                Four frames ·{" "}
-                <span className="fc-reel__hint-desk">keep scrolling</span>
-                <span className="fc-reel__hint-touch">swipe the strip</span>
-              </p>
-            </div>
-          }
-        >
-          <ReelFrame index="01" label="Collect">
-            <p className="fc-frame__lede serif">
-              At 08:00 and 20:00 UTC we ask {providerWord} public catalogs the
-              same question: what does an hour of this GPU cost right now?
-            </p>
-            <ul className="fc-frame__chips" aria-label="Active catalogs">
-              {activeProviders.map((p) => (
-                <li key={p}>{catalogLabel(p)}</li>
-              ))}
-            </ul>
-            <p className="fc-frame__foot">
-              Spot, on-demand, and reserved quotes are collected as separate
-              observations — commitment type is never folded into the provider
-              name. No private data and no paywalled feeds.
-            </p>
-          </ReelFrame>
-
-          <ReelFrame index="02" label="File">
-            <p className="fc-frame__lede serif">
-              Every provider response is written down exactly as received, in
-              full, and never edited again.
-            </p>
-            <p className="fc-frame__foot">
-              Raw is sacred. Everything derived from it is disposable, and can be
-              rebuilt from the file.
-            </p>
-            {receipt ? (
-              <div className="fc-frame__receipt">
-                <span className="fc-frame__receipt-label">Sample record</span>
-                <span className="fc-frame__receipt-id">Quote #{receipt.id}</span>
-                <span className="fc-frame__receipt-meta">
-                  {providerLabel(receipt.provider)} · collected{" "}
-                  {stampDate(receipt.collectedAt)}
-                </span>
-              </div>
-            ) : null}
-            {totalOffers !== null ? (
-              <div className="fc-frame__tally">
-                <span className="serif">
-                  <Tally value={totalOffers} grouping />
-                </span>
-                <span className="fc-frame__tally-label">
-                  canonical offers indexed
-                </span>
-              </div>
-            ) : null}
-          </ReelFrame>
-
-          <ReelFrame index="03" label="Canonicalize">
-            <p className="fc-frame__lede serif">
-              Every cloud describes the same chip differently.
-            </p>
-            {/* Real recorded raw names, verified against raw_observations
-                2026-08-03: vast reports "H100 SXM" (5,157 obs) and tensordock
-                "H100 SXM5 80GB"; both canonicalize to h100_sxm_80gb under
-                explicit lookup rules — never inferred from partial strings.
-                Quarantine Rule: never swap these for invented strings. */}
-            <div className="fc-stencil">
-              <span className="fc-stencil__raw" translate="no">&quot;H100 SXM&quot;</span>
-              <span className="fc-stencil__raw" translate="no">&quot;H100 SXM5 80GB&quot;</span>
-              <span className="fc-stencil__arrow" aria-hidden>
-                ↓
-              </span>
-              <span className="fc-stencil__out" translate="no">{HERO_SKU}</span>
-            </div>
-            <p className="fc-frame__foot">
-              Each alias maps under a documented rule — never guessed from a
-              partial name. A string that matches no rule is set aside. Missing
-              information stays <span className="fc-unknown">UNKNOWN</span> and
-              stays visible.
-            </p>
-          </ReelFrame>
-
-          <ReelFrame index="04" label="Account">
-            <p className="fc-frame__lede serif">
-              Then we account for every observable reason prices should differ —
-              provider, region, commitment, bundle — together.
-            </p>
-            <p className="fc-frame__foot">
-              Where it is. How it&rsquo;s rented. Who sells it. What comes with
-              it. What survives that accounting is the finding.
-            </p>
-            {decomposition ? (
-              <MethodDepletion decomposition={decomposition} />
-            ) : null}
-            <Link className="fc-frame__link" href="/methodology">
-              Read full methodology →
-            </Link>
-          </ReelFrame>
-        </Reel>
+        <div className="fc-wrap fc-method-passport">
+          <span className="fc-eyebrow fc-eyebrow--accent">04 · The method</span>
+          <h2 id="fc-method" className="fc-h2 fc-h2--invert serif" data-lines>
+            <span className="fc-line">
+              <span>Twice a day. Four steps.</span>
+            </span>
+            <span className="fc-line">
+              <span>Every answer kept.</span>
+            </span>
+          </h2>
+          <p className="fc-body fc-method-passport__lede" data-stamp>
+            Collect → file → canonicalize → account. The full procedure is
+            documented separately.
+          </p>
+          <MethodPassport />
+        </div>
       </section>
 
       {/* ——————————————————————————————— VI · Exhibit B */}
@@ -1093,44 +976,6 @@ function RegistryRow({
     <div className="fc-registry__row">
       <dt>{label}</dt>
       <dd className="serif">{value ?? "—"}</dd>
-    </div>
-  );
-}
-
-function MethodDepletion({
-  decomposition,
-}: {
-  decomposition: BasisDecompositionResponse;
-}) {
-  const { rows, residualShare } = buildLedger(
-    decomposition as unknown as Record<string, unknown>
-  );
-
-  return (
-    <div
-      className="fc-depletion"
-      aria-label="Observable factors accounted for together; what remains is Basis."
-    >
-      {rows.map((row) => (
-        <div key={row.key} className="fc-depletion__row">
-          <span className="fc-depletion__tag">{row.tag}</span>
-          <div className="fc-depletion__bar" aria-hidden>
-            <span
-              className="fc-depletion__fill"
-              style={{ width: `${row.share * 100}%`, background: row.color }}
-            />
-          </div>
-          <span className="fc-depletion__pct">{formatShare(row.share)}%</span>
-        </div>
-      ))}
-      <div className="fc-depletion__residual">
-        <span className="fc-depletion__tag">Basis</span>
-        <span className="fc-depletion__pct">{formatShare(residualShare)}%</span>
-        <span className="fc-depletion__note">unexplained residual</span>
-      </div>
-      <p className="fc-depletion__philosophy">
-        Prices are observed. The decomposition is modeled from those quotes.
-      </p>
     </div>
   );
 }

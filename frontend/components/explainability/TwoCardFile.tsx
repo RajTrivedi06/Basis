@@ -166,19 +166,22 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
               <ShapTally features={shap_summary.top_features} />
             </div>
           </div>
-        </div>
 
-        {/* The exhibits are one picture, not two independent
-            confirmations (standing Director ruling): the model's own SHAP
-            tally is what hands the file to Exhibit II. */}
-        <p className="two-card__bridge">
-          <span className="two-card__bridge-mark" aria-hidden>
-            ↓
-          </span>
-          WHAT THE MODEL KEPT REACHING FOR WAS THE MACHINE ITSELF. EXHIBIT II
-          ASKS HOW MUCH OF THE LEFTOVER IS JUST WHO IS HOSTING — ONE PICTURE
-          CONTINUED, NOT A SECOND OPINION.
-        </p>
+          {/* Handoff sticky: one picture continued, not a second opinion
+              (standing Director ruling). Attached to Exhibit I so the
+              file points at Exhibit II without interrupting the pair. */}
+          <aside
+            className="exhibit-sticky"
+            aria-label="Bridge from the bound to the host"
+          >
+            <span className="exhibit-sticky__tape" aria-hidden />
+            <p className="exhibit-sticky__body">
+              What the model kept reaching for was the machine itself. Exhibit
+              II asks how much of the leftover is just who is hosting — one
+              picture continued, not a second opinion.
+            </p>
+          </aside>
+        </div>
 
         {/* ——— EXHIBIT II ——— */}
         <div className="exhibit exhibit--host">
