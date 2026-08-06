@@ -643,6 +643,8 @@ export default async function StoryPage() {
         aria-labelledby="fc-findings"
         data-nav-backdrop="paper-warm"
       >
+        <div className="fc-desk" aria-hidden />
+
         <div className="fc-wrap">
           <span className="fc-eyebrow fc-eyebrow--accent">
             07 · Findings of record

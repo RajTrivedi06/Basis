@@ -9064,6 +9064,62 @@ body:has(.filecopy) footer {
 
 /* ——— VIII · findings ————————————————————————————————————————— */
 
+/* The act is a desk, not a sheet. Exhibit C before it is ruled stock under a
+   centred wash; this one is unruled surface under a lamp that pools where
+   the work is, so the two paper acts read as different materials rather than
+   the same page twice.
+ *
+ * The bottom edge darkens into the stakes plate that follows, so the seam
+ * between the last paper act and the last film act is a fade, not a cut. */
+/* No parallax and no inset slack, unlike Exhibit C's ruled layers. Those
+   need travel and are clipped by `overflow: hidden` on their act; this act
+   cannot clip, because the sheets are thrown in from outside its box. At
+   inset 0 the gradient stops also mean what they say — measured against an
+   oversized layer, the seam fade lands below the section entirely. */
+.fc-desk {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    /* lamp pool, upper left, over the eyebrow and headline */
+    radial-gradient(
+      118% 64% at 32% 20%,
+      rgba(255, 253, 247, 0.62) 0%,
+      rgba(252, 248, 240, 0.26) 38%,
+      rgba(237, 230, 217, 0) 74%
+    ),
+    /* the far side falls away from the lamp — kept level with the sheets,
+       clear of the limitations row, which is --ink-mid at 11px and has no
+       contrast headroom to give away */
+    radial-gradient(
+      58% 21% at 86% 50%,
+      rgba(31, 29, 26, 0.05) 0%,
+      rgba(31, 29, 26, 0) 72%
+    );
+}
+
+/* Hand-off into the film act below. Its own layer, and measured in pixels
+   rather than percent, so a taller viewport does not drag the ramp up into
+   the limitations text — that copy is --ink-mid at 11px and sits at 4.46:1
+   on bare paper, with nothing to spare. */
+.fc-desk::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Shorter than the tightest clearance between the limitations block and
+     the act's bottom edge (84px at the two-column breakpoint). */
+  height: 72px;
+  background: linear-gradient(
+    to bottom,
+    rgba(31, 29, 26, 0) 0%,
+    rgba(31, 29, 26, 0.03) 58%,
+    rgba(31, 29, 26, 0.09) 100%
+  );
+}
+
 /* The surface the sheets land on. Not a panel — every tone here dissolves
    into --paper-warm before it reaches an edge, so the desk reads as light
    and shade on the section itself rather than a box drawn on top of it. */
@@ -10059,6 +10115,11 @@ body:has(.filecopy) footer {
   .fc-ruled--lines { opacity: 0.32; }
 
   /* VIII · findings: stacked spill on a short blotter. */
+  /* Single column stacks the limitations down to 97% of the act, which is
+     inside the seam ramp. The seam matters less here anyway — a phone never
+     shows both acts at once — so drop it rather than dim the copy. */
+  .fc-desk::after { display: none; }
+
   .fc-file {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
