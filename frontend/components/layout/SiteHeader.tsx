@@ -68,8 +68,13 @@ function SiteHeaderInner() {
 
   const sku = params.get("sku");
   const suffix = sku ? `?sku=${encodeURIComponent(sku)}` : "";
-  const isStoryLanding = pathname === "/";
-  const navTheme = useNavBackdrop(isStoryLanding);
+  // Any route that declares [data-nav-backdrop] sections drives the rail's
+  // theme, not just the landing. The methodology bulletin bleeds under the
+  // rail the same way the cold open does, so it needs the same treatment —
+  // hardcoding "paper" left a light island sitting on the dark desk.
+  const themedRoutes = ["/", "/methodology"];
+  const isThemedRoute = themedRoutes.includes(pathname);
+  const navTheme = useNavBackdrop(isThemedRoute);
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
@@ -145,7 +150,7 @@ function SiteHeaderInner() {
     <>
       <div
         className={`site-header-rail site-header-rail--${navState}${menuOpen ? " is-pinned" : ""}`}
-        data-nav-theme={isStoryLanding ? navTheme : "paper"}
+        data-nav-theme={isThemedRoute ? navTheme : "paper"}
         aria-hidden={railHidden}
       >
         <header className="site-header-island">

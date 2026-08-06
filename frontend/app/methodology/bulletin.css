@@ -37,7 +37,15 @@
      texture on this page. */
   position: relative;
   margin-inline: calc(50% - 50vw);
-  padding: clamp(16px, 3.5vw, 56px) clamp(12px, 3vw, 44px) clamp(48px, 7vw, 96px);
+  /* Pull up under the sticky header rail, the same way the landing's cold
+     open does, so the desk paints to the very top of the viewport instead of
+     starting below the nav and drawing a seam across the page. The top
+     padding puts the clearance back for the island. */
+  margin-top: calc(-1 * var(--header-rail-h));
+  padding:
+    calc(var(--header-rail-h) + clamp(16px, 2.5vw, 40px))
+    clamp(12px, 3vw, 44px)
+    clamp(48px, 7vw, 96px);
   background: var(--bull-desk);
   color: var(--ink);
   font-family: var(--f-serif);
@@ -1168,4 +1176,9 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--ink-mid);
+}
+
+/* Anchors land below the rail rather than under it. */
+.bulletin-page [id] {
+  scroll-margin-top: calc(var(--header-rail-h) + 16px);
 }

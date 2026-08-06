@@ -58,7 +58,7 @@ export function MethodologyBulletin() {
   }, []);
 
   return (
-    <div className="bulletin-page fade-up">
+    <div className="bulletin-page fade-up" data-nav-backdrop="paper-deep">
       <a className="bulletin-skip" href="#file-00">
         Skip to the report
       </a>
