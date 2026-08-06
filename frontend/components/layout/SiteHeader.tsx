@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BasisLogo } from "@/components/layout/BasisLogo";
-import { NAV_ITEMS, navNumber } from "@/lib/nav";
+import { NAV_ITEMS } from "@/lib/nav";
 import { useNavBackdrop } from "@/lib/useNavBackdrop";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
@@ -21,14 +21,12 @@ function isActive(pathname: string, href: string): boolean {
 
 function RailLink({
   item,
-  num,
   active,
   href,
   onNavigate,
   variant,
 }: {
   item: (typeof NAV_ITEMS)[number];
-  num: string;
   active: boolean;
   href: string;
   onNavigate?: () => void;
@@ -46,7 +44,6 @@ function RailLink({
       aria-current={active ? "page" : undefined}
       onClick={onNavigate}
     >
-      <span className={`${variant}-link__index`}>{num}</span>
       <span className={`${variant}-link__label`}>{item.label}</span>
       {variant === "rail" ? (
         <span className="rail-link__indicator" aria-hidden />
@@ -162,11 +159,10 @@ function SiteHeaderInner() {
 
           <nav className="site-nav-rail" aria-label="Main navigation">
             <div className="site-nav-rail__track">
-              {NAV_ITEMS.map((item, index) => (
+              {NAV_ITEMS.map((item) => (
                 <RailLink
                   key={item.href}
                   item={item}
-                  num={navNumber(index)}
                   active={isActive(pathname, item.href)}
                   href={`${item.href}${suffix}`}
                   variant="rail"
@@ -226,11 +222,10 @@ function SiteHeaderInner() {
           </div>
 
           <nav className="site-nav-stage__list" aria-label="Main navigation">
-            {NAV_ITEMS.map((item, index) => (
+            {NAV_ITEMS.map((item) => (
               <RailLink
                 key={item.href}
                 item={item}
-                num={navNumber(index)}
                 active={isActive(pathname, item.href)}
                 href={`${item.href}${suffix}`}
                 onNavigate={closeMenu}
