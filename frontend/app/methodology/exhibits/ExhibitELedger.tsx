@@ -66,6 +66,7 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
         role="group"
         aria-label="Reorder the subtraction"
       >
+        <div className="bull-table-scroll">
         <table className="bull-table">
           <thead>
             <tr>
@@ -169,6 +170,7 @@ export function ExhibitELedger({ view, onMove }: ExhibitELedgerProps) {
             </tr>
           </tbody>
         </table>
+        </div>
         <div className="bull-ledger-note">
           Current order: {view.orderText} · Reorder freely — the shares move;
           the remainder does not.

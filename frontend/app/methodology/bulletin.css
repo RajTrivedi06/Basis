@@ -4,25 +4,38 @@
 .bulletin-page {
   --bull-paper: var(--bg);
   --bull-paper-deep: var(--bg-deep);
+  /* The desk under the sheet — the one tone this page adds to the palette. */
+  --bull-desk: color-mix(in srgb, var(--ink) 22%, var(--paper-warm));
   --bull-rule: var(--ink);
   --bull-rule-soft: var(--ink-mid);
   --bull-rule-faint: color-mix(in srgb, var(--ink) 28%, var(--bg));
   --bull-tint: color-mix(in srgb, var(--ink) 6%, var(--bg));
   --bull-sim: color-mix(in srgb, var(--ink) 10%, var(--bg-deep));
 
+  /* The desk the sheet lies on. Bleeds past the page wrapper's padding, but
+     with `100%` + negative inline margins rather than `100vw` — 100vw counts
+     the scrollbar, which is what pushed the document 3px wider than the
+     viewport and clipped the dateline's right-hand item. */
   position: relative;
-  /* Bleed past .page-wide horizontal padding so the paper fills the viewport */
-  width: 100vw;
-  max-width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  padding: 0 0 80px;
-  background: var(--bull-paper);
+  margin-inline: calc(50% - 50vw);
+  padding: clamp(12px, 3vw, 44px) clamp(12px, 3vw, 44px) clamp(40px, 6vw, 80px);
+  background: var(--bull-desk);
   color: var(--ink);
   font-family: var(--f-serif);
 }
 
-.bulletin-page::before {
+/* One sheet of paper, centred on the desk. Every band of the bulletin sits
+   inside it, so there is exactly one left and right margin on the page. */
+.bulletin-sheet {
+  position: relative;
+  z-index: 1;
+  max-width: 1140px;
+  margin: 0 auto;
+  background: var(--bull-paper);
+  box-shadow: 0 3px 18px rgba(31, 29, 26, 0.26);
+}
+
+.bulletin-sheet::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -35,9 +48,7 @@
 .bulletin-inner {
   position: relative;
   z-index: 1;
-  max-width: 1140px;
-  margin: 0 auto;
-  padding: 0 clamp(16px, 3vw, 40px);
+  padding: 0 clamp(20px, 4vw, 48px);
 }
 
 .bulletin-skip {
@@ -100,7 +111,10 @@
 }
 
 .bull-mast {
-  padding: 22px 0 0;
+  /* Same inline padding as .bulletin-inner, so the masthead's rules line up
+     with the body columns instead of running to the sheet's cut edge. The
+     classification bar above is deliberately exempt — it bleeds edge to edge. */
+  padding: 22px clamp(20px, 4vw, 48px) 0;
 }
 
 .bull-mast__titleblock {
@@ -511,6 +525,11 @@
   line-height: 1.45;
 }
 
+.bull-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .bull-table {
   border-collapse: collapse;
   width: 100%;
@@ -878,6 +897,11 @@
   letter-spacing: 0.04em;
 }
 
+.bull-colo,
+.bull-colo-bar {
+  padding-inline: clamp(20px, 4vw, 48px);
+}
+
 .bull-colo-bar {
   margin-top: 0;
   background: var(--ink);
@@ -988,5 +1012,30 @@
   .bull-note {
     text-align: left;
     max-width: none;
+  }
+}
+
+/* —— Narrow viewports —— */
+@media (max-width: 640px) {
+  /* The classification strip is one nowrap line; on a phone its second half
+     ran past the sheet. Let it wrap and centre instead of overflowing. */
+  .bull-classbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    row-gap: 4px;
+  }
+
+  /* The ledger table is wider than a phone. Scroll it inside its own box
+     rather than widening the document. */
+  /* Every bulletin table is wider than a phone. Scrolling them inside their
+     own box beats widening the document. */
+  .bull-table-scroll,
+  .bull-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
