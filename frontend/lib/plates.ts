@@ -81,6 +81,30 @@ export const PUZZLE_HYPERSCALER: PlateSpec = {
   position: "50% 50%",
 };
 
+/**
+ * Act V · The method — the review room: two analysts at desks, a wall of
+ * hand-annotated charts behind them. The only act whose subject is the
+ * procedure itself, so the frame carries people doing clerical work rather
+ * than hardware.
+ *
+ * Native stock is 1536 wide; there is deliberately no larger derivative,
+ * because anything above that is an upscale of the same pixels.
+ */
+export const METHOD_ANALYSTS: PlateSpec = {
+  src: `${P}/method-analysts-1536.webp`,
+  width: 1536,
+  height: 1024,
+  sources: [
+    { media: "(max-width: 1023px)", srcSet: `${P}/method-analysts-1024.webp` },
+    { srcSet: `${P}/method-analysts-1536.webp` },
+  ],
+  slate: "Plate 04 · the method",
+  /* Bias right: the right-hand desk and the chart wall carry the frame, and
+     the left stays in shadow under the heading. */
+  position: "62% 42%",
+  positionMobile: "58% 38%",
+};
+
 /** Act IV · The name — analyst at the desk, right-anchored on film. */
 export const NAME_BACKDROP: PlateSpec = {
   src: `${P}/finding-analyst-1600.webp`,
