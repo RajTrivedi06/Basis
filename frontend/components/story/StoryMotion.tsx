@@ -19,7 +19,7 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
  *
  * Phones are a separate direction rather than a scaled copy: shallower
  * parallax, one group fade instead of hundreds of per-dot tweens, and no
- * pinning (the reel becomes a swipe, handled in Reel).
+ * pinning on the landing (the old method reel pin was retired for MethodPassport).
  */
 export function StoryMotion() {
   const scope = useRef<HTMLDivElement | null>(null);
