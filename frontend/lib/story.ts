@@ -271,7 +271,16 @@ function isoDay(iso: string): string {
 }
 
 export async function getStoryData(): Promise<StoryData> {
-  const sinceIso = new Date(Date.now() - 36 * 3600 * 1000).toISOString();
+  // Quantised to the revalidate window rather than read raw. A bare
+  // Date.now() puts a fresh timestamp in the offers URL on every call, so the
+  // server render and the render that produces the client payload request
+  // different URLs, miss each other's fetch cache, and can come back with
+  // different offer sets — which moves the axis bounds and hydrates a
+  // different set of ticks. A 36-hour lookback does not need sub-window
+  // precision, and this keeps the URL stable for as long as the data is.
+  const bucketMs = REVALIDATE_SECONDS * 1000;
+  const nowBucketed = Math.floor(Date.now() / bucketMs) * bucketMs;
+  const sinceIso = new Date(nowBucketed - 36 * 3600 * 1000).toISOString();
   const exclusion = CATALOG_PROVIDERS.join(",");
 
   const [providers, matrix, offers, decomposition, timeseries, artifact] =

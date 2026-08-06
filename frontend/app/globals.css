@@ -6788,6 +6788,7 @@ button {
 .fc-act--exhibit-a,
 .fc-act--name,
 .fc-act--reel,
+.fc-act--exhibit-c,
 .fc-act--stakes {
   background: var(--film);
   color: var(--film-ink);
@@ -6797,6 +6798,7 @@ button {
 .fc-act--exhibit-a::after,
 .fc-act--name::after,
 .fc-act--reel::after,
+.fc-act--exhibit-c::after,
 .fc-act--stakes::after {
   opacity: 0.075;
   mix-blend-mode: screen;
@@ -6805,11 +6807,9 @@ button {
 /* Paper acts */
 .fc-act--brief { background: var(--bg); }
 .fc-act--exhibit-b { background: var(--bg); }
-.fc-act--exhibit-c { background: var(--bg-deep); }
-.fc-act--findings { background: var(--paper-warm); }
+.fc-act--findings { background: var(--bg-deep); }
 
 .fc-act--exhibit-b,
-.fc-act--exhibit-c,
 .fc-act--findings { border-top: 1px solid var(--line); }
 
 .fc-act__scrim {
@@ -6853,25 +6853,23 @@ button {
     );
 }
 
-/* The method act reads its plate in the upper right, where the layout leaves
-   negative space beside the heading. Everything the type and the passport
-   cards sit on goes nearly solid. */
+/* Exhibit C reads its plate on the right, where the layout leaves negative
+   space beside the statement. Everything the type sits on goes near solid. */
 .fc-act__scrim--room {
   background:
     linear-gradient(
-      104deg,
+      100deg,
       rgba(14, 13, 11, 0.96) 0%,
-      rgba(14, 13, 11, 0.88) 34%,
-      rgba(14, 13, 11, 0.62) 64%,
-      rgba(14, 13, 11, 0.46) 100%
+      rgba(14, 13, 11, 0.9) 38%,
+      rgba(14, 13, 11, 0.66) 66%,
+      rgba(14, 13, 11, 0.5) 100%
     ),
     linear-gradient(
       to bottom,
-      rgba(14, 13, 11, 0.66) 0%,
-      rgba(14, 13, 11, 0.14) 26%,
-      rgba(14, 13, 11, 0.72) 58%,
-      rgba(14, 13, 11, 0.93) 78%,
-      rgba(14, 13, 11, 0.98) 100%
+      rgba(14, 13, 11, 0.72) 0%,
+      rgba(14, 13, 11, 0.3) 26%,
+      rgba(14, 13, 11, 0.52) 66%,
+      rgba(14, 13, 11, 0.9) 100%
     );
 }
 
@@ -6892,13 +6890,15 @@ button {
 .fc-act--exhibit-a .fc-eyebrow,
 .fc-act--name .fc-eyebrow,
 .fc-act--reel .fc-eyebrow,
-.fc-act--stakes .fc-eyebrow { color: var(--film-dim); }
+.fc-act--stakes .fc-eyebrow,
+.fc-act--exhibit-c .fc-eyebrow { color: var(--film-dim); }
 
 .fc-act--open .fc-eyebrow--accent,
 .fc-act--exhibit-a .fc-eyebrow--accent,
 .fc-act--name .fc-eyebrow--accent,
 .fc-act--reel .fc-eyebrow--accent,
-.fc-act--stakes .fc-eyebrow--accent { color: #D98A64; }
+.fc-act--stakes .fc-eyebrow--accent,
+.fc-act--exhibit-c .fc-eyebrow--accent { color: #D98A64; }
 
 .fc-h2 {
   margin: 16px 0 0;
@@ -6918,24 +6918,29 @@ button {
 .fc-act--exhibit-a .fc-h2,
 .fc-act--name .fc-h2,
 .fc-act--reel .fc-h2,
-.fc-act--stakes .fc-h2 { color: var(--film-ink); }
+.fc-act--stakes .fc-h2,
+.fc-act--exhibit-c .fc-h2 { color: var(--film-ink); }
 
 .fc-act--exhibit-a .fc-body { color: var(--film-mid); }
 
 .fc-act--name .fc-body,
 .fc-act--reel .fc-body,
-.fc-act--stakes .fc-body { color: var(--film-mid); }
+.fc-act--stakes .fc-body,
+.fc-act--exhibit-c .fc-body { color: var(--film-mid); }
 
 .fc-act--name .fc-lede,
 .fc-act--reel .fc-lede,
-.fc-act--stakes .fc-lede { color: var(--film-mid); }
+.fc-act--stakes .fc-lede,
+.fc-act--exhibit-c .fc-lede { color: var(--film-mid); }
 
 .fc-act--name .fc-note,
 .fc-act--reel .fc-note,
-.fc-act--stakes .fc-note { color: var(--film-dim); }
+.fc-act--stakes .fc-note,
+.fc-act--exhibit-c .fc-note { color: var(--film-dim); }
 
 .fc-act--name .fc-slate-label,
-.fc-act--stakes .fc-slate-label { color: var(--film-faint); }
+.fc-act--stakes .fc-slate-label,
+.fc-act--exhibit-c .fc-slate-label { color: var(--film-faint); }
 
 /* The bracket diagram is drawn for cream; on film it is redrawn, not
    dimmed — its hairlines, labels and the italic mark all invert. */
@@ -8885,13 +8890,13 @@ body:has(.filecopy) footer {
  * NOT a pinned frame — see the note in SettlementSheet.tsx. The section scrolls
  * like any other and the scroll credits the rows.
  */
-.fc-act--exhibit-c {
-  background: var(--bg);
-  overflow: hidden;
-}
+.fc-act--exhibit-c { overflow: hidden; }
 
 /* Ruled paper, in two layers at different parallax depths, plus one
    terracotta register rule down the sheet — the reference's own grammar. */
+/* --static drops the parallax slack for acts that cannot clip it away. */
+.fc-ruled--static { inset: 0; }
+
 .fc-ruled {
   position: absolute;
   inset: -14%;
@@ -8961,6 +8966,88 @@ body:has(.filecopy) footer {
   max-width: 32ch;
 }
 
+/* The condensed exhibit. The filed ledger is on /basis and is not drawn
+   twice; what stays here is the claim, the three numbers the findings act
+   then spends, and the hand-off. */
+.fc-settle__verdict {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  max-width: 54ch;
+  font-size: clamp(17px, 1.9vw, 21px);
+  line-height: 1.5;
+  color: var(--film-mid);
+}
+
+.fc-settle__figures {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(28px, 5vw, 72px);
+  margin: clamp(30px, 4.5vw, 48px) 0 0;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--film-line);
+}
+
+.fc-settle__figures div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fc-settle__figures dt {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--film-dim);
+}
+
+.fc-settle__figures dd {
+  margin: 0;
+  font-family: var(--f-serif);
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--film-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The remainder is the headline of the whole study; it is the one figure
+   here that is allowed the accent. */
+.fc-settle__figure--headline dd { color: #E0946C; }
+
+.fc-settle__figures dd span {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--film-dim);
+}
+
+.fc-settle__standing {
+  position: relative;
+  z-index: 2;
+  margin: clamp(24px, 3.4vw, 34px) 0 0;
+  max-width: 62ch;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--film-mid);
+}
+
+/* On film the terracotta has to go the other way — lighter, not darker. */
+.fc-settle__standing a {
+  color: #E0946C;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .fc-sheet__popblock {
   display: flex;
   flex-direction: column;
@@ -8974,19 +9061,19 @@ body:has(.filecopy) footer {
   font-size: 9.5px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink-mid);
+  color: var(--film-dim);
 }
 
 .fc-sheet__poptag {
-  border: 1px solid var(--accent-line);
+  border: 1px solid rgba(224, 148, 108, 0.4);
   border-radius: 999px;
   padding: 9px 16px;
-  background: var(--accent-bg);
+  background: rgba(224, 148, 108, 0.1);
   font-family: var(--f-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: #E0946C;
 }
 
 /* One card: slate, ledger, footer. Nothing arrives after the sheet. */
@@ -9064,65 +9151,6 @@ body:has(.filecopy) footer {
 
 /* ——— VIII · findings ————————————————————————————————————————— */
 
-/* The act is a desk, not a sheet. Exhibit C before it is ruled stock under a
-   centred wash; this one is unruled surface under a lamp that pools where
-   the work is, so the two paper acts read as different materials rather than
-   the same page twice.
- *
- * The bottom edge darkens into the stakes plate that follows, so the seam
- * between the last paper act and the last film act is a fade, not a cut. */
-/* No parallax and no inset slack, unlike Exhibit C's ruled layers. Those
-   need travel and are clipped by `overflow: hidden` on their act; this act
-   cannot clip, because the sheets are thrown in from outside its box. At
-   inset 0 the gradient stops also mean what they say — measured against an
-   oversized layer, the seam fade lands below the section entirely. */
-.fc-desk {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    /* lamp pool, upper left, over the eyebrow and headline */
-    radial-gradient(
-      118% 64% at 32% 20%,
-      rgba(255, 253, 247, 0.62) 0%,
-      rgba(252, 248, 240, 0.26) 38%,
-      rgba(237, 230, 217, 0) 74%
-    ),
-    /* the far side falls away from the lamp — kept level with the sheets,
-       clear of the limitations row, which is --ink-mid at 11px and has no
-       contrast headroom to give away */
-    radial-gradient(
-      58% 21% at 86% 50%,
-      rgba(31, 29, 26, 0.05) 0%,
-      rgba(31, 29, 26, 0) 72%
-    );
-}
-
-/* Hand-off into the film act below. Its own layer, and measured in pixels
-   rather than percent, so a taller viewport does not drag the ramp up into
-   the limitations text — that copy is --ink-mid at 11px and sits at 4.46:1
-   on bare paper, with nothing to spare. */
-.fc-desk::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* Shorter than the tightest clearance between the limitations block and
-     the act's bottom edge (84px at the two-column breakpoint). */
-  height: 72px;
-  background: linear-gradient(
-    to bottom,
-    rgba(31, 29, 26, 0) 0%,
-    rgba(31, 29, 26, 0.03) 58%,
-    rgba(31, 29, 26, 0.09) 100%
-  );
-}
-
-/* The surface the sheets land on. Not a panel — every tone here dissolves
-   into --paper-warm before it reaches an edge, so the desk reads as light
-   and shade on the section itself rather than a box drawn on top of it. */
 .fc-file {
   --paper-grain: var(--grain);
   position: relative;
@@ -9995,19 +10023,6 @@ body:has(.filecopy) footer {
   }
 
   /* V · method passport */
-  /* One column means type spans the full width, so the diagonal has nothing
-     to protect. Vertical only: the room reads across the head, then goes
-     solid before the passport cards. */
-  .fc-act__scrim--room {
-    background: linear-gradient(
-      to bottom,
-      rgba(14, 13, 11, 0.64) 0%,
-      rgba(14, 13, 11, 0.81) 22%,
-      rgba(14, 13, 11, 0.94) 44%,
-      rgba(14, 13, 11, 0.97) 100%
-    );
-  }
-
   .fc-passport__stamps {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
@@ -10102,8 +10117,32 @@ body:has(.filecopy) footer {
     display: inline;
   }
 
+  /* Collapsing the authored lines to inline joins them with no separator,
+     because JSX drops the newline between the spans — "One hundredunits of".
+     The space has to be put back explicitly. */
+  .fc-sheet__head .fc-line + .fc-line::before {
+    content: " ";
+    white-space: pre;
+  }
+
   .fc-sheet__head .fc-h2 {
     text-wrap: pretty;
+  }
+
+  /* The population is a long string in a pill; at 390px it ran off the
+     right edge. Let it wrap inside the tag instead. */
+  /* The block is `flex: none` at desktop, so max-width on the tag has
+     nothing to resolve against — it has to be allowed to take the row. */
+  .fc-sheet__popblock {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .fc-sheet__poptag {
+    max-width: 100%;
+    border-radius: 12px;
+    white-space: normal;
+    line-height: 1.6;
   }
   .fc-sheet__ledger { padding: 18px 14px; }
   .fc-sheet__foot { grid-template-columns: minmax(0, 1fr); gap: 13px; padding: 14px; }
@@ -10115,11 +10154,6 @@ body:has(.filecopy) footer {
   .fc-ruled--lines { opacity: 0.32; }
 
   /* VIII · findings: stacked spill on a short blotter. */
-  /* Single column stacks the limitations down to 97% of the act, which is
-     inside the seam ramp. The seam matters less here anyway — a phone never
-     shows both acts at once — so drop it rather than dim the copy. */
-  .fc-desk::after { display: none; }
-
   .fc-file {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
