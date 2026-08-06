@@ -255,7 +255,7 @@ export function BasisPageClient() {
       {/* ——— C · Schedule of accounts ——— */}
       <section className="settle-schedule">
         <div className="settle-schedule__eyebrow">
-          04 · Schedule of accounts
+          Schedule of accounts
         </div>
 
         {basisState === "ready" && factorRows.length > 0 ? (
@@ -301,7 +301,7 @@ export function BasisPageClient() {
       {/* ——— D · Filed quotes ——— */}
       <section className="settle-quotes">
         <div className="settle-quotes__eyebrow">
-          05 · Filed quotes by factor
+          Filed quotes by factor
         </div>
         <p className="settle-quotes__lede">
           Per-offer prices laid out by a single factor. Tight rows mean the

@@ -14,7 +14,7 @@ import {
 function PageHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="prov-head">
-      <div className="prov-head__eyebrow">04 · Source posture</div>
+      <div className="prov-head__eyebrow">Source posture</div>
       {children}
     </div>
   );

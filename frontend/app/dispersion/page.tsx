@@ -4,7 +4,7 @@ import { DispersionPageClient } from "./DispersionPageClient";
 function DispersionFallback() {
   return (
     <div className="page-wide fade-up disp-page">
-      <div className="disp-head__eyebrow">02 · Raw price spread</div>
+      <div className="disp-head__eyebrow">Raw price spread</div>
       <p className="caption mt-3">Loading page…</p>
     </div>
   );

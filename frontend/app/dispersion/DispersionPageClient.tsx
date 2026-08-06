@@ -45,7 +45,7 @@ export function DispersionPageClient() {
       <section className="disp-guide">
         <div className="disp-guide__head">
           <span className="disp-guide__eyebrow">
-            03 · How to read this chart
+            How to read this chart
           </span>
           <button
             type="button"
