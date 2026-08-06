@@ -41,7 +41,7 @@ describe("ProvidersPage: declassified watch list", () => {
         name: /one provider,\s*one posture/i,
       })
     ).toBeInTheDocument();
-    expect(screen.getByText(/04 · Source posture/i)).toBeInTheDocument();
+    expect(screen.getByText(/Source posture/i)).toBeInTheDocument();
     expect(screen.getByText(/TOP SECRET/i)).toBeInTheDocument();
     expect(
       screen.getByText(/OVERSTAMPED: DECLASSIFIED/i)

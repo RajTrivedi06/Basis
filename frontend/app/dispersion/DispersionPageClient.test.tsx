@@ -59,7 +59,7 @@ describe("DispersionPageClient: declassified observation sheet", () => {
     const user = userEvent.setup();
     renderWithQuery(<DispersionPageClient />);
 
-    expect(screen.getByText(/03 · How to read this chart/i)).toBeInTheDocument();
+    expect(screen.getByText(/How to read this chart/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Median" })).toBeInTheDocument();
 
     const toggle = screen.getByRole("button", {

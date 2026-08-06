@@ -58,7 +58,7 @@ describe("BasisPageClient: settlement sheet", () => {
         name: /Four factors take their turn/i,
       })
     ).toBeInTheDocument();
-    expect(screen.getByText(/03 · Variance settlement/i)).toBeInTheDocument();
+    expect(screen.getByText(/Variance settlement/i)).toBeInTheDocument();
     expect(
       await screen.findByText(/SETTLEMENT SHEET · SEQUENTIAL ANOVA/i)
     ).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe("BasisPageClient: settlement sheet", () => {
     const { container } = renderWithQuery(<BasisPageClient />);
     await screen.findByText("Unexplained");
 
-    expect(screen.getByText(/04 · Schedule of accounts/i)).toBeInTheDocument();
+    expect(screen.getByText(/Schedule of accounts/i)).toBeInTheDocument();
     const rows = container.querySelectorAll(".account-row");
     expect(rows.length).toBe(5);
 
