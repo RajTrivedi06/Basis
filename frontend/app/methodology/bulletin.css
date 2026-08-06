@@ -1410,3 +1410,33 @@ body:has(.bulletin-page) > footer {
     padding-bottom: clamp(16px, 4vw, 28px);
   }
 }
+
+/* —— Narrow screens: tables must not outgrow their figure —— */
+/* The ledger measured 366px inside a 326px figure. A table only honours
+   max-width once it stops being `display: table`, and every ancestor in the
+   chain needs min-width: 0 or the flex/grid parents refuse to shrink. */
+@media (max-width: 1099px) {
+  .bull-exhibit,
+  .bull-exhibit figure,
+  .bull-leaf,
+  .bull-leaf__face,
+  .bull-table-scroll {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .bull-table-scroll,
+  .bull-table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Give the ledger's own columns somewhere to go rather than forcing width. */
+  .bull-table th,
+  .bull-table td {
+    white-space: nowrap;
+  }
+}
