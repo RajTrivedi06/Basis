@@ -82,28 +82,26 @@ export const PUZZLE_HYPERSCALER: PlateSpec = {
 };
 
 /**
- * Act VIII · Findings — the review room: two analysts at desks, a wall of
- * hand-annotated charts behind them. The room the three sheets came out of.
+ * Act VIII · Findings — not a picture of anything. Derived from the review-room
+ * frame by cropping off its mirror line and defocusing until no room, desk or
+ * figure survives: what is left is a sweep of lamp light across a surface.
  *
- * This is the one plate that runs in the paper register rather than the film
- * one: it is graded to the page's cream (see `.fc-plate--paper`) so dark ink
- * still reads over it and the sheets still land on paper.
- *
- * Native stock is 1536 wide; there is deliberately no larger derivative,
- * because anything above that is an upscale of the same pixels.
+ * The reading is shallow depth of field. The three sheets are the sharp
+ * foreground; this is the ground they sit on, thrown out of focus. It also
+ * runs in the paper register rather than the film one — see
+ * `.fc-plate--paper` — so dark ink still reads over it.
  */
-export const FINDINGS_ROOM: PlateSpec = {
-  src: `${P}/method-analysts-1536.webp`,
-  width: 1536,
-  height: 1024,
-  sources: [
-    { media: "(max-width: 1023px)", srcSet: `${P}/method-analysts-1024.webp` },
-    { srcSet: `${P}/method-analysts-1536.webp` },
-  ],
-  slate: "Plate 04 · the review room",
-  /* Park the chart wall behind the heading and the desks under the sheets. */
-  position: "50% 34%",
-  positionMobile: "54% 26%",
+export const FINDINGS_SURFACE: PlateSpec = {
+  src: `${P}/findings-surface-900.webp`,
+  width: 900,
+  height: 600,
+  /* One source: the frame is defocused past the point where resolution buys
+     anything, which is also why it costs 7KB instead of 118KB. */
+  sources: [{ srcSet: `${P}/findings-surface-900.webp` }],
+  slate: "Plate 04 · the surface",
+  /* Bias toward the sweep of lamp light rather than the dark upper corner. */
+  position: "38% 46%",
+  positionMobile: "42% 50%",
 };
 
 /** Act IV · The name — analyst at the desk, right-anchored on film. */

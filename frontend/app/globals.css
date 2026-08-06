@@ -7162,8 +7162,8 @@ body:has(.filecopy) .ask-launcher { bottom: calc(20px + 34px); }
 }
 
 .fc-plate--paper .fc-plate__img {
-  filter: grayscale(0.9) sepia(0.5) saturate(0.72) contrast(0.6)
-    brightness(1.55);
+  filter: grayscale(0.88) sepia(0.46) saturate(0.78) contrast(0.7)
+    brightness(1.4);
 }
 
 .fc-plate--mobile-only { display: none; }
@@ -8951,6 +8951,90 @@ body:has(.filecopy) footer {
   max-width: 32ch;
 }
 
+/* The condensed exhibit. The filed ledger is on /basis and is not drawn
+   twice; what stays here is the claim, the three numbers the findings act
+   then spends, and the hand-off. */
+.fc-settle__verdict {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  max-width: 54ch;
+  font-size: clamp(17px, 1.9vw, 21px);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.fc-settle__figures {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(28px, 5vw, 72px);
+  margin: clamp(30px, 4.5vw, 48px) 0 0;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--line-hi);
+}
+
+.fc-settle__figures div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fc-settle__figures dt {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-settle__figures dd {
+  margin: 0;
+  font-family: var(--f-serif);
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The remainder is the headline of the whole study; it is the one figure
+   here that is allowed the accent. */
+.fc-settle__figure--headline dd { color: var(--accent); }
+
+.fc-settle__figures dd span {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+.fc-settle__standing {
+  position: relative;
+  z-index: 2;
+  margin: clamp(24px, 3.4vw, 34px) 0 0;
+  max-width: 62ch;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+/* --accent-dim, not --accent: this link is 11px mono, and the lighter
+   terracotta measures 3.55:1 on this act's ground. The dim token is the same
+   family and clears AA at 4.65:1. */
+.fc-settle__standing a {
+  color: var(--accent-dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .fc-sheet__popblock {
   display: flex;
   flex-direction: column;
@@ -9089,8 +9173,8 @@ body:has(.filecopy) footer {
       to bottom,
       rgb(237, 230, 217) 0%,
       rgb(237, 230, 217) 22%,
-      rgba(237, 230, 217, 0.42) 31%,
-      rgba(237, 230, 217, 0.42) 70%,
+      rgba(237, 230, 217, 0.28) 31%,
+      rgba(237, 230, 217, 0.28) 70%,
       rgb(237, 230, 217) 78%,
       rgb(237, 230, 217) 100%
     );
@@ -10086,8 +10170,32 @@ body:has(.filecopy) footer {
     display: inline;
   }
 
+  /* Collapsing the authored lines to inline joins them with no separator,
+     because JSX drops the newline between the spans — "One hundredunits of".
+     The space has to be put back explicitly. */
+  .fc-sheet__head .fc-line + .fc-line::before {
+    content: " ";
+    white-space: pre;
+  }
+
   .fc-sheet__head .fc-h2 {
     text-wrap: pretty;
+  }
+
+  /* The population is a long string in a pill; at 390px it ran off the
+     right edge. Let it wrap inside the tag instead. */
+  /* The block is `flex: none` at desktop, so max-width on the tag has
+     nothing to resolve against — it has to be allowed to take the row. */
+  .fc-sheet__popblock {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .fc-sheet__poptag {
+    max-width: 100%;
+    border-radius: 12px;
+    white-space: normal;
+    line-height: 1.6;
   }
   .fc-sheet__ledger { padding: 18px 14px; }
   .fc-sheet__foot { grid-template-columns: minmax(0, 1fr); gap: 13px; padding: 14px; }
