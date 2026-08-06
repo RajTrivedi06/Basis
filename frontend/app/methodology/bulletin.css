@@ -1127,6 +1127,17 @@ body:has(.bulletin-page) > footer {
   visibility: hidden;
 }
 
+/* A spread that is not on screen contributes nothing to layout. `inset: 0`
+   sized these to the stage, but their content — up to 1600px of it — spilled
+   past unclipped and inflated the document's scroll height by ~400px. That is
+   the empty space below the page: it was invisible pages still being
+   measured. */
+.bull-spread:not([data-current]) {
+  bottom: auto;
+  height: 0;
+  overflow: hidden;
+}
+
 /* The front page stands alone and takes the full sheet. */
 .bull-book__stage.is-cover .bull-spread[data-current] {
   grid-template-columns: 1fr;
