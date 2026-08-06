@@ -8,7 +8,7 @@ export function ExhibitBCustody({ view }: ExhibitBCustodyProps) {
   return (
     <figure className="bull-exhibit">
       <figcaption className="bull-exhibit__cap">
-        <span>Exhibit B — Chain of custody, today&apos;s cycle</span>
+        <span>Exhibit B: Chain of custody, today&apos;s cycle</span>
         <span className="bull-exhibit__cap-meta">
           {view.skuCode} · <span className="bull-sim">[SIM]</span>
         </span>

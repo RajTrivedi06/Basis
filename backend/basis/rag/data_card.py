@@ -174,8 +174,8 @@ def render_data_card_summary(
             ),
             f"Providers: {provider_text or 'none indexed'}.",
             f"Top SKUs by canonical-offer count: {sku_text or 'none indexed'}.",
-            f"…and {remaining} more SKUs — ask about any specific one.",
+            f"…and {remaining} more SKUs; ask about any specific one.",
             f"Database schemas: {', '.join(_SCHEMA_NAMES)}.",
-            "Numbers in documents may be stale — prefer tools for current values.",
+            "Numbers in documents may be stale; prefer tools for current values.",
         )
     )

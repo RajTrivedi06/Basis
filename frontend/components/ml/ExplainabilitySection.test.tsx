@@ -18,7 +18,7 @@ import { ML_EXPLAINABILITY_FIXTURE } from "@/lib/mlExplainability";
 import { ExplainabilityPageClient } from "@/app/explainability/ExplainabilityPageClient";
 import { renderWithQuery } from "@/test/test-utils";
 
-describe("ExplainabilityContent — design 5b two-card file", () => {
+describe("ExplainabilityContent: design 5b two-card file", () => {
   const artifact = ML_EXPLAINABILITY_FIXTURE;
 
   it("renders bound numbers from the artifact", () => {
@@ -30,7 +30,7 @@ describe("ExplainabilityContent — design 5b two-card file", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("−10.9 pp")).toBeInTheDocument();
-    expect(screen.getByText("EXHIBIT I — THE BOUND")).toBeInTheDocument();
+    expect(screen.getByText("EXHIBIT I: THE BOUND")).toBeInTheDocument();
   });
 
   it("renders caveats verbatim", () => {
@@ -47,7 +47,7 @@ describe("ExplainabilityContent — design 5b two-card file", () => {
     expect(screen.getByText("0.34")).toBeInTheDocument();
     expect(screen.getByText("61")).toBeInTheDocument();
     expect(screen.getByText(/HOSTS ≥10D/i)).toBeInTheDocument();
-    expect(screen.getByText("EXHIBIT II — THE HOST")).toBeInTheDocument();
+    expect(screen.getByText("EXHIBIT II: THE HOST")).toBeInTheDocument();
   });
 
   it("renders per-provider holdout R² as punch cards", () => {
@@ -113,7 +113,7 @@ describe("ExplainabilityPageClient", () => {
       })
     ).toBeInTheDocument();
     expect(
-      await screen.findByText("EXHIBIT I — THE BOUND")
+      await screen.findByText("EXHIBIT I: THE BOUND")
     ).toBeInTheDocument();
     expect(
       screen.getByRole("img", {

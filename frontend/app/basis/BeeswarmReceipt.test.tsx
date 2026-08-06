@@ -60,7 +60,7 @@ function tapAt(x: number, y: number) {
   fireEvent.click(layer, { clientX: x, clientY: y });
 }
 
-describe("BeeswarmReceipt — the swarm", () => {
+describe("BeeswarmReceipt: the swarm", () => {
   it("draws one dot per real offer and one row per group", () => {
     const { container } = renderSwarm();
 
@@ -102,10 +102,37 @@ describe("BeeswarmReceipt — the swarm", () => {
 
     expect(Math.max(...firstRow)).toBeLessThan(Math.min(...secondRow));
   });
+
+  it("compresses many factor rows so region/residual do not stretch the page", () => {
+    // 24 sparse region-like rows at the old 56px floor would be ~1.5k tall.
+    const many = Array.from({ length: 24 }, (_, i) =>
+      point(i + 1, 1.5 + i * 0.05, `r${i}`)
+    );
+    const { container } = renderSwarm({ factor: "region", points: many });
+    const plate = container.querySelector(".swarm__plate");
+    const figure = container.querySelector(".swarm__figure");
+    expect(plate).not.toBeNull();
+    // Crowded floor still exceeds the soft budget, so the plate scrolls inside
+    // a capped figure instead of lengthening the page.
+    expect(figure?.classList.contains("is-scroll")).toBe(true);
+    expect(Number(plate!.getAttribute("height"))).toBeLessThan(1200);
+  });
+
+  it("fits a middling factor stack on screen without a scroll pane", () => {
+    const mid = Array.from({ length: 10 }, (_, i) =>
+      point(i + 1, 1.5 + i * 0.05, `r${i}`)
+    );
+    const { container } = renderSwarm({ factor: "region", points: mid });
+    const plate = container.querySelector(".swarm__plate");
+    expect(Number(plate!.getAttribute("height"))).toBeLessThanOrEqual(640);
+    expect(
+      container.querySelector(".swarm__figure")?.classList.contains("is-scroll")
+    ).toBe(false);
+  });
 });
 
-describe("BeeswarmReceipt — touch targets", () => {
-  it("takes a tap 20px off a dot's centre — a 44px target", () => {
+describe("BeeswarmReceipt: touch targets", () => {
+  it("takes a tap 20px off a dot's centre: a 44px target", () => {
     const { container } = renderSwarm();
     // The third runpod offer, well clear of its neighbours on the log axis.
     const dot = dotAt(container, 2);
@@ -129,7 +156,7 @@ describe("BeeswarmReceipt — touch targets", () => {
   });
 
   it("resolves a crowded tap to the nearest dot, so none is unreachable", () => {
-    // Two offers a cent apart stack in the same column — the case where
+    // Two offers a cent apart stack in the same column: the case where
     // per-dot 44px circles would bury one of them under the other.
     const { container } = renderSwarm({
       points: [...POINTS, point(6, 2.42, "runpod")],
@@ -146,7 +173,7 @@ describe("BeeswarmReceipt — touch targets", () => {
   });
 });
 
-describe("BeeswarmReceipt — the inline receipt", () => {
+describe("BeeswarmReceipt: the inline receipt", () => {
   it("reserves the slot before anything is selected, so nothing jumps", () => {
     renderSwarm();
 
@@ -155,7 +182,7 @@ describe("BeeswarmReceipt — the inline receipt", () => {
     expect(slot.textContent).toContain("Select a dot to file its receipt.");
   });
 
-  it("files the receipt into that same slot on tap — no new layout box", () => {
+  it("files the receipt into that same slot on tap: no new layout box", () => {
     const { container } = renderSwarm();
 
     const slot = screen.getByTestId("swarm-receipt-slot");

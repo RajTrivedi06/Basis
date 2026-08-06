@@ -35,7 +35,7 @@ const points = Array.from({ length: 30 }, (_, i) => {
   };
 });
 
-describe("FindingsHero — declassified memorandum", () => {
+describe("FindingsHero: declassified memorandum", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedTimeseries.mockResolvedValue({
@@ -79,7 +79,7 @@ describe("FindingsHero — declassified memorandum", () => {
     await screen.findByText("ICC 0.55");
     const redactions = container.querySelectorAll(".memo-line__redaction");
     expect(redactions.length).toBe(1);
-    // it sits on line 4 — the unexplained remainder
+    // it sits on line 4: the unexplained remainder
     const line = redactions[0].closest(".memo-line") as HTMLElement;
     expect(within(line).getByText(/CAUSE OF REMAINDER/)).toBeInTheDocument();
   });

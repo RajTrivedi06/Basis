@@ -38,7 +38,7 @@ const live = {
   pct_residual: 61.3,
 };
 
-describe("BasisPageClient — settlement sheet", () => {
+describe("BasisPageClient: settlement sheet", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedSkus.mockResolvedValue({ items: [] });

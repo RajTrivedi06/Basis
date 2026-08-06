@@ -64,7 +64,7 @@ def test_generated_data_card_summary_stays_within_300_tokens() -> None:
     )
 
     assert count_tokens(summary) <= DATA_CARD_TOKEN_BUDGET
-    assert "…and 84 more SKUs — ask about any specific one." in summary
+    assert "…and 84 more SKUs; ask about any specific one." in summary
     card = load_data_card()
     assert len(card.sku_list) == 96
     assert len(card.top_skus) == 12

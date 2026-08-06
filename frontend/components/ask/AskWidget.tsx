@@ -77,7 +77,7 @@ export function AskWidget() {
         className="ask-launcher mono"
         aria-expanded={open}
         aria-controls="ask-basis-drawer"
-        title="Query the public dataset — experimental (⌘K / Ctrl+K)"
+        title="Query the public dataset (experimental) (⌘K / Ctrl+K)"
         onClick={() => (open ? closeWidget() : openWidget())}
       >
         ASK BASIS

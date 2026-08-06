@@ -3,13 +3,13 @@
 import { SKUS, type SkuId } from "./sim/bulletinSim";
 
 const TOC = [
-  { href: "#file-00", label: "00 — THE QUESTION" },
-  { href: "#file-01", label: "01 — COLLECTION & CUSTODY" },
-  { href: "#file-02", label: "02 — NOMENCLATURE" },
-  { href: "#file-03", label: "03 — DISPERSION" },
-  { href: "#file-04", label: "04 — THE SUBTRACTION" },
-  { href: "#file-05", label: "05 — THE FINDING" },
-  { href: "#file-06", label: "06 — LIMITATIONS" },
+  { href: "#file-00", label: "00 · THE QUESTION" },
+  { href: "#file-01", label: "01 · COLLECTION & CUSTODY" },
+  { href: "#file-02", label: "02 · NOMENCLATURE" },
+  { href: "#file-03", label: "03 · DISPERSION" },
+  { href: "#file-04", label: "04 · THE SUBTRACTION" },
+  { href: "#file-05", label: "05 · THE FINDING" },
+  { href: "#file-06", label: "06 · LIMITATIONS" },
   { href: "#letters", label: "LETTERS TO THE EDITOR" },
   { href: "#subscribe", label: "SUBSCRIPTIONS" },
 ] as const;

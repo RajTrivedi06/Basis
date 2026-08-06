@@ -78,7 +78,7 @@ export default function ProvidersPage() {
       <header className="prov-head">
         <div className="prov-head__row">
           <div>
-            <div className="prov-head__eyebrow">04 · Source posture</div>
+            <div className="prov-head__eyebrow">Source posture</div>
             <h1 className="prov-head__title">
               {activeWord} {noun},{" "}
               <em>
@@ -88,15 +88,14 @@ export default function ProvidersPage() {
             <p className="prov-head__lede">
               Columns below are exactly what the public{" "}
               <span className="mono text-[var(--ink)]">GET /api/providers</span>{" "}
-              returns — nothing inferred, embellished, or backfilled.
+              returns: nothing inferred, embellished, or backfilled.
             </p>
           </div>
           <div className="prov-head__meta">
             <div className="prov-head__meta-label">Collected twice daily</div>
             <div className="prov-head__meta-value">
               {ordered.length} rows · {totalOffers.toLocaleString("en-US")}{" "}
-              offers{" "}
-              <span className="prov-head__live">LIVE</span>
+              offers <span className="prov-head__live">LIVE</span>
             </div>
           </div>
         </div>
@@ -108,7 +107,7 @@ export default function ProvidersPage() {
         <div>
           <h2 className="prov-notes__title">Marketplace caution</h2>
           <p>
-            Marketplace subjects aggregate many independent listings — not a
+            Marketplace subjects aggregate many independent listings, not a
             single price policy. Quoted public prices only, never executed
             trades.
           </p>
@@ -118,7 +117,7 @@ export default function ProvidersPage() {
           <p>
             No collection in the last {PROVIDER_STALE_AFTER_DAYS} days earns the{" "}
             <span className="mono">RETIRED</span> tag and a place below the
-            active. Historical offers stay in the corpus — surveillance stopped,
+            active. Historical offers stay in the corpus; surveillance stopped,
             the file did not close.
           </p>
         </div>
@@ -134,9 +133,8 @@ export default function ProvidersPage() {
 
       <footer className="prov-sheet-foot">
         <span className="prov-sheet-foot__stamp">
-          {sheetLabel("/providers")} · COMPILED{" "}
-          <em className="serif">Basis</em>
-          {compiled !== "—" ? ` · ${compiled}` : null}
+          {sheetLabel("/providers")} · COMPILED <em className="serif">Basis</em>
+          {compiled !== "-" ? ` · ${compiled}` : null}
         </span>
         <Link href="/basis" className="prov-sheet-foot__next">
           Next: which factors absorb the difference →

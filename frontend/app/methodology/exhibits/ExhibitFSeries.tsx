@@ -16,7 +16,7 @@ export function ExhibitFSeries({
   return (
     <figure className="bull-exhibit bull-exhibit--strong">
       <figcaption className="bull-exhibit__cap">
-        <span>Exhibit F — The unexplained share, 60 days (operable)</span>
+        <span>Exhibit F: The unexplained share, 60 days (operable)</span>
         <span className="bull-exhibit__cap-meta">
           {view.skuCode} · <span className="bull-sim">[SIM]</span>
         </span>

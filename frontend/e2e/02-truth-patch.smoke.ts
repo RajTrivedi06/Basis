@@ -77,7 +77,7 @@ test.describe("check 2 · truth-patch positive", () => {
   test("Ask Basis is labelled Experimental", async ({ page }) => {
     await gotoRendered(page, "/");
 
-    // exact: true — once the drawer opens, the backdrop's "Close Ask Basis"
+    // exact: true: once the drawer opens, the backdrop's "Close Ask Basis"
     // label also substring-matches "Ask Basis".
     const launcher = page.getByRole("button", { name: "ASK BASIS", exact: true });
     await expect(launcher).toBeVisible();

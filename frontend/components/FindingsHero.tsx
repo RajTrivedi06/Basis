@@ -234,13 +234,13 @@ function FindingsHeroInner() {
             </p>
             <p>
               Unexplained share in market-priced segments has ranged ~20–61%
-              across recent weeks — basis risk is segment- and
+              across recent weeks; basis risk is segment- and
               time-conditional.
             </p>
             <p>
               The gap compares the 45-feature model&rsquo;s honest
               out-of-sample fit against the four simple factors&rsquo;
-              in-sample share — one picture, not two separate confirmations.
+              in-sample share: one picture, not two separate confirmations.
               Both anchors are dated structural claims from the published
               artifact; inspect them on the{" "}
               <Link href="/explainability">explainability page</Link>.

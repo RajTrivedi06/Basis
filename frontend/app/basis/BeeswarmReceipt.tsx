@@ -35,6 +35,16 @@ const TOUCH_R = 22;
  *  and a populous row grows so its dots stack instead of merging into a line. */
 const ROW_H_MIN = 56;
 const ROW_H_MAX = 104;
+/** When many factor levels crowd the plate (region, residual cells), rows may
+ *  compress down to this so the chart stays on one screen. */
+const ROW_H_CROWDED = 32;
+/**
+ * Soft budget for the row stack (excludes top pad and axis). Provider /
+ * commitment / bundle fit under this naturally; region and residual scale or
+ * scroll instead of stretching the page.
+ */
+const PLOT_H_BUDGET = 560;
+const SCROLL_H_CAP = 640;
 const ROW_GAP = 6;
 const ROW_LABEL_H = 15;
 const PAD_T = 10;
@@ -150,7 +160,9 @@ export function BeeswarmReceipt({
 
   return (
     <div className="swarm" ref={ref}>
-      <figure className="swarm__figure">
+      <figure
+        className={`swarm__figure${layout.scrollable ? " is-scroll" : ""}`}
+      >
         <figcaption className="sr-only">{layout.summary}</figcaption>
         <svg
           className="swarm__plate"
@@ -258,7 +270,7 @@ export function BeeswarmReceipt({
           {/* Touch layer. A tap anywhere within the ruled 44px of a dot picks
               it; where dots crowd closer than that, the nearest one wins. Giving
               each dot its own 44px circle instead would stack the circles on a
-              dense row and leave the covered dots unreachable — which defeats
+              dense row and leave the covered dots unreachable, which defeats
               the point of the target. */}
           <rect
             className="swarm__hit"
@@ -383,6 +395,8 @@ type Layout = {
   ticks: { value: number; x: number }[];
   height: number;
   summary: string;
+  /** True when the plate still exceeds the scroll cap after row compression. */
+  scrollable: boolean;
 };
 
 function buildLayout(
@@ -405,10 +419,18 @@ function buildLayout(
   const groupOrder = counts.has("UNKNOWN") ? [...named, "UNKNOWN"] : named;
 
   const labelBand = narrow ? ROW_LABEL_H : 0;
+  // Narrow mode stacks a label above every row, so the budget has to leave
+  // room for those bands or region/residual still blow the page open.
+  const bandTax = groupOrder.length * labelBand;
+  const heights = rowHeights(
+    groupOrder.map((key) => counts.get(key) ?? 0),
+    bandTax
+  );
+
   let cursor = PAD_T;
-  const rows: Row[] = groupOrder.map((key) => {
+  const rows: Row[] = groupOrder.map((key, i) => {
     const count = counts.get(key) ?? 0;
-    const height = rowHeight(count);
+    const height = heights[i] ?? ROW_H_MIN;
     const top = cursor + labelBand;
     cursor = top + height + ROW_GAP;
     return {
@@ -422,6 +444,7 @@ function buildLayout(
   });
 
   const height = cursor + AXIS_H;
+  const scrollable = height > SCROLL_H_CAP;
 
   const x0 = labelW + 8;
   const x1 = Math.max(x0 + 40, width - PAD_R);
@@ -456,7 +479,14 @@ function buildLayout(
     .map((value) => ({ value, x: xAt(value) }))
     .filter((_, i, all) => all.length <= 6 || i % Math.ceil(all.length / 5) === 0);
 
-  return { rows, placed, ticks, height, summary: summarise(points, rows) };
+  return {
+    rows,
+    placed,
+    ticks,
+    height,
+    summary: summarise(points, rows),
+    scrollable,
+  };
 }
 
 /**
@@ -517,6 +547,34 @@ function rowHeight(count: number): number {
   // five-lane band starts overplotting on live H100 data.
   const grown = ROW_H_MIN + Math.floor(count / 60) * pitch * 2;
   return clamp(grown, ROW_H_MIN, ROW_H_MAX);
+}
+
+/**
+ * Ideal per-row heights, then uniformly compressed when the stack would blow
+ * past the soft budget (region / residual). `bandTax` is the extra vertical
+ * taken by per-row labels in narrow layout.
+ */
+function rowHeights(counts: number[], bandTax = 0): number[] {
+  if (counts.length === 0) return [];
+  const ideals = counts.map(rowHeight);
+  const gaps = Math.max(0, counts.length - 1) * ROW_GAP;
+  const idealSum = ideals.reduce((sum, h) => sum + h, 0);
+  const idealTotal = idealSum + gaps + bandTax;
+  if (idealTotal <= PLOT_H_BUDGET) return ideals;
+
+  const n = counts.length;
+  const budgetForRows = PLOT_H_BUDGET - gaps - bandTax;
+  const crowdedFloor = n * ROW_H_CROWDED;
+
+  // Fit inside the budget when crowded-min rows would; otherwise accept the
+  // crowded floor and let the plate scroll inside SCROLL_H_CAP.
+  if (budgetForRows >= crowdedFloor && idealSum > 0) {
+    const scale = budgetForRows / idealSum;
+    return ideals.map((h) =>
+      clamp(Math.round(h * scale), ROW_H_CROWDED, ROW_H_MAX)
+    );
+  }
+  return ideals.map(() => ROW_H_CROWDED);
 }
 
 function clamp(v: number, lo: number, hi: number): number {

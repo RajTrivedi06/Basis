@@ -31,7 +31,7 @@
   },
   "refusal": {
     "question": "Should I buy H100 spot capacity on Vast.ai right now?",
-    "answer": "I can't give trading or procurement advice. Basis documents quoted public prices and decomposition methodology — it does not recommend buys, sells, or capacity timing. For methodology on what the residual measures, see the project docs.",
+    "answer": "I can't give trading or procurement advice. Basis documents quoted public prices and decomposition methodology; it does not recommend buys, sells, or capacity timing. For methodology on what the residual measures, see the project docs.",
     "citations": [],
     "tool_calls": [],
     "usage": {

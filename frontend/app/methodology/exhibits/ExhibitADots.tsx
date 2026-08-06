@@ -8,7 +8,7 @@ export function ExhibitADots({ view }: ExhibitADotsProps) {
   return (
     <figure className="bull-exhibit">
       <figcaption className="bull-exhibit__cap">
-        <span>Exhibit A — The day&apos;s quotes, as received</span>
+        <span>Exhibit A: The day&apos;s quotes, as received</span>
         <span className="bull-exhibit__cap-meta">
           {view.skuCode} · TODAY · <span className="bull-sim">[SIM]</span>
         </span>

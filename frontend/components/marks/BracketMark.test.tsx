@@ -61,7 +61,7 @@ describe("BracketMark", () => {
     expect(with_.querySelectorAll(".bracket-mark__leader")).toHaveLength(2);
   });
 
-  it("colors by tone using tokens — void only where it measures the residual", () => {
+  it("colors by tone using tokens: void only where it measures the residual", () => {
     const { container: ink } = renderMark();
     expect(ink.querySelector(".bracket-mark__spine")!.getAttribute("stroke")).toBe(
       "var(--ink)"

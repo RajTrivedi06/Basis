@@ -29,7 +29,7 @@ test.describe("check 8 · mobile viewport 390x844", () => {
 
       if (overflow.scrollWidth > overflow.clientWidth + 2) {
         layoutFindings.push(
-          `${route}: horizontal overflow — scrollWidth ${overflow.scrollWidth}px vs viewport ${overflow.clientWidth}px`
+          `${route}: horizontal overflow: scrollWidth ${overflow.scrollWidth}px vs viewport ${overflow.clientWidth}px`
         );
       }
     });
@@ -38,7 +38,7 @@ test.describe("check 8 · mobile viewport 390x844", () => {
   test.afterAll(() => {
     console.log(`\n=== STAGE 6 LAYOUT CANDIDATES (${layoutFindings.length}) ===`);
     if (layoutFindings.length === 0) {
-      console.log("  none — no horizontal overflow at 390x844");
+      console.log("  none: no horizontal overflow at 390x844");
     }
     for (const finding of layoutFindings) console.log(`  ${finding}`);
   });

@@ -15,7 +15,7 @@ describe("providerDossier", () => {
   });
 });
 
-describe("deltaClause — prose can never contradict the figure", () => {
+describe("deltaClause: prose can never contradict the figure", () => {
   it("reads parity at exactly zero, not 'below'", () => {
     expect(deltaClause(0)).toMatch(/level with the market median/i);
     expect(deltaClause(0)).not.toMatch(/above|below/i);

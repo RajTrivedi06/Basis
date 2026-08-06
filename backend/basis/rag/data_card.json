@@ -131,7 +131,7 @@
     "v100_sxm2_16gb",
     "v100_sxm3_32gb"
   ],
-  "text": "Basis is a public-data study of GPU compute price fungibility across cloud providers.\nCorpus: 507,522 raw observations; 504,638 canonical offers; 2026-04-26 through 2026-07-29.\nProviders: aws_spot (since 2026-04-26), azure (since 2026-07-28), runpod (since 2026-04-26), tensordock (since 2026-04-26), vast (since 2026-04-26).\nTop SKUs by canonical-offer count: a10g_pcie_24gb, l4_pcie_24gb, rtx_5090_32gb, rtx_4090_24gb, rtx_3090_24gb, rtx_3060_12gb, rtx_5060ti_16gb, a100_sxm_80gb, rtx_pro6000_96gb, h100_sxm_80gb, rtx_a4000_16gb, a100_pcie_80gb.\n…and 84 more SKUs — ask about any specific one.\nDatabase schemas: raw_observations, canonical_offers, daily_aggregates, basis_decomposition, doc_chunks.\nNumbers in documents may be stale — prefer tools for current values.",
+  "text": "Basis is a public-data study of GPU compute price fungibility across cloud providers.\nCorpus: 507,522 raw observations; 504,638 canonical offers; 2026-04-26 through 2026-07-29.\nProviders: aws_spot (since 2026-04-26), azure (since 2026-07-28), runpod (since 2026-04-26), tensordock (since 2026-04-26), vast (since 2026-04-26).\nTop SKUs by canonical-offer count: a10g_pcie_24gb, l4_pcie_24gb, rtx_5090_32gb, rtx_4090_24gb, rtx_3090_24gb, rtx_3060_12gb, rtx_5060ti_16gb, a100_sxm_80gb, rtx_pro6000_96gb, h100_sxm_80gb, rtx_a4000_16gb, a100_pcie_80gb.\n…and 84 more SKUs; ask about any specific one.\nDatabase schemas: raw_observations, canonical_offers, daily_aggregates, basis_decomposition, doc_chunks.\nNumbers in documents may be stale; prefer tools for current values.",
   "top_skus": [
     [
       "a10g_pcie_24gb",

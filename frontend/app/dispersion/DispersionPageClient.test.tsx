@@ -18,7 +18,7 @@ vi.mock("next/navigation", () => ({
 const mockedGetDispersion = vi.mocked(getDispersion);
 const mockedGetGpuSkus = vi.mocked(getGpuSkus);
 
-describe("DispersionPageClient — declassified observation sheet", () => {
+describe("DispersionPageClient: declassified observation sheet", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetGpuSkus.mockResolvedValue({ items: [] });

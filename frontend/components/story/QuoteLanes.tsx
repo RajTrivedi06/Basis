@@ -273,7 +273,7 @@ export function QuoteLanes({
         </div>
 
         <p className="fc-quotes__note">
-          We report the middle 90% (p5–p95), not the mean — the quote
+          We report the middle 90% (p5–p95), not the mean; the quote
           distribution is skewed, and outliers can distort an average without
           describing the market.
         </p>

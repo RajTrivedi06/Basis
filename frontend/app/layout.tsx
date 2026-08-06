@@ -28,7 +28,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Basis — GPU Compute Fungibility Study",
+  title: "Basis: GPU Compute Fungibility Study",
   description:
     "A public-data study quantifying GPU compute fungibility across cloud providers, decomposing price dispersion into observable factors and residual basis risk.",
 };
@@ -67,7 +67,7 @@ function Footer() {
           <span className="serif mr-[10px] font-semibold text-[var(--ink)]">
             Basis
           </span>
-          — research artifact · public data ·
+          - research artifact · public data ·
           2026
         </span>
         <span className="mono text-[11px] text-[var(--ink-dim)]">

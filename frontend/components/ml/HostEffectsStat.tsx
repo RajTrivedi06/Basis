@@ -25,7 +25,7 @@ export function HostEffectsStat({ hostAnalysis }: HostEffectsStatProps) {
       <div className="eyebrow mb-2">Vast host identity (on-demand panel)</div>
       <p className="caption max-w-[68ch] leading-relaxed">
         How much of the leftover variation stays attached to the same specific
-        machines from one day to the next — identity, not specification.
+        machines from one day to the next: identity, not specification.
       </p>
 
       <div className="ml-statrow ml-statrow--four">
@@ -83,7 +83,7 @@ export function HostEffectsStat({ hostAnalysis }: HostEffectsStatProps) {
         {!expanded && (
           <p className="caption mt-2 text-[var(--ink-dim)]">
             Sensitivity at ≥{sensitivity.map((s) => s.threshold).join(", ≥")}{" "}
-            days available — expand to view all ICC values.
+            days available; expand to view all ICC values.
           </p>
         )}
       </div>

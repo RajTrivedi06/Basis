@@ -29,7 +29,7 @@ const items = [
   },
 ];
 
-describe("ProvidersPage — declassified watch list", () => {
+describe("ProvidersPage: declassified watch list", () => {
   beforeEach(() => {
     mockedGetProviders.mockResolvedValue({ items });
   });

@@ -165,7 +165,7 @@ function InspectorHeader({
             <span className="mono text-[var(--ink)]">#{rawObservationId}</span>
           </h2>
           <div className="caption mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span>How this row was normalized — reported fields, the rule that fired, and the canonical result.</span>
+            <span>How this row was normalized: reported fields, the rule that fired, and the canonical result.</span>
             {raw && (
               <>
                 <span className="text-[var(--ink-faint)]">·</span>
@@ -257,7 +257,7 @@ function InspectorBody({
       <section className="grid gap-3">
         <CollapsibleJsonPanel
           title="raw_payload"
-          subtitle="Untouched provider response — what the collector saw"
+          subtitle="Untouched provider response: what the collector saw"
           value={raw.raw_payload}
         />
         {raw.provider_metadata && (
@@ -315,7 +315,7 @@ function QuoteStrip({
             <span className="pill-unknown">UNKNOWN</span>
           )}
           <span className="mono text-[11px] text-[var(--ink-dim)]">
-            commitment: {raw.commitment_type_reported ?? "—"}
+            commitment: {raw.commitment_type_reported ?? "-"}
           </span>
         </QuoteCell>
       </div>
@@ -475,9 +475,9 @@ function BundleFieldTable({
                   {field.canonical_field}
                 </td>
                 <td className="mono text-[11px] text-[var(--ink-mid)]">
-                  {field.source_field ?? "—"}
+                  {field.source_field ?? "-"}
                 </td>
-                <td className="caption">{field.transformation ?? "—"}</td>
+                <td className="caption">{field.transformation ?? "-"}</td>
                 <td className="mono text-[11px] text-[var(--ink)]">
                   {formatResult(field.result)}
                 </td>
@@ -609,7 +609,7 @@ function formatBundleResult(exp: BundleExtractionExplanation): string | null {
 }
 
 function formatResult(value: unknown): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "-";
   if (typeof value === "string") return value;
   if (typeof value === "number") return String(value);
   return JSON.stringify(value);

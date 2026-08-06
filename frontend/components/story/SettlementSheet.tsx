@@ -105,7 +105,7 @@ export function SettlementSheet({
 
       <div ref={scene} className="fc-sheet__card">
         {/* One line. The population is stated once, on the head, and the
-            ledger's own glyph caption already carries the Live tag — both
+            ledger's own glyph caption already carries the Live tag; both
             used to be repeated here. */}
         <div className="fc-sheet__slate">
           <span>

@@ -44,13 +44,13 @@ import {
 // Director rider on C23: the full name lives in author meta + OG only —
 // page copy renders Raj's attribution exactly as written.
 export const metadata: Metadata = {
-  title: "Basis — measuring what the GPU market cannot explain.",
-  description: "Basis — measuring what the GPU market cannot explain.",
+  title: "Basis: measuring what the GPU market cannot explain.",
+  description: "Basis: measuring what the GPU market cannot explain.",
   authors: [
     { name: "Raj Trivedi", url: "https://github.com/RajTrivedi06/Basis" },
   ],
   openGraph: {
-    title: "Basis — measuring what the GPU market cannot explain.",
+    title: "Basis: measuring what the GPU market cannot explain.",
     description:
       "A public-data research study of GPU-hour pricing by Raj Trivedi.",
     type: "website",
@@ -188,7 +188,7 @@ export default async function StoryPage() {
 
           <div className="fc-open__foot" data-stamp data-stamp-group>
             <p className="fc-open__lede">
-              Basis studies what makes identical compute cost differently — and
+              Basis studies what makes identical compute cost differently, and
               how much of that difference observable facts still cannot explain.
               Every figure traces back to the raw response a provider returned.
             </p>
@@ -228,7 +228,7 @@ export default async function StoryPage() {
         <div className="fc-wrap fc-brief">
           <div className="fc-brief__copy">
             <div className="fc-brief__intro">
-              <span className="fc-eyebrow fc-eyebrow--accent">01 · The brief</span>
+              <span className="fc-eyebrow fc-eyebrow--accent">The brief</span>
               <span className="fc-brief__badge">A study, not a product</span>
             </div>
             <h2 id="fc-brief" className="fc-h2 serif" data-lines>
@@ -248,7 +248,7 @@ export default async function StoryPage() {
                 <a href="#sources">1</a>
               </sup>{" "}
               Region, commitment, and contract structure explain part of the
-              spread — but once those observable differences are accounted for,
+              spread, but once those observable differences are accounted for,
               prices ought to converge.{" "}
               <strong>They don&rsquo;t. Not even close.</strong>
             </p>
@@ -281,7 +281,7 @@ export default async function StoryPage() {
                 </>
               ) : (
                 <p className="fc-receipt__fallback">
-                  Every figure traces back to a raw provider response — no
+                  Every figure traces back to a raw provider response: no
                   paywalled feeds.
                 </p>
               )}
@@ -322,7 +322,7 @@ export default async function StoryPage() {
               />
             </dl>
             <p className="fc-registry__foot">
-              Quoted prices only — no transactions claimed. Raw responses are
+              Quoted prices only: no transactions claimed. Raw responses are
               write-once and kept.
               {bounds && totalOffers !== null ? (
                 <>
@@ -343,7 +343,7 @@ export default async function StoryPage() {
         data-nav-backdrop="film"
       >
         <div className="fc-wrap">
-          <span className="fc-eyebrow fc-eyebrow--accent">02 · Exhibit A</span>
+          <span className="fc-eyebrow fc-eyebrow--accent">Exhibit A</span>
 
           <h2 id="fc-exhibit-a" className="fc-h2 serif" data-lines>
             {bounds ? (
@@ -429,7 +429,7 @@ export default async function StoryPage() {
         <div className="fc-act__scrim fc-act__scrim--soft" aria-hidden />
         <div className="fc-wrap fc-name">
           <div className="fc-name__copy">
-            <span className="fc-eyebrow fc-eyebrow--accent">03 · The name</span>
+            <span className="fc-eyebrow fc-eyebrow--accent">The name</span>
             <h2 id="fc-name" className="fc-h2 serif" data-lines>
               <span className="fc-line">
                 <span>The gap has a name.</span>
@@ -437,7 +437,7 @@ export default async function StoryPage() {
             </h2>
             <p className="fc-body fc-body--invert">
               In commodity markets, <em className="serif">basis</em> names the
-              gap between a local cash price and the relevant futures price —
+              gap between a local cash price and the relevant futures price,
               the part geography, timing, and contract terms cannot standardize
               away.
               <sup className="fc-fn">
@@ -451,7 +451,7 @@ export default async function StoryPage() {
               basis of its own. In this study,{" "}
               <strong>Basis</strong> is the share of quoted price dispersion
               that remains after provider, region, commitment, and other
-              observable terms are accounted for — not the raw spread between
+              observable terms are accounted for, not the raw spread between
               two quotes, but the part normalization still cannot explain.
             </p>
           </div>
@@ -470,7 +470,7 @@ export default async function StoryPage() {
         data-nav-backdrop="film"
       >
         <div className="fc-wrap fc-method-passport">
-          <span className="fc-eyebrow fc-eyebrow--accent">04 · The method</span>
+          <span className="fc-eyebrow fc-eyebrow--accent">The method</span>
           <h2 id="fc-method" className="fc-h2 fc-h2--invert serif" data-lines>
             <span className="fc-line">
               <span>Twice a day. Four steps.</span>
@@ -496,9 +496,7 @@ export default async function StoryPage() {
         <div className="fc-wrap">
           <div className="fc-exhibit__head">
             <div>
-              <span className="fc-eyebrow fc-eyebrow--accent">
-                05 · Exhibit B
-              </span>
+              <span className="fc-eyebrow fc-eyebrow--accent">Exhibit B</span>
               <h2 id="fc-exhibit-b" className="fc-h2 serif" data-lines>
                 <span className="fc-line">
                   <span>One collection day.</span>
@@ -560,15 +558,13 @@ export default async function StoryPage() {
         <div className="fc-act__scrim fc-act__scrim--room" aria-hidden />
 
         {/* The filed ledger itself lives on /basis, row by row and live. This
-            act states the result and the vocabulary the findings then spend —
-            four factors, the subtraction, the remainder — and hands the reader
+            act states the result and the vocabulary the findings then spend:
+            four factors, the subtraction, the remainder, and hands the reader
             over rather than drawing the same waterfall twice. */}
         <div className="fc-wrap fc-settle">
           <div className="fc-sheet__head">
             <div>
-              <span className="fc-eyebrow fc-eyebrow--accent">
-                06 · Exhibit C
-              </span>
+              <span className="fc-eyebrow fc-eyebrow--accent">Exhibit C</span>
               {/* Title and lede are one statement, as the reference sets it —
                   the sheet gets its own sentence, not a stacked heading plus
                   a subheading. */}
@@ -643,9 +639,7 @@ export default async function StoryPage() {
         <div className="fc-sheet__wash" aria-hidden />
 
         <div className="fc-wrap">
-          <span className="fc-eyebrow fc-eyebrow--accent">
-            07 · Findings of record
-          </span>
+          <span className="fc-eyebrow fc-eyebrow--accent">Findings of record</span>
           <h2 id="fc-findings" className="fc-h2 serif" data-lines>
             <span className="fc-line">
               <span>Three sheets that survived review.</span>
@@ -682,7 +676,7 @@ export default async function StoryPage() {
                 <>
                   <p className="fc-card__body">
                     Forty-five features, day-based validation, and a leakage
-                    guard — scored on the same held-out days as the four-factor
+                    guard, scored on the same held-out days as the four-factor
                     bound.
                   </p>
                   <div className="fc-bars">
@@ -765,7 +759,7 @@ export default async function StoryPage() {
                   <p className="fc-card__body">
                     Over half of what survives the subtraction tracks which host
                     listed the offer, day after day. That persistence is
-                    inconsistent with a fully fungible market — at least within
+                    inconsistent with a fully fungible market, at least within
                     the factors and period studied.
                   </p>
                   {sensitivity.length > 0 ? (
@@ -935,7 +929,7 @@ export default async function StoryPage() {
                 github.com/RajTrivedi06/Basis
               </a>
             </p>
-            <p className="serif fc-attrib__sig">— Raj</p>
+            <p className="serif fc-attrib__sig">- Raj</p>
           </div>
 
           <div id="sources" className="fc-sources">
@@ -945,15 +939,15 @@ export default async function StoryPage() {
             <ol>
               <li>
                 Hardware identity within a canonical SKU: normalization rules
-                and variant separation — Basis methodology §3 (canonical
+                and variant separation: Basis methodology §3 (canonical
                 schema).
               </li>
               <li>
-                Commodity basis — cash price minus futures price; CME Group
+                Commodity basis: cash price minus futures price; CME Group
                 education materials on basis and hedging.
               </li>
               <li>
-                Compute-as-commodity framing — Ornn AI public materials; the
+                Compute-as-commodity framing: Ornn AI public materials; the
                 essays referenced in the original Basis proposal.
               </li>
             </ol>
@@ -978,7 +972,7 @@ function RegistryRow({
   return (
     <div className="fc-registry__row">
       <dt>{label}</dt>
-      <dd className="serif">{value ?? "—"}</dd>
+      <dd className="serif">{value ?? "-"}</dd>
     </div>
   );
 }

@@ -84,7 +84,7 @@ describe("FungibilityMatrix", () => {
   });
 });
 
-describe("FungibilityMatrix — cards + pagination", () => {
+describe("FungibilityMatrix: cards + pagination", () => {
   beforeEach(() => {
     mockedGetFungibilityMatrix.mockResolvedValue({ items: rows });
   });

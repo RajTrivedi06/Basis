@@ -20,7 +20,7 @@ export const ERA_ANNOTATIONS: EraAnnotation[] = [
   {
     date: "2026-07-26",
     marker: "D",
-    label: "Era D — Vast spot becomes visible",
+    label: "Era D: Vast spot becomes visible",
   },
   {
     date: "2026-07-28",

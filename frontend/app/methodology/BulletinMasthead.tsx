@@ -6,7 +6,7 @@ export function BulletinMasthead() {
       <div className="bull-classbar">
         <span className="bull-classbar__struck">TOP SECRET // EYES ONLY</span>
         <span className="bull-classbar__declass">
-          <span className="bull-classbar__star">★</span> DECLASSIFIED — PUBLIC
+          <span className="bull-classbar__star">★</span> DECLASSIFIED: PUBLIC
           RELEASE <span className="bull-classbar__star">★</span>
         </span>
       </div>
@@ -20,14 +20,14 @@ export function BulletinMasthead() {
         </div>
 
         <div className="bull-mast__meta">
-          <span>VOL. XXIV — NO. 3</span>
+          <span>VOL. XXIV, NO. 3</span>
           <span>TUESDAY, OCTOBER 12, 1965</span>
           <span>LANGLEY, VA.</span>
-          <span>5¢ — INTERNAL DISTRIBUTION ONLY</span>
+          <span>5¢ · INTERNAL DISTRIBUTION ONLY</span>
         </div>
 
         <div className="bull-mast__proof">
-          DESIGN PROOF — FIGURES MARKED <span className="bull-sim">[SIM]</span>{" "}
+          DESIGN PROOF: FIGURES MARKED <span className="bull-sim">[SIM]</span>{" "}
           ARE SIMULATED; PRODUCTION VALUES ARRIVE FROM THE LIVE WIRE{" "}
           <span className="bull-sim">[LIVE]</span>
         </div>
@@ -35,7 +35,7 @@ export function BulletinMasthead() {
         <div className="bull-mast__desk">
           <div className="bull-extra">Extra</div>
           <div className="bull-desk-label">
-            Methodology desk — declassification special
+            Methodology desk: declassification special
           </div>
           <div style={{ marginLeft: "auto" }}>
             <BulletinStamp>

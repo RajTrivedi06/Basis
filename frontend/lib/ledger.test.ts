@@ -15,7 +15,7 @@ const live = {
   pct_residual: 61.3,
 };
 
-describe("buildLedger — factor discovery", () => {
+describe("buildLedger: factor discovery", () => {
   it("orders rows by the model's sequential-ANOVA order, not response key order", () => {
     // The API declares bundle before provider; the model attributes provider first.
     const { rows } = buildLedger(live);
@@ -27,7 +27,7 @@ describe("buildLedger — factor discovery", () => {
     ]);
   });
 
-  it("renders as many rows as the response carries — no fixed factor count", () => {
+  it("renders as many rows as the response carries: no fixed factor count", () => {
     expect(buildLedger(live).rows).toHaveLength(4);
 
     const withFifth = buildLedger({
@@ -68,7 +68,7 @@ describe("buildLedger — factor discovery", () => {
   });
 });
 
-describe("buildLedger — the 'X left' column", () => {
+describe("buildLedger: the 'X left' column", () => {
   it("starts at 100% and subtracts each factor in turn", () => {
     const { rows } = buildLedger(live);
 

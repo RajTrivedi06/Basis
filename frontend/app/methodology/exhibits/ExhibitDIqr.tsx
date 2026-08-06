@@ -8,7 +8,7 @@ export function ExhibitDIqr({ view }: ExhibitDIqrProps) {
   return (
     <figure className="bull-exhibit">
       <figcaption className="bull-exhibit__cap">
-        <span>Exhibit D — Same quotes, now summarized</span>
+        <span>Exhibit D: Same quotes, now summarized</span>
         <span className="bull-exhibit__cap-meta">
           {view.skuCode} · TODAY · <span className="bull-sim">[SIM]</span>
         </span>

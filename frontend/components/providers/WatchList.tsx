@@ -18,7 +18,7 @@ function deviationSign(
 }
 
 function formatDeviation(pct: number | null): string {
-  if (pct === null) return "—";
+  if (pct === null) return "-";
   // Arrow doubles the sign so the direction survives a greyscale print
   // and does not rely on colour alone. Exactly-level gets no arrow: a
   // zero deviation is parity, and claiming "below" would be false.
@@ -29,9 +29,9 @@ function formatDeviation(pct: number | null): string {
 
 /** UTC stamp matching the sheet voice: "AUG 3 · 06:12". */
 export function formatObserved(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   const mon = d
     .toLocaleString("en-US", { month: "short", timeZone: "UTC" })
     .toUpperCase();
@@ -141,7 +141,7 @@ export function WatchList({ items }: { items: ProviderSummary[] }) {
           TOP SECRET
         </span>
         <span className="watch__overstamp">
-          OVERSTAMPED: DECLASSIFIED — EVERY FIGURE HERE IS PUBLIC
+          OVERSTAMPED: DECLASSIFIED: EVERY FIGURE HERE IS PUBLIC
         </span>
         <span className="watch__sheet-id">WATCH LIST · {sheetLabel("/providers")}</span>
       </div>
@@ -180,7 +180,7 @@ export function WatchList({ items }: { items: ProviderSummary[] }) {
           {howOpen ? "−" : "+"} SHOW ME HOW Δ VS MARKET IS COMPUTED
         </button>
         <span className="watch__footnote">
-          ARROWS CARRY THE SIGN — COLOR IS NOT LOAD-BEARING
+          ARROWS CARRY THE SIGN; COLOR IS NOT LOAD-BEARING
         </span>
       </div>
 
@@ -190,7 +190,7 @@ export function WatchList({ items }: { items: ProviderSummary[] }) {
             Mean across SKUs of (provider median − market median) ÷ market
             median, on the latest collection date. Market median is the
             all-providers rollup. SKUs with no usable market median are
-            skipped — never zero-filled.
+            skipped, never zero-filled.
           </p>
           <p>
             Positive sits above the market, negative below. It is a{" "}

@@ -7,10 +7,7 @@ import { type DecompShares } from "@/components/charts/DecompBar";
 import { LedgerWaterfall } from "@/components/charts/LedgerWaterfall";
 import { SkuPicker } from "@/components/SkuPicker";
 import { GlossaryTerm } from "@/components/glossary/GlossaryTerm";
-import {
-  getBasisDecomposition,
-  getDecompositionObservations,
-} from "@/lib/api";
+import { getBasisDecomposition, getDecompositionObservations } from "@/lib/api";
 import { factorColor, type Factor } from "@/lib/factorColor";
 import { formatMemoDate } from "@/lib/memoDate";
 import { useSku } from "@/lib/useSku";
@@ -87,33 +84,32 @@ export function BasisPageClient() {
     queryFn: () =>
       getDecompositionObservations(
         sku,
-        decomposition?.date ? { date: decomposition.date } : undefined
+        decomposition?.date ? { date: decomposition.date } : undefined,
       ),
     enabled: !!decomposition?.date,
   });
 
   const basisMessage = getBasisMessage(basisQuery.error);
-  const basisState =
-    basisQuery.isLoading
-      ? "loading"
-      : basisQuery.isError
-        ? basisMessage.tone === "muted"
-          ? "empty"
-          : "error"
-        : !decomposition
-          ? "empty"
-          : "ready";
+  const basisState = basisQuery.isLoading
+    ? "loading"
+    : basisQuery.isError
+      ? basisMessage.tone === "muted"
+        ? "empty"
+        : "error"
+      : !decomposition
+        ? "empty"
+        : "ready";
 
   const shares = decomposition ? toDecompShares(decomposition) : null;
   const factorRows = useMemo(
     () => (shares ? buildFactorRows(shares) : []),
-    [shares]
+    [shares],
   );
 
   const swarmPoints = useMemo(
     () =>
       pointsFromObservations(swarmFactor, observationsQuery.data?.items ?? []),
-    [swarmFactor, observationsQuery.data]
+    [swarmFactor, observationsQuery.data],
   );
 
   const stampDate = formatMemoDate(decomposition?.date ?? null);
@@ -124,15 +120,15 @@ export function BasisPageClient() {
       <header className="settle-head">
         <div className="settle-head__row">
           <div className="settle-head__copy">
-            <div className="settle-head__eyebrow">03 · Variance settlement</div>
+            <div className="settle-head__eyebrow">Variance settlement</div>
             <h1 className="settle-head__title">
               Four factors take their turn.
               <em> One remainder refuses.</em>
             </h1>
             <p className="settle-head__lede">
               Prices for the same chip disagree. This sheet names the causes we
-              can see — where it is, how it is rented, who is renting it, what
-              came bundled with it — and measures what is left after all four.
+              can see (where it is, how it is rented, who is renting it, what
+              came bundled with it) and measures what is left after all four.
             </p>
           </div>
           <div className="settle-head__meta">
@@ -151,7 +147,7 @@ export function BasisPageClient() {
                 </>
               ) : (
                 <>
-                  No settlement yet <span className="settle-head__live">—</span>
+                  No settlement yet <span className="settle-head__live">-</span>
                 </>
               )}
             </div>
@@ -182,7 +178,7 @@ export function BasisPageClient() {
             <p>
               Order matters for the four factors and not for the last one. Each
               factor is credited only with what it explains after the factors
-              before it have had their turn — but the{" "}
+              before it have had their turn, but the{" "}
               <GlossaryTerm term="residual">residual</GlossaryTerm> at the end
               is the same either way. That is what makes it worth reporting.
             </p>
@@ -221,7 +217,7 @@ export function BasisPageClient() {
             <span className="mono settle-sheet__residual">
               {decomposition.pct_residual.toFixed(1)}%
             </span>{" "}
-            is residual basis risk — the entry above that cannot be filed.
+            is residual basis risk: the entry above that cannot be filed.
           </p>
 
           <div className="settle-sheet__foot">
@@ -304,14 +300,16 @@ export function BasisPageClient() {
 
       {/* ——— D · Filed quotes ——— */}
       <section className="settle-quotes">
-        <div className="settle-quotes__eyebrow">05 · Filed quotes by factor</div>
+        <div className="settle-quotes__eyebrow">
+          05 · Filed quotes by factor
+        </div>
         <p className="settle-quotes__lede">
           Per-offer prices laid out by a single factor. Tight rows mean the
           factor explains the spread; broad rows mean it doesn&apos;t. The{" "}
           <span className="mono">Residual (within cell)</span> view conditions
-          on <span className="mono">(provider × commitment)</span> — within-row
-          spread is the basis risk observable factors cannot capture. Every
-          dot is a real offer; select one to file its receipt.
+          on <span className="mono">(provider × commitment)</span>: within-row
+          spread is the basis risk observable factors cannot capture. Every dot
+          is a real offer; select one to file its receipt.
         </p>
 
         <div className="settle-quotes__sheet">
@@ -368,7 +366,7 @@ export function BasisPageClient() {
       <footer className="settle-foot">
         <span className="settle-foot__stamp">
           {sheetLabel("/basis")} · SETTLED <em className="serif">Basis</em>
-          {stampDate !== "—" ? ` · ${stampDate}` : null}
+          {stampDate !== "-" ? ` · ${stampDate}` : null}
         </span>
         <Link href="/explainability" className="settle-foot__next">
           Next: the honesty bound →
@@ -455,7 +453,8 @@ function AccountRow({
             <p className="account-row__dossier-body">
               SOURCE: GET /api/basis
               <br />
-              FIELD: {isResidual ? "residual_variance" : `variance_from_${row.key}`}
+              FIELD:{" "}
+              {isResidual ? "residual_variance" : `variance_from_${row.key}`}
               <br />
               BASIS: LATEST DECOMPOSITION DATE
             </p>
@@ -540,7 +539,7 @@ function buildFactorRows(shares: DecompShares): FactorRow[] {
       label: "Residual",
       share: shares.residual,
       balance: Math.max(0, remaining),
-      note: "Everything the four observable factors do not explain on that day — the entry that cannot be filed.",
+      note: "Everything the four observable factors do not explain on that day: the entry that cannot be filed.",
     },
   ];
 }

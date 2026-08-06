@@ -27,7 +27,7 @@ export function ExplainabilityPageClient() {
         <div className="expl-head__row">
           <div>
             <div className="expl-head__eyebrow">
-              05 · Explainability · a bound, not proof about unobservables
+              Explainability · a bound, not proof about unobservables
             </div>
             <h1 className="expl-head__title">
               Two exhibits. Neither one closes the file.
@@ -46,15 +46,15 @@ export function ExplainabilityPageClient() {
 
         {howOpen ? (
           <p className="expl-head__protocol" id={howId}>
-            Protocol: the last{" "}
-            {holdoutDays != null ? holdoutDays : "N"} distinct UTC days are held
-            out and never tuned on; both scores are read on those same days. The
-            four-factor share is the rule-based in-sample decomposition — it
-            flatters itself. The GBM is day-demeaned, so nothing is credited for
-            explaining market drift. Host IDs are banned as model features — but
-            the model finds the machines anyway through hardware fingerprints
-            (mobo_name leads its SHAP tally), which is why these two exhibits
-            are one picture, not two independent confirmations.
+            Protocol: the last {holdoutDays != null ? holdoutDays : "N"}{" "}
+            distinct UTC days are held out and never tuned on; both scores are
+            read on those same days. The four-factor share is the rule-based
+            in-sample decomposition; it flatters itself. The GBM is
+            day-demeaned, so nothing is credited for explaining market drift.
+            Host IDs are banned as model features, but the model finds the
+            machines anyway through hardware fingerprints (mobo_name leads its
+            SHAP tally), which is why these two exhibits are one picture, not
+            two independent confirmations.
           </p>
         ) : null}
       </header>

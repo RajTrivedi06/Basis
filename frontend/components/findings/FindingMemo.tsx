@@ -17,7 +17,7 @@ export interface MemoFacts {
   points: ExhibitPoint[];
 }
 
-const DASH = "—";
+const DASH = "-";
 
 /**
  * The declassified finding memorandum (design 4a, Findings Hero
@@ -44,7 +44,7 @@ export function FindingMemo({ facts }: { facts: MemoFacts }) {
       </div>
 
       <div className="memo__subject">
-        SUBJECT: UNACCOUNTED PRICE VARIATION — {sku}
+        SUBJECT: UNACCOUNTED PRICE VARIATION: {sku}
       </div>
 
       <div className="memo__rule" />
@@ -94,7 +94,7 @@ export function FindingMemo({ facts }: { facts: MemoFacts }) {
       {points.length > 1 ? (
         <FindingExhibit points={points} />
       ) : (
-        <p className="memo__note">EXHIBIT UNAVAILABLE — RECORD NOT LOADED.</p>
+        <p className="memo__note">EXHIBIT UNAVAILABLE: RECORD NOT LOADED.</p>
       )}
 
       <div className="memo__band memo__band--foot">THE FILE STAYS OPEN</div>
