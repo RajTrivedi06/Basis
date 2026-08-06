@@ -130,7 +130,7 @@ export function MethodPassport() {
         <Link href="/methodology" className="fc-btn">
           Open the methodology →
         </Link>
-        <Link href="/methodology#collection" className="fc-passport__secondary">
+        <Link href="/methodology#file-01" className="fc-passport__secondary">
           Or jump to the pipeline diagram
         </Link>
       </div>

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&amp;family=Libre+Franklin:wght@500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&amp;family=Caveat:wght@600&amp;display=swap">
+  <style>
+    body { margin: 0; background: #C9C2B2; font-family: "Source Serif 4", Georgia, serif; color: #1C1B17; }
+    a { color: #9E2B25; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    a:hover { color: #6E1F1B; }
+    ::selection { background: #9E2B25; color: #EFE9DC; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @keyframes slam { from { opacity: 0; transform: scale(1.15) rotate(-10deg); } to { opacity: 1; transform: scale(1) rotate(-4deg); } }
+    summary { cursor: pointer; }
+    summary:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #9E2B25; outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</helmet>
+
+<a href="#file-00" style="position: absolute; left: -9999px; top: 0; background: #1C1B17; color: #EFE9DC; padding: 8px 14px; font-family: 'Libre Franklin', sans-serif; z-index: 50;" style-focus="left: 8px; top: 8px;">Skip to the report</a>
+
+<div style="padding: clamp(12px, 3vw, 44px);">
+<div style="max-width: 1140px; margin: 0 auto; background: #EFE9DC; box-shadow: 0 3px 18px rgba(28,27,23,0.3); position: relative;">
+  <sc-if value="{{ showTexture }}" hint-placeholder-val="{{ true }}">
+    <div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; opacity: 0.05; background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E&quot;);"></div>
+  </sc-if>
+
+  <svg width="0" height="0" style="position: absolute;" aria-hidden="true"><defs>
+    <pattern id="hA" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#EFE9DC"></rect><line x1="1" y1="0" x2="1" y2="6" stroke="#1C1B17" stroke-width="1.7"></line></pattern>
+    <pattern id="hB" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="7" height="7" fill="#EFE9DC"></rect><line x1="1" y1="0" x2="1" y2="7" stroke="#1C1B17" stroke-width="1.4"></line><line x1="0" y1="1" x2="7" y2="1" stroke="#1C1B17" stroke-width="1.4"></line></pattern>
+    <pattern id="hC" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#EFE9DC"></rect><circle cx="3.5" cy="3.5" r="1.5" fill="#1C1B17"></circle></pattern>
+    <pattern id="hD" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#EFE9DC"></rect><line x1="1" y1="0" x2="1" y2="6" stroke="#1C1B17" stroke-width="1.7"></line></pattern>
+    <pattern id="hE" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#E4DCC8"></rect><line x1="0" y1="2" x2="8" y2="2" stroke="#6E6A5E" stroke-width="1"></line></pattern>
+  </defs></svg>
+
+  <header style="position: relative;">
+    <div style="background: #1C1B17; color: #EFE9DC; display: flex; justify-content: space-between; align-items: center; padding: 8px 24px; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 2px; white-space: nowrap; overflow: hidden;">
+      <span style="position: relative; padding: 0 4px;">TOP SECRET // EYES ONLY<span aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 48%; height: 3px; background: #9E2B25;"></span></span>
+      <span style="color: #E8B7B3; font-weight: 700;"><span style="color: #9E2B25;">★</span> DECLASSIFIED — PUBLIC RELEASE <span style="color: #9E2B25;">★</span></span>
+    </div>
+    <div style="padding: 22px clamp(20px, 4vw, 48px) 0;">
+      <div style="border-bottom: 1px solid #1C1B17; text-align: center; padding: 8px 0 12px;">
+        <div style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(38px, 6.5vw, 72px); letter-spacing: -2px; line-height: 1;">The Internal Bulletin</div>
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 3px; margin-top: 10px; color: #4A463C;">PUBLISHED FOR FIELD PERSONNEL OF THE DIRECTORATE OF MEASUREMENT</div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between; font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1.5px; padding: 8px 4px; border-bottom: 3px double #1C1B17;">
+        <span>VOL. XXIV — NO. 3</span>
+        <span>TUESDAY, OCTOBER 12, 1965</span>
+        <span>LANGLEY, VA.</span>
+        <span>5¢ — INTERNAL DISTRIBUTION ONLY</span>
+      </div>
+      <sc-if value="{{ showProof }}" hint-placeholder-val="{{ true }}">
+        <div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #4A463C; text-align: center; padding: 8px 0 0; letter-spacing: 1px;">DESIGN PROOF — ALL FIGURES BELOW ARE SIMULATED AND MARKED <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span>; PRODUCTION VALUES ARRIVE FROM THE LIVE WIRE <span style="background: #E4DCC8; padding: 0 4px;">[LIVE]</span></div>
+      </sc-if>
+      <div style="display: flex; align-items: center; gap: 18px; margin-top: 14px; flex-wrap: wrap;">
+        <div style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 26px; background: #9E2B25; color: #EFE9DC; padding: 3px 12px; letter-spacing: 2px;">EXTRA</div>
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #4A463C;">METHODOLOGY DESK — DECLASSIFICATION SPECIAL</div>
+        <div data-stamp style="margin-left: auto; font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; border: 2.5px solid #9E2B25; padding: 4px 10px; transform: rotate(-4deg); letter-spacing: 1px; line-height: 1.5; background: rgba(239,233,220,0.55);">APPROVED<br>FOR RELEASE</div>
+      </div>
+      <h1 style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(34px, 5vw, 56px); line-height: 1.04; margin: 12px 0 0; letter-spacing: -1px; text-wrap: balance;">DIRECTORATE SUBTRACTS EVERY KNOWN CAUSE; WHAT REMAINS IS FILED AS THE FINDING</h1>
+    </div>
+  </header>
+
+  <main style="padding: 0 clamp(20px, 4vw, 48px) 40px;">
+
+    <!-- ==================== FRONT PAGE: §00 THE QUESTION + SIDEBAR ==================== -->
+    <div style="display: flex; flex-wrap: wrap; gap: 0; margin-top: 20px; border-top: 3px double #1C1B17;">
+      <article id="file-00" data-screen-label="00 The Question" style="flex: 2.1 1 480px; min-width: 0; padding: 16px 26px 8px 0; border-right: 1px solid #6E6A5E;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+          <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">THE QUESTION</div>
+          <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C;">FILE NO. 00-1173-M/00</div>
+        </div>
+        <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; margin: 8px 0 10px; text-wrap: balance;">ONE CHIP, ONE DAY: QUOTED PRICES FOUND IN WIDE DISAGREEMENT</h2>
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1px; color: #4A463C; margin-bottom: 12px;">By STAFF CORRESPONDENT — LANGLEY, Va. —</div>
+        <p style="font-size: 17.5px; line-height: 1.6; margin: 0;"><span style="float: left; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 62px; line-height: 0.82; padding: 6px 8px 0 0;">O</span>n the day of this edition, field stations recorded <span style="font-family: 'Special Elite', monospace; font-size: 15px;">{{ n }}</span> public quoted prices for one exactly-specified machine — the {{ skuLabel }} — every quote stated in dollars per GPU per hour. The cheapest asked <span style="font-family: 'Special Elite', monospace; font-size: 15px;">{{ minP }}</span>; the dearest, <span style="font-family: 'Special Elite', monospace; font-size: 15px;">{{ maxP }}</span> — a spread of <span style="font-family: 'Special Elite', monospace; font-size: 15px;">{{ spread }}</span> for hardware that is, by specification, the same.</p>
+        <p style="font-size: 17.5px; line-height: 1.6; margin: 12px 0 0;">These are simultaneous quotes on a single UTC day — not prices moving over time. The disagreement is the subject of this bulletin: how much of it can be explained by observable causes, and how much cannot.</p>
+        <figure style="margin: 18px 0 0; border: 1px solid #1C1B17;">
+          <figcaption style="font-family: 'Libre Franklin', sans-serif; font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; padding: 7px 12px; border-bottom: 1px solid #1C1B17; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;"><span>EXHIBIT A — THE DAY'S QUOTES, AS RECEIVED</span><span style="color: #4A463C; font-weight: 500;">{{ skuCode }} · TODAY · <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span></span></figcaption>
+          <svg viewBox="0 0 720 172" style="display: block; width: 100%;" aria-hidden="true">
+            <line x1="40" y1="146" x2="680" y2="146" stroke="#1C1B17" stroke-width="1.5"></line>
+            <sc-for list="{{ dots }}" as="d" hint-placeholder-count="8">
+              <circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="4" fill="#1C1B17" opacity="0.78"></circle>
+            </sc-for>
+            <line x1="{{ axMinX }}" y1="140" x2="{{ axMinX }}" y2="152" stroke="#1C1B17" stroke-width="1.5"></line>
+            <line x1="{{ axMedX }}" y1="140" x2="{{ axMedX }}" y2="152" stroke="#9E2B25" stroke-width="2"></line>
+            <line x1="{{ axMaxX }}" y1="140" x2="{{ axMaxX }}" y2="152" stroke="#1C1B17" stroke-width="1.5"></line>
+            <text x="{{ axMinX }}" y="166" text-anchor="middle" font-family="Special Elite" font-size="12" fill="#1C1B17">{{ minP }}</text>
+            <text x="{{ axMedX }}" y="166" text-anchor="middle" font-family="Special Elite" font-size="12" fill="#9E2B25">MEDIAN {{ medP }}</text>
+            <text x="{{ axMaxX }}" y="166" text-anchor="middle" font-family="Special Elite" font-size="12" fill="#1C1B17">{{ maxP }}</text>
+          </svg>
+          <div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #4A463C; padding: 6px 12px 10px; border-top: 1px solid #6E6A5E;">EACH DOT: ONE PUBLIC QUOTE, USD PER GPU-HOUR, LOG SCALE. VERTICAL SCATTER IS FOR LEGIBILITY ONLY.</div>
+        </figure>
+        <details style="margin: 14px 0 0; border: 1.5px solid #6E6A5E; background: #E4DCC8;">
+          <summary style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; padding: 9px 14px; color: #1C1B17;">INTER-OFFICE MEMORANDUM — SCOPE OF THE COMPARISON (TECHNICAL ANNEX)</summary>
+          <div style="font-family: 'Special Elite', monospace; font-size: 13.5px; line-height: 1.75; padding: 4px 16px 14px; color: #1C1B17;">
+            <p style="margin: 8px 0;">1. UNIT. Price is USD per GPU per hour. Multi-GPU bundles are divided out before anything else happens.</p>
+            <p style="margin: 8px 0;">2. ONE SKU AT A TIME. SXM, PCIe, and NVL are different SKUs; 40GB and 80GB are different SKUs. No cross-SKU pooling exists anywhere in the method.</p>
+            <p style="margin: 8px 0;">3. ONE UTC DAY AT A TIME. The comparison is purely cross-sectional. THE MEASUREMENT IS DISAGREEMENT BETWEEN SIMULTANEOUS QUOTES — NOT PRICE VOLATILITY, which concerns movement over time.</p>
+            <p style="margin: 8px 0;">4. The exhibit's data table: n = {{ n }}, min {{ minP }}, p25 {{ p25P }}, median {{ medP }}, p75 {{ p75P }}, max {{ maxP }}. <span style="background: #EFE9DC; padding: 0 4px;">[SIM]</span></p>
+          </div>
+        </details>
+      </article>
+
+      <aside style="flex: 1 1 250px; min-width: 0; padding: 16px 0 8px 24px;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; border-bottom: 1px solid #1C1B17; padding-bottom: 6px;">IN THIS EDITION</div>
+        <nav aria-label="Sections" style="font-family: 'Special Elite', monospace; font-size: 13px; line-height: 2.15; margin-top: 8px;">
+          <a href="#file-00" style="color: #1C1B17;">00 — THE QUESTION</a><br>
+          <a href="#file-01" style="color: #1C1B17;">01 — COLLECTION &amp; CUSTODY</a><br>
+          <a href="#file-02" style="color: #1C1B17;">02 — NOMENCLATURE</a><br>
+          <a href="#file-03" style="color: #1C1B17;">03 — DISPERSION</a><br>
+          <a href="#file-04" style="color: #1C1B17;">04 — THE SUBTRACTION</a><br>
+          <a href="#file-05" style="color: #1C1B17;">05 — THE FINDING</a><br>
+          <a href="#file-06" style="color: #1C1B17;">06 — LIMITATIONS</a><br>
+          <a href="#letters" style="color: #1C1B17;">LETTERS TO THE EDITOR</a><br>
+          <a href="#subscribe" style="color: #1C1B17;">SUBSCRIPTIONS</a>
+        </nav>
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; border-bottom: 1px solid #1C1B17; padding-bottom: 6px; margin-top: 22px;">TODAY'S FIGURES</div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 13px; line-height: 2.1; margin-top: 8px;">
+          PROVIDERS ....... <span style="background: #E4DCC8; padding: 0 4px;">[LIVE]</span><br>
+          COLLECTIONS ..... 2×/DAY<br>
+          MODEL ........... SEQ. ANOVA<br>
+          RESIDUAL (MKT) .. {{ marketPct }}% <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span>
+        </div>
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; border-bottom: 1px solid #1C1B17; padding-bottom: 6px; margin-top: 22px;">THIS EDITION COVERS</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+          <sc-for list="{{ editions }}" as="e" hint-placeholder-count="3">
+            <button onClick="{{ e.pick }}" aria-pressed="{{ e.active }}" style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; text-align: left; padding: 7px 10px; border: 1.5px solid #1C1B17; background: {{ e.bg }}; color: {{ e.fg }}; cursor: pointer;" style-hover="background: #E4DCC8; color: #1C1B17;">{{ e.mark }} {{ e.label }}</button>
+          </sc-for>
+        </div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C; margin-top: 8px; line-height: 1.6;">EVERY FIGURE ON THIS PAGE RE-SETS TO THE CHOSEN EDITION. IN PRODUCTION THIS IS THE ?sku= CONTROL.</div>
+      </aside>
+    </div>
+
+    <!-- ==================== §01 COLLECTION & CUSTODY ==================== -->
+    <article id="file-01" data-screen-label="01 Collection and Custody" data-reveal style="border-top: 3px double #1C1B17; margin-top: 26px; padding-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">COLLECTION &amp; CUSTODY</div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C;">FILE NO. 00-1173-M/01</div>
+      </div>
+      <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; margin: 8px 0 10px; text-wrap: balance;">FIELD STATIONS RECORD EVERY ANSWER; ORIGINALS SEALED, NEVER EDITED</h2>
+      <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1px; color: #4A463C; margin-bottom: 12px;">From the RECORDS DIVISION — LANGLEY, Va. —</div>
+      <div style="columns: 320px 2; column-gap: 30px; column-rule: 1px solid #6E6A5E;">
+        <p style="font-size: 17px; line-height: 1.6; margin: 0;">Twice daily, at 08:00 and 20:00 hours UTC, stations operating <button data-redaction aria-label="redacted" style="font: inherit; border: 0; padding: 0 6px; background: #1C1B17; color: #1C1B17; cursor: pointer;" style-hover="background: rgba(28,27,23,0.25); color: #1C1B17;" style-focus="background: rgba(28,27,23,0.25); color: #1C1B17;">from two commercial cloud regions</button> query five providers and write down every answer exactly as given. Should a provider fail to answer, the cycle proceeds without it — the record shows holes, never fabrications.</p>
+        <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">Each original response is sealed in full into the central file, where it may never be edited or destroyed. Every later judgment — every translation, every calculation — is a disposable copy that can be re-derived from the sealed originals. This, officials note, is the answer to the question every reader should ask: <em>how do we know you didn't tune this?</em> Because the evidence cannot be touched, any opinion about it can be safely revised in public.</p>
+        <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">The public record counts only prices gathered by this regular twice-daily routine. Historical prices back-filled by other means exist in the archive but are kept out of the series, because mixing two collection mechanisms manufactures changes where none occurred. The series answers one question: <em>what does the market look like, sampled the same way every day?</em></p>
+      </div>
+      <figure style="margin: 18px 0 0; border: 1px solid #1C1B17;">
+        <figcaption style="font-family: 'Libre Franklin', sans-serif; font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; padding: 7px 12px; border-bottom: 1px solid #1C1B17; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;"><span>EXHIBIT B — CHAIN OF CUSTODY, TODAY'S CYCLE</span><span style="color: #4A463C; font-weight: 500;">{{ skuCode }} · <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span></span></figcaption>
+        <ol style="list-style: none; display: flex; flex-wrap: wrap; gap: 0; margin: 0; padding: 14px;">
+          <sc-for list="{{ stages }}" as="s" hint-placeholder-count="5">
+            <li style="flex: 1 1 150px; min-width: 140px; border: 1.5px solid #1C1B17; margin: 4px; padding: 10px 12px; background: #EFE9DC;">
+              <div style="font-family: 'Special Elite', monospace; font-size: 11px; color: #9E2B25; letter-spacing: 1px;">STAGE {{ s.num }}</div>
+              <div style="font-family: 'Libre Franklin', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; margin-top: 4px;">{{ s.name }}</div>
+              <div style="font-family: 'Special Elite', monospace; font-size: 13px; margin-top: 6px;">{{ s.count }}</div>
+              <div style="font-family: 'Special Elite', monospace; font-size: 10.5px; color: #4A463C; margin-top: 4px; line-height: 1.5;">{{ s.note }}</div>
+            </li>
+          </sc-for>
+        </ol>
+      </figure>
+      <details style="margin: 14px 0 0; border: 1.5px solid #6E6A5E; background: #E4DCC8;">
+        <summary style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; padding: 9px 14px;">INTER-OFFICE MEMORANDUM — COLLECTION PARTICULARS (TECHNICAL ANNEX)</summary>
+        <div style="font-family: 'Special Elite', monospace; font-size: 13.5px; line-height: 1.75; padding: 4px 16px 14px;">
+          <p style="margin: 8px 0;">1. STATIONS. Five collectors: Vast.ai (REST), RunPod (GraphQL), AWS EC2 Spot (boto3), Azure retail catalog, GCP catalog. Timer fires 08:00 and 20:00 UTC, persistent, with a randomized delay. A collector that fails returns an empty list; one outage cannot fail a cycle.</p>
+          <p style="margin: 8px 0;">2. THE DUAL QUERY. Vast is asked twice per run — once for on-demand, once for interruptible bids. The payload's is_bid field reads FALSE on every offer of BOTH queries (verified across 315,685 stored rows), so commitment type is derived from WHICH ENDPOINT ANSWERED, not from the data. A machine listed by both queries yields two observations at two prices: two distinct products, not duplicates.</p>
+          <p style="margin: 8px 0;">3. THE CAP. Since 2026-06-23 unauthenticated Vast responses are silently capped at the 64 cheapest offers, structurally hiding the premium tier. Collection is authenticated.</p>
+          <p style="margin: 8px 0;">4. CUSTODY. raw_observations stores the provider's complete response (~95 fields per Vast offer) as write-once JSONB plus five extracted columns. Derived tables (canonical_offers onward) are deleted and regenerated whenever the rules change.</p>
+          <p style="margin: 8px 0;">5. POPULATION RULE (ADR-0007). Analytics reads only cron-collected rows; rows flagged as backfill are excluded. Precedent: a 90-day AWS backfill made pre-boundary days carry ~57 rows and post-boundary days ~30 — pooled, this produced an apparent decline that was purely a change in who was in the sample. Caught before publication.</p>
+        </div>
+      </details>
+    </article>
+
+    <!-- ==================== §02 NOMENCLATURE ==================== -->
+    <article id="file-02" data-screen-label="02 Nomenclature" data-reveal style="border-top: 3px double #1C1B17; margin-top: 26px; padding-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">NOMENCLATURE</div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C;">FILE NO. 00-1173-M/02</div>
+      </div>
+      <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; margin: 8px 0 10px; text-wrap: balance;">FIVE DIALECTS, ONE VOCABULARY; UNMATCHED NAMES SET ASIDE, NEVER GUESSED</h2>
+      <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1px; color: #4A463C; margin-bottom: 12px;">By the TRANSLATION BUREAU — LANGLEY, Va. —</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 26px;">
+        <div style="flex: 1 1 340px; min-width: 0;">
+          <p style="font-size: 17px; line-height: 1.6; margin: 0;">Every seller describes the same chip differently. Before prices can be compared, the names must be translated into one shared vocabulary — and the Bureau's rules are strict: an exact-match dictionary, hand-written entry by entry. A name not in the book is <strong>set aside and counted</strong>, never guessed at. No fuzzy matching, no tolerance for near-misses.</p>
+          <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">Where information is missing, it stays visibly missing: the label UNKNOWN enters the analysis as a real group of its own, so that no observation is quietly dropped and no gap is laundered into an answer. Meaningful hardware differences are never collapsed — different form factors and memory sizes remain different subjects, permanently.</p>
+          <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">Every translation keeps its paper trail. For any sealed original, the Bureau can replay exactly which rule fired, what the source value was, and what it became — a trail the write-path is structurally forbidden from touching.</p>
+        </div>
+        <figure style="flex: 1 1 340px; min-width: 0; margin: 0; border: 1px solid #1C1B17; align-self: flex-start;">
+          <figcaption style="font-family: 'Libre Franklin', sans-serif; font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; padding: 7px 12px; border-bottom: 1px solid #1C1B17;">EXHIBIT C — THE TRANSLATION BOOK, SPECIMEN ENTRIES</figcaption>
+          <table style="border-collapse: collapse; width: 100%; font-family: 'Special Elite', monospace; font-size: 12.5px;">
+            <thead><tr>
+              <th scope="col" style="text-align: left; padding: 8px 12px; border-bottom: 1.5px solid #1C1B17; font-family: 'Libre Franklin', sans-serif; font-size: 11px; letter-spacing: 2px;">AS RECEIVED</th>
+              <th scope="col" style="text-align: left; padding: 8px 12px; border-bottom: 1.5px solid #1C1B17; font-family: 'Libre Franklin', sans-serif; font-size: 11px; letter-spacing: 2px;">FILED AS</th>
+            </tr></thead>
+            <tbody>
+              <tr><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">NVIDIA H100 80GB HBM3</td><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">h100_sxm_80gb</td></tr>
+              <tr><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">H100 SXM5-80G</td><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">h100_sxm_80gb</td></tr>
+              <tr><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">H100-PCIE-80GB</td><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">h100_pcie_80gb — A DIFFERENT SUBJECT</td></tr>
+              <tr><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">(region not reported)</td><td style="padding: 7px 12px; border-bottom: 1px solid #6E6A5E;">UNKNOWN — ITS OWN GROUP</td></tr>
+              <tr><td style="padding: 7px 12px;">GEFORCE RTX 4090 D</td><td style="padding: 7px 12px; color: #9E2B25;">SET ASIDE &amp; COUNTED — NOT IN THE BOOK</td></tr>
+            </tbody>
+          </table>
+        </figure>
+      </div>
+      <details style="margin: 14px 0 0; border: 1.5px solid #6E6A5E; background: #E4DCC8;">
+        <summary style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; padding: 9px 14px;">INTER-OFFICE MEMORANDUM — THE FOUR RULE MODULES (TECHNICAL ANNEX)</summary>
+        <div style="font-family: 'Special Elite', monospace; font-size: 13.5px; line-height: 1.75; padding: 4px 16px 14px;">
+          <p style="margin: 8px 0;">1. GPU SKU. Exact-string dictionary, ~190 hand-written entries → 96 canonical SKUs, format {model}_{form_factor}_{vram}gb. SXM / PCIe / NVL are different SKUs; 40GB / 80GB are different SKUs. Unmatched → skipped and counted (skipped_unknown_gpu). No fuzzy matching, no case folding.</p>
+          <p style="margin: 8px 0;">2. COMMITMENT. Eight canonical values: on_demand, spot, reserved_1w/1m/3m/6m/1y/3y. Alternates map (interruptible, bid, preemptible → spot). Unknown non-null strings pass through unchanged as their own group. DISCLOSURE: a null commitment is coerced to on_demand — the one inference in the layer.</p>
+          <p style="margin: 8px 0;">3. REGION. Per-provider lookup maps → (country, state, city). ONLY COUNTRY enters the model; state and city are stored, unused. RunPod reports no region → UNKNOWN.</p>
+          <p style="margin: 8px 0;">4. BUNDLE. vCPU / RAM / storage extracted for marketplaces only (Vast, TensorDock); hyperscalers and RunPod contribute none → UNKNOWN. Bundle sits LAST in the fixed order, so its provider-shaped missingness is absorbed by the provider term before bundle takes its turn.</p>
+          <p style="margin: 8px 0;">5. PROVENANCE. Each module carries a parallel explain_* trail (matched key, transformation, source value). An AST-level test fails the build if the write path references any explain identifier. Endpoint: /api/raw-observation/{id}/explain.</p>
+        </div>
+      </details>
+    </article>
+
+    <!-- ==================== §03 DISPERSION ==================== -->
+    <article id="file-03" data-screen-label="03 Dispersion" data-reveal style="border-top: 3px double #1C1B17; margin-top: 26px; padding-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">DISPERSION</div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C;">FILE NO. 00-1173-M/03</div>
+      </div>
+      <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; margin: 8px 0 10px; text-wrap: balance;">A DAY'S QUOTES REDUCED TO THREE NUMBERS</h2>
+      <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1px; color: #4A463C; margin-bottom: 12px;">By the STATISTICS DESK — LANGLEY, Va. —</div>
+      <div style="columns: 320px 2; column-gap: 30px; column-rule: 1px solid #6E6A5E;">
+        <p style="font-size: 17px; line-height: 1.6; margin: 0;">For each day and each chip, the cloud of quotes is reduced to three figures: the middle price, and the range within which the middle half of all quotes falls. Averages are never used — one junk listing, priced by a seller who expects no taker, would drag an average to a price at which no buyer could actually transact.</p>
+        <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">Days too thin to summarize are not summarized: fewer than three quotes, and the Bureau declines to report rather than pretend. What is not known is not stated.</p>
+      </div>
+      <figure style="margin: 18px 0 0; border: 1px solid #1C1B17;">
+        <figcaption style="font-family: 'Libre Franklin', sans-serif; font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; padding: 7px 12px; border-bottom: 1px solid #1C1B17; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;"><span>EXHIBIT D — SAME QUOTES, NOW SUMMARIZED</span><span style="color: #4A463C; font-weight: 500;">{{ skuCode }} · TODAY · <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span></span></figcaption>
+        <svg viewBox="0 0 720 172" style="display: block; width: 100%;" aria-hidden="true">
+          <rect x="{{ bandX }}" y="24" width="{{ bandW }}" height="108" fill="url(#hE)" stroke="#6E6A5E" stroke-width="1"></rect>
+          <line x1="40" y1="146" x2="680" y2="146" stroke="#1C1B17" stroke-width="1.5"></line>
+          <sc-for list="{{ dots }}" as="d" hint-placeholder-count="8">
+            <circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="4" fill="#1C1B17" opacity="0.55"></circle>
+          </sc-for>
+          <line x1="{{ axMedX }}" y1="16" x2="{{ axMedX }}" y2="146" stroke="#9E2B25" stroke-width="2.5"></line>
+          <text x="{{ axMedX }}" y="164" text-anchor="middle" font-family="Special Elite" font-size="12" fill="#9E2B25">MEDIAN {{ medP }}</text>
+          <text x="{{ bandX }}" y="164" text-anchor="middle" font-family="Special Elite" font-size="12" fill="#1C1B17">P25 {{ p25P }}</text>
+          <text x="{{ bandRX }}" y="164" text-anchor="middle" font-family="Special Elite" font-size="12" fill="#1C1B17">P75 {{ p75P }}</text>
+        </svg>
+        <div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #4A463C; padding: 6px 12px 10px; border-top: 1px solid #6E6A5E;">OBSERVATIONS {{ n }} · MEDIAN {{ medP }} · MIDDLE HALF {{ p25P }}–{{ p75P }} · MINIMUM 3 QUOTES OR THE DAY IS NOT REPORTED.</div>
+      </figure>
+      <details style="margin: 14px 0 0; border: 1.5px solid #6E6A5E; background: #E4DCC8;">
+        <summary style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; padding: 9px 14px;">INTER-OFFICE MEMORANDUM — DISPERSION PARTICULARS (TECHNICAL ANNEX)</summary>
+        <div style="font-family: 'Special Elite', monospace; font-size: 13.5px; line-height: 1.75; padding: 4px 16px 14px;">
+          <p style="margin: 8px 0;">1. Grouped twice: per (date, sku) across all providers, and per (date, sku, provider). Outputs: observation_count, median_price, p25_price, p75_price.</p>
+          <p style="margin: 8px 0;">2. MINIMUM 3 OBSERVATIONS per bucket, else the bucket is skipped entirely.</p>
+          <p style="margin: 8px 0;">3. Percentiles, never mean ± sd: quote distributions are asymmetric, and a single mispriced line would average the price somewhere no buyer could transact.</p>
+        </div>
+      </details>
+    </article>
+
+    <!-- ==================== §04 THE SUBTRACTION ==================== -->
+    <article id="file-04" data-screen-label="04 The Subtraction" data-reveal style="border-top: 3px double #1C1B17; margin-top: 26px; padding-top: 16px; position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">THE DECOMPOSITION</div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C;">FILE NO. 00-1173-M/04</div>
+      </div>
+      <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; margin: 8px 0 10px; text-wrap: balance;">FOUR CAUSES REMOVED IN FIXED ORDER; THE REMAINDER REFUSES TO BE FILED</h2>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1px; color: #4A463C;">By STAFF CORRESPONDENT — LANGLEY, Va. —</div>
+        <div aria-hidden="true" style="font-family: 'Caveat', cursive; font-size: 21px; color: #4A463C; transform: rotate(-3deg); max-width: 200px; text-align: right;">the leftover is the finding — R.T.</div>
+      </div>
+      <div style="columns: 320px 2; column-gap: 30px; column-rule: 1px solid #6E6A5E;">
+        <p style="font-size: 17px; line-height: 1.6; margin: 0;">Take all of the day's disagreement — one hundred percent of it — and subtract, one cause at a time, everything observable: <strong>where</strong> the machine is, <strong>how</strong> it is rented, <strong>who</strong> sells it, and <strong>what</strong> comes bundled. Each cause is credited only with what it explains after the causes before it have had their turn. Whatever is still standing at the end is the finding.</p>
+        <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">The order of subtraction changes each cause's share of the credit. It does not — cannot — change the remainder. Readers are invited to verify this themselves in Exhibit E: reorder the ledger and watch the shares move while the remainder stands still. That invariance is the entire reason the remainder, and not the causes, carries the headline.</p>
+      </div>
+      <figure style="margin: 18px 0 0; border: 1.5px solid #1C1B17;">
+        <figcaption style="font-family: 'Libre Franklin', sans-serif; font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; padding: 7px 12px; border-bottom: 1px solid #1C1B17; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;"><span>EXHIBIT E — THE LEDGER OF ACCOUNTS (OPERABLE)</span><span style="color: #4A463C; font-weight: 500;">{{ skuCode }} · MARKET-PRICED PANEL, n = {{ mktN }} · <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span></span></figcaption>
+        <div style="padding: 14px 14px 4px;">
+          <svg viewBox="0 0 720 92" style="display: block; width: 100%;" aria-hidden="true">
+            <text x="40" y="16" font-family="Libre Franklin" font-size="11" letter-spacing="2" fill="#4A463C">ALL DISAGREEMENT, 100% —— SUBTRACTED LEFT TO RIGHT</text>
+            <sc-for list="{{ segs }}" as="g" hint-placeholder-count="4">
+              <rect x="{{ g.x }}" y="28" width="{{ g.w }}" height="42" fill="{{ g.fill }}" stroke="#1C1B17" stroke-width="1.2"></rect>
+            </sc-for>
+            <rect x="{{ residX }}" y="28" width="{{ residW }}" height="42" fill="#1C1B17"></rect>
+            <text x="{{ residMidX }}" y="86" text-anchor="middle" font-family="Special Elite" font-size="12.5" fill="#9E2B25">REMAINDER {{ residPct }}%</text>
+          </svg>
+        </div>
+        <div role="group" aria-label="Reorder the subtraction" style="padding: 2px 14px 12px;">
+          <table style="border-collapse: collapse; width: 100%; font-family: 'Special Elite', monospace; font-size: 13px;">
+            <thead><tr>
+              <th scope="col" style="text-align: left; padding: 6px 8px; border-bottom: 1.5px solid #1C1B17; font-family: 'Libre Franklin', sans-serif; font-size: 11px; letter-spacing: 2px;">ORDER</th>
+              <th scope="col" style="text-align: left; padding: 6px 8px; border-bottom: 1.5px solid #1C1B17; font-family: 'Libre Franklin', sans-serif; font-size: 11px; letter-spacing: 2px;">CAUSE SUBTRACTED</th>
+              <th scope="col" style="text-align: right; padding: 6px 8px; border-bottom: 1.5px solid #1C1B17; font-family: 'Libre Franklin', sans-serif; font-size: 11px; letter-spacing: 2px;">SHARE CREDITED</th>
+              <th scope="col" style="text-align: right; padding: 6px 8px; border-bottom: 1.5px solid #1C1B17; font-family: 'Libre Franklin', sans-serif; font-size: 11px; letter-spacing: 2px;">MOVE</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+                <tr>
+                  <td style="padding: 7px 8px; border-bottom: 1px solid #6E6A5E;">{{ r.pos }}</td>
+                  <td style="padding: 7px 8px; border-bottom: 1px solid #6E6A5E;"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align: -2px;" aria-hidden="true"><rect x="0.5" y="0.5" width="13" height="13" fill="{{ r.fill }}" stroke="#1C1B17"></rect></svg> {{ r.label }}</td>
+                  <td style="padding: 7px 8px; border-bottom: 1px solid #6E6A5E; text-align: right;">{{ r.pct }}%</td>
+                  <td style="padding: 7px 8px; border-bottom: 1px solid #6E6A5E; text-align: right; white-space: nowrap;">
+                    <button onClick="{{ r.up }}" disabled="{{ r.upDis }}" aria-label="{{ r.upAria }}" style="font-family: 'Special Elite', monospace; font-size: 13px; border: 1.5px solid #1C1B17; background: transparent; color: #1C1B17; cursor: pointer; padding: 2px 8px;" style-hover="background: #E4DCC8;">▲</button>
+                    <button onClick="{{ r.down }}" disabled="{{ r.downDis }}" aria-label="{{ r.downAria }}" style="font-family: 'Special Elite', monospace; font-size: 13px; border: 1.5px solid #1C1B17; background: transparent; color: #1C1B17; cursor: pointer; padding: 2px 8px;" style-hover="background: #E4DCC8;">▼</button>
+                  </td>
+                </tr>
+              </sc-for>
+              <tr>
+                <td style="padding: 9px 8px; font-weight: 700;">—</td>
+                <td style="padding: 9px 8px;"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align: -2px;" aria-hidden="true"><rect x="0.5" y="0.5" width="13" height="13" fill="#1C1B17"></rect></svg> THE REMAINDER — UNEXPLAINED
+                  <span data-stamp style="display: inline-block; font-family: 'Special Elite', monospace; font-size: 11px; color: #9E2B25; border: 2px solid #9E2B25; padding: 2px 7px; transform: rotate(-4deg); margin-left: 10px; letter-spacing: 1px;">CANNOT BE FILED</span>
+                </td>
+                <td style="padding: 9px 8px; text-align: right; color: #9E2B25; font-weight: 700;">{{ residPct }}%</td>
+                <td style="padding: 9px 8px; text-align: right; font-size: 11px; color: #4A463C;">FIXED UNDER ANY ORDER</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #4A463C; padding: 8px 2px 2px;">CURRENT ORDER: {{ orderText }} · REORDER FREELY — THE SHARES MOVE; THE REMAINDER DOES NOT.</div>
+        </div>
+      </figure>
+      <details style="margin: 14px 0 0; border: 1.5px solid #6E6A5E; background: #E4DCC8;">
+        <summary style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; padding: 9px 14px;">INTER-OFFICE MEMORANDUM — THE CALCULATION IN FULL (TECHNICAL ANNEX)</summary>
+        <div style="font-family: 'Special Elite', monospace; font-size: 13.5px; line-height: 1.75; padding: 4px 16px 14px;">
+          <pre style="font-family: 'Special Elite', monospace; font-size: 12.5px; line-height: 1.6; background: #EFE9DC; border: 1px solid #6E6A5E; padding: 12px 14px; overflow-x: auto; margin: 8px 0;">Per (date, gpu_sku) with n ≥ 5:
+  y        = ln(price_usd_per_hour)
+  total_ss = Σ (yᵢ − ȳ)²
+  for factor in (region, commitment, provider, bundle):  # fixed order
+      keys = factor values, NULL → "UNKNOWN"
+      if distinct(keys) &lt; 2: attribute 0; continue
+      ss_within = Σ (yᵢ − mean within CROSS-PRODUCT of prior keys)²
+      attributed[factor] = max(0, previous_ss_within − ss_within)
+  residual = max(0, total_ss − Σ attributed)
+  # each component / (n − 1) to become a variance</pre>
+          <p style="margin: 8px 0;">SEVEN STANDING DECISIONS: (1) LOG PRICES — ratios, not dollar gaps; a 2× spread at $1→$2 equals $2→$4. (2) SEQUENTIAL, NOT SIMULTANEOUS — conditioning is on the cross-product of all prior factors. (3) FIXED ORDER, most-exogenous → most-internal: region → commitment → provider → bundle. (4) ORDER CHANGES THE FACTORS, NEVER THE RESIDUAL. (5) NULL IS A GROUP — UNKNOWN participates as a real level. (6) A factor with fewer than 2 distinct values contributes exactly zero. (7) max(0,·) flooring — numerically safe; the arithmetic can never surface a contradiction.</p>
+          <p style="margin: 8px 0;">BUNDLE IS A DERIVED LABEL: z-normalize vCPU, RAM, storage independently (skipping columns with &lt;2 distinct values or zero variance), sum the z-scores treating NaN as 0, then cut into quartiles; fallbacks cascade qcut → dense rank → flat label; all-null rows → UNKNOWN.</p>
+          <p style="margin: 8px 0;">The exhibit above runs this exact arithmetic, in the reader's browser, on the day's simulated panel. In production it runs on the live panel and every share can be walked back to the contributing offers.</p>
+        </div>
+      </details>
+    </article>
+
+    <!-- ==================== §05 THE FINDING ==================== -->
+    <article id="file-05" data-screen-label="05 The Finding" data-reveal style="border-top: 3px double #1C1B17; margin-top: 26px; padding-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">THE FINDING</div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C;">FILE NO. 00-1173-M/05</div>
+      </div>
+      <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; margin: 8px 0 10px; text-wrap: balance;">SAME METHOD, SAME DAYS, TWO ANSWERS: THE POPULATION IS PART OF THE NUMBER</h2>
+      <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1px; color: #4A463C; margin-bottom: 12px;">By STAFF CORRESPONDENT — LANGLEY, Va. —</div>
+      <div style="columns: 320px 2; column-gap: 30px; column-rule: 1px solid #6E6A5E;">
+        <p style="font-size: 17px; line-height: 1.6; margin: 0;">Two of the five providers publish administered list catalogs — one posted price per machine type, revised rarely. Such quotes are explainable <em>by construction</em>: where the machine is and how it is rented account for nearly everything. Pool them with marketplace quotes and the measured remainder collapses mechanically, with nothing in the market having changed.</p>
+        <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">Operate the switch in Exhibit F and perform the experiment yourself. The verdict, in the Bureau's words: <strong>a benchmark that quotes the pooled figure is reporting the composition of its sample, not the state of the market.</strong> The remainder is not a constant — it is a property of who is counted. That dependence is not a caveat on the finding. It <em>is</em> the finding.</p>
+      </div>
+      <figure style="margin: 18px 0 0; border: 1.5px solid #1C1B17;">
+        <figcaption style="font-family: 'Libre Franklin', sans-serif; font-size: 11.5px; font-weight: 700; letter-spacing: 2.5px; padding: 7px 12px; border-bottom: 1px solid #1C1B17; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;"><span>EXHIBIT F — THE UNEXPLAINED SHARE, 60 DAYS (OPERABLE)</span><span style="color: #4A463C; font-weight: 500;">{{ skuCode }} · <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span></span></figcaption>
+        <div style="padding: 12px 14px 4px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+          <button onClick="{{ toggleCatalogs }}" aria-pressed="{{ catPressed }}" style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; border: 1.5px solid #1C1B17; background: transparent; color: #1C1B17; cursor: pointer; padding: 7px 12px; text-align: left;" style-hover="background: #E4DCC8;">{{ catMark }} INCLUDE ADMINISTERED CATALOGS (AZURE, GCP)</button>
+          <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #9E2B25;">{{ popTitle }}</div>
+        </div>
+        <svg viewBox="0 0 720 232" style="display: block; width: 100%;" aria-hidden="true">
+          <line x1="40" y1="200" x2="690" y2="200" stroke="#1C1B17" stroke-width="1.5"></line>
+          <line x1="40" y1="200" x2="40" y2="20" stroke="#1C1B17" stroke-width="1.5"></line>
+          <text x="34" y="26" text-anchor="end" font-family="Special Elite" font-size="11" fill="#4A463C">90%</text>
+          <text x="34" y="118" text-anchor="end" font-family="Special Elite" font-size="11" fill="#4A463C">45%</text>
+          <text x="34" y="204" text-anchor="end" font-family="Special Elite" font-size="11" fill="#4A463C">0%</text>
+          <path d="{{ ghostPath }}" fill="none" stroke="#6E6A5E" stroke-width="1.2" stroke-dasharray="4 4"></path>
+          <path d="{{ seriesPath }}" fill="none" stroke="#1C1B17" stroke-width="2.4"></path>
+          <circle cx="{{ lastX }}" cy="{{ lastY }}" r="4.5" fill="#9E2B25"></circle>
+          <text x="{{ lastLabelX }}" y="{{ lastLabelY }}" text-anchor="end" font-family="Special Elite" font-size="13" fill="#9E2B25">{{ activePct }}%</text>
+          <text x="42" y="222" font-family="Special Elite" font-size="11" fill="#4A463C">60 DAYS AGO</text>
+          <text x="688" y="222" text-anchor="end" font-family="Special Elite" font-size="11" fill="#4A463C">TODAY</text>
+        </svg>
+        <div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #4A463C; padding: 6px 12px 10px; border-top: 1px solid #6E6A5E;">SOLID LINE: {{ popTitle }}. DASHED: THE OTHER POPULATION, FOR COMPARISON. TODAY <span style="background: #E4DCC8; padding: 0 4px;">[SIM]</span>: MARKET-PRICED {{ marketPct }}% · POOLED {{ pooledPct }}%.</div>
+        <details style="border-top: 1px solid #6E6A5E;">
+          <summary style="font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 1px; padding: 8px 12px; color: #4A463C;">EXHIBIT F AS A TABLE (FOR THE RECORD)</summary>
+          <table style="border-collapse: collapse; margin: 4px 12px 12px; font-family: 'Special Elite', monospace; font-size: 12px;">
+            <thead><tr><th scope="col" style="text-align: left; padding: 4px 12px 4px 0; border-bottom: 1px solid #1C1B17;">DAY</th><th scope="col" style="text-align: right; padding: 4px 0; border-bottom: 1px solid #1C1B17;">UNEXPLAINED SHARE</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ seriesRows }}" as="t" hint-placeholder-count="4">
+                <tr><td style="padding: 3px 12px 3px 0;">{{ t.day }}</td><td style="padding: 3px 0; text-align: right;">{{ t.val }}%</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </details>
+      </figure>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 18px;">
+        <div style="flex: 1 1 300px; border: 1px solid #1C1B17; padding: 14px 16px;">
+          <div style="font-family: 'Libre Franklin', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2.5px; color: #9E2B25;">WIRE BRIEF — THE COUNTER-ANALYSIS</div>
+          <h3 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: 21px; line-height: 1.15; margin: 6px 0 8px;">RICH MODEL FAILS TO BEAT FOUR COARSE FACTORS, AUDIT FINDS</h3>
+          <p style="font-size: 15.5px; line-height: 1.55; margin: 0;">To answer the objection that the remainder is merely the Bureau's own ignorance, a forty-five-feature model was trained on every observable a seller will disclose, under strict out-of-sample rules and a leakage guard that fails the run outright. Tested honestly, it explained <em>less</em> than the four factors. The gap is negative, and is published. <a href="/explainability">Consult the counter-analysis file.</a></p>
+        </div>
+        <div style="flex: 1 1 300px; border: 1px solid #1C1B17; padding: 14px 16px;">
+          <div style="font-family: 'Libre Franklin', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2.5px; color: #9E2B25;">WIRE BRIEF — THE ANATOMY OF THE LEFTOVER</div>
+          <h3 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: 21px; line-height: 1.15; margin: 6px 0 8px;">LEFTOVER STICKS TO SPECIFIC MACHINES — IDENTITY, NOT SPECIFICATION</h3>
+          <p style="font-size: 15.5px; line-height: 1.55; margin: 0;">In the one marketplace where machines can be tracked across days, over half of the within-day leftover attaches to the same specific hosts, day after day (ICC ≈ 0.55, published with sensitivity checks at three tenure thresholds). Whatever the remainder is, it is not random noise. <a href="/explainability">See the host-identity file.</a></p>
+        </div>
+      </div>
+      <details style="margin: 14px 0 0; border: 1.5px solid #6E6A5E; background: #E4DCC8;">
+        <summary style="font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 1px; padding: 9px 14px;">INTER-OFFICE MEMORANDUM — POPULATIONS &amp; THE COUNTER-ANALYSIS (TECHNICAL ANNEX)</summary>
+        <div style="font-family: 'Special Elite', monospace; font-size: 13.5px; line-height: 1.75; padding: 4px 16px 14px;">
+          <p style="margin: 8px 0;">1. MARKET-PRICED is defined as the panel excluding the administered catalogs (azure, gcp). The exclusion RECOMPUTES the decomposition through the same production function the nightly job uses — it does not filter a cached result. Endpoint: /api/basis/{sku}/timeseries?exclude_providers=azure,gcp.</p>
+          <p style="margin: 8px 0;">2. THE BOUND. XGBoost on ~45 observable features (four canonical factors + 51 triaged payload keys), day-based expanding-window CV, a 10-day untouched holdout, a hard-failing permuted-target leakage guard, and day-demeaned R² for parity with the ANOVA. Result: negative gap — the rich model, tested out-of-sample, explains less than four coarse factors claimed in-sample. Scope note: the rich features are marketplace-shaped; for catalog providers the model sees little more than the four factors.</p>
+          <p style="margin: 8px 0;">3. HOST ICC ≈ 0.55, Vast on-demand panel only, ≥10-day tenure primary, recomputed at ≥5 and ≥20 with a 0.15 swing alarm. It says the effect is persistent; it does not say why.</p>
+        </div>
+      </details>
+    </article>
+
+    <!-- ==================== §06 LIMITATIONS ==================== -->
+    <article id="file-06" data-screen-label="06 Limitations" data-reveal style="border-top: 3px double #1C1B17; margin-top: 26px; padding-top: 16px; position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">LIMITATIONS — PUBLISHED IN FULL</div>
+        <div style="font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C;">FILE NO. 00-1173-M/06</div>
+      </div>
+      <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; margin: 8px 0 6px; text-wrap: balance;">WHAT THE BUREAU CANNOT SEE</h2>
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
+        <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; letter-spacing: 1px; color: #4A463C;">From the OFFICE OF THE INSPECTOR — these run open, never folded away. —</div>
+        <div data-stamp style="font-family: 'Special Elite', monospace; font-size: 11px; color: #9E2B25; border: 2px solid #9E2B25; padding: 3px 8px; transform: rotate(-4deg); letter-spacing: 1px;">READ WITH CARE</div>
+        <div aria-hidden="true" style="margin-left: auto; font-family: 'Caveat', cursive; font-size: 20px; color: #4A463C; transform: rotate(2deg); max-width: 220px; text-align: right;">print this section in full. no exceptions.</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; letter-spacing: 1px;">L1 — QUOTES, NOT TRANSACTIONS</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">Every figure rests on quoted list prices. Real transactions likely compress the disagreement; by how much is unobservable from public data. The remainder is therefore a lower-bound-style claim, not a settled market fact.</p></div>
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; letter-spacing: 1px;">L2 — UNLIKE GENERATORS</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">A marketplace of thousands of independent sellers and a catalog with a handful of posted lines are not like-for-like sources. Selection differs between them in ways the method does not model.</p></div>
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; letter-spacing: 1px;">L3 — COVERAGE</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">The record begins in April 2026 and runs on scheduled equipment (EC2 systemd timers). Days a provider failed to answer are holes, and stay holes — they are never back-filled into the public series.</p></div>
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; letter-spacing: 1px;">L4 — WHAT IS LEFT IN, BY DESIGN</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">Reliability scores, interconnect, datacenter tier and other continuous qualities are deliberately not subtracted: normalizing them would require subjective mappings that are more opinion than measurement. They remain inside the remainder.</p></div>
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; letter-spacing: 1px;">L5 — NO ERROR BARS</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">Every figure is a point estimate. A five-quote day and a five-hundred-quote day are stored and plotted identically; no confidence interval is published anywhere. This is the objection a hostile reviewer should lead with, and the Bureau prints it unprompted.</p></div>
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; letter-spacing: 1px;">L6 — ONE LOUD WITNESS</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">One marketplace has supplied 68–75% of all filed offers. Under equal weighting, the remainder partly measures that single marketplace's internal heterogeneity wearing the market's name.</p></div>
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #9E2B25; letter-spacing: 1px;">L7 — BUNDLE IS MARKETPLACE-ONLY</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">The bundled vCPU / RAM / storage factor is measured for marketplace listings only; catalog providers contribute none and are filed UNKNOWN. Its position last in the order limits, but does not remove, the consequence.</p></div>
+        <div style="border: 1px solid #1C1B17; padding: 12px 14px; background: #E4DCC8;"><div style="font-family: 'Special Elite', monospace; font-size: 12px; color: #1C1B17; letter-spacing: 1px;">AND WHAT THE REMAINDER IS NOT</div><p style="font-size: 15px; line-height: 1.55; margin: 6px 0 0;">Not volatility. Not arbitrage. Not overpricing, nor a savings estimate, nor a claim that any two offers are perfectly substitutable. It is unexplained cross-sectional disagreement within one SKU, one day, one stated population — nothing more is asserted.</p></div>
+      </div>
+    </article>
+
+    <!-- ==================== LETTERS ==================== -->
+    <section id="letters" data-screen-label="Letters to the Editor" data-reveal style="border-top: 3px double #1C1B17; margin-top: 26px; padding-top: 16px;">
+      <div style="font-family: 'Libre Franklin', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 3px; color: #9E2B25;">LETTERS TO THE EDITOR</div>
+      <h2 style="font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.12; margin: 8px 0 14px;">READERS ASK; THE DESK REPLIES</h2>
+      <div style="columns: 320px 2; column-gap: 30px; column-rule: 1px solid #6E6A5E;">
+        <div style="break-inside: avoid; margin-bottom: 18px;">
+          <p style="font-size: 16.5px; line-height: 1.6; margin: 0; font-style: italic;">"Sirs — If the same chip is quoted at twice the price across town, has your Bureau not discovered free money?" — A READER, <button data-redaction aria-label="redacted" style="font: inherit; border: 0; padding: 0 6px; background: #1C1B17; color: #1C1B17; cursor: pointer;" style-hover="background: rgba(28,27,23,0.25); color: #1C1B17;" style-focus="background: rgba(28,27,23,0.25); color: #1C1B17;">STATION W</button></p>
+          <p style="font-size: 16.5px; line-height: 1.6; margin: 8px 0 0;"><strong>The Desk replies:</strong> No. Unexplained is not exploitable. Two offers at different prices may not be substitutable for reasons the record cannot see — availability, latency, contract terms, trust. The record shows disagreement; it does not show a trade.</p>
+        </div>
+        <div style="break-inside: avoid; margin-bottom: 6px;">
+          <p style="font-size: 16.5px; line-height: 1.6; margin: 0; font-style: italic;">"Sirs — Is your 'remainder' not simply prices bouncing about, as prices do?"</p>
+          <p style="font-size: 16.5px; line-height: 1.6; margin: 8px 0 0;"><strong>The Desk replies:</strong> No. Every comparison is between quotes recorded on the same day. The remainder measures simultaneous disagreement, never movement over time — and it is neither an overpricing charge nor a savings estimate. It is the portion of same-day disagreement that survives every observable explanation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SUBSCRIBE / CTA ==================== -->
+    <section id="subscribe" data-screen-label="Subscribe" data-reveal style="margin-top: 28px;">
+      <div style="border: 2px dashed #1C1B17; padding: 4px;">
+        <div style="border: 1.5px solid #1C1B17; padding: 20px clamp(16px, 3vw, 32px); display: flex; flex-wrap: wrap; gap: 20px; align-items: center; position: relative;">
+          <div aria-hidden="true" style="position: absolute; top: -15px; left: 26px; background: #EFE9DC; padding: 0 8px; font-size: 17px;">✂</div>
+          <div style="flex: 2 1 340px; min-width: 0;">
+            <div style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: 0.5px;">SUBSCRIBE TO THE BULLETIN</div>
+            <p style="font-size: 16px; line-height: 1.6; margin: 8px 0 0;">The Bureau does not ask to be believed; it asks to be checked. Every figure in this edition walks back — through the ledger, to the contributing offers, to the raw wire a provider actually returned, to the exact rule applied. No accounts. No fees. Public data only.</p>
+          </div>
+          <div style="flex: 1 1 260px; font-family: 'Special Elite', monospace; font-size: 13.5px; line-height: 2;">
+            ☐ <a href="/basis">INSPECT THE EVIDENCE — THE SETTLEMENT LEDGER</a><br>
+            ☐ <a href="/explainability">READ THE COUNTER-ANALYSIS — BOUND &amp; HOST FILE</a><br>
+            ☐ <a href="/dispersion">CONSULT THE DAILY DISPERSION RECORD</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer style="margin-top: 8px;">
+    <div style="padding: 14px clamp(20px, 4vw, 48px); border-top: 3px double #1C1B17; font-family: 'Special Elite', monospace; font-size: 11.5px; color: #4A463C; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+      <span>THE INTERNAL BULLETIN — VOL. XXIV, NO. 3 — FILE 00-1173-M</span>
+      <span>NOT A PRICE AGGREGATOR · NOT A DERIVATIVES ENGINE</span>
+      <span>EVERY FIGURE: VALUE · POPULATION · DATE · SOURCE</span>
+    </div>
+    <div style="background: #1C1B17; color: #EFE9DC; display: flex; justify-content: center; align-items: center; gap: 18px; padding: 8px 24px; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 2px; white-space: nowrap; overflow: hidden;">
+      <span style="color: #E8B7B3; font-weight: 700;"><span style="color: #9E2B25;">★</span> DECLASSIFIED — AUTHORIZED FOR PUBLIC RELEASE <span style="color: #9E2B25;">★</span></span>
+    </div>
+  </footer>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;paperTexture&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Paper&quot;}, &quot;proofSlug&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Paper&quot;}, &quot;defaultEdition&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;h100_sxm_80gb&quot;, &quot;a100_sxm_80gb&quot;, &quot;rtx_4090_24gb&quot;], &quot;default&quot;: &quot;h100_sxm_80gb&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Data&quot;}}">
+class Component extends DCLogic {
+  state = { sku: null, order: ['region', 'commitment', 'provider', 'bundle'], catalogs: false };
+
+  componentDidMount() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Content is never pre-hidden: animation is additive on first entry only,
+    // so a lifecycle miss can never leave sections invisible.
+    const els = Array.from(document.querySelectorAll('[data-reveal],[data-stamp]'));
+    this._io = new IntersectionObserver(ents => {
+      ents.forEach(e => {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        el.style.animation = el.hasAttribute('data-stamp') ? 'slam 240ms ease-out both' : 'rise 220ms ease-out both';
+        this._io.unobserve(el);
+      });
+    }, { threshold: 0.15 });
+    els.forEach(el => this._io.observe(el));
+  }
+  componentWillUnmount() { if (this._io) this._io.disconnect(); }
+
+  static SKUS = {
+    h100_sxm_80gb: { label: 'H100 SXM 80GB', base: 2.85, sigma: 1.06, eff: 1, seed: 11 },
+    a100_sxm_80gb: { label: 'A100 SXM 80GB', base: 1.42, sigma: 0.47, eff: 1, seed: 22 },
+    rtx_4090_24gb: { label: 'RTX 4090 24GB', base: 0.46, sigma: 1.63, eff: 0.5, seed: 33 },
+  };
+  static FMETA = {
+    region: { label: 'WHERE IT IS — REGION', fill: 'url(#hA)' },
+    commitment: { label: "HOW IT'S RENTED — COMMITMENT", fill: 'url(#hC)' },
+    provider: { label: 'WHO SELLS IT — PROVIDER', fill: 'url(#hB)' },
+    bundle: { label: "WHAT'S BUNDLED — BUNDLE", fill: 'url(#hD)' },
+  };
+
+  rng(seed) { let a = seed | 0; return function () { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  genOffers(skuId) {
+    const P = Component.SKUS[skuId], rnd = this.rng(P.seed);
+    const es = P.eff;
+    const regions = ['US', 'DE', 'JP'];
+    const rEff = { US: 0, DE: 0.06, JP: 0.12, UNKNOWN: 0.03 };
+    const cEff = { on_demand: 0, spot: -0.55 };
+    const bEff = { Q1: -0.12, Q2: 0, Q3: 0.14, UNKNOWN: 0 };
+    const pEff = { vast: 0, runpod: 0.05, aws: 0.50 };
+    const catEff = { azure: 2.2, gcp: 2.1 };
+    const offers = [];
+    const push = (provider, count, opts) => {
+      for (let i = 0; i < count; i++) {
+        const region = opts.noRegion ? 'UNKNOWN' : regions[Math.floor(rnd() * 3)];
+        const commitment = rnd() < 0.5 ? 'on_demand' : 'spot';
+        const bundle = opts.bundle ? ['Q1', 'Q2', 'Q3'][Math.floor(rnd() * 3)] : 'UNKNOWN';
+        let y;
+        if (opts.cat) {
+          // administered catalog: deterministic in (region, commitment) — explainable by construction
+          y = Math.log(P.base) + catEff[provider] + rEff[region] * 3 + cEff[commitment];
+        } else {
+          const noise = (rnd() * 2 - 1) * P.sigma;
+          y = Math.log(P.base) + es * (rEff[region] + cEff[commitment] + pEff[provider] + (opts.bundle ? bEff[bundle] : 0)) + noise;
+        }
+        offers.push({ provider, region, commitment, bundle, price: Math.exp(y) });
+      }
+    };
+    push('vast', 100, { bundle: true });
+    push('runpod', 12, { noRegion: true });
+    push('aws', 14, {});
+    push('azure', 30, { cat: true });
+    push('gcp', 30, { cat: true });
+    return offers;
+  }
+
+  anova(offers, order) {
+    const ys = offers.map(o => Math.log(o.price));
+    const mean = ys.reduce((a, b) => a + b, 0) / ys.length;
+    const total = ys.reduce((a, y) => a + (y - mean) ** 2, 0);
+    let keys = offers.map(() => '');
+    let prevWithin = total;
+    const shares = {};
+    order.forEach(f => {
+      const vals = offers.map(o => o[f] || 'UNKNOWN');
+      if (new Set(vals).size < 2) { shares[f] = 0; return; }
+      keys = keys.map((k, i) => k + '|' + vals[i]);
+      const groups = {};
+      keys.forEach((k, i) => { (groups[k] = groups[k] || []).push(ys[i]); });
+      let within = 0;
+      Object.values(groups).forEach(g => { const m = g.reduce((a, b) => a + b, 0) / g.length; g.forEach(y => { within += (y - m) ** 2; }); });
+      shares[f] = Math.max(0, prevWithin - within) / total;
+      prevWithin = within;
+    });
+    const residual = Math.max(0, total - Object.values(shares).reduce((a, b) => a + b, 0) * total) / total;
+    return { shares, residual, n: offers.length };
+  }
+
+  quant(sorted, p) {
+    const i = (sorted.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i);
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
+  }
+
+  genSeries(skuId, market, endVal) {
+    const rnd = this.rng(Component.SKUS[skuId].seed + (market ? 7 : 5));
+    let v = endVal;
+    const arr = [];
+    const min = Math.max(2, endVal * 0.65), max = Math.min(88, endVal * 1.35 + 5), step = market ? 2.6 : 0.9;
+    for (let i = 0; i < 60; i++) { arr.push(v); v = Math.min(max, Math.max(min, v + (rnd() * 2 - 1) * step)); }
+    arr.reverse();
+    arr[59] = endVal;
+    return arr;
+  }
+
+  pathFrom(arr) {
+    return arr.map((v, i) => (i ? 'L' : 'M') + (40 + i * (650 / 59)).toFixed(1) + ',' + (200 - v / 90 * 180).toFixed(1)).join(' ');
+  }
+
+  move(i, d) {
+    const o = [...this.state.order], j = i + d;
+    if (j < 0 || j > 3) return;
+    [o[i], o[j]] = [o[j], o[i]];
+    this.setState({ order: o });
+  }
+
+  renderVals() {
+    const sku = this.state.sku || (this.props.defaultEdition && Component.SKUS[this.props.defaultEdition] ? this.props.defaultEdition : 'h100_sxm_80gb');
+    const { order, catalogs } = this.state;
+    const P = Component.SKUS[sku];
+    const all = this.genOffers(sku);
+    const market = all.filter(o => o.provider !== 'azure' && o.provider !== 'gcp');
+    const prices = all.map(o => o.price).sort((a, b) => a - b);
+    const $ = v => '$' + v.toFixed(2);
+    const med = this.quant(prices, 0.5), p25 = this.quant(prices, 0.25), p75 = this.quant(prices, 0.75);
+    const lo = Math.log(prices[0]) - 0.06, hi = Math.log(prices[prices.length - 1]) + 0.06;
+    const X = p => +(40 + (Math.log(p) - lo) / (hi - lo) * 640).toFixed(1);
+    const jr = this.rng(99);
+    const dots = all.map(o => ({ cx: X(o.price), cy: +(30 + jr() * 100).toFixed(1) }));
+
+    const led = this.anova(market, order);
+    const pooledRes = this.anova(all, ['region', 'commitment', 'provider', 'bundle']).residual;
+    const marketRes = this.anova(market, ['region', 'commitment', 'provider', 'bundle']).residual;
+
+    let cx = 40;
+    const segs = order.map(f => { const w = +(led.shares[f] * 640).toFixed(1); const s = { x: +cx.toFixed(1), w, fill: Component.FMETA[f].fill }; cx += w; return s; });
+    const residW = +(led.residual * 640).toFixed(1);
+    const rows = order.map((f, i) => ({
+      pos: (i + 1) + ((['ST', 'ND', 'RD', 'TH'])[i] || 'TH'),
+      label: Component.FMETA[f].label,
+      fill: Component.FMETA[f].fill,
+      pct: (led.shares[f] * 100).toFixed(1),
+      up: () => this.move(i, -1), down: () => this.move(i, 1),
+      upDis: i === 0, downDis: i === 3,
+      upAria: 'Subtract ' + f + ' earlier', downAria: 'Subtract ' + f + ' later',
+    }));
+
+    const marketPct = (marketRes * 100).toFixed(1), pooledPct = (pooledRes * 100).toFixed(1);
+    const activeArr = this.genSeries(sku, !catalogs, +(catalogs ? pooledPct : marketPct));
+    const ghostArr = this.genSeries(sku, catalogs, +(catalogs ? marketPct : pooledPct));
+    const lastV = activeArr[59];
+    const lastX = +(40 + 59 * (650 / 59)).toFixed(1), lastY = +(200 - lastV / 90 * 180).toFixed(1);
+
+    const editions = Object.keys(Component.SKUS).map(id => ({
+      id, label: Component.SKUS[id].label,
+      active: id === sku ? 'true' : 'false',
+      mark: id === sku ? '☑' : '☐',
+      bg: id === sku ? '#1C1B17' : 'transparent',
+      fg: id === sku ? '#EFE9DC' : '#1C1B17',
+      pick: () => this.setState({ sku: id }),
+    }));
+
+    const skipped = 3;
+    const stages = [
+      { num: '1', name: 'COLLECT', count: (all.length + skipped) + ' QUOTES [SIM]', note: '5 PROVIDERS · 08:00 & 20:00 UTC' },
+      { num: '2', name: 'SEAL RAW', count: (all.length + skipped) + ' ORIGINALS [SIM]', note: 'WRITE-ONCE · FULL RESPONSE KEPT' },
+      { num: '3', name: 'TRANSLATE', count: all.length + ' FILED [SIM]', note: skipped + ' SET ASIDE — NOT IN THE BOOK' },
+      { num: '4', name: 'ADMIT TO PANEL', count: all.length + ' ADMITTED [SIM]', note: 'CRON-COLLECTED ONLY · BACKFILL HELD OUT' },
+      { num: '5', name: 'MEASURE', count: '3 FIGURES + LEDGER', note: 'MEDIAN · MIDDLE HALF · DECOMPOSITION' },
+    ];
+
+    return {
+      showTexture: this.props.paperTexture ?? true,
+      showProof: this.props.proofSlug ?? true,
+      skuLabel: P.label, skuCode: sku, n: all.length, mktN: market.length,
+      minP: $(prices[0]), maxP: $(prices[prices.length - 1]), medP: $(med), p25P: $(p25), p75P: $(p75),
+      spread: (prices[prices.length - 1] / prices[0]).toFixed(1) + '×',
+      dots, axMinX: X(prices[0]), axMedX: X(med), axMaxX: X(prices[prices.length - 1]),
+      bandX: X(p25), bandW: +(X(p75) - X(p25)).toFixed(1), bandRX: X(p75),
+      segs, residX: +cx.toFixed(1), residW, residMidX: +(cx + residW / 2).toFixed(1),
+      residPct: (led.residual * 100).toFixed(1),
+      rows, orderText: order.map(f => f.toUpperCase()).join(' → '),
+      editions, stages,
+      toggleCatalogs: () => this.setState(s => ({ catalogs: !s.catalogs })),
+      catPressed: catalogs ? 'true' : 'false', catMark: catalogs ? '☑' : '☐',
+      popTitle: catalogs ? 'POOLED PANEL — ALL PROVIDERS' : 'MARKET-PRICED PANEL — AZURE, GCP EXCLUDED',
+      seriesPath: this.pathFrom(activeArr), ghostPath: this.pathFrom(ghostArr),
+      lastX, lastY, lastLabelX: lastX - 14, lastLabelY: Math.max(16, lastY - 12),
+      activePct: lastV.toFixed(1), marketPct, pooledPct,
+      seriesRows: activeArr.filter((_, i) => i % 6 === 5).map((v, i) => ({ day: 'DAY ' + (i * 6 + 6), val: v.toFixed(1) })),
+    };
+  }
+}
+</script>
+</body>
+</html>
