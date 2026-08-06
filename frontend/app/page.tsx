@@ -22,7 +22,7 @@ import {
 import {
   COLD_OPEN,
   FINDING_ANALYST,
-  METHOD_ANALYSTS,
+  FINDINGS_ROOM,
   NAME_BACKDROP,
   PUZZLE_HYPERSCALER,
   PUZZLE_MARKETPLACE,
@@ -470,9 +470,6 @@ export default async function StoryPage() {
         aria-labelledby="fc-method"
         data-nav-backdrop="film"
       >
-        <PlateFrame plate={METHOD_ANALYSTS} depth={0.12} showSlate={false} />
-        <div className="fc-act__scrim fc-act__scrim--room" aria-hidden />
-
         <div className="fc-wrap fc-method-passport">
           <span className="fc-eyebrow fc-eyebrow--accent">04 · The method</span>
           <h2 id="fc-method" className="fc-h2 fc-h2--invert serif" data-lines>
@@ -643,6 +640,12 @@ export default async function StoryPage() {
         aria-labelledby="fc-findings"
         data-nav-backdrop="paper-warm"
       >
+        <PlateFrame
+          plate={FINDINGS_ROOM}
+          className="fc-plate--paper"
+          depth={0.08}
+          showSlate={false}
+        />
         <div className="fc-desk" aria-hidden />
 
         <div className="fc-wrap">

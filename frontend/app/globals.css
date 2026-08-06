@@ -6853,28 +6853,6 @@ button {
     );
 }
 
-/* The method act reads its plate in the upper right, where the layout leaves
-   negative space beside the heading. Everything the type and the passport
-   cards sit on goes nearly solid. */
-.fc-act__scrim--room {
-  background:
-    linear-gradient(
-      104deg,
-      rgba(14, 13, 11, 0.96) 0%,
-      rgba(14, 13, 11, 0.88) 34%,
-      rgba(14, 13, 11, 0.62) 64%,
-      rgba(14, 13, 11, 0.46) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(14, 13, 11, 0.66) 0%,
-      rgba(14, 13, 11, 0.14) 26%,
-      rgba(14, 13, 11, 0.72) 58%,
-      rgba(14, 13, 11, 0.93) 78%,
-      rgba(14, 13, 11, 0.98) 100%
-    );
-}
-
 /* ——— type ————————————————————————————————————————————————————— */
 
 .fc-eyebrow {
@@ -7174,6 +7152,18 @@ body:has(.filecopy) .ask-launcher { bottom: calc(20px + 34px); }
   text-transform: uppercase;
   color: rgba(250, 249, 245, 0.72);
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+}
+
+/* The one plate that runs in the paper register. The film grade is built to
+   sit under white type on black; this one has to sit under --ink on cream,
+   so it is bleached to a pale print rather than graded to period stock. */
+.fc-plate--paper {
+  background: var(--paper-warm);
+}
+
+.fc-plate--paper .fc-plate__img {
+  filter: grayscale(0.9) sepia(0.5) saturate(0.72) contrast(0.6)
+    brightness(1.55);
 }
 
 .fc-plate--mobile-only { display: none; }
@@ -9079,23 +9069,30 @@ body:has(.filecopy) footer {
 .fc-desk {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  /* Above the plate, below .fc-wrap. */
+  z-index: 1;
   pointer-events: none;
   background:
-    /* lamp pool, upper left, over the eyebrow and headline */
-    radial-gradient(
-      118% 64% at 32% 20%,
-      rgba(255, 253, 247, 0.62) 0%,
-      rgba(252, 248, 240, 0.26) 38%,
-      rgba(237, 230, 217, 0) 74%
+    /* A left-hand veil so the heading column stays on clean paper even where
+       the envelope below has opened up. */
+    linear-gradient(
+      to right,
+      rgba(237, 230, 217, 0.62) 0%,
+      rgba(237, 230, 217, 0.24) 30%,
+      rgba(237, 230, 217, 0) 58%
     ),
-    /* the far side falls away from the lamp — kept level with the sheets,
-       clear of the limitations row, which is --ink-mid at 11px and has no
-       contrast headroom to give away */
-    radial-gradient(
-      58% 21% at 86% 50%,
-      rgba(31, 29, 26, 0.05) 0%,
-      rgba(31, 29, 26, 0) 72%
+    /* The envelope. Solid paper under the head block and under the
+       limitations row at the foot; the room is only allowed through the band
+       the sheets actually lie in. Both text blocks measured at 4.46:1 on bare
+       paper, so neither has any contrast to lend the picture. */
+    linear-gradient(
+      to bottom,
+      rgb(237, 230, 217) 0%,
+      rgb(237, 230, 217) 22%,
+      rgba(237, 230, 217, 0.42) 31%,
+      rgba(237, 230, 217, 0.42) 70%,
+      rgb(237, 230, 217) 78%,
+      rgb(237, 230, 217) 100%
     );
 }
 
@@ -9995,19 +9992,6 @@ body:has(.filecopy) footer {
   }
 
   /* V · method passport */
-  /* One column means type spans the full width, so the diagonal has nothing
-     to protect. Vertical only: the room reads across the head, then goes
-     solid before the passport cards. */
-  .fc-act__scrim--room {
-    background: linear-gradient(
-      to bottom,
-      rgba(14, 13, 11, 0.64) 0%,
-      rgba(14, 13, 11, 0.81) 22%,
-      rgba(14, 13, 11, 0.94) 44%,
-      rgba(14, 13, 11, 0.97) 100%
-    );
-  }
-
   .fc-passport__stamps {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;

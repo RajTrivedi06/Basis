@@ -82,15 +82,17 @@ export const PUZZLE_HYPERSCALER: PlateSpec = {
 };
 
 /**
- * Act V · The method — the review room: two analysts at desks, a wall of
- * hand-annotated charts behind them. The only act whose subject is the
- * procedure itself, so the frame carries people doing clerical work rather
- * than hardware.
+ * Act VIII · Findings — the review room: two analysts at desks, a wall of
+ * hand-annotated charts behind them. The room the three sheets came out of.
+ *
+ * This is the one plate that runs in the paper register rather than the film
+ * one: it is graded to the page's cream (see `.fc-plate--paper`) so dark ink
+ * still reads over it and the sheets still land on paper.
  *
  * Native stock is 1536 wide; there is deliberately no larger derivative,
  * because anything above that is an upscale of the same pixels.
  */
-export const METHOD_ANALYSTS: PlateSpec = {
+export const FINDINGS_ROOM: PlateSpec = {
   src: `${P}/method-analysts-1536.webp`,
   width: 1536,
   height: 1024,
@@ -98,11 +100,10 @@ export const METHOD_ANALYSTS: PlateSpec = {
     { media: "(max-width: 1023px)", srcSet: `${P}/method-analysts-1024.webp` },
     { srcSet: `${P}/method-analysts-1536.webp` },
   ],
-  slate: "Plate 04 · the method",
-  /* Bias right: the right-hand desk and the chart wall carry the frame, and
-     the left stays in shadow under the heading. */
-  position: "62% 42%",
-  positionMobile: "58% 38%",
+  slate: "Plate 04 · the review room",
+  /* Park the chart wall behind the heading and the desks under the sheets. */
+  position: "50% 34%",
+  positionMobile: "54% 26%",
 };
 
 /** Act IV · The name — analyst at the desk, right-anchored on film. */
