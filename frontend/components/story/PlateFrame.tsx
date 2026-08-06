@@ -32,9 +32,13 @@ export function PlateFrame({
         style={{ "--fc-depth": depth } as React.CSSProperties}
       >
         <picture>
-          {plate.sources.map((source) => (
+          {/* Keyed by position, not by srcSet: a plate may legitimately point
+              two breakpoints at the same derivative (STAKES_FLOOR does), and
+              that duplicated a React key. The list is static and never
+              reorders, so the index is a stable identity. */}
+          {plate.sources.map((source, index) => (
             <source
-              key={source.srcSet}
+              key={index}
               media={source.media}
               srcSet={source.srcSet}
               type="image/webp"

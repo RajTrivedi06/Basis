@@ -9,7 +9,6 @@ import { ResidualSparkline } from "@/components/story/ResidualSparkline";
 import { MethodPassport } from "@/components/story/MethodPassport";
 import { PlateFrame } from "@/components/story/PlateFrame";
 import { QuoteLanes } from "@/components/story/QuoteLanes";
-import { SettlementSheet } from "@/components/story/SettlementSheet";
 import { StoryMotion } from "@/components/story/StoryMotion";
 import { Tally } from "@/components/story/Tally";
 import {
@@ -22,10 +21,10 @@ import {
 import {
   COLD_OPEN,
   FINDING_ANALYST,
-  METHOD_ANALYSTS,
   NAME_BACKDROP,
   PUZZLE_HYPERSCALER,
   PUZZLE_MARKETPLACE,
+  REVIEW_ROOM,
   STAKES_FLOOR,
   type PlateSpec,
 } from "@/lib/plates";
@@ -470,9 +469,6 @@ export default async function StoryPage() {
         aria-labelledby="fc-method"
         data-nav-backdrop="film"
       >
-        <PlateFrame plate={METHOD_ANALYSTS} depth={0.12} showSlate={false} />
-        <div className="fc-act__scrim fc-act__scrim--room" aria-hidden />
-
         <div className="fc-wrap fc-method-passport">
           <span className="fc-eyebrow fc-eyebrow--accent">04 · The method</span>
           <h2 id="fc-method" className="fc-h2 fc-h2--invert serif" data-lines>
@@ -558,92 +554,93 @@ export default async function StoryPage() {
       <section
         className="fc-act fc-act--exhibit-c"
         aria-labelledby="fc-sheet"
-        data-nav-backdrop="paper-deep"
+        data-nav-backdrop="film"
       >
-        <div className="fc-ruled fc-ruled--lines" data-parallax style={{ "--fc-depth": 0.1 } as React.CSSProperties} aria-hidden />
-        <div className="fc-ruled fc-ruled--cross" data-parallax style={{ "--fc-depth": 0.24 } as React.CSSProperties} aria-hidden />
-        <div className="fc-sheet__wash" aria-hidden />
+        <PlateFrame plate={REVIEW_ROOM} depth={0.12} showSlate={false} />
+        <div className="fc-act__scrim fc-act__scrim--room" aria-hidden />
 
-        {decomposition ? (
-          <SettlementSheet
-            decomposition={decomposition}
-            head={
-              <>
-                <div>
-                  <span className="fc-eyebrow fc-eyebrow--accent">
-                    06 · Exhibit C
-                  </span>
-                  {/* Title and lede are one statement, as the reference sets
-                      it — the sheet gets its own sentence, not a stacked
-                      heading plus a subheading. */}
-                  <h2 id="fc-sheet" className="fc-h2 serif" data-lines>
-                    <span className="fc-line">
-                      <span>The settlement sheet. One hundred</span>
-                    </span>
-                    <span className="fc-line">
-                      <span>units of disagreement, filed against</span>
-                    </span>
-                    <span className="fc-line">
-                      <span>what sellers disclose.</span>
-                    </span>
-                  </h2>
-                </div>
-                <div className="fc-sheet__popblock">
-                  <span className="fc-sheet__poplabel">Sample population</span>
-                  <span className="fc-sheet__poptag">{population}</span>
-                </div>
-              </>
-            }
-            foot={
-              <>
-                <p className="fc-sheet__verdict">
-                  Where the machine is. How it&rsquo;s rented. Who sells it.
-                  What comes bundled with it. Everything observable, accounted
-                  for, and still a share of the price has no explanation.
-                </p>
-                <p className="fc-sheet__standing">
-                  Change the order of the factors and the four credits move. The
-                  remainder does not. That is why the remainder is the headline.
-                  {residualRange ? (
-                    <em>
-                      Market-priced range · {residualRange.minPct.toFixed(0)}% to{" "}
-                      {residualRange.maxPct.toFixed(0)}% across{" "}
-                      {residualRange.days} days · segment- and time-conditional
-                    </em>
-                  ) : (
-                    <em>Segment- and time-conditional</em>
-                  )}
-                </p>
-              </>
-            }
-          />
-        ) : (
-          <div className="fc-wrap">
-            <div className="fc-sheet__head">
-              <div>
-                <span className="fc-eyebrow fc-eyebrow--accent">
-                  06 · Exhibit C
+        {/* The filed ledger itself lives on /basis, row by row and live. This
+            act states the result and the vocabulary the findings then spend —
+            four factors, the subtraction, the remainder — and hands the reader
+            over rather than drawing the same waterfall twice. */}
+        <div className="fc-wrap fc-settle">
+          <div className="fc-sheet__head">
+            <div>
+              <span className="fc-eyebrow fc-eyebrow--accent">
+                06 · Exhibit C
+              </span>
+              {/* Title and lede are one statement, as the reference sets it —
+                  the sheet gets its own sentence, not a stacked heading plus
+                  a subheading. */}
+              <h2 id="fc-sheet" className="fc-h2 serif" data-lines>
+                <span className="fc-line">
+                  <span>The settlement sheet. One hundred</span>
                 </span>
-                <h2 id="fc-sheet" className="fc-h2 serif">
-                  The settlement sheet.
-                </h2>
-              </div>
+                <span className="fc-line">
+                  <span>units of disagreement, filed against</span>
+                </span>
+                <span className="fc-line">
+                  <span>what sellers disclose.</span>
+                </span>
+              </h2>
             </div>
-            <p className="fc-body">
-              The live decomposition is momentarily unavailable. The{" "}
-              <Link href="/basis">Basis page</Link> holds the full ledger.
-            </p>
+            <div className="fc-sheet__popblock">
+              <span className="fc-sheet__poplabel">Sample population</span>
+              <span className="fc-sheet__poptag">{population}</span>
+            </div>
           </div>
-        )}
+
+          <p className="fc-settle__verdict" data-stamp>
+            Where the machine is. How it&rsquo;s rented. Who sells it. What
+            comes bundled with it. Everything observable, accounted for, and
+            still a share of the price has no explanation.
+          </p>
+
+          {decomposition ? (
+            <dl className="fc-settle__figures" data-stamp data-stamp-group>
+              <div>
+                <dt>Four observable factors</dt>
+                <dd>{decomposition.pct_explained.toFixed(1)}%</dd>
+              </div>
+              <div className="fc-settle__figure--headline">
+                <dt>The remainder</dt>
+                <dd>{decomposition.pct_residual.toFixed(1)}%</dd>
+              </div>
+              {residualRange ? (
+                <div>
+                  <dt>Market-priced range</dt>
+                  <dd>
+                    {residualRange.minPct.toFixed(0)}&ndash;
+                    {residualRange.maxPct.toFixed(0)}%
+                    <span>across {residualRange.days} days</span>
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
+
+          <p className="fc-settle__standing" data-stamp>
+            Change the order of the factors and the four credits move. The
+            remainder does not. That is why the remainder is the headline.{" "}
+            <Link href="/basis">
+              The ledger it comes off, filed row by row, is on the Basis page.
+            </Link>
+          </p>
+        </div>
       </section>
 
       {/* ——————————————————————————————— VIII · Findings (C8, C9, C10) */}
       <section
         className="fc-act fc-act--findings"
         aria-labelledby="fc-findings"
-        data-nav-backdrop="paper-warm"
+        data-nav-backdrop="paper-deep"
       >
-        <div className="fc-desk" aria-hidden />
+        {/* The ruled ground Exhibit C used to carry. No parallax and no inset
+            slack here: parallax needs travel plus `overflow: hidden`, and this
+            act cannot clip — the sheets are thrown in from outside its box. */}
+        <div className="fc-ruled fc-ruled--static fc-ruled--lines" aria-hidden />
+        <div className="fc-ruled fc-ruled--static fc-ruled--cross" aria-hidden />
+        <div className="fc-sheet__wash" aria-hidden />
 
         <div className="fc-wrap">
           <span className="fc-eyebrow fc-eyebrow--accent">

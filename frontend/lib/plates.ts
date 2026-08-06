@@ -82,15 +82,15 @@ export const PUZZLE_HYPERSCALER: PlateSpec = {
 };
 
 /**
- * Act V · The method — the review room: two analysts at desks, a wall of
- * hand-annotated charts behind them. The only act whose subject is the
- * procedure itself, so the frame carries people doing clerical work rather
- * than hardware.
+ * Act VII · Exhibit C — the review room: two analysts at desks, a wall of
+ * hand-annotated charts behind them. The room the settlement sheet is filed
+ * in, and the one act whose photograph is of the work rather than the
+ * hardware.
  *
  * Native stock is 1536 wide; there is deliberately no larger derivative,
  * because anything above that is an upscale of the same pixels.
  */
-export const METHOD_ANALYSTS: PlateSpec = {
+export const REVIEW_ROOM: PlateSpec = {
   src: `${P}/method-analysts-1536.webp`,
   width: 1536,
   height: 1024,
@@ -98,11 +98,10 @@ export const METHOD_ANALYSTS: PlateSpec = {
     { media: "(max-width: 1023px)", srcSet: `${P}/method-analysts-1024.webp` },
     { srcSet: `${P}/method-analysts-1536.webp` },
   ],
-  slate: "Plate 04 · the method",
-  /* Bias right: the right-hand desk and the chart wall carry the frame, and
-     the left stays in shadow under the heading. */
-  position: "62% 42%",
-  positionMobile: "58% 38%",
+  slate: "Plate 04 · the review room",
+  /* Chart wall behind the heading, desks under the figures. */
+  position: "52% 38%",
+  positionMobile: "56% 30%",
 };
 
 /** Act IV · The name — analyst at the desk, right-anchored on film. */
