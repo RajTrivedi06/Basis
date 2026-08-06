@@ -22,14 +22,14 @@ export function DispersionPageClient() {
       <header className="disp-head">
         <div className="disp-head__row">
           <div className="disp-head__copy">
-            <div className="disp-head__eyebrow">02 · Raw price spread</div>
+            <div className="disp-head__eyebrow">Raw price spread</div>
             <h1 className="disp-head__title">
               <span className="disp-head__sku mono">{sku}</span>
               <em>p25 – median – p75</em>
             </h1>
             <p className="disp-head__lede">
               Wider bands mean more same-day price disagreement across providers
-              for this SKU. Quoted prices only — no executed trades.
+              for this SKU. Quoted prices only: no executed trades.
             </p>
           </div>
           <div className="disp-head__meta">
@@ -44,7 +44,9 @@ export function DispersionPageClient() {
 
       <section className="disp-guide">
         <div className="disp-guide__head">
-          <span className="disp-guide__eyebrow">03 · How to read this chart</span>
+          <span className="disp-guide__eyebrow">
+            How to read this chart
+          </span>
           <button
             type="button"
             className="disp-guide__how"
@@ -60,7 +62,7 @@ export function DispersionPageClient() {
           <div>
             <h2 className="disp-guide__title">Median</h2>
             <p>
-              The middle quoted price of the day — robust to a single extreme
+              The middle quoted price of the day, robust to a single extreme
               listing.
             </p>
           </div>
@@ -85,7 +87,7 @@ export function DispersionPageClient() {
             <p>
               Every provider&apos;s quotes for the day are pooled, then reduced
               to three numbers. A day needs at least three offers or it is held
-              out — thinner days are never drawn as confident points.
+              out; thinner days are never drawn as confident points.
             </p>
             <p>
               Percentiles instead of mean and standard deviation: quotes are not
@@ -129,7 +131,7 @@ function DispersionMeta({ gpuSku }: { gpuSku: string }) {
 
   const totalObs = data.points.reduce(
     (sum: number, p: DispersionPoint) => sum + p.observation_count,
-    0
+    0,
   );
 
   return (
@@ -155,7 +157,7 @@ function DispersionStamp({ gpuSku }: { gpuSku: string }) {
   return (
     <span className="disp-sheet-foot__stamp">
       {sheetLabel("/dispersion")} · PLOTTED <em className="serif">Basis</em>
-      {stamp !== "—" ? ` · ${stamp}` : null}
+      {stamp !== "-" ? ` · ${stamp}` : null}
     </span>
   );
 }

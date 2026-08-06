@@ -179,14 +179,14 @@ describe("chart-mark accent grammar", () => {
     const median = container.querySelector(".dispersion-band__median")!;
     expect(median.getAttribute("stroke")).toBe("var(--accent)");
     // The grammar cares that the median leads the band, not about the exact
-    // weight — pinning the literal broke on a cosmetic redesign tweak.
+    // weight: pinning the literal broke on a cosmetic redesign tweak.
     const medianWidth = Number(median.getAttribute("stroke-width"));
     const edgeWidth = Number(edges[0].getAttribute("stroke-width") ?? 1);
     expect(medianWidth).toBeGreaterThanOrEqual(edgeWidth);
     expect(medianWidth).toBeGreaterThan(1);
   });
 
-  it("keeps void out of the dispersion band — nothing here is a residual share", () => {
+  it("keeps void out of the dispersion band: nothing here is a residual share", () => {
     const { container } = render(
       <DispersionBand
         title="dispersion"

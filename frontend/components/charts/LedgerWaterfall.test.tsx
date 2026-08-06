@@ -107,7 +107,7 @@ describe("LedgerWaterfall", () => {
     );
   });
 
-  it("renders finished by default — the Basis page and every server render", () => {
+  it("renders finished by default: the Basis page and every server render", () => {
     const { container } = render(<LedgerWaterfall decomposition={live} />);
     const rows = container.querySelectorAll<HTMLElement>(".ledger__row");
     rows.forEach((row) => expect(row.style.opacity).toBe("1"));

@@ -5,7 +5,7 @@ import {
   type DispersionBandPoint,
 } from "@/app/dispersion/DispersionBand";
 
-/** A deliberately jagged series — reversals, a spike, and a collapse. */
+/** A deliberately jagged series: reversals, a spike, and a collapse. */
 const jagged: DispersionBandPoint[] = [
   { date: "2026-07-24", p25: 1.8, median: 2.4, p75: 3.2 },
   { date: "2026-07-25", p25: 1.2, median: 3.9, p75: 6.1 },
@@ -22,7 +22,7 @@ function paths(container: HTMLElement, selector: string) {
 
 /**
  * jsdom's PointerEvent drops coordinates, so the pointer is simulated with a
- * MouseEvent carrying the pointer type — which is what React delegates on.
+ * MouseEvent carrying the pointer type: which is what React delegates on.
  */
 function pointAt(plate: Element, clientX: number) {
   plate.getBoundingClientRect = () => ({ left: 0, width: 1000 }) as DOMRect;
@@ -32,7 +32,7 @@ function pointAt(plate: Element, clientX: number) {
   );
 }
 
-describe("DispersionBand — the no-smoothing rider", () => {
+describe("DispersionBand: the no-smoothing rider", () => {
   it("draws straight segments only: no curve commands anywhere", () => {
     const { container } = render(
       <DispersionBand data={jagged} title="dispersion" />
@@ -52,7 +52,7 @@ describe("DispersionBand — the no-smoothing rider", () => {
     }
   });
 
-  it("puts a vertex on every real day — none dropped, none invented", () => {
+  it("puts a vertex on every real day: none dropped, none invented", () => {
     const { container } = render(
       <DispersionBand data={jagged} title="dispersion" />
     );
@@ -86,7 +86,7 @@ describe("DispersionBand — the no-smoothing rider", () => {
   });
 });
 
-describe("DispersionBand — crosshair and readout", () => {
+describe("DispersionBand: crosshair and readout", () => {
   it("reads out the latest day until the pointer says otherwise", () => {
     const { container } = render(
       <DispersionBand data={jagged} title="dispersion" />
@@ -153,7 +153,7 @@ describe("DispersionBand — crosshair and readout", () => {
   });
 });
 
-describe("DispersionBand — today's disagreement", () => {
+describe("DispersionBand: today's disagreement", () => {
   it("brackets the latest day's p25–p75 spread and labels the delta", () => {
     const { container } = render(
       <DispersionBand data={jagged} title="dispersion" />
@@ -165,7 +165,7 @@ describe("DispersionBand — today's disagreement", () => {
     expect(screen.getByText("Δ $1.00")).toBeInTheDocument();
   });
 
-  it("brackets the spread in ink — a price gap is not a residual share", () => {
+  it("brackets the spread in ink: a price gap is not a residual share", () => {
     const { container } = render(
       <DispersionBand data={jagged} title="dispersion" />
     );

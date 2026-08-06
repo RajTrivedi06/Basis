@@ -64,6 +64,23 @@ export function BulletinPager({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Turning a page should hand the reader its top, not leave them wherever
+  // they had scrolled the previous one to.
+  const toTop = useCallback(() => {
+    const el = stage.current;
+    if (el === null) return;
+    const y = el.getBoundingClientRect().top + window.scrollY;
+    const rail = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--header-rail-h"
+      )
+    );
+    window.scrollTo({
+      top: Math.max(0, y - (Number.isFinite(rail) ? rail : 68) - 8),
+      behavior: still ? "auto" : "smooth",
+    });
+  }, [still]);
+
   const go = useCallback(
     (next: number) => {
       if (!paged || turning.current) return;
@@ -90,6 +107,7 @@ export function BulletinPager({ children }: { children: ReactNode }) {
 
       if (still) {
         setPage(next);
+        toTop();
         return;
       }
 
@@ -128,8 +146,9 @@ export function BulletinPager({ children }: { children: ReactNode }) {
       }
 
       setPage(next);
+      toTop();
     },
-    [paged, page, total, views, still]
+    [paged, page, total, views, still, toTop]
   );
 
 

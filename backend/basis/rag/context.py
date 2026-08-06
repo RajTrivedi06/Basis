@@ -275,7 +275,7 @@ def _strip_history_answer(answer: str) -> str:
 def _render_chunks(chunks: Sequence[AssembledChunk]) -> str:
     return "\n\n".join(
         f"[{chunk.marker}] {chunk.source_path}"
-        f"{f' — {chunk.heading}' if chunk.heading else ''}\n{chunk.text}"
+        f"{f': {chunk.heading}' if chunk.heading else ''}\n{chunk.text}"
         for chunk in chunks
     )
 

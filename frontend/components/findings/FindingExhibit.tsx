@@ -148,7 +148,7 @@ export function FindingExhibit({
   return (
     <div className="memo-exhibit">
       <div className="memo-exhibit__head">
-        <span>EXHIBIT — DAILY RECORD</span>
+        <span>EXHIBIT: DAILY RECORD</span>
         <span
           className="memo-exhibit__readout"
           data-pinned={pinned ? "true" : undefined}
@@ -167,7 +167,7 @@ export function FindingExhibit({
           role="application"
           tabIndex={0}
           aria-label={`Daily unexplained share, ${points.length} days ending ${
-            last ? shortDate(last.date) : "—"
+            last ? shortDate(last.date) : "-"
           }. Arrow keys scrub, Enter pins a reading.`}
           onPointerMove={(e) => {
             if (!pinned) scrub(e.clientX);
@@ -257,7 +257,7 @@ export function FindingExhibit({
             )}
 
             <text x={0} y={height - 6} className="memo-exhibit__axislabel">
-              {points[0] ? shortDate(points[0].date) : "—"}
+              {points[0] ? shortDate(points[0].date) : "-"}
             </text>
             <text
               x={geo.w}
@@ -265,7 +265,7 @@ export function FindingExhibit({
               textAnchor="end"
               className="memo-exhibit__axislabel"
             >
-              {last ? `${shortDate(last.date)} · ${last.pct.toFixed(1)}%` : "—"}
+              {last ? `${shortDate(last.date)} · ${last.pct.toFixed(1)}%` : "-"}
             </text>
           </svg>
         </div>

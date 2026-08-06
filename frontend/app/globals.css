@@ -33,11 +33,13 @@
   --ink-faint:   #C9C2B4;
 
   /* Editorial accent — terracotta. Eyebrows, links, annotations, active
-     nav, progress. Never encodes data. */
-  --accent:      #C15F3C;
+     nav, progress. Never encodes data. Tuned for WCAG AA on paper (≥4.5:1). */
+  --accent:      #B15737;
   --accent-dim:  #A84E2E;
   --accent-bg:   #FBF4EE;
   --accent-line: #E8D5C9;
+  /* Lighter terracotta for film/dark grounds (paper accent fails AA there). */
+  --accent-on-film: #D98A64;
 
   /* THE RESIDUAL — void near-black (Raj ruling 2026-08-02, ADR-0005 addendum).
      Encodes the unexplained share and nothing else. Everything below is
@@ -3662,6 +3664,16 @@ button {
   margin: 0;
 }
 
+.swarm__figure.is-scroll {
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  /* Keep the receipt slot visually attached while the plate scrolls. */
+  background: var(--panel);
+}
+
 .swarm__plate {
   display: block;
   touch-action: manipulation;
@@ -5908,7 +5920,7 @@ button {
 .fc-act--name .fc-eyebrow--accent,
 .fc-act--reel .fc-eyebrow--accent,
 .fc-act--stakes .fc-eyebrow--accent,
-.fc-act--exhibit-c .fc-eyebrow--accent { color: #D98A64; }
+.fc-act--exhibit-c .fc-eyebrow--accent { color: var(--accent-on-film); }
 
 .fc-h2 {
   margin: 16px 0 0;
@@ -5999,9 +6011,57 @@ button {
 
 .fc-body strong { color: var(--ink); font-weight: 500; }
 .fc-body--invert { color: var(--film-mid); }
-.fc-body--invert em { color: var(--film-ink); font-style: italic; }
+.fc-body--invert em,
+.fc-body--invert strong { color: var(--film-ink); }
+.fc-body--invert em { font-style: italic; }
+.fc-body--invert strong { font-weight: 500; }
 .fc-body a,
 .fc-note a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Film acts: never let paper-ink emphasis bleed onto the dark ground. */
+.fc-act--open .fc-body strong,
+.fc-act--exhibit-a .fc-body strong,
+.fc-act--name .fc-body strong,
+.fc-act--reel .fc-body strong,
+.fc-act--stakes .fc-body strong,
+.fc-act--exhibit-c .fc-body strong {
+  color: var(--film-ink);
+  font-weight: 500;
+}
+
+.fc-act--open .fc-body em,
+.fc-act--exhibit-a .fc-body em,
+.fc-act--name .fc-body em,
+.fc-act--reel .fc-body em,
+.fc-act--stakes .fc-body em,
+.fc-act--exhibit-c .fc-body em {
+  color: var(--film-ink);
+}
+
+/* Footnotes on film need the lighter terracotta (paper accent fails AA on dark). */
+.fc-act--open .fc-fn a,
+.fc-act--exhibit-a .fc-fn a,
+.fc-act--name .fc-fn a,
+.fc-act--reel .fc-fn a,
+.fc-act--stakes .fc-fn a,
+.fc-act--exhibit-c .fc-fn a {
+  color: var(--accent-on-film);
+}
+
+.fc-act--open .fc-body a,
+.fc-act--exhibit-a .fc-body a,
+.fc-act--name .fc-body a,
+.fc-act--reel .fc-body a,
+.fc-act--stakes .fc-body a,
+.fc-act--exhibit-c .fc-body a,
+.fc-act--open .fc-note a,
+.fc-act--exhibit-a .fc-note a,
+.fc-act--name .fc-note a,
+.fc-act--reel .fc-note a,
+.fc-act--stakes .fc-note a,
+.fc-act--exhibit-c .fc-note a {
+  color: var(--accent-on-film);
+}
 
 .fc-note {
   margin: 20px 0 0;
@@ -6116,7 +6176,7 @@ button {
   align-items: center;
   gap: 8px;
   min-width: 0;
-  color: #D98A64;
+  color: var(--accent-on-film);
 }
 
 .fc-ribbon__dot {
@@ -6784,9 +6844,9 @@ body:has(.filecopy) footer {
 }
 
 .fc-exhibit-matrix__status--same { color: var(--film-mid); }
-.fc-exhibit-matrix__status--diff { color: #D98A64; }
+.fc-exhibit-matrix__status--diff { color: var(--accent-on-film); }
 .fc-exhibit-matrix__status--outcome {
-  color: #D98A64;
+  color: var(--accent-on-film);
   font-size: 12px;
 }
 
@@ -6812,7 +6872,7 @@ body:has(.filecopy) footer {
   font-family: var(--f-mono);
   font-size: clamp(12px, 1.2vw, 14px);
   letter-spacing: 0.1em;
-  color: #D98A64;
+  color: var(--accent-on-film);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -6910,7 +6970,7 @@ body:has(.filecopy) footer {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
-  color: #D98A64;
+  color: var(--accent-on-film);
   transition: color 160ms ease;
 }
 
@@ -7037,9 +7097,9 @@ body:has(.filecopy) footer {
   overflow: visible;
 }
 
-.fc-tags__bracket line { stroke: #C15F3C; }
+.fc-tags__bracket line { stroke: var(--accent); }
 .fc-tags__bracket .bracket-mark__spine,
-.fc-tags__bracket line:not(.bracket-mark__leader) { stroke: #C15F3C; }
+.fc-tags__bracket line:not(.bracket-mark__leader) { stroke: var(--accent); }
 
 .fc-tags__aside {
   display: flex;
@@ -7076,7 +7136,7 @@ body:has(.filecopy) footer {
   font-family: var(--f-mono);
   font-size: clamp(12px, 1.2vw, 14px);
   letter-spacing: 0.08em;
-  color: #D98A64;
+  color: var(--accent-on-film);
   font-variant-numeric: tabular-nums;
 }
 
@@ -7195,7 +7255,7 @@ body:has(.filecopy) footer {
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #D98A64;
+  color: var(--accent-on-film);
 }
 
 .fc-passport__stamp-label {
@@ -7346,7 +7406,7 @@ body:has(.filecopy) footer {
   text-transform: uppercase;
 }
 
-.fc-frame__index { color: var(--accent); }
+.fc-frame__index { color: var(--accent-on-film); }
 .fc-frame__label { color: var(--film-mid); }
 
 .fc-frame__perf {
@@ -7441,7 +7501,7 @@ body:has(.filecopy) footer {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
-  color: #D98A64;
+  color: var(--accent-on-film);
   transition: color 160ms ease;
 }
 
@@ -7570,7 +7630,7 @@ body:has(.filecopy) footer {
   overflow-wrap: anywhere;
 }
 
-.fc-stencil__arrow { color: var(--accent); font-size: 13px; }
+.fc-stencil__arrow { color: var(--accent-on-film); font-size: 13px; }
 
 .fc-stencil__out {
   font-family: var(--f-mono);
@@ -7578,7 +7638,7 @@ body:has(.filecopy) footer {
   color: var(--film-ink);
   padding: 8px 13px;
   border: 1px solid #6B4231;
-  background: rgba(193, 95, 60, 0.1);
+  background: color-mix(in srgb, var(--accent-on-film) 14%, transparent);
   overflow-wrap: anywhere;
 }
 
@@ -7827,7 +7887,7 @@ body:has(.filecopy) footer {
   color: var(--film-faint);
 }
 
-.fc-slip__tag { color: var(--accent); }
+.fc-slip__tag { color: var(--accent-on-film); }
 .fc-slip__body { padding: 18px 18px 14px; flex: 1; }
 
 .fc-slip__price {
@@ -8777,7 +8837,7 @@ body:has(.filecopy) footer {
   font-weight: 500;
 }
 
-.fc-btn:hover { background: var(--accent); color: var(--film-ink); }
+.fc-btn:hover { background: var(--accent-dim); color: var(--film-ink); }
 
 .fc-btn--ghost {
   background: transparent;
@@ -8978,7 +9038,7 @@ body:has(.filecopy) footer {
     flex: 1;
     max-width: 72px;
     height: 1px;
-    background: #C15F3C;
+    background: var(--accent);
   }
 
   .fc-tags__aside {

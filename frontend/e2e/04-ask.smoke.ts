@@ -56,7 +56,7 @@ test("check 5 · Ask Basis answers with citations and labelled figures", async (
   const pooledLabel = /pooled|all[- ]provider|administered|list catalog/i;
   if (!pooledLabel.test(answer)) {
     console.log(
-      "REPORT (not a failure): pooled/administered figure absent from the answer prose — " +
+      "REPORT (not a failure): pooled/administered figure absent from the answer prose: " +
         "primary market-priced figure was labelled, which the flake guard treats as a pass."
     );
   } else {

@@ -99,7 +99,7 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
       <div className="two-card__exhibits">
         {/* ——— EXHIBIT I ——— */}
         <div className="exhibit exhibit--bound">
-          <div className="exhibit__tab">EXHIBIT I — THE BOUND</div>
+          <div className="exhibit__tab">EXHIBIT I: THE BOUND</div>
           <div className="exhibit-card exhibit-card--bound">
             <div className="exhibit-card__meta">
               <span>
@@ -143,7 +143,7 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
 
             <div className="exhibit-card__section">
               <div className="exhibit-card__section-label">
-                HOLDOUT R² BY PROVIDER — PUNCHED:
+                HOLDOUT R² BY PROVIDER, PUNCHED:
               </div>
               <div className="punch-row">
                 {Object.entries(r2_holdout_by_provider).map(([provider, r2]) => (
@@ -161,7 +161,7 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
 
             <div className="exhibit-card__section">
               <div className="exhibit-card__section-label">
-                WHAT IT LEANED ON — MEAN |SHAP|:
+                WHAT IT LEANED ON, MEAN |SHAP|:
               </div>
               <ShapTally features={shap_summary.top_features} />
             </div>
@@ -177,7 +177,7 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
             <span className="exhibit-sticky__tape" aria-hidden />
             <p className="exhibit-sticky__body">
               What the model kept reaching for was the machine itself. Exhibit
-              II asks how much of the leftover is just who is hosting — one
+              II asks how much of the leftover is just who is hosting: one
               picture continued, not a second opinion.
             </p>
           </aside>
@@ -185,7 +185,7 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
 
         {/* ——— EXHIBIT II ——— */}
         <div className="exhibit exhibit--host">
-          <div className="exhibit__tab">EXHIBIT II — THE HOST</div>
+          <div className="exhibit__tab">EXHIBIT II: THE HOST</div>
           <div className="exhibit-card exhibit-card--host">
             <div className="exhibit-card__meta">
               VAST HOST IDENTITY · ON-DEMAND PANEL
@@ -241,10 +241,10 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
                 ))}
               </div>
               <p className="exhibit-card__dim">
-                SWING {swing.toFixed(2)} —{" "}
+                SWING {swing.toFixed(2)}: {" "}
                 {swing < 0.15
                   ? "BELOW THE 0.15 FLAG. NO THRESHOLD WAS CHOSEN FOR FLATTERY."
-                  : "ABOVE THE 0.15 FLAG — READ WITH CARE."}
+                  : "ABOVE THE 0.15 FLAG: READ WITH CARE."}
               </p>
             </div>
 
@@ -258,7 +258,7 @@ export function TwoCardFile({ artifact }: TwoCardFileProps) {
       <div className="two-card__foot">
         <div className="two-card__caveats" aria-label="Mandatory caveats">
           <span className="two-card__caveats-label">
-            CAVEATS — READ BEFORE INTERPRETING:{" "}
+            CAVEATS: READ BEFORE INTERPRETING:{" "}
           </span>
           {caveats.map((caveat, i) => (
             <span key={caveat}>

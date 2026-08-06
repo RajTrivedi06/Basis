@@ -31,10 +31,10 @@ export const FACTOR_META: Record<
   FactorKey,
   { label: string; patternId: string }
 > = {
-  region: { label: "WHERE IT IS — REGION", patternId: "bull-hA" },
-  commitment: { label: "HOW IT'S RENTED — COMMITMENT", patternId: "bull-hC" },
-  provider: { label: "WHO SELLS IT — PROVIDER", patternId: "bull-hB" },
-  bundle: { label: "WHAT'S BUNDLED — BUNDLE", patternId: "bull-hD" },
+  region: { label: "WHERE IT IS: REGION", patternId: "bull-hA" },
+  commitment: { label: "HOW IT'S RENTED: COMMITMENT", patternId: "bull-hC" },
+  provider: { label: "WHO SELLS IT: PROVIDER", patternId: "bull-hB" },
+  bundle: { label: "WHAT'S BUNDLED: BUNDLE", patternId: "bull-hD" },
 };
 
 export interface Offer {
@@ -360,7 +360,7 @@ export function buildBulletinView(
       num: "3",
       name: "TRANSLATE",
       count: `${all.length} FILED [SIM]`,
-      note: `${skipped} SET ASIDE — NOT IN THE BOOK`,
+      note: `${skipped} SET ASIDE: NOT IN THE BOOK`,
     },
     {
       num: "4",
@@ -415,8 +415,8 @@ export function buildBulletinView(
       .filter((_, i) => i % 6 === 5)
       .map((v, i) => ({ day: "DAY " + (i * 6 + 6), val: v.toFixed(1) })),
     popTitle: catalogs
-      ? "POOLED PANEL — ALL PROVIDERS"
-      : "MARKET-PRICED PANEL — AZURE, GCP EXCLUDED",
+      ? "POOLED PANEL: ALL PROVIDERS"
+      : "MARKET-PRICED PANEL: AZURE, GCP EXCLUDED",
   };
 }
 

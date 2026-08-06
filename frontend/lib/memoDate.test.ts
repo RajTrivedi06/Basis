@@ -8,7 +8,7 @@ describe("formatMemoDate", () => {
   });
 
   it("returns an em dash for missing or invalid input", () => {
-    expect(formatMemoDate(null)).toBe("—");
-    expect(formatMemoDate("not-a-date")).toBe("—");
+    expect(formatMemoDate(null)).toBe("-");
+    expect(formatMemoDate("not-a-date")).toBe("-");
   });
 });

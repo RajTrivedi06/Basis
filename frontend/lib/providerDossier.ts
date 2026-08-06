@@ -28,7 +28,7 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     file: "BS-04-RUNP",
     role: "curated cloud · published catalog, operator-set",
     dossier:
-      "A published price list, revised rarely — a single pricing authority quoting the same catalog twice a day, which is what a narrow spread looks like.",
+      "A published price list, revised rarely: a single pricing authority quoting the same catalog twice a day, which is what a narrow spread looks like.",
   },
   aws_spot: {
     file: "BS-04-AWS",
@@ -87,6 +87,6 @@ export function providerDossier(canonical: string): ProviderDossier {
     file: fileFor(canonical),
     role: "source · role not yet filed",
     dossier:
-      "No dossier has been filed for this subject yet. The figures on the row are still exactly what GET /api/providers returns — nothing inferred or backfilled.",
+      "No dossier has been filed for this subject yet. The figures on the row are still exactly what GET /api/providers returns: nothing inferred or backfilled.",
   };
 }

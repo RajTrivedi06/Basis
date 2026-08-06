@@ -31,7 +31,7 @@ export function AskAnswerBody({ answer, citations, streaming }: AskAnswerBodyPro
               className="ask-cite mono"
               title={
                 resolved?.kind === "chunk"
-                  ? `${resolved.source_path ?? ""} — ${resolved.heading ?? ""}`
+                  ? `${resolved.source_path ?? ""}: ${resolved.heading ?? ""}`
                   : resolved?.tool
                     ? `${resolved.tool} (live data)`
                     : segment.label

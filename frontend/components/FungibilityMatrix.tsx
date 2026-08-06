@@ -97,7 +97,7 @@ export function FungibilityMatrix() {
       </h2>
       <p className="dossier-head__lede">
         A low residual means the market agrees on price given observable
-        features. A high residual means it doesn&apos;t — and the SKU is a poor
+        features. A high residual means it doesn&apos;t, and the SKU is a poor
         benchmark target.
       </p>
     </header>
@@ -116,7 +116,7 @@ export function FungibilityMatrix() {
       <section className="dossier">
         {header}
         <Placeholder
-          message={`REGISTER UNAVAILABLE — ${
+          message={`REGISTER UNAVAILABLE: ${
             (error as Error)?.message ?? "unknown error"
           }`}
           tone="error"

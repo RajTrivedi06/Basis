@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
  *
  * Behaviour:
  * - If `target` is null/undefined (loading or errored upstream query)
- *   the hook returns the sentinel "—" and does not run the animation.
+ *   the hook returns the sentinel "-" and does not run the animation.
  *   The sentinel is returned regardless of the supplied `format`.
  * - If `target` changes mid-flight, the tween is restarted from the
  *   currently-displayed value rather than snapping back to 0.
@@ -112,6 +112,6 @@ export function useCountUp(
     return cancel;
   }, [target, durationMs, delayMs]);
 
-  if (display === null || display === undefined) return "—";
+  if (display === null || display === undefined) return "-";
   return format(display);
 }

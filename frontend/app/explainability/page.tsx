@@ -4,7 +4,7 @@ import { ExplainabilityPageClient } from "./ExplainabilityPageClient";
 function ExplainabilityFallback() {
   return (
     <div className="page-wide fade-up expl-page">
-      <div className="expl-head__eyebrow">05 · Explainability</div>
+      <div className="expl-head__eyebrow">Explainability</div>
       <p className="caption mt-3">Loading page…</p>
     </div>
   );

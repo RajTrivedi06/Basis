@@ -52,7 +52,7 @@ export function BracketDiagram({
         className="bracket-diagram__plate"
         viewBox="0 0 452 216"
         role="img"
-        aria-label="Two price lines — a reference price and a quoted price — with a dimension bracket measuring the gap between them, labelled basis."
+        aria-label="Two price lines (a reference price and a quoted price) with a dimension bracket measuring the gap between them, labelled basis."
       >
         <line
           x1={LINE_X0}
