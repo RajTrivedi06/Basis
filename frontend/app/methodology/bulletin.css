@@ -2,27 +2,82 @@
    Scoped under .bulletin-page so other routes are untouched. */
 
 .bulletin-page {
+  /* —— The bulletin's palette. Eight literals, no others, no gradients.
+     These re-bind the site's own token names inside this subtree, so every
+     rule below inherits the bulletin palette without being rewritten and no
+     other route is affected. —— */
+  --bg: #EFE9DC;          /* newsprint */
+  --bg-deep: #E4DCC8;     /* newsprint dark */
+  --ink: #1C1B17;         /* ink */
+  --ink-mid: #4A463C;     /* ink faded */
+  --ink-dim: #6E6A5E;     /* pencil */
+  --accent: #9E2B25;      /* stamp red */
+  --accent-dim: #9E2B25;
+  --line: #6E6A5E;
+  --line-hi: #6E6A5E;
+
+  /* —— The five faces. Georgia is the serif fallback. —— */
+  --f-serif: var(--bull-f-body), Georgia, "Times New Roman", serif;
+  --f-sans: var(--bull-f-sans), "Helvetica Neue", Arial, sans-serif;
+  --f-mono: var(--bull-f-type), "Courier New", ui-monospace, monospace;
+  --f-display: var(--bull-f-display), Georgia, serif;
+  --f-hand: var(--bull-f-hand), "Segoe Script", cursive;
+
   --bull-paper: var(--bg);
   --bull-paper-deep: var(--bg-deep);
+  --bull-desk: #C9C2B2;   /* desk */
+  --bull-pale: #E8B7B3;   /* pale stamp — reversed text on the black bars */
   --bull-rule: var(--ink);
-  --bull-rule-soft: var(--ink-mid);
-  --bull-rule-faint: color-mix(in srgb, var(--ink) 28%, var(--bg));
-  --bull-tint: color-mix(in srgb, var(--ink) 6%, var(--bg));
-  --bull-sim: color-mix(in srgb, var(--ink) 10%, var(--bg-deep));
+  --bull-rule-soft: var(--ink-dim);
+  --bull-rule-faint: var(--ink-dim);
+  --bull-tint: var(--bg-deep);
+  --bull-sim: var(--bg-deep);
 
+  /* Flat desk tone, per the palette: the sheet is the only thing with
+     texture on this page. */
   position: relative;
-  /* Bleed past .page-wide horizontal padding so the paper fills the viewport */
-  width: 100vw;
-  max-width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  padding: 0 0 80px;
-  background: var(--bull-paper);
+  margin-inline: calc(50% - 50vw);
+  /* Pull up under the sticky header rail, the same way the landing's cold
+     open does, so the desk paints to the very top of the viewport instead of
+     starting below the nav and drawing a seam across the page. The top
+     padding puts the clearance back for the island. */
+  margin-top: calc(-1 * var(--header-rail-h));
+  padding:
+    calc(var(--header-rail-h) + clamp(16px, 2.5vw, 40px))
+    clamp(12px, 3vw, 44px)
+    clamp(48px, 7vw, 96px);
+  background: var(--bull-desk);
   color: var(--ink);
   font-family: var(--f-serif);
 }
 
-.bulletin-page::before {
+/* The global footer carries mt-20, which would flash cream (--bg) between the
+   desk and the footer bar. Drop that margin on this route and seat the footer
+   on the same desk tone so the page reads as one continuous ground. */
+body:has(.bulletin-page) {
+  background: #C9C2B2;
+}
+
+body:has(.bulletin-page) > footer {
+  margin-top: 0;
+  background: #C9C2B2;
+  border-top-color: rgba(28, 27, 23, 0.22);
+}
+
+/* One sheet of paper, centred on the desk. Every band of the bulletin sits
+   inside it, so there is exactly one left and right margin on the page. */
+.bulletin-sheet {
+  position: relative;
+  z-index: 1;
+  max-width: 1480px;
+  margin: 0 auto;
+  background: var(--bull-paper);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.42),
+    0 26px 70px rgba(0, 0, 0, 0.5);
+}
+
+.bulletin-sheet::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -35,9 +90,7 @@
 .bulletin-inner {
   position: relative;
   z-index: 1;
-  max-width: 1140px;
-  margin: 0 auto;
-  padding: 0 clamp(16px, 3vw, 40px);
+  padding: 0 clamp(20px, 4vw, 48px);
 }
 
 .bulletin-skip {
@@ -91,7 +144,7 @@
 }
 
 .bull-classbar__declass {
-  color: color-mix(in srgb, var(--accent) 55%, var(--bg));
+  color: var(--bull-pale);
   font-weight: 500;
 }
 
@@ -100,7 +153,10 @@
 }
 
 .bull-mast {
-  padding: 22px 0 0;
+  /* Same inline padding as .bulletin-inner, so the masthead's rules line up
+     with the body columns instead of running to the sheet's cut edge. The
+     classification bar above is deliberately exempt — it bleeds edge to edge. */
+  padding: 22px clamp(20px, 4vw, 48px) 0;
 }
 
 .bull-mast__titleblock {
@@ -110,18 +166,17 @@
 }
 
 .bull-mast__name {
-  font-family: var(--f-serif);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-weight: 900;
   font-size: clamp(36px, 6vw, 68px);
   letter-spacing: -0.02em;
   line-height: 1;
-  font-style: italic;
 }
 
 .bull-mast__sub {
   font-family: var(--f-sans);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.22em;
   margin-top: 10px;
   color: var(--ink-mid);
@@ -135,7 +190,7 @@
   justify-content: space-between;
   font-family: var(--f-sans);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 8px 4px;
@@ -168,8 +223,8 @@
 }
 
 .bull-extra {
-  font-family: var(--f-serif);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-weight: 900;
   font-size: 22px;
   background: var(--accent);
   color: var(--bg);
@@ -188,11 +243,14 @@
 }
 
 .bull-mast__headline {
-  font-family: var(--f-serif);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-weight: 900;
   font-size: clamp(28px, 4.4vw, 48px);
-  line-height: 1.08;
+  /* 1.08 clipped the descenders on Playfair 900 — "g" in "finding" lost its
+     tail between the two lines. */
+  line-height: 1.18;
   margin: 12px 0 0;
+  padding-bottom: 4px;
   letter-spacing: -0.015em;
   text-wrap: balance;
 }
@@ -224,9 +282,9 @@
 }
 
 .bull-note {
-  font-family: var(--f-serif);
-  font-style: italic;
-  font-size: 17px;
+  font-family: var(--f-hand);
+  font-weight: 600;
+  font-size: 21px;
   color: var(--ink-mid);
   transform: rotate(-2deg);
   max-width: 220px;
@@ -288,8 +346,8 @@
 }
 
 .bull-file__title {
-  font-family: var(--f-serif);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-weight: 800;
   font-size: clamp(24px, 2.8vw, 34px);
   line-height: 1.12;
   margin: 8px 0 10px;
@@ -297,6 +355,7 @@
 }
 
 .bull-byline {
+  font-weight: 500;
   font-family: var(--f-sans);
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -307,8 +366,8 @@
 
 .bull-drop {
   float: left;
-  font-family: var(--f-serif);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-weight: 900;
   font-size: 58px;
   line-height: 0.82;
   padding: 6px 8px 0 0;
@@ -325,13 +384,25 @@
 }
 
 .bull-cols {
-  columns: 320px 2;
-  column-gap: 30px;
+  /* Newspaper measure. `320px 2` gave two ~677px columns at the widened
+     sheet — a magazine measure, not a newspaper one. Three columns of ~440px
+     is ~58 characters, and a column block's height is the text height divided
+     by the column count, so this is also where the page-count budget comes
+     from. Degrades to 2 then 1 as the sheet narrows. */
+  columns: 260px 3;
+  column-gap: 26px;
   column-rule: 1px solid var(--bull-rule-faint);
 }
 
 .bull-cols .bull-prose {
-  break-inside: avoid;
+  /* Text flows across the columns, as it does in a newspaper. Keeping each
+     paragraph whole in one column made the block as tall as its longest
+     paragraph, so adding columns made the page taller instead of shorter. */
+  margin-top: 0;
+}
+
+.bull-cols .bull-prose + .bull-prose {
+  margin-top: 0.9em;
 }
 
 .bull-tok {
@@ -458,10 +529,21 @@
   line-height: 1.5;
 }
 
-.bull-exhibit svg {
+/* Chart SVGs fill the exhibit; the inline key chips must not. This rule used
+   to catch every svg in the figure, so each 14px pattern swatch in the ledger
+   stretched to the full cell and drove its row to ~360px tall. */
+.bull-exhibit svg:not(.bull-swatch) {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.bull-swatch {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  flex: none;
+  vertical-align: -2px;
 }
 
 .bull-stages {
@@ -509,6 +591,11 @@
   color: var(--ink-mid);
   margin-top: 4px;
   line-height: 1.45;
+}
+
+.bull-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .bull-table {
@@ -746,8 +833,8 @@
 }
 
 .bull-brief h3 {
-  font-family: var(--f-serif);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-weight: 800;
   font-size: 20px;
   line-height: 1.18;
   margin: 6px 0 8px;
@@ -829,8 +916,8 @@
 }
 
 .bull-subscribe__title {
-  font-family: var(--f-serif);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-weight: 800;
   font-size: clamp(22px, 2.6vw, 30px);
   letter-spacing: 0.01em;
 }
@@ -876,6 +963,11 @@
   gap: 12px;
   flex-wrap: wrap;
   letter-spacing: 0.04em;
+}
+
+.bull-colo,
+.bull-colo-bar {
+  padding-inline: clamp(20px, 4vw, 48px);
 }
 
 .bull-colo-bar {
@@ -988,5 +1080,333 @@
   .bull-note {
     text-align: left;
     max-width: none;
+  }
+}
+
+/* —— Narrow viewports —— */
+@media (max-width: 640px) {
+  /* The classification strip is one nowrap line; on a phone its second half
+     ran past the sheet. Let it wrap and centre instead of overflowing. */
+  .bull-classbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    row-gap: 4px;
+  }
+
+  /* The ledger table is wider than a phone. Scroll it inside its own box
+     rather than widening the document. */
+  /* Every bulletin table is wider than a phone. Scrolling them inside their
+     own box beats widening the document. */
+  .bull-table-scroll,
+  .bull-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+
+
+/* —— The bulletin as a turned newspaper —— */
+
+.bull-book { position: relative; }
+
+.bull-book__stage {
+  position: relative;
+  perspective: 2200px;
+}
+
+.bull-spread {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  visibility: hidden;
+}
+
+/* A spread that is not on screen contributes nothing to layout. `inset: 0`
+   sized these to the stage, but their content — up to 1600px of it — spilled
+   past unclipped and inflated the document's scroll height by ~400px. That is
+   the empty space below the page: it was invisible pages still being
+   measured. */
+.bull-spread:not([data-current]) {
+  bottom: auto;
+  height: 0;
+  overflow: hidden;
+}
+
+/* The front page stands alone and takes the full sheet. */
+.bull-book__stage.is-cover .bull-spread[data-current] {
+  grid-template-columns: 1fr;
+}
+
+.bull-spread[data-current] {
+  position: relative;
+  visibility: visible;
+  z-index: 2;
+}
+
+/* The gutter: two pages meeting at a fold, with the crease shaded on both
+   sides so the spread reads as one folded sheet rather than two cards. */
+.bull-spread > .bull-leaf + .bull-leaf {
+  border-left: 1px solid var(--ink-dim);
+  box-shadow: inset 14px 0 22px -16px rgba(28, 27, 23, 0.5);
+}
+
+.bull-spread > .bull-leaf:first-child:not(:only-child) {
+  box-shadow: inset -14px 0 22px -16px rgba(28, 27, 23, 0.5);
+}
+
+.bull-leaf {
+  position: relative;
+  min-width: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  background: var(--bull-paper);
+}
+
+/* Off-spread pages stay in the DOM and stay findable; they are simply not
+   painted. `display: none` would take them out of Cmd-F and the a11y tree. */
+
+/* The turning leaf paints while it moves, whichever side of the fold. */
+.bull-leaf[style*="rotate"] { visibility: visible; }
+
+.bull-leaf__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(28, 27, 23, 0.02) 0%,
+    rgba(28, 27, 23, 0.3) 55%,
+    rgba(28, 27, 23, 0.06) 100%
+  );
+}
+
+.bull-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 12px 0 0;
+  border-top: 3px double var(--bull-rule);
+  font-family: var(--f-mono);
+  font-size: 13px;
+}
+
+.bull-pager__btn {
+  font: inherit;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.bull-pager__btn:hover:not(:disabled) {
+  background: var(--bg-deep);
+}
+
+.bull-pager__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bull-pager__count {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
+
+/* Anchors land below the rail rather than under it. */
+.bulletin-page [id] {
+  scroll-margin-top: calc(var(--header-rail-h) + 16px);
+}
+
+.bull-leaf__face {
+  padding: 0 clamp(12px, 1.6vw, 24px);
+}
+
+.bull-book__stage.is-cover .bull-leaf__face { padding: 0; }
+
+/* —— One screen, no scroll —— */
+/* A reader you turn should not also be a page you scroll. The sheet becomes a
+   column exactly as tall as the viewport allows, the stage takes whatever is
+   left after the masthead and the pager, and any page too long for that
+   scrolls inside its own leaf. */
+@media (min-width: 1100px) and (prefers-reduced-motion: no-preference) {
+  .bulletin-page:has(.bull-book) {
+    padding-bottom: clamp(12px, 1.6vw, 22px);
+  }
+
+  .bulletin-page:has(.bull-book) .bulletin-sheet {
+    display: flex;
+    flex-direction: column;
+    /* No fixed height: the spread is as tall as its tallest page and the
+       document scrolls, so there is exactly one scrollbar on the screen. */
+    min-height: calc(100svh - var(--header-rail-h) - clamp(28px, 4vw, 62px));
+  }
+
+  .bulletin-page:has(.bull-book) .bulletin-inner,
+  .bulletin-page:has(.bull-book) .bulletin-inner > main,
+  .bull-book {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .bull-book__stage {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .bull-pager {
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+
+}
+
+/* After the front page, the masthead becomes a running head — the nameplate,
+   the EXTRA slug and the banner headline belong to page one only. They were
+   re-printing on every spread and taking 400px of a 1000px screen, leaving
+   the articles about four lines each. */
+@media (min-width: 1100px) and (prefers-reduced-motion: no-preference) {
+  /* Page one gets the full masthead. Later pages keep the same elements at
+     running-head size — the nameplate and the banner line stay, so the reader
+     always knows which paper and which story, they just stop shouting. */
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__proof,
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__desk {
+    display: none;
+  }
+
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__titleblock {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 18px;
+    text-align: left;
+    padding: 0 0 6px;
+  }
+
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__name {
+    font-size: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__sub {
+    margin-top: 0;
+    font-size: 9.5px;
+  }
+
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__headline {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.3;
+    margin: 6px 0 0;
+    padding-bottom: 2px;
+    color: var(--ink-mid);
+  }
+
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast {
+    padding-top: 10px;
+  }
+
+  .bulletin-sheet:has(.bull-book__stage:not(.is-cover)) .bull-mast__meta {
+    border-bottom-width: 1px;
+    padding-block: 6px;
+  }
+}
+
+/* —— The thumb —— */
+.bull-book__stage {
+  /* Vertical stays with the browser, horizontal comes to us. Without this the
+     swipe and the scroll fight over the same finger. */
+  touch-action: pan-y;
+}
+
+/* One page at a time below the spread breakpoint. */
+.bull-book__stage.is-single .bull-spread {
+  grid-template-columns: 1fr;
+}
+
+.bull-book__stage.is-single .bull-spread > .bull-leaf,
+.bull-book__stage.is-single .bull-spread > .bull-leaf + .bull-leaf {
+  border-left: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1099px) {
+  .bull-leaf__face { padding: 0; }
+
+  /* Thumb-sized controls, and a hint that the page is swipeable. */
+  .bull-pager {
+    gap: 10px;
+    margin-top: 12px;
+    padding: 8px 0 0;
+  }
+
+  .bull-pager__btn {
+    min-height: 44px;
+    padding: 8px 14px;
+  }
+
+  .bull-pager__count {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+}
+
+@media (max-width: 1099px) and (hover: none) {
+  .bull-pager::before {
+    content: "Swipe to turn";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--f-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+}
+
+/* The colophon and the classification strip are furniture, not content. Two
+   thin lines at every width — they were 203px tall on a phone, because these
+   rules had been written inside the desktop-only query. */
+.bull-colo {
+  padding-block: 6px;
+  font-size: 10px;
+  gap: 8px;
+}
+
+.bull-colo-bar {
+  padding-block: 4px;
+  font-size: 10px;
+}
+
+@media (max-width: 1099px) {
+  .bull-colo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    line-height: 1.5;
+  }
+
+  .bulletin-page {
+    padding-bottom: clamp(16px, 4vw, 28px);
   }
 }
