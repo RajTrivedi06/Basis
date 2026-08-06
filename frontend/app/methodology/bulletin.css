@@ -360,13 +360,25 @@
 }
 
 .bull-cols {
-  columns: 320px 2;
-  column-gap: 30px;
+  /* Newspaper measure. `320px 2` gave two ~677px columns at the widened
+     sheet — a magazine measure, not a newspaper one. Three columns of ~440px
+     is ~58 characters, and a column block's height is the text height divided
+     by the column count, so this is also where the page-count budget comes
+     from. Degrades to 2 then 1 as the sheet narrows. */
+  columns: 260px 3;
+  column-gap: 26px;
   column-rule: 1px solid var(--bull-rule-faint);
 }
 
 .bull-cols .bull-prose {
-  break-inside: avoid;
+  /* Text flows across the columns, as it does in a newspaper. Keeping each
+     paragraph whole in one column made the block as tall as its longest
+     paragraph, so adding columns made the page taller instead of shorter. */
+  margin-top: 0;
+}
+
+.bull-cols .bull-prose + .bull-prose {
+  margin-top: 0.9em;
 }
 
 .bull-tok {
