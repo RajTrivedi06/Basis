@@ -136,14 +136,28 @@ export function QuoteLanes({
     run();
   };
 
+  /**
+   * Percent along the axis, rounded before it reaches the DOM.
+   *
+   * `logPosition` runs Math.log, which the spec does not require to be
+   * correctly rounded — Node and the browser can differ in the last ULP. Left
+   * raw, that put `left:51.9041448694803%` in the server HTML against
+   * `51.904144869480305%` on the client and tripped a hydration mismatch. Three
+   * decimals is still sub-pixel at any width the axis is drawn at.
+   */
+  const pct = (price: number) =>
+    (logPosition(price, exhibit.lo, exhibit.hi) * 100).toFixed(3);
+
   const at = (price: number) => logPosition(price, exhibit.lo, exhibit.hi);
   const showLow =
     boundLow !== null && boundLow > exhibit.lo && boundLow < exhibit.hi;
   const showHigh =
     boundHigh !== null && boundHigh > exhibit.lo && boundHigh < exhibit.hi;
-  const bandLeft = showLow ? at(boundLow) * 100 : 0;
+  const bandLeft = showLow ? pct(boundLow) : "0";
   const bandWidth =
-    showLow && showHigh ? (at(boundHigh) - at(boundLow)) * 100 : 0;
+    showLow && showHigh
+      ? ((at(boundHigh) - at(boundLow)) * 100).toFixed(3)
+      : "0";
 
   return (
     <div className="fc-quotes">
@@ -172,7 +186,7 @@ export function QuoteLanes({
           {showLow ? (
             <span
               className="fc-quotes__bound"
-              style={{ left: `${at(boundLow) * 100}%` }}
+              style={{ left: `${pct(boundLow)}%` }}
               aria-hidden
             >
               <span className="fc-quotes__bound-tag">p5 {usd(boundLow)}</span>
@@ -181,7 +195,7 @@ export function QuoteLanes({
           {showHigh ? (
             <span
               className="fc-quotes__bound fc-quotes__bound--high"
-              style={{ left: `${at(boundHigh) * 100}%` }}
+              style={{ left: `${pct(boundHigh)}%` }}
               aria-hidden
             >
               <span className="fc-quotes__bound-tag">p95 {usd(boundHigh)}</span>
@@ -250,7 +264,7 @@ export function QuoteLanes({
               <span
                 key={tick}
                 className="fc-quotes__tick"
-                style={{ left: `${at(tick) * 100}%` }}
+                style={{ left: `${pct(tick)}%` }}
               >
                 {usd(tick)}
               </span>
