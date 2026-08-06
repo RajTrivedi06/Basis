@@ -21,10 +21,10 @@ import {
 import {
   COLD_OPEN,
   FINDING_ANALYST,
-  FINDINGS_SURFACE,
   NAME_BACKDROP,
   PUZZLE_HYPERSCALER,
   PUZZLE_MARKETPLACE,
+  REVIEW_ROOM,
   STAKES_FLOOR,
   type PlateSpec,
 } from "@/lib/plates";
@@ -554,11 +554,10 @@ export default async function StoryPage() {
       <section
         className="fc-act fc-act--exhibit-c"
         aria-labelledby="fc-sheet"
-        data-nav-backdrop="paper-deep"
+        data-nav-backdrop="film"
       >
-        <div className="fc-ruled fc-ruled--lines" data-parallax style={{ "--fc-depth": 0.1 } as React.CSSProperties} aria-hidden />
-        <div className="fc-ruled fc-ruled--cross" data-parallax style={{ "--fc-depth": 0.24 } as React.CSSProperties} aria-hidden />
-        <div className="fc-sheet__wash" aria-hidden />
+        <PlateFrame plate={REVIEW_ROOM} depth={0.12} showSlate={false} />
+        <div className="fc-act__scrim fc-act__scrim--room" aria-hidden />
 
         {/* The filed ledger itself lives on /basis, row by row and live. This
             act states the result and the vocabulary the findings then spend —
@@ -634,15 +633,14 @@ export default async function StoryPage() {
       <section
         className="fc-act fc-act--findings"
         aria-labelledby="fc-findings"
-        data-nav-backdrop="paper-warm"
+        data-nav-backdrop="paper-deep"
       >
-        <PlateFrame
-          plate={FINDINGS_SURFACE}
-          className="fc-plate--paper"
-          depth={0.08}
-          showSlate={false}
-        />
-        <div className="fc-desk" aria-hidden />
+        {/* The ruled ground Exhibit C used to carry. No parallax and no inset
+            slack here: parallax needs travel plus `overflow: hidden`, and this
+            act cannot clip — the sheets are thrown in from outside its box. */}
+        <div className="fc-ruled fc-ruled--static fc-ruled--lines" aria-hidden />
+        <div className="fc-ruled fc-ruled--static fc-ruled--cross" aria-hidden />
+        <div className="fc-sheet__wash" aria-hidden />
 
         <div className="fc-wrap">
           <span className="fc-eyebrow fc-eyebrow--accent">
