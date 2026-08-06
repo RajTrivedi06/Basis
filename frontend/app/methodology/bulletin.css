@@ -1211,8 +1211,6 @@
 }
 
 .bull-leaf__face {
-  height: 100%;
-  overflow-y: auto;
   padding: 0 clamp(12px, 1.6vw, 24px);
 }
 
@@ -1231,10 +1229,9 @@
   .bulletin-page:has(.bull-book) .bulletin-sheet {
     display: flex;
     flex-direction: column;
-    /* Taller than one screen on purpose. Cramming a newspaper spread into
-       exactly 100svh left about four lines per article; a little scroll buys
-       a page worth reading. */
-    min-height: calc(118svh - var(--header-rail-h));
+    /* No fixed height: the spread is as tall as its tallest page and the
+       document scrolls, so there is exactly one scrollbar on the screen. */
+    min-height: calc(100svh - var(--header-rail-h) - clamp(28px, 4vw, 62px));
   }
 
   .bulletin-page:has(.bull-book) .bulletin-inner,
@@ -1249,25 +1246,6 @@
   .bull-book__stage {
     flex: 1;
     min-height: 0;
-  }
-
-  .bull-spread[data-current] {
-    position: absolute;
-    inset: 0;
-  }
-
-  /* Each leaf is a window onto its page: it clips, and the page scrolls
-     inside it. Without this the front page overflowed the stage and sat on
-     top of the pager, swallowing its clicks. */
-  .bull-leaf {
-    overflow: hidden;
-    min-height: 0;
-  }
-
-  .bull-leaf__face {
-    height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
   }
 
   /* The colophon and the classification strip were two stacked bars on top of
@@ -1287,12 +1265,6 @@
     padding-top: 8px;
   }
 
-  /* The site footer belongs under a scrolling page, not under a reader that
-     is exactly one screen tall. */
-  body:has(.bull-book) > footer,
-  body:has(.bull-book) footer.site-footer {
-    display: none;
-  }
 }
 
 /* After the front page, the masthead becomes a running head — the nameplate,
