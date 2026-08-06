@@ -1085,3 +1085,87 @@
 }
 
 
+
+/* —— The bulletin as a turned newspaper —— */
+
+.bull-book { position: relative; }
+
+.bull-book__stage {
+  position: relative;
+  perspective: 2200px;
+}
+
+.bull-leaf {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  background: var(--bull-paper);
+  /* Off-leaf pages stay in the DOM and stay findable; they are simply not
+     painted. `display: none` would take them out of Cmd-F and the a11y tree. */
+  visibility: hidden;
+}
+
+.bull-leaf[data-current] {
+  position: relative;
+  visibility: visible;
+  z-index: 2;
+}
+
+/* The turning leaf paints while it moves, whichever side of the fold it is on. */
+.bull-leaf[style*="rotate"] { visibility: visible; }
+
+.bull-leaf__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(28, 27, 23, 0.02) 0%,
+    rgba(28, 27, 23, 0.3) 55%,
+    rgba(28, 27, 23, 0.06) 100%
+  );
+}
+
+.bull-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 12px 0 0;
+  border-top: 3px double var(--bull-rule);
+  font-family: var(--f-mono);
+  font-size: 13px;
+}
+
+.bull-pager__btn {
+  font: inherit;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.bull-pager__btn:hover:not(:disabled) {
+  background: var(--bg-deep);
+}
+
+.bull-pager__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bull-pager__count {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mid);
+}
