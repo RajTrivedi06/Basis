@@ -17,7 +17,7 @@ class RawObservationCreate(BaseModel):
     collected_at: datetime = Field(..., description="UTC timestamp of when the data was collected")
     raw_payload: dict[str, Any] = Field(..., description="Full API response stored as JSONB")
     gpu_model_reported: str = Field(..., description="GPU model as reported by the provider")
-    price_hourly: float = Field(..., gt=0, description="Price in USD per hour as reported")
+    price_hourly: float = Field(..., gt=0, allow_inf_nan=False, description="Price in USD per hour as reported")
     region_reported: str | None = Field(None, description="Region as reported by the provider")
     commitment_type_reported: str | None = Field(None, description="Commitment type as reported")
     provider_metadata: dict[str, Any] | None = Field(None, description="Additional provider data")

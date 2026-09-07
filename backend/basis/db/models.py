@@ -11,7 +11,19 @@ Core pricing tables matching Basis_Project_Proposal.md section 5.3, plus:
 import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Computed, DateTime, Float, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Computed,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -38,6 +50,13 @@ class RawObservation(Base):
 
     __table_args__ = (
         Index("ix_raw_obs_collected_gpu_provider", "collected_at", "gpu_model_reported", "source"),
+        # `> 0` alone admits +Infinity and NaN in PostgreSQL (both sort above
+        # every finite value); `< 'Infinity'` excludes both. Schema-level
+        # allow_inf_nan=False rejects them earlier; this is the last line.
+        CheckConstraint(
+            "price_hourly > 0 AND price_hourly < 'Infinity'::float8",
+            name="ck_raw_obs_price_finite",
+        ),
     )
 
 
@@ -79,6 +98,16 @@ class CanonicalOffer(Base):
         # offer). A FK does not auto-create an index in Postgres; without this
         # the NOT EXISTS / NOT IN check full-scans canonical_offers.
         Index("ix_canonical_raw_obs_id", "raw_observation_id"),
+        CheckConstraint(
+            "price_usd_per_hour > 0 AND price_usd_per_hour < 'Infinity'::float8",
+            name="ck_canonical_price_finite",
+        ),
+        CheckConstraint(
+            "normalized_price_usd_per_hour IS NULL OR "
+            "(normalized_price_usd_per_hour > 0 "
+            "AND normalized_price_usd_per_hour < 'Infinity'::float8)",
+            name="ck_canonical_norm_price_finite",
+        ),
     )
 
 
@@ -100,6 +129,9 @@ class DailyAggregate(Base):
     p25_price: Mapped[float] = mapped_column(Float, nullable=False)
     p75_price: Mapped[float] = mapped_column(Float, nullable=False)
     normalized_median_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Which admitted population this row was computed from (collection window,
+    # completeness state, admissibility rules). NULL = legacy, pre-versioning.
+    population_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     __table_args__ = (Index("ix_daily_agg_date_gpu", "date", "gpu_sku"),)
 
@@ -122,8 +154,49 @@ class BasisDecomposition(Base):
     variance_from_bundle: Mapped[float] = mapped_column(Float, nullable=False)
     variance_from_provider: Mapped[float] = mapped_column(Float, nullable=False)
     residual_variance: Mapped[float] = mapped_column(Float, nullable=False)
+    # The estimand. "v1-joint-cell" is the sequential joint-cell partition the
+    # analytics have always computed; an additive nested least-squares variant
+    # lands as "v2-additive". Historical rows are never overwritten across
+    # versions — a version is a new row set.
+    method_version: Mapped[str] = mapped_column(
+        String(40), nullable=False, server_default="v1-joint-cell"
+    )
+    population_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
-    __table_args__ = (Index("ix_basis_decomp_date_gpu", "date", "gpu_sku"),)
+    __table_args__ = (
+        Index("ix_basis_decomp_date_gpu", "date", "gpu_sku"),
+        Index("ix_basis_decomp_method", "method_version"),
+    )
+
+
+class CollectionHealth(Base):
+    """Completeness verdict for one commitment query of one collection run.
+
+    Written by run_collect.py from the collector's health records. The volume
+    alert reads the latest row per (source, commitment): a provider whose
+    latest row is not exhaustive stays alerting until a later exhaustive row
+    exists — the persistent, non-adaptive failure state the 2026-09-06 review
+    asked for.
+    """
+
+    __tablename__ = "collection_health"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    collected_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source: Mapped[str] = mapped_column(String(50), nullable=False)
+    commitment_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    cap: Mapped[int] = mapped_column(Integer, nullable=False)
+    bands_total: Mapped[int] = mapped_column(Integer, nullable=False)
+    bands_incomplete: Mapped[int] = mapped_column(Integer, nullable=False)
+    offers_returned: Mapped[int] = mapped_column(Integer, nullable=False)
+    offers_unique: Mapped[int] = mapped_column(Integer, nullable=False)
+    exhaustive: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    desc_check_missing: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    probe_missing: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    __table_args__ = (
+        Index("ix_collection_health_source_ts", "source", "commitment_type", "collected_at"),
+    )
 
 
 class DocChunk(Base):
