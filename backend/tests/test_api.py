@@ -11,9 +11,11 @@ Skips cleanly if the DB is unreachable (see `api_client` fixture).
 
 from __future__ import annotations
 
+import datetime
+
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from basis.db.models import BasisDecomposition, CanonicalOffer, RawObservation
@@ -110,6 +112,26 @@ async def test_basis_decomposition_rejects_unknown_query_params(
     )
 
 
+async def _decomposition_window(
+    db_session: AsyncSession, sku: str
+) -> tuple[datetime.date, datetime.date] | None:
+    """Fixture date span for ``sku`` so tests do not depend on the wall clock.
+
+    The default window is the trailing 30 days from *today*; the committed
+    fixtures are from July 2026, so an unpinned request 404s in September.
+    """
+    row = (
+        await db_session.execute(
+            select(
+                func.min(BasisDecomposition.date), func.max(BasisDecomposition.date)
+            ).where(BasisDecomposition.gpu_sku == sku)
+        )
+    ).one()
+    if row[0] is None:
+        return None
+    return row[0], row[1]
+
+
 @pytest.mark.asyncio
 async def test_basis_timeseries(
     api_client: AsyncClient, db_session: AsyncSession
@@ -117,7 +139,13 @@ async def test_basis_timeseries(
     sku = await _pick_decomposed_sku(db_session)
     if sku is None:
         pytest.skip("No SKU with a basis decomposition available.")
-    r = await api_client.get(f"/api/basis/{sku}/timeseries")
+    window = await _decomposition_window(db_session, sku)
+    assert window is not None
+    since, until = window
+    r = await api_client.get(
+        f"/api/basis/{sku}/timeseries",
+        params={"since": since.isoformat(), "until": until.isoformat()},
+    )
     assert r.status_code == 200, r.text
     body = BasisTimeseriesResponse.model_validate(r.json())
     assert body.gpu_sku == sku
@@ -145,14 +173,17 @@ async def test_basis_timeseries_exclude_vast_and_single_day_agree(
     if not await _has_decomposition(db_session, sku):
         pytest.skip(f"No decomposition for {sku} in this DB.")
 
-    baseline = await api_client.get(f"/api/basis/{sku}/timeseries")
+    window = await _decomposition_window(db_session, sku)
+    assert window is not None
+    pinned = {"since": window[0].isoformat(), "until": window[1].isoformat()}
+    baseline = await api_client.get(f"/api/basis/{sku}/timeseries", params=pinned)
     assert baseline.status_code == 200, baseline.text
     base_body = BasisTimeseriesResponse.model_validate(baseline.json())
     assert base_body.gpu_sku == sku
     assert base_body.points
 
     filtered = await api_client.get(
-        f"/api/basis/{sku}/timeseries", params={"exclude_providers": "vast"}
+        f"/api/basis/{sku}/timeseries", params={**pinned, "exclude_providers": "vast"}
     )
     assert filtered.status_code == 200, filtered.text
     filt_body = BasisTimeseriesResponse.model_validate(filtered.json())

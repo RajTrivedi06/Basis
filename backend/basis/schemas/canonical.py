@@ -29,9 +29,9 @@ class CanonicalOfferCreate(BaseModel):
     storage_gb_bundled: float | None = None
     networking_type: str | None = None
     verification_tier: str | None = None
-    price_usd_per_hour: float = Field(..., gt=0, description="Raw price in USD/GPU/hour")
+    price_usd_per_hour: float = Field(..., gt=0, allow_inf_nan=False, description="Raw price in USD/GPU/hour")
     normalized_price_usd_per_hour: float | None = Field(
-        None, description="Price after adjusting for observable factors"
+        None, allow_inf_nan=False, description="Price after adjusting for observable factors"
     )
 
 

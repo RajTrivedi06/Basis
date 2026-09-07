@@ -1,11 +1,20 @@
 """Vast.ai GPU marketplace collector.
 
 Data source: Public API at https://console.vast.ai/api/v0/bundles/
-Auth: A free API key is now effectively required. As of 2026-06-23 Vast caps
-    *unauthenticated* responses at 64 offers and silently ignores the `limit`
-    parameter; because results are ordered cheapest-first, that drops the entire
-    premium tier (H100, etc.) from collection. Set VAST_API_KEY to lift the cap.
-    See docs/analysis/2026-07-11-findings-refresh.md.
+Auth: A free API key is required. Unauthenticated responses are capped at 64
+    offers (2026-06-23); *authenticated* responses were found capped at 512
+    regardless of ``limit`` (2026-09-06 review), which silently censored the
+    premium tier from 2026-08-11. Neither cap is documented, so the collector
+    does not trust any single response to be complete.
+
+Completeness: offers are retrieved by recursive half-open price bands
+    ``[lo, hi)``. A band that returns fewer rows than the observed cap is
+    complete. A band at the cap is split at its median returned price and both
+    halves are re-queried. A band that cannot be split further (every returned
+    row at one price) is recorded INCOMPLETE — never assumed complete. The run's
+    verdict is ``exhaustive = every band complete``. A descending-order page and
+    an explicit H100 SXM probe are checked afterwards as supplementary alarms;
+    they cannot certify exhaustiveness (two truncated pages can agree).
 Format: JSON with {"offers": [...]} containing ~95 fields per offer
 
 Key fields used:
@@ -29,7 +38,9 @@ See docs/data_sources.md for full documentation.
 """
 
 import asyncio
+import json
 import logging
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
@@ -49,13 +60,23 @@ _DEFAULT_BACKOFFS: tuple[float, ...] = (1.0, 2.0, 4.0)
 def _auth_headers() -> dict[str, str]:
     """Bearer-auth header for the Vast.ai API when a key is configured.
 
-    Vast caps *unauthenticated* /bundles/ responses at 64 cheapest-first offers
-    (the `limit` param is ignored), which excludes the premium tier from
-    collection. A free API key lifts the cap. Returns an empty dict when no key
-    is set, preserving the prior keyless behaviour.
+    Unauthenticated /bundles/ responses are capped at 64 cheapest-first offers;
+    authenticated ones at 512 (observed). Neither cap honours ``limit``. Returns
+    an empty dict when no key is set, preserving the prior keyless behaviour;
+    the band partition in ``_fetch_exhaustive`` is what guarantees coverage.
     """
     key = settings.vast_api_key
     return {"Authorization": f"Bearer {key}"} if key else {}
+
+
+def _encode_query(q: dict[str, Any]) -> str:
+    """Serialise a /bundles/ query compactly.
+
+    The API accepts either form; the compact one matches the hand-written
+    strings this collector used before band partitioning, keeps the URL short,
+    and is what content-routed test handlers match on.
+    """
+    return json.dumps(q, separators=(",", ":"))
 
 
 async def _request_with_retry(
@@ -107,6 +128,66 @@ async def _request_with_retry(
     raise last_exc
 
 
+
+REQUEST_LIMIT = 10000
+"""The ``limit`` we ask for. The server ignores it above its own cap."""
+
+PROBE_GPU_NAMES: tuple[str, ...] = ("H100 SXM",)
+"""SKU-specific probes run after collection as supplementary checks."""
+
+MAX_BAND_DEPTH = 40
+
+
+@dataclass(frozen=True)
+class BandResult:
+    """One price band ``[lo, hi)`` queried during exhaustive retrieval."""
+
+    lo: float
+    hi: float | None
+    returned: int
+    complete: bool
+
+
+@dataclass
+class VastQueryHealth:
+    """Completeness record for one commitment query of one collection run.
+
+    ``exhaustive`` is the structural verdict: every band returned fewer rows
+    than the cap. ``desc_check_missing`` and ``probe_missing`` are supplementary
+    alarms — a nonzero value means something was missed, but zero does not
+    prove nothing was.
+    """
+
+    commitment_type: str
+    cap: int
+    bands: list[BandResult] = field(default_factory=list)
+    offers_returned: int = 0
+    offers_unique: int = 0
+    desc_check_missing: int | None = None
+    probe_missing: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def exhaustive(self) -> bool:
+        return bool(self.bands) and all(b.complete for b in self.bands)
+
+    @property
+    def bands_incomplete(self) -> int:
+        return sum(1 for b in self.bands if not b.complete)
+
+    def as_record(self) -> dict[str, Any]:
+        return {
+            "commitment_type": self.commitment_type,
+            "cap": self.cap,
+            "bands_total": len(self.bands),
+            "bands_incomplete": self.bands_incomplete,
+            "offers_returned": self.offers_returned,
+            "offers_unique": self.offers_unique,
+            "exhaustive": self.exhaustive,
+            "desc_check_missing": self.desc_check_missing,
+            "probe_missing": dict(self.probe_missing),
+        }
+
+
 class VastCollector(BaseCollector):
     """Collects GPU pricing data from the Vast.ai marketplace.
 
@@ -132,52 +213,59 @@ class VastCollector(BaseCollector):
 
         return observations
 
+    # Test seams: a transport for httpx.MockTransport, and an explicit cap so a
+    # test need not touch settings.
+    _transport: httpx.AsyncBaseTransport | None = None
+    result_cap: int | None = None
+    min_band_width: float | None = None
+
+    # Completeness records for the most recent ``collect()``; one per commitment
+    # query. Persisted by run_collect.py alongside the observations.
+    health: list[VastQueryHealth]
+
     async def _fetch_offers(self) -> list[tuple[dict, str]]:
-        """Call the Vast.ai API and return (offer, commitment_type) pairs.
+        """Fetch all offers, tagged with the commitment type of their query.
 
-        Fetches both on-demand and spot (bid) offers separately, since
-        the API's type filter only accepts one at a time.
-        The default API limit is 64, so we set a high limit to get everything.
+        Two queries: ``type=on-demand`` → "on_demand" and ``type=bid`` → "spot".
+        Each is retrieved exhaustively by price band (module docstring). Offers
+        are deduplicated WITHIN a query only: a machine listed by both queries is
+        two distinct price observations (fixed on-demand price vs current bid),
+        so no cross-query dedup is applied.
 
-        The commitment type of each offer is the query that returned it —
-        the payload's `is_bid` field is always false and cannot be used
-        (see module docstring). Offers are deduplicated WITHIN a query only:
-        a machine listed by both queries is two distinct price observations
-        (fixed on-demand price vs current interruptible bid price), so no
-        cross-query dedup is applied.
-
-        If one query fails after retries (e.g. persistent 429), the other
-        query's offers are still returned. Both failing yields an empty list,
-        matching the prior all-or-nothing behavior at that boundary.
+        If one query fails after retries the other query's offers are still
+        returned. Both failing yields an empty list.
         """
         all_offers: list[tuple[dict, str]] = []
+        self.health = []
+        cap = self.result_cap if self.result_cap is not None else settings.vast_result_cap
+        min_width = (
+            self.min_band_width
+            if self.min_band_width is not None
+            else settings.vast_min_band_width
+        )
 
-        queries: list[tuple[str, str, str]] = [
-            (
-                "on-demand",
-                "on_demand",
-                '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"on-demand","limit":10000}',
-            ),
-            (
-                "bid",
-                "spot",
-                '{"rentable":{"eq":true},"order":[["dph_total","asc"]],"type":"bid","limit":10000}',
-            ),
+        queries: list[tuple[str, str, dict[str, Any]]] = [
+            ("on-demand", "on_demand", {"rentable": {"eq": True}, "type": "on-demand"}),
+            ("bid", "spot", {"rentable": {"eq": True}, "type": "bid"}),
         ]
 
         headers = _auth_headers()
         if not headers:
             logger.warning(
                 "Vast.ai API key not configured (VAST_API_KEY) — unauthenticated "
-                "requests are capped at 64 cheapest-first offers and will miss the "
-                "premium tier (e.g. H100). See "
-                "docs/analysis/2026-07-11-findings-refresh.md."
+                "requests are capped at 64 cheapest-first offers. Band partitioning "
+                "still runs, but the premium tier will be recorded as incomplete."
             )
 
-        async with httpx.AsyncClient(timeout=60.0, headers=headers) as client:
-            for label, commitment_type, q in queries:
+        async with httpx.AsyncClient(
+            timeout=60.0, headers=headers, transport=self._transport
+        ) as client:
+            for label, commitment_type, base in queries:
+                health = VastQueryHealth(commitment_type=commitment_type, cap=cap)
                 try:
-                    offers = await self._fetch_query(client, q)
+                    offers = await self._fetch_exhaustive(
+                        client, base, health, cap=cap, min_width=min_width
+                    )
                 except (httpx.HTTPError, httpx.TransportError) as exc:
                     logger.warning(
                         "Vast.ai %s query failed after retries (%s); continuing with other endpoint",
@@ -185,20 +273,148 @@ class VastCollector(BaseCollector):
                         exc,
                     )
                     continue
-                seen_ids: set[int] = set()
+
+                seen_ids: set[Any] = set()
                 for offer in offers:
                     oid = offer.get("id")
                     if oid not in seen_ids:
                         seen_ids.add(oid)
                         all_offers.append((offer, commitment_type))
-                logger.info(
-                    "Vast.ai %s query returned %d offers (running total: %d)",
+                health.offers_returned = len(offers)
+                health.offers_unique = len(seen_ids)
+
+                try:
+                    await self._supplementary_checks(client, base, seen_ids, health)
+                except (httpx.HTTPError, httpx.TransportError) as exc:
+                    logger.warning("Vast.ai %s supplementary checks failed: %s", label, exc)
+
+                self.health.append(health)
+                log = logger.info if health.exhaustive else logger.error
+                log(
+                    "Vast.ai %s: %d offers (%d unique) over %d bands, %d incomplete, "
+                    "exhaustive=%s, desc_missing=%s, probe_missing=%s",
                     label,
-                    len(offers),
-                    len(all_offers),
+                    health.offers_returned,
+                    health.offers_unique,
+                    len(health.bands),
+                    health.bands_incomplete,
+                    health.exhaustive,
+                    health.desc_check_missing,
+                    health.probe_missing,
                 )
 
         return all_offers
+
+    async def _fetch_exhaustive(
+        self,
+        client: httpx.AsyncClient,
+        base: dict[str, Any],
+        health: VastQueryHealth,
+        *,
+        cap: int,
+        min_width: float,
+    ) -> list[dict[str, Any]]:
+        """Retrieve every offer matching ``base`` by recursive price bands.
+
+        A band is complete when the server returned fewer than ``cap`` rows for
+        it. A band at the cap is split at a price strictly inside it and both
+        halves are re-queried; the truncated page itself is discarded so nothing
+        is counted twice. A band that cannot be split — width at the floor,
+        depth at the limit, or every returned row at one price — keeps what it
+        returned and is recorded incomplete.
+        """
+        collected: list[dict[str, Any]] = []
+        stack: list[tuple[float, float | None, int]] = [(0.0, None, 0)]
+
+        while stack:
+            lo, hi, depth = stack.pop()
+            price_filter: dict[str, float] = {"gte": lo}
+            if hi is not None:
+                price_filter["lt"] = hi
+            q = {
+                **base,
+                "dph_total": price_filter,
+                "order": [["dph_total", "asc"]],
+                "limit": REQUEST_LIMIT,
+            }
+            offers = await self._fetch_query(client, _encode_query(q))
+            n = len(offers)
+
+            if n < cap:
+                health.bands.append(BandResult(lo, hi, n, True))
+                collected.extend(offers)
+                continue
+
+            split = self._split_point(offers, lo, hi)
+            width = None if hi is None else hi - lo
+            splittable = (
+                split is not None
+                and depth < MAX_BAND_DEPTH
+                and (width is None or width > min_width)
+            )
+            if not splittable:
+                health.bands.append(BandResult(lo, hi, n, False))
+                collected.extend(offers)
+                logger.warning(
+                    "Vast.ai band [%s, %s) returned %d rows at the cap and cannot be "
+                    "split further; recorded INCOMPLETE",
+                    lo,
+                    hi,
+                    n,
+                )
+                continue
+
+            assert split is not None
+            stack.append((split, hi, depth + 1))
+            stack.append((lo, split, depth + 1))
+
+        return collected
+
+    @staticmethod
+    def _split_point(
+        offers: list[dict[str, Any]], lo: float, hi: float | None
+    ) -> float | None:
+        """A price strictly inside ``[lo, hi)`` to split a truncated band at.
+
+        Prefers the median of the returned prices for balance; falls back to
+        the smallest returned price above ``lo``. ``None`` when every returned
+        row sits at the band's lower edge — price cannot separate them.
+        """
+        prices = sorted(float(o.get("dph_total") or 0.0) for o in offers)
+        if not prices:
+            return None
+        inside = lambda p: p > lo and (hi is None or p < hi)  # noqa: E731
+        median = prices[len(prices) // 2]
+        if inside(median):
+            return median
+        for p in prices:
+            if inside(p):
+                return p
+        return None
+
+    async def _supplementary_checks(
+        self,
+        client: httpx.AsyncClient,
+        base: dict[str, Any],
+        collected_ids: set[Any],
+        health: VastQueryHealth,
+    ) -> None:
+        """Alarms that can catch a miss but cannot certify completeness."""
+        desc_q = {**base, "order": [["dph_total", "desc"]], "limit": REQUEST_LIMIT}
+        desc = await self._fetch_query(client, _encode_query(desc_q))
+        health.desc_check_missing = sum(1 for o in desc if o.get("id") not in collected_ids)
+
+        for name in PROBE_GPU_NAMES:
+            probe_q = {
+                **base,
+                "gpu_name": {"eq": name},
+                "order": [["dph_total", "asc"]],
+                "limit": REQUEST_LIMIT,
+            }
+            probe = await self._fetch_query(client, _encode_query(probe_q))
+            health.probe_missing[name] = sum(
+                1 for o in probe if o.get("id") not in collected_ids
+            )
 
     @staticmethod
     async def _fetch_query(client: httpx.AsyncClient, query: str) -> list[dict[str, Any]]:

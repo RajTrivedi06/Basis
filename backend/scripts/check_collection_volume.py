@@ -47,7 +47,23 @@ logger = logging.getLogger("check_collection_volume")
 # TensorDock is intentionally excluded: its public /locations feed drained to
 # empty and inventory moved behind an API key (parked 2026-07-13, ~0.8% of
 # offers — see docs/02-reference/data-sources.md). Re-add it here if restored.
-EXPECTED_PROVIDERS: tuple[str, ...] = ("vast", "runpod", "aws_spot")
+EXPECTED_PROVIDERS: tuple[str, ...] = ("vast", "runpod", "aws_spot", "azure", "gcp")
+
+# Absolute per-run floors that no rolling baseline can lower. A censored Vast
+# run of 512 rows sat inside the adaptive baseline for weeks in Aug-Sep 2026
+# because the baseline had already adapted to it. These are deliberately
+# below any healthy run and must be revisited after the API is re-characterised.
+ABSOLUTE_FLOOR: dict[str, int] = {
+    "vast": 1500,
+    "runpod": 20,
+    "aws_spot": 15,
+    "azure": 100,
+    "gcp": 150,
+}
+
+# The headline SKU. Provider-level counts missed its disappearance entirely.
+HEADLINE_SKU = "h100_sxm_80gb"
+HEADLINE_FLOOR: dict[str, int] = {"vast": 20}
 
 LOOKBACK_DAYS = 21          # window for the rolling baseline
 MIN_FRACTION = 0.30         # latest < 30% of baseline median => collapse
@@ -105,23 +121,75 @@ def classify(
     *,
     min_fraction: float = MIN_FRACTION,
     min_baseline_runs: int = MIN_BASELINE_RUNS,
+    absolute_floor: int | None = None,
 ) -> tuple[str, bool]:
     """Return (status, is_alert) for one provider's latest run.
 
     Pure function so the decision logic is unit-testable without a database.
+    - "below_floor": latest run under the provider's absolute floor (alert),
+      regardless of baseline.
     - "no_baseline": too little history to judge (info, not an alert).
     - "zero":  latest run empty against a real baseline (alert).
     - "low":   latest run below min_fraction of baseline (alert).
     - "ok":    latest run within expected range.
     """
+    latest = latest_cnt or 0
+    # The floor is checked first so "no_baseline" can never mask a collapse.
+    if absolute_floor is not None and latest < absolute_floor:
+        return "below_floor", True
     if baseline_median is None or baseline_runs < min_baseline_runs or baseline_median <= 0:
         return "no_baseline", False
-    latest = latest_cnt or 0
     if latest == 0:
         return "zero", True
     if latest < min_fraction * baseline_median:
         return "low", True
     return "ok", False
+
+
+_HEADLINE_QUERY = text(
+    f"""
+    SELECT c.provider, count(*) AS cnt
+    FROM canonical_offers c
+    JOIN raw_observations r ON r.id = c.raw_observation_id
+    WHERE c.gpu_sku_canonical = :sku
+      AND c.collected_at > now() - make_interval(hours => :recent_hours)
+      {_BACKFILL_EXCLUSION.replace("provider_metadata", "r.provider_metadata")}
+    GROUP BY c.provider
+    """
+)
+
+_HEALTH_QUERY = text(
+    """
+    SELECT DISTINCT ON (source, commitment_type)
+        source, commitment_type, collected_at, exhaustive,
+        bands_incomplete, desc_check_missing, probe_missing
+    FROM collection_health
+    ORDER BY source, commitment_type, collected_at DESC
+    """
+)
+
+
+async def fetch_headline_rows(session) -> dict[str, int]:
+    result = await session.execute(
+        _HEADLINE_QUERY, {"sku": HEADLINE_SKU, "recent_hours": LATEST_WINDOW_HOURS}
+    )
+    return {m["provider"]: int(m["cnt"]) for m in result.mappings().all()}
+
+
+async def fetch_health_rows(session) -> list[dict]:
+    """Latest completeness verdict per (source, commitment).
+
+    Tolerates a database that predates the ``collection_health`` table: the
+    volume checks must keep running even if this migration has not landed —
+    a crashing alert is a silent alert (see the 2026-07-13 incident above).
+    """
+    try:
+        result = await session.execute(_HEALTH_QUERY)
+    except Exception as exc:  # any DB error must not kill the alert
+        await session.rollback()
+        logger.error("collection_health unavailable (%s); completeness state not checked", exc)
+        return []
+    return [dict(m) for m in result.mappings().all()]
 
 
 async def fetch_volume_rows(session) -> list[dict]:
@@ -132,13 +200,16 @@ async def fetch_volume_rows(session) -> list[dict]:
     return [dict(m) for m in result.mappings().all()]
 
 
-async def _fetch_rows() -> list[dict]:
+async def _fetch_rows() -> tuple[list[dict], dict[str, int], list[dict]]:
     async with async_session_factory() as session:
-        return await fetch_volume_rows(session)
+        volume = await fetch_volume_rows(session)
+        headline = await fetch_headline_rows(session)
+        health = await fetch_health_rows(session)
+        return volume, headline, health
 
 
 def main() -> int:
-    rows = asyncio.run(_fetch_rows())
+    rows, headline, health = asyncio.run(_fetch_rows())
     by_source = {r["source"]: r for r in rows}
 
     alerts: list[str] = []
@@ -155,7 +226,9 @@ def main() -> int:
         latest_cnt = row["latest_cnt"] or 0
         baseline = row["baseline_median"]
         baseline_runs = row["baseline_runs"] or 0
-        status, is_alert = classify(latest_cnt, baseline, baseline_runs)
+        status, is_alert = classify(
+            latest_cnt, baseline, baseline_runs, absolute_floor=ABSOLUTE_FLOOR.get(source)
+        )
 
         base_str = f"{baseline:.0f}" if baseline is not None else "n/a"
         recent = "" if row["is_recent"] else "  (stale: no recent run!)"
@@ -171,6 +244,35 @@ def main() -> int:
             alerts.append(f"{source}: {status}{' + stale' if stale else ''}")
         else:
             logger.info(line.rstrip())
+
+    # Headline SKU: provider-level totals hid the loss of every H100 SXM row.
+    for source, floor in HEADLINE_FLOOR.items():
+        cnt = headline.get(source, 0)
+        if cnt < floor:
+            logger.error("  %-11s %s rows in last %dh: %d < floor %d", source, HEADLINE_SKU,
+                         LATEST_WINDOW_HOURS, cnt, floor)
+            alerts.append(f"{source}: {HEADLINE_SKU} {cnt} < {floor}")
+        else:
+            logger.info("  %-11s %s rows in last %dh: %d", source, HEADLINE_SKU,
+                        LATEST_WINDOW_HOURS, cnt)
+
+    # Persistent completeness state: the latest verdict per (source, commitment)
+    # stays alerting until a later exhaustive run replaces it. Not adaptive.
+    for h in health:
+        label = f"{h['source']}/{h['commitment_type']}"
+        problems = []
+        if not h["exhaustive"]:
+            problems.append(f"{h['bands_incomplete']} incomplete band(s)")
+        if (h["desc_check_missing"] or 0) > 0:
+            problems.append(f"desc check missed {h['desc_check_missing']}")
+        for name, n in (h.get("probe_missing") or {}).items():
+            if n:
+                problems.append(f"probe {name!r} missed {n}")
+        if problems:
+            logger.error("  %-20s NOT COMPLETE since %s: %s", label, h["collected_at"], "; ".join(problems))
+            alerts.append(f"{label}: incomplete ({'; '.join(problems)})")
+        else:
+            logger.info("  %-20s complete as of %s", label, h["collected_at"])
 
     if alerts:
         logger.error("VOLUME ANOMALY: %s", "; ".join(alerts))

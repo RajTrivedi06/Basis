@@ -133,7 +133,10 @@ GCP_REGION_MAP: dict[str, tuple[str, str | None]] = {
     "australia-southeast1": ("AU", "Sydney"),
     "australia-southeast2": ("AU", "Melbourne"),
     "me-west1": ("IL", "Tel Aviv"),
-    "me-central1": ("SA", "Dammam"),
+    # me-central1 is Doha, Qatar; me-central2 is Dammam, Saudi Arabia. They were
+    # both mapped to SA until the 2026-09-06 review. Country is a decomposition
+    # factor, so this changed the analytical grouping of every me-central1 row.
+    "me-central1": ("QA", "Doha"),
     "me-central2": ("SA", "Dammam"),
     "africa-south1": ("ZA", "Johannesburg"),
 }

@@ -410,7 +410,14 @@ def _offer_identity(
     # the stable catalog identity rather than a reason to invent one.
     if provider in {"runpod", "azure", "gcp"}:
         if provider == "runpod":
+            # community and secure cloud are two products with the same GPU id,
+            # region and commitment. Without the tier in the identity the daily
+            # dedupe kept only the last-inserted one (secure) and silently
+            # dropped community pricing from the ML sample (2026-09-06 review).
             catalog_sku = provider_metadata.get("runpod_id") or payload.get("id")
+            tier = provider_metadata.get("cloud_tier")
+            if catalog_sku not in (None, ""):
+                return _encoded_identity(provider, (catalog_sku, raw_region, tier))
         elif provider == "azure":
             catalog_sku = provider_metadata.get("instance_type") or payload.get("armSkuName")
         else:

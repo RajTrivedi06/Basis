@@ -12,16 +12,21 @@ from __future__ import annotations
 
 import datetime
 import logging
+from dataclasses import dataclass
 
 import pandas as pd
 from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
-from basis.analytics.basis import compute_decompositions
-from basis.analytics.dispersion import compute_dispersion
+from basis.analytics.basis import DecompositionRow, compute_decompositions
+from basis.analytics.dispersion import DispersionRow, compute_dispersion
 from basis.db.models import BasisDecomposition, CanonicalOffer, DailyAggregate, RawObservation
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_METHOD_VERSION = "v1-joint-cell"
+"""The sequential joint-cell partition ``compute_decompositions`` implements."""
 
 
 async def run_analytics(
@@ -57,8 +62,12 @@ async def run_analytics(
         len(decomposition_rows),
     )
 
-    await _upsert_aggregates(session, dispersion_rows)
-    await _upsert_decompositions(session, decomposition_rows)
+    # Replace the entire requested scope, not just the pairs we happen to emit.
+    # A slice that dropped below the minimum-observation threshold, or lost all
+    # of its source offers, emits nothing — and used to keep its stale row.
+    scope = _ReplaceScope(only_date=only_date, only_gpu_sku=only_gpu_sku)
+    await _upsert_aggregates(session, dispersion_rows, scope=scope)
+    await _upsert_decompositions(session, decomposition_rows, scope=scope)
     await session.commit()
 
     return {
@@ -113,18 +122,57 @@ async def _load_canonical_offers(
     return df
 
 
-async def _upsert_aggregates(session: AsyncSession, rows: list) -> None:
-    """Replace daily_aggregates rows for the (date, gpu_sku) pairs we're writing."""
+@dataclass(frozen=True)
+class _ReplaceScope:
+    """The (date, gpu_sku) region a materialization run is responsible for.
+
+    ``None`` on either axis means "every value of that axis". The scope is what
+    gets deleted before insert, so an output whose input slice became
+    ineligible is removed rather than left behind.
+    """
+
+    only_date: datetime.date | None
+    only_gpu_sku: str | None
+    # A rebuild replaces one estimand's rows, never another's: a v1 recompute
+    # must not delete v2-additive output that shares the (date, sku) scope.
+    method_version: str = DEFAULT_METHOD_VERSION
+
+    def clause(
+        self, model: type[DailyAggregate] | type[BasisDecomposition]
+    ) -> list[ColumnElement[bool]]:
+        conds: list[ColumnElement[bool]] = []
+        if self.only_date is not None:
+            conds.append(model.date == self.only_date)
+        if self.only_gpu_sku is not None:
+            conds.append(model.gpu_sku == self.only_gpu_sku)
+        if model is BasisDecomposition:
+            conds.append(BasisDecomposition.method_version == self.method_version)
+        return conds
+
+
+async def _delete_scope(
+    session: AsyncSession,
+    model: type[DailyAggregate] | type[BasisDecomposition],
+    scope: _ReplaceScope,
+) -> None:
+    conds = scope.clause(model)
+    stmt = delete(model)
+    if conds:
+        stmt = stmt.where(and_(*conds))
+    await session.execute(stmt)
+
+
+async def _upsert_aggregates(
+    session: AsyncSession, rows: list[DispersionRow], *, scope: _ReplaceScope
+) -> None:
+    """Replace every daily_aggregates row in ``scope``, then insert ``rows``.
+
+    Runs even when ``rows`` is empty: an empty result for a scope means the
+    scope has no eligible output, and the previous output must go.
+    """
+    await _delete_scope(session, DailyAggregate, scope)
     if not rows:
         return
-
-    pairs = {(r.date, r.gpu_sku) for r in rows}
-    for date_val, gpu_sku in pairs:
-        await session.execute(
-            delete(DailyAggregate).where(
-                and_(DailyAggregate.date == date_val, DailyAggregate.gpu_sku == gpu_sku)
-            )
-        )
 
     session.add_all(
         [
@@ -144,21 +192,13 @@ async def _upsert_aggregates(session: AsyncSession, rows: list) -> None:
     )
 
 
-async def _upsert_decompositions(session: AsyncSession, rows: list) -> None:
-    """Replace basis_decomposition rows for the (date, gpu_sku) pairs we're writing."""
+async def _upsert_decompositions(
+    session: AsyncSession, rows: list[DecompositionRow], *, scope: _ReplaceScope
+) -> None:
+    """Replace every basis_decomposition row in ``scope``, then insert ``rows``."""
+    await _delete_scope(session, BasisDecomposition, scope)
     if not rows:
         return
-
-    pairs = {(r.date, r.gpu_sku) for r in rows}
-    for date_val, gpu_sku in pairs:
-        await session.execute(
-            delete(BasisDecomposition).where(
-                and_(
-                    BasisDecomposition.date == date_val,
-                    BasisDecomposition.gpu_sku == gpu_sku,
-                )
-            )
-        )
 
     session.add_all(
         [
@@ -171,6 +211,7 @@ async def _upsert_decompositions(session: AsyncSession, rows: list) -> None:
                 variance_from_bundle=r.variance_from_bundle,
                 variance_from_provider=r.variance_from_provider,
                 residual_variance=r.residual_variance,
+                method_version=scope.method_version,
             )
             for r in rows
         ]

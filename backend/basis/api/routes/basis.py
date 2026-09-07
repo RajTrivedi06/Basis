@@ -21,6 +21,21 @@ from basis.schemas.api import BasisDecompositionResponse, BasisTimeseriesRespons
 
 router = APIRouter(prefix="/api/basis", tags=["basis"])
 
+
+def _utc_today() -> datetime.date:
+    return datetime.datetime.now(datetime.UTC).date()
+
+
+def _utc_day_start(day: datetime.date) -> datetime.datetime:
+    return datetime.datetime.combine(day, datetime.time.min, tzinfo=datetime.UTC)
+
+
+def _utc_day_of(ts: datetime.datetime) -> datetime.date:
+    """UTC calendar day of a timestamp; naive values are treated as UTC."""
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=datetime.UTC)
+    return ts.astimezone(datetime.UTC).date()
+
 _BASIS_DETAIL_QUERY_PARAMS = frozenset({"date", "exclude_providers"})
 
 
@@ -89,8 +104,11 @@ async def _compute_filtered_timeseries(
     ).where(
         and_(
             CanonicalOffer.gpu_sku_canonical == gpu_sku,
-            func.date(CanonicalOffer.collected_at) >= since,
-            func.date(CanonicalOffer.collected_at) <= until,
+            # Half-open UTC range. ``func.date(timestamptz)`` truncates in the
+            # session's timezone, so the day boundary moved with the server's
+            # TZ setting (2026-09-06 review).
+            CanonicalOffer.collected_at >= _utc_day_start(since),
+            CanonicalOffer.collected_at < _utc_day_start(until + datetime.timedelta(days=1)),
             CanonicalOffer.provider.notin_(excluded),
             # ADR-0007: recompute must sample the same cron-only population
             # as the batch analytics path, or the two diverge at the
@@ -146,14 +164,15 @@ async def get_basis_decomposition(
         date_eff = date
         if date_eff is None:
             latest_stmt = select(
-                func.max(func.date(CanonicalOffer.collected_at))
+                func.max(CanonicalOffer.collected_at)
             ).where(
                 and_(
                     CanonicalOffer.gpu_sku_canonical == gpu_sku,
                     CanonicalOffer.provider.notin_(excluded),
                 )
             )
-            date_eff = (await db.execute(latest_stmt)).scalar_one_or_none()
+            latest_ts = (await db.execute(latest_stmt)).scalar_one_or_none()
+            date_eff = _utc_day_of(latest_ts) if latest_ts is not None else None
 
         decomposed = (
             await _compute_filtered_timeseries(
@@ -229,7 +248,7 @@ async def get_basis_timeseries(
     decomposition on demand from canonical_offers with those providers
     filtered out. Used by the segment-conditional hero on the landing page.
     """
-    today = datetime.date.today()
+    today = _utc_today()
     until_eff = until or today
     since_eff = since or (until_eff - datetime.timedelta(days=30))
 

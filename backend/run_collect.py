@@ -7,17 +7,21 @@ Usage:
 """
 
 import asyncio
+import datetime
 import logging
 import statistics
 import sys
+from collections.abc import Sequence
 
-from basis.collectors.azure import AzureCollector
-from basis.collectors.vast import VastCollector
-from basis.collectors.runpod import RunPodCollector
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from basis.collectors.aws_spot import AWSSpotCollector
+from basis.collectors.azure import AzureCollector
 from basis.collectors.gcp import GCPCollector
 from basis.collectors.lambda_labs import LambdaLabsCollector
 from basis.collectors.persist import save_observations
+from basis.collectors.runpod import RunPodCollector
+from basis.collectors.vast import VastCollector, VastQueryHealth
 from basis.db.engine import async_session_factory
 
 logging.basicConfig(
@@ -38,6 +42,36 @@ AVAILABLE = {
     "azure": AzureCollector,
     "gcp": GCPCollector,
 }
+
+
+
+async def save_collection_health(
+    session: AsyncSession,
+    source: str,
+    collected_at: datetime.datetime,
+    records: Sequence[VastQueryHealth],
+) -> None:
+    """Persist per-query completeness verdicts beside the run's observations."""
+    from basis.db.models import CollectionHealth
+
+    for rec in records:
+        r = rec.as_record()
+        session.add(
+            CollectionHealth(
+                collected_at=collected_at,
+                source=source,
+                commitment_type=r["commitment_type"],
+                cap=r["cap"],
+                bands_total=r["bands_total"],
+                bands_incomplete=r["bands_incomplete"],
+                offers_returned=r["offers_returned"],
+                offers_unique=r["offers_unique"],
+                exhaustive=r["exhaustive"],
+                desc_check_missing=r["desc_check_missing"],
+                probe_missing=r["probe_missing"],
+            )
+        )
+    await session.commit()
 
 
 async def main() -> None:
@@ -114,6 +148,22 @@ async def main() -> None:
             async with async_session_factory() as session:
                 saved = await save_observations(session, observations)
                 logger.info("Saved %d rows to raw_observations", saved)
+                health = getattr(collector, "health", None)
+                if health:
+                    # Observations are already committed above. A health-table
+                    # problem (e.g. migration not yet applied) must not turn a
+                    # successful collection run into a crashed one.
+                    try:
+                        await save_collection_health(
+                            session, name, observations[0].collected_at, health
+                        )
+                        logger.info("Saved %d collection_health rows for %s", len(health), name)
+                    except Exception:
+                        await session.rollback()
+                        logger.exception(
+                            "Could not persist collection_health for %s; observations were saved",
+                            name,
+                        )
 
 
 if __name__ == "__main__":
