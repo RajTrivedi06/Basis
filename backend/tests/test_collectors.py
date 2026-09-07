@@ -658,3 +658,123 @@ def test_aws_spot_per_gpu_price_conversion() -> None:
     assert obs.price_hourly == pytest.approx(3.20)
     assert obs.gpu_model_reported == "H100 SXM"
     assert obs.region_reported == "us-east-1a"
+
+
+# --- Finding 1: Vast retrieval is exhaustive by construction ------------------
+
+
+
+def _fake_vast_server(offers: list[dict], cap: int):
+    """A /bundles/ stand-in that honours filters and order, then truncates at ``cap``.
+
+    Mirrors the observed production behaviour: ``limit`` is ignored above the
+    server's own cap, and rows are returned cheapest-first unless asked
+    otherwise. ``calls`` records every query so tests can assert structure.
+    """
+    calls: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        q = json.loads(request.url.params["q"])
+        calls.append(q)
+        rows = list(offers)
+        if "type" in q:
+            rows = [o for o in rows if o["type"] == q["type"]]
+        if "gpu_name" in q:
+            rows = [o for o in rows if o["gpu_name"] == q["gpu_name"]["eq"]]
+        if "dph_total" in q:
+            f = q["dph_total"]
+            rows = [o for o in rows if o["dph_total"] >= f.get("gte", -1e9)]
+            if "lt" in f:
+                rows = [o for o in rows if o["dph_total"] < f["lt"]]
+        desc = q.get("order", [["dph_total", "asc"]])[0][1] == "desc"
+        rows.sort(key=lambda o: (o["dph_total"], o["id"]), reverse=desc)
+        return httpx.Response(200, json={"offers": rows[:cap]})
+
+    return handler, calls
+
+
+def _offers(n: int, *, price=lambda i: 0.05 + i * 0.01, gpu="RTX 4090") -> list[dict]:
+    return [
+        {
+            "id": i,
+            "gpu_name": gpu if i % 7 else "H100 SXM",
+            "dph_total": price(i),
+            "num_gpus": 1,
+            "rentable": True,
+            "type": "on-demand",
+            "geolocation": "Washington, US",
+        }
+        for i in range(n)
+    ]
+
+
+@pytest.mark.asyncio
+async def test_vast_band_partition_recovers_every_offer_above_cap() -> None:
+    """1,500 offers behind a 512-row cap: one page is censored, bands are not."""
+    offers = _offers(1500)
+    handler, _calls = _fake_vast_server(offers, cap=512)
+    collector = VastCollector()
+    collector._transport = httpx.MockTransport(handler)
+    collector.result_cap = 512
+
+    fetched = await collector._fetch_offers()
+    on_demand = [o for o, c in fetched if c == "on_demand"]
+    assert len(on_demand) == 1500
+    assert {o["id"] for o in on_demand} == {o["id"] for o in offers}
+
+    health = next(h for h in collector.health if h.commitment_type == "on_demand")
+    assert health.exhaustive, health.as_record()
+    assert health.bands_incomplete == 0
+    assert all(b.returned < 512 for b in health.bands)
+    assert health.desc_check_missing == 0
+    assert health.probe_missing == {"H100 SXM": 0}
+    assert len(health.bands) >= 3
+
+
+@pytest.mark.asyncio
+async def test_vast_single_page_would_have_missed_the_premium_tier() -> None:
+    """The control: the pre-review single query returned the cheapest 512 only."""
+    offers = _offers(1500)
+    handler, _ = _fake_vast_server(offers, cap=512)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        q = {
+            "rentable": {"eq": True},
+            "type": "on-demand",
+            "order": [["dph_total", "asc"]],
+            "limit": 10000,
+        }
+        page = await VastCollector._fetch_query(client, json.dumps(q))
+    assert len(page) == 512
+    assert max(o["dph_total"] for o in page) < max(o["dph_total"] for o in offers)
+
+
+@pytest.mark.asyncio
+async def test_vast_unsplittable_band_is_recorded_incomplete_not_assumed() -> None:
+    """1,000 offers all at one price cannot be separated by price. Say so."""
+    offers = _offers(1000, price=lambda i: 1.25)
+    handler, _ = _fake_vast_server(offers, cap=512)
+    collector = VastCollector()
+    collector._transport = httpx.MockTransport(handler)
+    collector.result_cap = 512
+
+    await collector._fetch_offers()
+    health = next(h for h in collector.health if h.commitment_type == "on_demand")
+    assert not health.exhaustive
+    assert health.bands_incomplete >= 1
+    assert (health.desc_check_missing or 0) > 0
+
+
+@pytest.mark.asyncio
+async def test_vast_health_record_shape() -> None:
+    offers = _offers(100)
+    handler, _ = _fake_vast_server(offers, cap=512)
+    collector = VastCollector()
+    collector._transport = httpx.MockTransport(handler)
+    collector.result_cap = 512
+    await collector._fetch_offers()
+    rec = collector.health[0].as_record()
+    assert set(rec) == {
+        "commitment_type", "cap", "bands_total", "bands_incomplete", "offers_returned",
+        "offers_unique", "exhaustive", "desc_check_missing", "probe_missing",
+    }
+    assert rec["exhaustive"] is True and rec["bands_total"] == 1

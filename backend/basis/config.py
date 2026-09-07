@@ -39,6 +39,15 @@ class Settings(BaseSettings):
 
     # Provider API keys (optional -- public endpoints work without these)
     vast_api_key: str = ""
+    # Largest result set a single /bundles/ query has been observed to return
+    # (512 on 2026-09-06 with Bearer auth, regardless of ``limit``). A query
+    # that returns this many rows is treated as truncated and its price band
+    # is split; the number is a trigger for subdivision, not a trusted limit.
+    vast_result_cap: int = 512
+    # Narrowest price band the collector will still split. Below this, rows
+    # that share a price cannot be separated by price and the band is recorded
+    # as incomplete rather than assumed complete.
+    vast_min_band_width: float = 0.0005
     runpod_api_key: str = ""
     gcp_api_key: str = ""
     openai_api_key: str = ""
