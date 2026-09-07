@@ -370,3 +370,18 @@ async def test_run_normalization_processes_all_rows_when_exceeding_batch_size(
             await db_session.commit()
             # Batch size larger than corpus -> single-batch run, bug can't bite.
             await run_normalization(db_session, batch_size=eligible + 1000)
+
+
+def test_gcp_me_central1_is_doha_qatar() -> None:
+    """me-central1 is Doha (QA); me-central2 is Dammam (SA).
+
+    Both mapped to SA until the 2026-09-06 review. Country is a decomposition
+    factor, so 2,184 production rows were grouped under the wrong country.
+    """
+    doha = normalize_region("gcp", "me-central1")
+    dammam = normalize_region("gcp", "me-central2")
+    # GCP's (country, locality) tuple lands in ``state``; ``city`` is unused.
+    assert doha.country == "QA", doha
+    assert doha.state == "Doha", doha
+    assert dammam.country == "SA", dammam
+    assert dammam.state == "Dammam", dammam
